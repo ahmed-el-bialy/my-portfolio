@@ -101,12 +101,20 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
   const githubRepos: GitHubRepo[] = githubData?.repos || [];
   const githubStats: GitHubStats | undefined = githubData?.stats;
 
-  // Real-time dynamic GitHub release & APK check across repos
+  // Gather all repo names from both Featured Production Projects & GitHub Repositories
+  const allTargetRepoNames = useMemo(() => {
+    const featured = FEATURED_PROJECTS.map((p) => p.repoName);
+    const repos = githubRepos.map((r) => r.name);
+    return Array.from(new Set([...featured, ...repos]));
+  }, [githubRepos]);
+
+  // Real-time automatic GitHub release & APK check across all production apps and repos
   const { data: repoReleases } = useQuery<Record<string, RepoReleaseInfo>>({
-    queryKey: ['github-releases-map', githubUser, githubRepos.map((r) => r.name).join(',')],
-    queryFn: () => fetchAllRepoReleases(githubRepos, githubUser),
-    enabled: githubRepos.length > 0,
+    queryKey: ['github-releases-map', githubUser, allTargetRepoNames.join(',')],
+    queryFn: () => fetchAllRepoReleases(allTargetRepoNames, githubUser),
+    enabled: allTargetRepoNames.length > 0,
     staleTime: 1000 * 60 * 5,
+    refetchInterval: 1000 * 60 * 5,
   });
 
   useEffect(() => {
@@ -329,13 +337,14 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
       {activeTab === 'featured' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 sm:gap-8">
           {FEATURED_PROJECTS.map((project) => {
-            const liveRelease = repoReleases?.[project.repoName] || repoReleases?.[project.name];
-            const hasApkFile = Boolean(
-              project.links.apkDownloadUrl ||
-              liveRelease?.apkDownloadUrl ||
-              (liveRelease?.hasRelease && liveRelease?.releaseUrl) ||
-              project.hasApk
+            const liveRelease =
+              repoReleases?.[project.repoName] ||
+              repoReleases?.[project.name] ||
+              repoReleases?.[project.repoName.toLowerCase()];
+            const hasLiveRelease = Boolean(
+              liveRelease?.hasRelease && (liveRelease.apkDownloadUrl || liveRelease.releaseUrl)
             );
+            const hasApkFile = Boolean(project.links.apkDownloadUrl || hasLiveRelease);
             const hasVideo = Boolean(project.links.youtubeDemo);
 
             // Dynamic project with live release info
@@ -548,7 +557,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 sm:gap-8">
               {filteredRepos.map((repo) => {
                 const projectObj = getProjectFromRepo(repo);
-                const repoRelease = repoReleases?.[repo.name];
+                const repoRelease = repoReleases?.[repo.name] || repoReleases?.[repo.name.toLowerCase()];
                 const hasReleaseOrApk = Boolean(
                   projectObj.links.apkDownloadUrl ||
                   repoRelease?.apkDownloadUrl ||

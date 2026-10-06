@@ -616,34 +616,55 @@ export interface RepoReleaseInfo {
  */
 export async function checkRepoRelease(repoName: string, username: string = 'ahmed-el-bialy'): Promise<RepoReleaseInfo> {
   if (!repoName) return { hasRelease: false };
+  const cleanRepo = repoName.trim();
 
   try {
-    const res = await fetch(`https://api.github.com/repos/${username}/${repoName}/releases/latest`);
-    if (!res.ok) return { hasRelease: false };
+    // 1. Try latest published release first
+    let res = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/releases/latest`, {
+      headers: { Accept: "application/vnd.github+json" }
+    });
 
-    const data = await res.json();
-    if (!data.html_url) return { hasRelease: false };
+    let releaseData: any = null;
 
-    const apkAsset = Array.isArray(data.assets)
-      ? data.assets.find((a: any) => typeof a.name === 'string' && a.name.toLowerCase().endsWith('.apk'))
-      : undefined;
+    if (res.ok) {
+      releaseData = await res.json();
+    } else {
+      // 2. If latest release endpoint fails, query the releases list for any published/pre-release tag
+      const listRes = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/releases?per_page=1`, {
+        headers: { Accept: "application/vnd.github+json" }
+      });
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        if (Array.isArray(listData) && listData.length > 0) {
+          releaseData = listData[0];
+        }
+      }
+    }
 
-    return {
-      hasRelease: true,
-      releaseUrl: data.html_url,
-      tagName: data.tag_name,
-      apkDownloadUrl: apkAsset ? apkAsset.browser_download_url : undefined,
-    };
+    if (releaseData && releaseData.html_url) {
+      const apkAsset = Array.isArray(releaseData.assets)
+        ? releaseData.assets.find((a: any) => typeof a.name === 'string' && a.name.toLowerCase().endsWith('.apk'))
+        : undefined;
+
+      return {
+        hasRelease: true,
+        releaseUrl: releaseData.html_url,
+        tagName: releaseData.tag_name || releaseData.name || 'v1.0.0',
+        apkDownloadUrl: apkAsset ? apkAsset.browser_download_url : undefined,
+      };
+    }
+
+    return { hasRelease: false };
   } catch {
     return { hasRelease: false };
   }
 }
 
 /**
- * Automatically checks releases across all repositories and returns a map
+ * Automatically checks releases across all repositories and production apps
  */
 export async function fetchAllRepoReleases(
-  repos: GitHubRepo[],
+  repoNames: string[],
   username: string = 'ahmed-el-bialy'
 ): Promise<Record<string, RepoReleaseInfo>> {
   const cacheKey = `releases_cache_${username}`;
@@ -656,15 +677,17 @@ export async function fetchAllRepoReleases(
   }
 
   const results: Record<string, RepoReleaseInfo> = { ...cachedMap };
-  const targetRepos = repos.slice(0, 15);
+  const uniqueNames = Array.from(new Set(repoNames.filter(Boolean))).slice(0, 25);
 
   await Promise.all(
-    targetRepos.map(async (repo) => {
+    uniqueNames.map(async (name) => {
       try {
-        const info = await checkRepoRelease(repo.name, username);
-        results[repo.name] = info;
+        const info = await checkRepoRelease(name, username);
+        results[name] = info;
+        results[name.toLowerCase()] = info;
       } catch {
-        results[repo.name] = { hasRelease: false };
+        results[name] = { hasRelease: false };
+        results[name.toLowerCase()] = { hasRelease: false };
       }
     })
   );
