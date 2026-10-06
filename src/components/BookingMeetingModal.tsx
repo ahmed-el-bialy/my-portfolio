@@ -177,14 +177,15 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
     }\n\nيرجى التواصل لتأكيد رابط اللقاء.`
   )}`;
 
-  // Google Calendar URL pre-configured with Google Meet & Ahmed's email
+  // Google Calendar URL pre-configured with Google Meet & Ahmed's emails
+  const linkedEmails = [profile.email, 'elbailyahmed47@gmail.com'].filter(Boolean).join(',');
   const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
     `Meeting: ${currentTypeObj.title} with Ahmed El-Bialy`
   )}&details=${encodeURIComponent(
-    `Mobile App Developer Consultation with Ahmed El-Bialy\n\nClient Name: ${name}\nClient Email: ${email}\nPlatform: ${selectedPlatform.toUpperCase()}\nNotes: ${notes || 'None'}\n\nGoogle Meet: https://meet.google.com/new`
+    `Mobile App Developer Consultation with Ahmed El-Bialy\n\nClient Name: ${name}\nClient Email: ${email}\nPlatform: ${selectedPlatform.toUpperCase()}\nNotes: ${notes || 'None'}\n\nGoogle Meet: https://meet.google.com/new\nHost Account: ${profile.email}`
   )}&location=${encodeURIComponent(
     selectedPlatform === 'meet' ? 'Google Meet (Online)' : selectedPlatform === 'zoom' ? 'Zoom Video Call' : 'WhatsApp Video (+20 102 212 1573)'
-  )}&add=${encodeURIComponent(profile.email)}&dates=${meetingDate.replace(/-/g, '')}T150000Z/${meetingDate.replace(
+  )}&add=${encodeURIComponent(linkedEmails)}&dates=${meetingDate.replace(/-/g, '')}T150000Z/${meetingDate.replace(
     /-/g,
     ''
   )}T153000Z`;
@@ -237,14 +238,24 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
         _template: 'table',
       };
 
-      await fetch('https://formsubmit.co/ajax/ah.elbialy.dev@gmail.com', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      await Promise.allSettled([
+        fetch('https://formsubmit.co/ajax/ah.elbialy.dev@gmail.com', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }),
+        fetch('https://formsubmit.co/ajax/elbailyahmed47@gmail.com', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify(payload),
+        })
+      ]);
     } catch {
       // FormSubmit fallback
     }

@@ -121,11 +121,21 @@ export const createGoogleCalendarEvent = async (
     params.durationMinutes || 30
   );
 
-  const ahmedEmail = params.ahmedEmail || 'ah.elbialy.dev@gmail.com';
+  const primaryEmail = params.ahmedEmail || 'ah.elbialy.dev@gmail.com';
+  const secondaryEmail = 'elbailyahmed47@gmail.com';
+
+  const attendeesList = [
+    { email: params.clientEmail, displayName: params.clientName },
+    { email: primaryEmail, displayName: 'Ahmed El-Bialy' },
+  ];
+
+  if (secondaryEmail.toLowerCase() !== primaryEmail.toLowerCase() && secondaryEmail.toLowerCase() !== params.clientEmail.toLowerCase()) {
+    attendeesList.push({ email: secondaryEmail, displayName: 'Ahmed El-Bialy (Direct)' });
+  }
 
   const requestBody: any = {
     summary: `Meeting: ${params.meetingTitle} - Ahmed El-Bialy & ${params.clientName}`,
-    description: `Consultation with Ahmed El-Bialy (Mobile App Developer)\n\nClient Name: ${params.clientName}\nClient Email: ${params.clientEmail}\nPlatform: ${params.platform.toUpperCase()}\nAgenda / Project Notes: ${params.notes || 'None'}\n\nGoogle Calendar Auto-Created Event.`,
+    description: `Consultation with Ahmed El-Bialy (Mobile App Developer)\n\nClient Name: ${params.clientName}\nClient Email: ${params.clientEmail}\nPlatform: ${params.platform.toUpperCase()}\nAgenda / Project Notes: ${params.notes || 'None'}\n\nLinked Calendar Account: ${primaryEmail} / ${secondaryEmail}\nGoogle Calendar Auto-Created Event.`,
     start: {
       dateTime: startIso,
       timeZone: 'Africa/Cairo',
@@ -134,10 +144,7 @@ export const createGoogleCalendarEvent = async (
       dateTime: endIso,
       timeZone: 'Africa/Cairo',
     },
-    attendees: [
-      { email: params.clientEmail, displayName: params.clientName },
-      { email: ahmedEmail, displayName: 'Ahmed El-Bialy' },
-    ],
+    attendees: attendeesList,
     reminders: {
       useDefault: false,
       overrides: [

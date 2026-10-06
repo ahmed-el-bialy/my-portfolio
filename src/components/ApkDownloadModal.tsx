@@ -17,9 +17,9 @@ export const ApkDownloadModal: React.FC<ApkDownloadModalProps> = ({
 }) => {
   useScrollLock(isOpen);
 
-  if (!isOpen || !project || !project.hasApk) return null;
+  if (!isOpen || !project) return null;
 
-  const downloadUrl = project.links.apkDownloadUrl || `https://github.com/ahmed-el-bialy/${project.repoName}/releases/latest`;
+  const downloadUrl = project.links.apkDownloadUrl || (project.repoName ? `https://github.com/ahmed-el-bialy/${project.repoName}/releases/latest` : project.links.github);
 
   const node = (
     <div
@@ -124,17 +124,31 @@ export const ApkDownloadModal: React.FC<ApkDownloadModalProps> = ({
               </a>
             )}
 
-            <a
-              href={downloadUrl}
-              target="_blank"
-              rel="noreferrer"
-              onClick={onClose}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition-all shadow-md hover:shadow-purple-600/30"
-            >
-              <Download size={14} />
-              <span>Confirm & Download APK</span>
-              <ExternalLink size={12} />
-            </a>
+            {project.links.apkDownloadUrl ? (
+              <a
+                href={project.links.apkDownloadUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={onClose}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition-all shadow-md hover:shadow-purple-600/30"
+              >
+                <Download size={14} />
+                <span>Direct APK Download</span>
+                <ExternalLink size={12} />
+              </a>
+            ) : (
+              <a
+                href={downloadUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={onClose}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition-all shadow-md hover:shadow-purple-600/30"
+              >
+                <Download size={14} />
+                <span>View Release on GitHub</span>
+                <ExternalLink size={12} />
+              </a>
+            )}
           </div>
         </div>
       </div>

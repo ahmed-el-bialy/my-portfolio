@@ -126,7 +126,12 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     setActiveScreenIndex((prev) => (prev - 1 + screenshots.length) % screenshots.length);
   };
 
-  const hasApk = Boolean(project.hasApk && (project.links.apkDownloadUrl || releaseInfo.apkDownloadUrl));
+  const hasApk = Boolean(
+    project.links.apkDownloadUrl ||
+    releaseInfo.apkDownloadUrl ||
+    (releaseInfo.hasRelease && releaseInfo.releaseUrl) ||
+    project.hasApk
+  );
   const hasPlayStore = Boolean(project.links.googlePlay);
 
   const modalNode = (
@@ -454,13 +459,18 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
             {hasApk && (
               <a
-                href={project.links.apkDownloadUrl || releaseInfo.apkDownloadUrl}
+                href={
+                  project.links.apkDownloadUrl ||
+                  releaseInfo.apkDownloadUrl ||
+                  releaseInfo.releaseUrl ||
+                  `https://github.com/ahmed-el-bialy/${project.repoName}/releases`
+                }
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition-colors shadow-xs"
               >
                 <Download size={14} />
-                <span>Download APK</span>
+                <span>{project.links.apkDownloadUrl || releaseInfo.apkDownloadUrl ? 'Download APK' : 'View Release'}</span>
               </a>
             )}
 

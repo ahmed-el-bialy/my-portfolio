@@ -21,6 +21,8 @@ import {
   GitHubRepo,
   GitHubStats,
   fetchGitHubUserStats,
+  fetchAllRepoReleases,
+  RepoReleaseInfo,
   getLanguageColor,
   AHMED_DEFAULT_REPOS
 } from '../services/githubService';
@@ -98,6 +100,14 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
 
   const githubRepos: GitHubRepo[] = githubData?.repos || [];
   const githubStats: GitHubStats | undefined = githubData?.stats;
+
+  // Real-time dynamic GitHub release & APK check across repos
+  const { data: repoReleases } = useQuery<Record<string, RepoReleaseInfo>>({
+    queryKey: ['github-releases-map', githubUser, githubRepos.map((r) => r.name).join(',')],
+    queryFn: () => fetchAllRepoReleases(githubRepos, githubUser),
+    enabled: githubRepos.length > 0,
+    staleTime: 1000 * 60 * 5,
+  });
 
   useEffect(() => {
     if (githubRepos.length > 0 && onRepoCountChange) {
@@ -319,13 +329,30 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
       {activeTab === 'featured' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 sm:gap-8">
           {FEATURED_PROJECTS.map((project) => {
-            const hasApkFile = Boolean(project.hasApk && project.links.apkDownloadUrl);
+            const liveRelease = repoReleases?.[project.repoName] || repoReleases?.[project.name];
+            const hasApkFile = Boolean(
+              project.links.apkDownloadUrl ||
+              liveRelease?.apkDownloadUrl ||
+              (liveRelease?.hasRelease && liveRelease?.releaseUrl) ||
+              project.hasApk
+            );
             const hasVideo = Boolean(project.links.youtubeDemo);
+
+            // Dynamic project with live release info
+            const dynamicProject: Project = {
+              ...project,
+              hasApk: hasApkFile,
+              links: {
+                ...project.links,
+                apkDownloadUrl: liveRelease?.apkDownloadUrl || project.links.apkDownloadUrl,
+                releaseUrl: liveRelease?.releaseUrl || project.links.releaseUrl,
+              }
+            };
 
             return (
               <div
                 key={project.id}
-                onClick={() => setSelectedProject(project)}
+                onClick={() => setSelectedProject(dynamicProject)}
                 className="group rounded-2xl overflow-hidden bg-white dark:bg-[#121422] border border-slate-200 dark:border-white/10 flex flex-col justify-between hover:border-blue-500/50 cursor-pointer transition-all duration-300 shadow-md hover:shadow-2xl"
               >
                 <div>
@@ -384,7 +411,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedProject(project);
+                        setSelectedProject(dynamicProject);
                       }}
                       className="w-full flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl bg-blue-600/10 hover:bg-blue-600 hover:text-white text-blue-600 dark:text-cyan-400 font-bold text-xs border border-blue-500/25 transition-all cursor-pointer shadow-xs min-h-[44px]"
                       title="View App Details & Specs"
@@ -446,7 +473,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setApkModalProject(project);
+                            setApkModalProject(dynamicProject);
                           }}
                           className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-600 hover:text-white text-cyan-700 dark:text-cyan-400 border border-cyan-500/25 transition-all text-xs font-bold min-h-[44px] cursor-pointer"
                         >
@@ -521,12 +548,29 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 sm:gap-8">
               {filteredRepos.map((repo) => {
                 const projectObj = getProjectFromRepo(repo);
+                const repoRelease = repoReleases?.[repo.name];
+                const hasReleaseOrApk = Boolean(
+                  projectObj.links.apkDownloadUrl ||
+                  repoRelease?.apkDownloadUrl ||
+                  (repoRelease?.hasRelease && repoRelease?.releaseUrl)
+                );
+
+                const dynamicRepoProject: Project = {
+                  ...projectObj,
+                  hasApk: hasReleaseOrApk,
+                  links: {
+                    ...projectObj.links,
+                    apkDownloadUrl: repoRelease?.apkDownloadUrl || projectObj.links.apkDownloadUrl,
+                    releaseUrl: repoRelease?.releaseUrl || projectObj.links.releaseUrl,
+                  }
+                };
+
                 const hasDemo = Boolean(projectObj.links.youtubeDemo);
 
                 return (
                   <div
                     key={repo.id}
-                    onClick={() => setSelectedProject(projectObj)}
+                    onClick={() => setSelectedProject(dynamicRepoProject)}
                     className="group rounded-2xl overflow-hidden bg-white dark:bg-[#121422] border border-slate-200 dark:border-white/10 flex flex-col justify-between hover:border-blue-500/50 transition-all duration-300 cursor-pointer shadow-md hover:shadow-2xl"
                   >
                     <div>
@@ -535,7 +579,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                         repoName={repo.name}
                         language={repo.language}
                         coverUrl={repo.coverImageUrl}
-                        isHighlight={Boolean(projectObj.links.googlePlay || hasDemo)}
+                        isHighlight={Boolean(projectObj.links.googlePlay || hasDemo || hasReleaseOrApk)}
                       />
 
                       {/* Content Area with High Vertical Rhythm */}
@@ -545,9 +589,16 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                             <FolderGit2 size={18} className="text-blue-500 shrink-0" />
                             <span className="truncate">{repo.name}</span>
                           </span>
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs text-yellow-600 dark:text-yellow-400 shrink-0 font-mono font-semibold">
-                            <Star size={12} fill="currentColor" />
-                            <span>{repo.stargazers_count}</span>
+                          <div className="flex items-center gap-1.5">
+                            {hasReleaseOrApk && (
+                              <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold shrink-0">
+                                Release
+                              </span>
+                            )}
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs text-yellow-600 dark:text-yellow-400 shrink-0 font-mono font-semibold">
+                              <Star size={12} fill="currentColor" />
+                              <span>{repo.stargazers_count}</span>
+                            </div>
                           </div>
                         </div>
 
@@ -579,7 +630,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedProject(projectObj);
+                            setSelectedProject(dynamicRepoProject);
                           }}
                           className="w-full flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl bg-blue-600/10 hover:bg-blue-600 hover:text-white text-blue-600 dark:text-cyan-400 font-bold text-xs border border-blue-500/25 transition-all cursor-pointer shadow-xs min-h-[44px]"
                           title="Open full architectural details, specs & demo"
@@ -602,6 +653,20 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                           <ExternalLink size={12} />
                         </a>
                       </div>
+
+                      {/* Dynamic APK Download Button if Release exists */}
+                      {hasReleaseOrApk && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setApkModalProject(dynamicRepoProject);
+                          }}
+                          className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-600 hover:text-white text-cyan-700 dark:text-cyan-400 border border-cyan-500/25 transition-all text-xs font-bold min-h-[40px] cursor-pointer"
+                        >
+                          <Download size={14} />
+                          <span>Download APK / Release</span>
+                        </button>
+                      )}
 
                       {/* Language, Forks & Watch Demo Bar with Clear Spacing */}
                       <div className="pt-2.5 pb-0.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-gray-400">

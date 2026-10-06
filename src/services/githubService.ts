@@ -639,4 +639,43 @@ export async function checkRepoRelease(repoName: string, username: string = 'ahm
   }
 }
 
+/**
+ * Automatically checks releases across all repositories and returns a map
+ */
+export async function fetchAllRepoReleases(
+  repos: GitHubRepo[],
+  username: string = 'ahmed-el-bialy'
+): Promise<Record<string, RepoReleaseInfo>> {
+  const cacheKey = `releases_cache_${username}`;
+  let cachedMap: Record<string, RepoReleaseInfo> = {};
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) cachedMap = JSON.parse(cached);
+    } catch {}
+  }
+
+  const results: Record<string, RepoReleaseInfo> = { ...cachedMap };
+  const targetRepos = repos.slice(0, 15);
+
+  await Promise.all(
+    targetRepos.map(async (repo) => {
+      try {
+        const info = await checkRepoRelease(repo.name, username);
+        results[repo.name] = info;
+      } catch {
+        results[repo.name] = { hasRelease: false };
+      }
+    })
+  );
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(results));
+    } catch {}
+  }
+
+  return results;
+}
+
 
