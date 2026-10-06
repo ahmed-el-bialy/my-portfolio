@@ -266,11 +266,13 @@ export const FEATURED_PROJECTS: Project[] = [
       "Published and actively maintained on Google Play"
     ],
     image: "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/cover.png",
-    hasApk: false,
+    hasApk: true,
     links: {
       github: "https://github.com/ahmed-el-bialy/Revio",
       googlePlay: "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US",
-      youtubeDemo: "https://youtube.com/shorts/-9VfbxIcZkU?si=Tcpe0iwRztryd7w4"
+      youtubeDemo: "https://youtube.com/shorts/-9VfbxIcZkU?si=Tcpe0iwRztryd7w4",
+      releaseUrl: "https://github.com/ahmed-el-bialy/Revio/releases/tag/v1.0.0",
+      apkDownloadUrl: "https://github.com/ahmed-el-bialy/Revio/releases/download/v1.0.0/app-release.apk"
     },
     highlight: true
   },

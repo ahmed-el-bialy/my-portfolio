@@ -19,6 +19,8 @@ export interface GitHubRepo {
   candidateCoverUrls?: string[];
   youtubeDemoUrl?: string;
   googlePlayUrl?: string;
+  apkDownloadUrl?: string;
+  releaseUrl?: string;
 }
 
 export interface GitHubStats {
@@ -130,7 +132,9 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     default_branch: "main",
     coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/cover.png",
     youtubeDemoUrl: "https://youtube.com/shorts/-9VfbxIcZkU?si=Tcpe0iwRztryd7w4",
-    googlePlayUrl: "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US"
+    googlePlayUrl: "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US",
+    apkDownloadUrl: "https://github.com/ahmed-el-bialy/Revio/releases/download/v1.0.0/app-release.apk",
+    releaseUrl: "https://github.com/ahmed-el-bialy/Revio/releases/tag/v1.0.0"
   },
   {
     id: 2,
@@ -608,18 +612,37 @@ export interface RepoReleaseInfo {
   hasRelease: boolean;
   releaseUrl?: string;
   tagName?: string;
+  name?: string;
+  publishedAt?: string;
   apkDownloadUrl?: string;
+  apkFileName?: string;
+  apkSize?: number;
+  assetsCount?: number;
+  prerelease?: boolean;
+  body?: string;
 }
 
 /**
- * Checks if a GitHub repository actually has a published release or APK asset
+ * Fetches latest repository release data from GitHub API with full asset and APK inspection
  */
-export async function checkRepoRelease(repoName: string, username: string = 'ahmed-el-bialy'): Promise<RepoReleaseInfo> {
+export async function fetchRepositoryReleaseData(
+  repoName: string,
+  username: string = 'ahmed-el-bialy'
+): Promise<RepoReleaseInfo> {
   if (!repoName) return { hasRelease: false };
   const cleanRepo = repoName.trim();
+  const cacheKey = `gh_rel_${username}_${cleanRepo}`;
+
+  // Try memory/session cache
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) return JSON.parse(cached);
+    } catch {}
+  }
 
   try {
-    // 1. Try latest published release first
+    // 1. Query latest published release
     let res = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/releases/latest`, {
       headers: { Accept: "application/vnd.github+json" }
     });
@@ -629,7 +652,7 @@ export async function checkRepoRelease(repoName: string, username: string = 'ahm
     if (res.ok) {
       releaseData = await res.json();
     } else {
-      // 2. If latest release endpoint fails, query the releases list for any published/pre-release tag
+      // 2. Query release list for pre-releases or recent tags
       const listRes = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/releases?per_page=1`, {
         headers: { Accept: "application/vnd.github+json" }
       });
@@ -642,26 +665,53 @@ export async function checkRepoRelease(repoName: string, username: string = 'ahm
     }
 
     if (releaseData && releaseData.html_url) {
-      const apkAsset = Array.isArray(releaseData.assets)
-        ? releaseData.assets.find((a: any) => typeof a.name === 'string' && a.name.toLowerCase().endsWith('.apk'))
-        : undefined;
+      const assets = Array.isArray(releaseData.assets) ? releaseData.assets : [];
+      const apkAsset = assets.find((a: any) => typeof a.name === 'string' && a.name.toLowerCase().endsWith('.apk'));
 
-      return {
+      const result: RepoReleaseInfo = {
         hasRelease: true,
         releaseUrl: releaseData.html_url,
         tagName: releaseData.tag_name || releaseData.name || 'v1.0.0',
+        name: releaseData.name,
+        publishedAt: releaseData.published_at || releaseData.created_at,
         apkDownloadUrl: apkAsset ? apkAsset.browser_download_url : undefined,
+        apkFileName: apkAsset ? apkAsset.name : undefined,
+        apkSize: apkAsset ? apkAsset.size : undefined,
+        assetsCount: assets.length,
+        prerelease: Boolean(releaseData.prerelease),
+        body: releaseData.body,
       };
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(result));
+        } catch {}
+      }
+
+      return result;
     }
 
     return { hasRelease: false };
   } catch {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
     return { hasRelease: false };
   }
 }
 
 /**
- * Automatically checks releases across all repositories and production apps
+ * Checks if a GitHub repository actually has a published release or APK asset (alias for backwards compatibility)
+ */
+export async function checkRepoRelease(repoName: string, username: string = 'ahmed-el-bialy'): Promise<RepoReleaseInfo> {
+  return fetchRepositoryReleaseData(repoName, username);
+}
+
+/**
+ * Automatically checks and fetches releases across all repositories and production apps
  */
 export async function fetchAllRepoReleases(
   repoNames: string[],
@@ -682,7 +732,7 @@ export async function fetchAllRepoReleases(
   await Promise.all(
     uniqueNames.map(async (name) => {
       try {
-        const info = await checkRepoRelease(name, username);
+        const info = await fetchRepositoryReleaseData(name, username);
         results[name] = info;
         results[name.toLowerCase()] = info;
       } catch {
