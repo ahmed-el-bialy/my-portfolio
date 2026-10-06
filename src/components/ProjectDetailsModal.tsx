@@ -266,6 +266,11 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     src={project.image || (screenshots[0] ?? '')}
                     alt={project.name}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      if (screenshots.length > 0 && e.currentTarget.src !== screenshots[0]) {
+                        e.currentTarget.src = screenshots[0];
+                      }
+                    }}
                   />
                 )}
               </div>

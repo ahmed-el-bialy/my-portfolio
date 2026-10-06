@@ -153,7 +153,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 8200,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/Movura2607089.png",
     youtubeDemoUrl: "https://youtube.com/@ahmedel-bialy"
   },
   {
@@ -173,7 +173,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 4300,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/HomeView.png",
     youtubeDemoUrl: "https://youtube.com/shorts/PIg1rYA0CkQ"
   },
   {
@@ -193,7 +193,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 3100,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cloudy_main_weather.png",
     youtubeDemoUrl: "https://youtube.com/shorts/u5JjIphdrAM?si=h44HWlZMZki8L_GM"
   },
   {
@@ -213,7 +213,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 4700,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/general_view.png",
     youtubeDemoUrl: "https://youtube.com/shorts/AKbiBjCRIis"
   },
   {
@@ -233,7 +233,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 3800,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/LogInView.png",
     youtubeDemoUrl: "https://youtube.com/@ahmedel-bialy"
   },
   {
@@ -253,7 +253,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 2900,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/MainView.png",
     youtubeDemoUrl: "https://youtube.com/shorts/OG-S_8oSN00?si=1K0SkiW8voSb4YR-"
   },
   {
@@ -273,7 +273,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 2600,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/NBN-Basketball/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/NBN-Basketball/main/screenshots/StartView.png",
     youtubeDemoUrl: "https://youtube.com/shorts/xJaE0pxSpAQ?si=8lF-9tGR68cHibaL"
   },
   {
@@ -293,7 +293,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 3200,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/piano-tunes/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/piano-tunes/main/screenshots/Screenshot_20260426_182814.png",
     youtubeDemoUrl: "https://youtube.com/shorts/9PWzO0_ozQ0"
   },
   {
@@ -313,7 +313,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 2400,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Note-Keep/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/cover.png",
     youtubeDemoUrl: "https://youtube.com/@ahmedel-bialy"
   },
   {
@@ -333,7 +333,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 2100,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/splash_screen.png",
     youtubeDemoUrl: "https://youtube.com/@ahmedel-bialy"
   }
 ];
@@ -379,7 +379,16 @@ export async function fetchGitHubUserStats(username: string = 'ahmed-el-bialy'):
       .filter((r) => r.name.toLowerCase() !== cleanUsername.toLowerCase())
       .map((r) => {
         const branch = r.default_branch || "main";
-        const primaryCover = `https://raw.githubusercontent.com/${cleanUsername}/${r.name}/${branch}/screenshots/cover.png`;
+        const verifiedScreens =
+          VERIFIED_REPO_SCREENSHOTS[r.name] ||
+          VERIFIED_REPO_SCREENSHOTS[r.name.toLowerCase()] ||
+          Object.entries(VERIFIED_REPO_SCREENSHOTS).find(
+            ([k]) => k.toLowerCase() === r.name.toLowerCase()
+          )?.[1];
+        const primaryCover =
+          verifiedScreens && verifiedScreens.length > 0
+            ? verifiedScreens[0]
+            : `https://raw.githubusercontent.com/${cleanUsername}/${r.name}/${branch}/screenshots/cover.png`;
         const known = KNOWN_REPO_MEDIA[r.name] || {};
 
         return {

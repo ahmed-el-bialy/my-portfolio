@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Smartphone, Layers, Cpu, Zap, Sparkles, Film, ShoppingBag, CloudSun, Newspaper, MessageSquare, BookOpen, Trophy } from 'lucide-react';
-import { getLanguageColor } from '../services/githubService';
+import { Smartphone, Layers, Cpu, Zap, Sparkles, Film, ShoppingBag, CloudSun, Newspaper, MessageSquare, BookOpen, Trophy, ImageOff } from 'lucide-react';
+import { getLanguageColor, VERIFIED_REPO_SCREENSHOTS } from '../services/githubService';
 
 interface ProjectCardCoverProps {
   repoName: string;
@@ -104,7 +104,16 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   // viewMode: 'cover' (screenshot) | 'tech' (calm technical architecture blueprint)
   const [viewMode, setViewMode] = useState<'cover' | 'tech'>('cover');
 
-  const targetUrl = coverUrl || `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/main/screenshots/cover.png`;
+  const verified =
+    VERIFIED_REPO_SCREENSHOTS[repoName] ||
+    VERIFIED_REPO_SCREENSHOTS[repoName.toLowerCase()] ||
+    Object.entries(VERIFIED_REPO_SCREENSHOTS).find(
+      ([k]) => k.replace(/[-_\s]/g, '').toLowerCase() === repoName.replace(/[-_\s]/g, '').toLowerCase()
+    )?.[1];
+
+  const targetUrl =
+    coverUrl ||
+    (verified && verified.length > 0 ? verified[0] : `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/main/screenshots/cover.png`);
   const langColor = getLanguageColor(language);
 
   // Normalize key for lookup

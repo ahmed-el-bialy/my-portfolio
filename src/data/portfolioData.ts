@@ -291,7 +291,7 @@ export const FEATURED_PROJECTS: Project[] = [
       "Dynamic search suggestions with real-time debounced query handling",
       "Secure API key management via environment configurations"
     ],
-    image: "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/cover.png",
+    image: "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/Movura2607089.png",
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Movura",
@@ -313,7 +313,7 @@ export const FEATURED_PROJECTS: Project[] = [
       "Persistent favorites and local cart synchronization",
       "Strict Service Layer pattern isolating network calls from widgets"
     ],
-    image: "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/cover.png",
+    image: "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/HomeView.png",
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Vibrant-store",
@@ -334,7 +334,7 @@ export const FEATURED_PROJECTS: Project[] = [
       "Multi-day forecast projections, UV index, wind speed, and humidity metrics",
       "Native splash branding and low-latency network caching"
     ],
-    image: "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cover.png",
+    image: "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cloudy_main_weather.png",
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Sky-Cast",
@@ -354,7 +354,7 @@ export const FEATURED_PROJECTS: Project[] = [
       "Repository pattern with type-safe Retrofit HTTP clients",
       "Country-specific filtering and pull-to-refresh feeds"
     ],
-    image: "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/cover.png",
+    image: "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/general_view.png",
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/News-Cloud",
@@ -374,7 +374,7 @@ export const FEATURED_PROJECTS: Project[] = [
       "Distinct sender/receiver bubble styling and auto-scroll to newest message",
       "Optimistic UI updates for immediate responsiveness"
     ],
-    image: "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/cover.png",
+    image: "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/LogInView.png",
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Shaats",
@@ -393,7 +393,7 @@ export const FEATURED_PROJECTS: Project[] = [
       "Categorized essential vocabulary (Greetings, Numbers, Daily items)",
       "Engaging animations and clean UI for self-paced study"
     ],
-    image: "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/cover.png",
+    image: "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/MainView.png",
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Nihon-Seed",
@@ -412,7 +412,7 @@ export const FEATURED_PROJECTS: Project[] = [
       "Integrated period clock with pause/resume and buzzer triggers",
       "Foul and timeout tracking per team with clean visual indicators"
     ],
-    image: "https://raw.githubusercontent.com/ahmed-el-bialy/NBN-Basketball/main/screenshots/cover.png",
+    image: "https://raw.githubusercontent.com/ahmed-el-bialy/NBN-Basketball/main/screenshots/StartView.png",
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/NBN-Basketball",
