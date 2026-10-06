@@ -556,12 +556,82 @@ export function parseImagesFromDescription(description: string | null): string[]
   return urls;
 }
 
+// Verified screenshot URLs across Ahmed El-Bialy's repositories
+export const VERIFIED_REPO_SCREENSHOTS: Record<string, string[]> = {
+  Revio: [
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/Samsung%20Galaxy%20S21%20Ultra%20Screenshot%201.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/Samsung%20Galaxy%20S21%20Ultra%20Screenshot%202.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/Samsung%20Galaxy%20S21%20Ultra%20Screenshot%203.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/Samsung%20Galaxy%20S21%20Ultra%20Screenshot%204.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/Samsung%20Galaxy%20S21%20Ultra%20Screenshot%205.png",
+  ],
+  Movura: [
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/Movura2607089.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/Movura2607279.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/Movura2607319.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/Movura2607497.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/Movura2607994.png",
+  ],
+  "Vibrant-store": [
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/HomeView.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/CategoryProducts.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/ProductViewP1.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/ProductViewP2.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/SearchView.png",
+  ],
+  "Sky-Cast": [
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cloudy_main_weather.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cloudy_initial_search.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cloudy_results_search.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/default_initial_search.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/app_icon_screenshot.jpg",
+  ],
+  "News-Cloud": [
+    "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/general_view.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/WebView.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/business_view.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/entertainment_view.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/app_logo.png",
+  ],
+  Shaats: [
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/LogInView.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/LoadingDataView.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/SecurePasswordView.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/OthersPonitView.jpg",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/ErrorView.png",
+  ],
+  "Nihon-Seed": [
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/MainView.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/FamilyView.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/ColorsView.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/NumbersView.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/app_logo.png",
+  ],
+  "NBN-Basketball": [
+    "https://raw.githubusercontent.com/ahmed-el-bialy/NBN-Basketball/main/screenshots/StartView.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/NBN-Basketball/main/screenshots/HomeTeamScore.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/NBN-Basketball/main/screenshots/AwayTeamScore.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/NBN-Basketball/main/screenshots/HomeTeamScore3.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/NBN-Basketball/main/screenshots/AwayTeamScore2.png",
+  ],
+  "piano-tunes": [
+    "https://raw.githubusercontent.com/ahmed-el-bialy/piano-tunes/main/screenshots/Screenshot_20260426_182814.png"
+  ],
+  Quotely: [
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/splash_screen.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/quote_loaded.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/quote_loading.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/app_icon.png"
+  ]
+};
+
 /**
  * Dynamically queries the GitHub Contents API for the repo's /screenshots folder.
  * Retrieves all valid image files regardless of arbitrary filenames (e.g. login.png, feed.jpg)!
  */
 export async function fetchRepoScreenshots(repoName: string, username: string = 'ahmed-el-bialy'): Promise<string[]> {
-  const cacheKey = `repo-screens-${username}-${repoName}`;
+  const cleanName = repoName.trim();
+  const cacheKey = `repo-screens-${username}-${cleanName}`;
   if (typeof window !== 'undefined') {
     try {
       const cached = localStorage.getItem(cacheKey);
@@ -572,8 +642,17 @@ export async function fetchRepoScreenshots(repoName: string, username: string = 
     } catch (e) {}
   }
 
+  const verifiedFallback =
+    VERIFIED_REPO_SCREENSHOTS[cleanName] ||
+    VERIFIED_REPO_SCREENSHOTS[cleanName.toLowerCase()] ||
+    Object.entries(VERIFIED_REPO_SCREENSHOTS).find(
+      ([k]) => k.toLowerCase() === cleanName.toLowerCase()
+    )?.[1];
+
   try {
-    const res = await fetch(`https://api.github.com/repos/${username}/${repoName}/contents/screenshots`);
+    const res = await fetch(`https://api.github.com/repos/${username}/${cleanName}/contents/screenshots`, {
+      headers: { Accept: "application/vnd.github+json" }
+    });
     if (res.ok) {
       const files = await res.json();
       if (Array.isArray(files)) {
@@ -583,7 +662,10 @@ export async function fetchRepoScreenshots(repoName: string, username: string = 
             file.type === 'file' &&
             imageExtensions.some((ext) => file.name.toLowerCase().endsWith(ext))
           )
-          .map((file: any) => file.download_url || `https://raw.githubusercontent.com/${username}/${repoName}/main/screenshots/${file.name}`);
+          .map((file: any) =>
+            file.download_url ||
+            `https://raw.githubusercontent.com/${username}/${cleanName}/main/screenshots/${encodeURIComponent(file.name)}`
+          );
 
         if (imageUrls.length > 0) {
           if (typeof window !== 'undefined') {
@@ -599,12 +681,12 @@ export async function fetchRepoScreenshots(repoName: string, username: string = 
     // API rate limits or network issues fallback
   }
 
-  // Graceful fallback candidate list
+  if (verifiedFallback && verifiedFallback.length > 0) {
+    return verifiedFallback;
+  }
+
   return [
-    `https://raw.githubusercontent.com/${username}/${repoName}/main/screenshots/screen1.png`,
-    `https://raw.githubusercontent.com/${username}/${repoName}/main/screenshots/screen2.png`,
-    `https://raw.githubusercontent.com/${username}/${repoName}/main/screenshots/screen3.png`,
-    `https://raw.githubusercontent.com/${username}/${repoName}/main/screenshots/cover.png`,
+    `https://raw.githubusercontent.com/${username}/${cleanName}/main/screenshots/cover.png`
   ];
 }
 

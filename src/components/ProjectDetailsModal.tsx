@@ -25,7 +25,8 @@ import { Project } from '../data/portfolioData';
 import {
   fetchRepoScreenshots,
   checkRepoRelease,
-  getLanguageColor
+  getLanguageColor,
+  VERIFIED_REPO_SCREENSHOTS
 } from '../services/githubService';
 import { useScrollLock } from '../hooks/useScrollLock';
 
@@ -76,17 +77,36 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         scrollRef.current.scrollTop = 0;
       }
 
-      setLoadingScreens(true);
+      // 1. Immediately populate from verified list if known to avoid any blank state
+      const verified =
+        VERIFIED_REPO_SCREENSHOTS[project.repoName] ||
+        VERIFIED_REPO_SCREENSHOTS[project.name] ||
+        VERIFIED_REPO_SCREENSHOTS[project.repoName.toLowerCase()];
+
+      if (verified && verified.length > 0) {
+        setScreenshots(verified);
+        setLoadingScreens(false);
+      } else {
+        setLoadingScreens(true);
+      }
+
+      // 2. Fetch dynamic contents from GitHub API in parallel
       fetchRepoScreenshots(project.repoName)
         .then((urls) => {
           if (urls.length > 0) {
             setScreenshots(urls);
+          } else if (verified && verified.length > 0) {
+            setScreenshots(verified);
           } else if (project.image) {
             setScreenshots([project.image]);
           }
         })
         .catch(() => {
-          if (project.image) setScreenshots([project.image]);
+          if (verified && verified.length > 0) {
+            setScreenshots(verified);
+          } else if (project.image) {
+            setScreenshots([project.image]);
+          }
         })
         .finally(() => setLoadingScreens(false));
 
@@ -378,6 +398,9 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         alt={`${project.name} screen ${i + 1}`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLElement).style.display = 'none';
+                        }}
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
                         <ZoomIn size={24} />
