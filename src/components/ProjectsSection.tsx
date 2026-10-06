@@ -289,27 +289,27 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
 
       {/* Tab Toggle Switch */}
       <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-        <div className="p-1 rounded-full bg-slate-200/80 dark:bg-[#14151f] border border-black/10 dark:border-white/10 flex items-center shadow-md">
+        <div className="p-1 rounded-2xl sm:rounded-full bg-slate-200/80 dark:bg-[#14151f] border border-black/10 dark:border-white/10 flex flex-wrap sm:flex-nowrap items-center justify-center shadow-md gap-1">
           <button
             onClick={() => setActiveTab('featured')}
-            className={`flex items-center gap-2 px-5 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl sm:rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer min-h-[44px] ${
               activeTab === 'featured'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
                 : 'text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Sparkles size={14} />
+            <Sparkles size={16} />
             <span>Production Apps ({FEATURED_PROJECTS.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('github')}
-            className={`flex items-center gap-2 px-5 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl sm:rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer min-h-[44px] ${
               activeTab === 'github'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
                 : 'text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Github size={14} />
+            <Github size={16} />
             <span>GitHub Repositories ({githubRepos.length})</span>
           </button>
         </div>
@@ -386,10 +386,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                         e.stopPropagation();
                         setSelectedProject(project);
                       }}
-                      className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-blue-600/10 hover:bg-blue-600 hover:text-white text-blue-600 dark:text-cyan-400 font-semibold text-xs border border-blue-500/25 transition-all cursor-pointer shadow-xs min-h-[40px]"
+                      className="w-full flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl bg-blue-600/10 hover:bg-blue-600 hover:text-white text-blue-600 dark:text-cyan-400 font-bold text-xs border border-blue-500/25 transition-all cursor-pointer shadow-xs min-h-[44px]"
                       title="View App Details & Specs"
                     >
-                      <Eye size={14} />
+                      <Eye size={15} />
                       <span>Details</span>
                     </button>
 
@@ -403,10 +403,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                             url: project.links.youtubeDemo
                           });
                         }}
-                        className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-red-600/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 font-semibold text-xs border border-red-500/25 transition-all cursor-pointer shadow-xs min-h-[40px]"
+                        className="w-full flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl bg-red-600/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 font-bold text-xs border border-red-500/25 transition-all cursor-pointer shadow-xs min-h-[44px]"
                         title="Watch YouTube Demo Video"
                       >
-                        <Play size={13} fill="currentColor" />
+                        <Play size={14} fill="currentColor" />
                         <span>Demo</span>
                       </button>
                     )}
@@ -417,10 +417,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                         target="_blank"
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-800 dark:text-gray-200 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 transition-all text-xs font-semibold shadow-xs min-h-[40px]"
+                        className="w-full flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-800 dark:text-gray-200 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 transition-all text-xs font-bold shadow-xs min-h-[44px]"
                         title="View GitHub Code"
                       >
-                        <Github size={14} />
+                        <Github size={15} />
                         <span>Code</span>
                       </a>
                     )}
@@ -435,9 +435,9 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                           target="_blank"
                           rel="noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 hover:text-white text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 transition-all text-xs font-semibold min-h-[38px]"
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 hover:text-white text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 transition-all text-xs font-bold min-h-[44px]"
                         >
-                          <ArrowUpRight size={14} />
+                          <ArrowUpRight size={15} />
                           <span>Google Play</span>
                         </a>
                       )}
@@ -448,9 +448,9 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                             e.stopPropagation();
                             setApkModalProject(project);
                           }}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-600 dark:text-purple-400 border border-purple-500/25 transition-all text-xs font-semibold min-h-[38px] cursor-pointer"
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-600 hover:text-white text-cyan-700 dark:text-cyan-400 border border-cyan-500/25 transition-all text-xs font-bold min-h-[44px] cursor-pointer"
                         >
-                          <Download size={14} />
+                          <Download size={15} />
                           <span>Download APK</span>
                         </button>
                       )}
@@ -581,10 +581,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                             e.stopPropagation();
                             setSelectedProject(projectObj);
                           }}
-                          className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-blue-600/10 hover:bg-blue-600 hover:text-white text-blue-600 dark:text-cyan-400 font-semibold text-xs border border-blue-500/25 transition-all cursor-pointer shadow-xs min-h-[40px]"
+                          className="w-full flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl bg-blue-600/10 hover:bg-blue-600 hover:text-white text-blue-600 dark:text-cyan-400 font-bold text-xs border border-blue-500/25 transition-all cursor-pointer shadow-xs min-h-[44px]"
                           title="Open full architectural details, specs & demo"
                         >
-                          <Eye size={14} />
+                          <Eye size={15} />
                           <span>Details</span>
                         </button>
 
@@ -594,10 +594,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                           target="_blank"
                           rel="noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-800 dark:text-gray-200 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 transition-all text-xs font-semibold shadow-xs min-h-[40px]"
+                          className="w-full flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-800 dark:text-gray-200 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 transition-all text-xs font-bold shadow-xs min-h-[44px]"
                           title="View Repository on GitHub"
                         >
-                          <Github size={14} />
+                          <Github size={15} />
                           <span>GitHub</span>
                           <ExternalLink size={12} />
                         </a>
@@ -607,7 +607,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                       <div className="pt-2.5 pb-0.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs text-slate-500 dark:text-gray-400">
                         <div className="flex items-center gap-3">
                           {repo.language && (
-                            <div className="flex items-center gap-2 font-mono text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-xs">
+                            <div className="flex items-center gap-2 font-mono text-xs px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 shadow-xs">
                               <span
                                 className="w-2.5 h-2.5 rounded-full shrink-0"
                                 style={{ backgroundColor: getLanguageColor(repo.language) }}
@@ -633,10 +633,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                                 url: projectObj.links.youtubeDemo
                               });
                             }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-500/10 hover:bg-red-500 hover:text-white text-red-600 dark:text-red-400 font-semibold text-xs border border-red-500/20 transition-all cursor-pointer shadow-xs"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500 hover:text-white text-red-600 dark:text-red-400 font-bold text-xs border border-red-500/20 transition-all cursor-pointer shadow-xs min-h-[38px]"
                             title="Watch YouTube Demo Video"
                           >
-                            <Play size={12} fill="currentColor" />
+                            <Play size={13} fill="currentColor" />
                             <span>Watch Demo</span>
                           </button>
                         )}
