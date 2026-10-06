@@ -185,7 +185,7 @@ export default function App() {
         />
 
         {/* All Sections Sequentially Rendered with Section Dividers and Reveal */}
-        <main className="flex-1 pb-24 md:pb-12">
+        <main className="flex-1 pb-28 lg:pb-12">
           <RevealOnScroll threshold={0.05}>
             <HeroSection
               profile={profile}
