@@ -22,6 +22,7 @@ import {
   FileCode
 } from 'lucide-react';
 import { Project } from '../data/portfolioData';
+import { ProjectCardCover } from './ProjectCardCover';
 import {
   fetchRepoScreenshots,
   checkRepoRelease,
@@ -262,15 +263,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     allowFullScreen
                   />
                 ) : (
-                  <img
-                    src={project.image || (screenshots[0] ?? '')}
-                    alt={project.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      if (screenshots.length > 0 && e.currentTarget.src !== screenshots[0]) {
-                        e.currentTarget.src = screenshots[0];
-                      }
-                    }}
+                  <ProjectCardCover
+                    repoName={project.repoName}
+                    language={project.technologies[0] || 'Dart'}
+                    coverUrl={project.image}
                   />
                 )}
               </div>
