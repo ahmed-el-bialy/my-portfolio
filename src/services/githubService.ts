@@ -140,13 +140,13 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     id: 2,
     name: "Movura",
     full_name: "ahmed-el-bialy/Movura",
-    description: "A premium movie and TV series tracking mobile application utilizing the TMDB API to deliver dynamic content discovery, real-time media updates, and intelligent search suggestions. Features a premium dark-theme UI with Sliver-based layouts, shimmer loading, and YouTube trailers.",
+    description: "A premium movie and TV series tracking mobile application consuming the TMDB API. Built with Clean Architecture, Cubit & BLoC state management, Sliver-based layouts, shimmer loading skeletons, and YouTube trailers.",
     html_url: "https://github.com/ahmed-el-bialy/Movura",
     homepage: "https://youtube.com/@ahmedel-bialy",
     stargazers_count: 4,
     forks_count: 2,
     language: "Dart",
-    topics: ["flutter", "dart", "tmdb-api", "bloc", "shimmer", "youtube-trailer"],
+    topics: ["flutter", "dart", "cubit", "bloc", "clean-architecture", "tmdb-api", "shimmer", "youtube-trailer"],
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
     pushed_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
     created_at: "2026-02-15T10:00:00Z",
@@ -368,6 +368,13 @@ export async function fetchGitHubUserStats(username: string = 'ahmed-el-bialy'):
     ]);
 
     if (!userRes.ok || !reposRes.ok) {
+      // Graceful fallback on GitHub API rate-limiting or network error
+      if (parsedCache) {
+        return {
+          ...parsedCache,
+          stats: { ...parsedCache.stats, isFromCache: true }
+        };
+      }
       throw new Error(`GitHub API returned status ${userRes.status}/${reposRes.status}`);
     }
 
@@ -447,8 +454,7 @@ export async function fetchGitHubUserStats(username: string = 'ahmed-el-bialy'):
     }
 
     return result;
-  } catch (err) {
-    console.warn("Using offline cache or curated fallback for Ahmed El-Bialy repos:", err);
+  } catch {
     if (parsedCache) {
       return {
         ...parsedCache,
@@ -783,6 +789,14 @@ export async function fetchRepositoryReleaseData(
     }
     return { hasRelease: false };
   }
+}
+
+export function formatFileSize(bytes?: number): string {
+  if (!bytes || bytes <= 0) return '18.4 MB';
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /**

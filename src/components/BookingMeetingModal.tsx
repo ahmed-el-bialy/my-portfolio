@@ -370,6 +370,33 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
           {!isBooked ? (
             <form onSubmit={handleBookingSubmit} className="space-y-4 sm:space-y-5">
               
+              {/* Instant Direct WhatsApp Quick Booking Banner */}
+              <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/25 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-2.5 text-xs text-slate-800 dark:text-emerald-100">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <WhatsAppLogo size={18} />
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-white block text-xs sm:text-sm">
+                      Prefer Direct WhatsApp? (حجز وتواصل فوري عبر واتساب)
+                    </span>
+                    <span className="text-[11px] text-slate-600 dark:text-emerald-300/90">
+                      Skip forms — chat directly with Ahmed on WhatsApp in 1 click
+                    </span>
+                  </div>
+                </div>
+
+                <a
+                  href={`https://wa.me/201022121573?text=${encodeURIComponent(`Hello Ahmed! I would like to schedule a ${currentTypeObj.title} with you.`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-xs shrink-0 cursor-pointer min-h-[38px]"
+                >
+                  <WhatsAppLogo size={15} />
+                  <span>Chat on WhatsApp</span>
+                </a>
+              </div>
+
               {/* Google Calendar Connect Bar */}
               <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-600/10 border border-blue-200 dark:border-blue-500/20 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 text-xs text-slate-700 dark:text-gray-300">

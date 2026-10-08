@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Smartphone,
   Layers,
@@ -17,18 +17,34 @@ import {
   CheckCircle2,
   Image as ImageIcon,
   Palette,
+  Terminal,
+  Cpu,
+  Activity,
+  Compass,
+  Rocket,
+  ShieldCheck,
+  Code2,
+  FolderGit2,
+  Database,
+  Radio,
+  Globe,
+  Sliders,
+  Play,
+  Heart,
   ExternalLink,
 } from 'lucide-react';
 import { getLanguageColor } from '../services/githubService';
 
-interface ProjectCardCoverProps {
+export interface ProjectCardCoverProps {
   repoName: string;
   language: string | null;
   coverUrl?: string;
   isHighlight?: boolean;
+  description?: string | null;
+  topics?: string[];
 }
 
-interface ProjectBlueprintSpec {
+export interface ProjectBlueprintSpec {
   appTitle: string;
   genre: string;
   categoryBadge: string;
@@ -43,7 +59,7 @@ interface ProjectBlueprintSpec {
 }
 
 // Master-crafted blueprint specs with distinct visual identity, tailored icons, and comfortable color palettes
-const PROJECT_BLUEPRINTS: Record<string, ProjectBlueprintSpec> = {
+const KNOWN_BLUEPRINTS: Record<string, ProjectBlueprintSpec> = {
   revio: {
     appTitle: 'Revio',
     genre: 'Flashcards & Active Recall',
@@ -190,6 +206,182 @@ const PROJECT_BLUEPRINTS: Record<string, ProjectBlueprintSpec> = {
 };
 
 /**
+ * Procedural Color Harmonizer
+ * Gives any arbitrary string a stable, gorgeous, high-contrast neon/studio palette
+ */
+function hashStringToColor(str: string): { accentColor: string; secondaryAccent: string; glowRgb: string } {
+  const PALETTES = [
+    { accentColor: '#00E5FF', secondaryAccent: '#0284C7', glowRgb: '0, 229, 255' }, // Electric Cyan
+    { accentColor: '#10B981', secondaryAccent: '#059669', glowRgb: '16, 185, 129' }, // Emerald
+    { accentColor: '#8B5CF6', secondaryAccent: '#6D28D9', glowRgb: '139, 92, 246' }, // Violet
+    { accentColor: '#F59E0B', secondaryAccent: '#D97706', glowRgb: '245, 158, 11' }, // Warm Amber
+    { accentColor: '#EC4899', secondaryAccent: '#BE185D', glowRgb: '236, 72, 153' }, // Rose Pink
+    { accentColor: '#6366F1', secondaryAccent: '#4338CA', glowRgb: '99, 102, 241' }, // Indigo
+    { accentColor: '#14B8A6', secondaryAccent: '#0F766E', glowRgb: '20, 184, 166' }, // Sea Teal
+    { accentColor: '#F97316', secondaryAccent: '#C2410C', glowRgb: '249, 115, 22' }, // Neon Orange
+    { accentColor: '#06B6D4', secondaryAccent: '#0E7490', glowRgb: '6, 182, 212' }, // Sky
+    { accentColor: '#3B82F6', secondaryAccent: '#1D4ED8', glowRgb: '59, 130, 246' }, // Azure
+  ];
+
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % PALETTES.length;
+  return PALETTES[index];
+}
+
+/**
+ * Synthesizes a completely custom, professional standard cover specification
+ * automatically for ANY repository or project based on its name, language,
+ * topics, and description.
+ */
+export function synthesizeProjectBlueprint(
+  repoName: string,
+  language?: string | null,
+  description?: string | null,
+  topics: string[] = []
+): ProjectBlueprintSpec {
+  const cleanKey = (repoName || '').toLowerCase().replace(/[-_\s]/g, '');
+  
+  // 1. Check known explicit blueprints
+  const matched = Object.entries(KNOWN_BLUEPRINTS).find(
+    ([key]) => key.replace(/[-_\s]/g, '') === cleanKey
+  );
+  if (matched) {
+    return matched[1];
+  }
+
+  // 2. Format a pristine display title (e.g. "my-awesome-app" -> "My Awesome App")
+  const formattedTitle = (repoName || 'App Project')
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+
+  // 3. Procedural Topic & Keyword Analyzer
+  const allText = `${repoName} ${description || ''} ${topics.join(' ')}`.toLowerCase();
+
+  let genre = 'Mobile Application Architecture';
+  let categoryBadge = `${language || 'Dart'} Ecosystem`;
+  let badgeIcon: React.FC<{ size?: number; className?: string; style?: React.CSSProperties }> = Smartphone;
+  let architecturePattern = 'Clean Architecture • State Management';
+  let coreHighlights = [`${language || 'Dart'} Architecture`, 'Modular Components', 'SOLID Patterns'];
+  let performanceBadge = 'Optimized Frame Latency';
+
+  // Keyword-driven domain synthesis
+  if (allText.includes('movie') || allText.includes('film') || allText.includes('cinema') || allText.includes('stream') || allText.includes('video')) {
+    genre = 'Media & Entertainment Streaming';
+    categoryBadge = 'Media Player Engine';
+    badgeIcon = Film;
+    architecturePattern = 'Reactive Streams • Sliver UI Hierarchy';
+    coreHighlights = ['REST API Client', 'Custom Smooth Player', 'Dynamic Media Feed'];
+    performanceBadge = 'Hardware Accelerated';
+  } else if (allText.includes('shop') || allText.includes('store') || allText.includes('ecommerce') || allText.includes('market') || allText.includes('cart')) {
+    genre = 'E-Commerce & Digital Commerce';
+    categoryBadge = 'Mobile Marketplace';
+    badgeIcon = ShoppingBag;
+    architecturePattern = 'Clean Architecture • Repository Pattern';
+    coreHighlights = ['Product Catalog Engine', 'Persistent Cart State', 'Real-Time Pricing'];
+    performanceBadge = 'Instant Local Storage';
+  } else if (allText.includes('chat') || allText.includes('message') || allText.includes('social') || allText.includes('talk')) {
+    genre = 'Real-Time Social Messenger';
+    categoryBadge = 'Cloud Socket Engine';
+    badgeIcon = MessageSquare;
+    architecturePattern = 'Event-Driven WebSocket Architecture';
+    coreHighlights = ['Live Socket Streams', 'Encrypted State', 'Push Notification Pipeline'];
+    performanceBadge = 'Sub-Second Real-Time Sync';
+  } else if (allText.includes('weather') || allText.includes('forecast') || allText.includes('climate') || allText.includes('radar')) {
+    genre = 'Atmospheric Weather Radar';
+    categoryBadge = 'Geospatial Radar';
+    badgeIcon = CloudSun;
+    architecturePattern = 'GPS Location Streams • Clean Architecture';
+    coreHighlights = ['Interactive Radars', 'Atmospheric Forecasts', 'Dynamic Climate UI'];
+    performanceBadge = 'Smart Location Caching';
+  } else if (allText.includes('news') || allText.includes('article') || allText.includes('blog') || allText.includes('feed')) {
+    genre = 'Curated Digital Journal & News';
+    categoryBadge = 'Editorial Reader';
+    badgeIcon = Newspaper;
+    architecturePattern = 'Offline-First Repository Pattern';
+    coreHighlights = ['Bilingual RTL Support', 'In-App WebView Mode', 'Adaptive Feed Pagination'];
+    performanceBadge = 'Offline Cached Articles';
+  } else if (allText.includes('quiz') || allText.includes('learn') || allText.includes('card') || allText.includes('flashcard') || allText.includes('study') || allText.includes('edu')) {
+    genre = 'Gamified Education & Learning';
+    categoryBadge = 'Cognitive Engine';
+    badgeIcon = BookOpen;
+    architecturePattern = 'Spaced Repetition Algorithm • Local DB';
+    coreHighlights = ['Interactive Deck Engine', 'Native Audio Drill Engine', 'Progress Analytics'];
+    performanceBadge = 'Zero-Latency Offline CRUD';
+  } else if (allText.includes('game') || allText.includes('sport') || allText.includes('score') || allText.includes('ball')) {
+    genre = 'Interactive Sports & Game Tracking';
+    categoryBadge = 'Match Engine';
+    badgeIcon = Trophy;
+    architecturePattern = 'High-Speed State Machine • Dual Views';
+    coreHighlights = ['Real-Time Score Clock', 'Period State Machine', 'Haptic Touch Modifiers'];
+    performanceBadge = '60 FPS Motion Controls';
+  } else if (allText.includes('music') || allText.includes('audio') || allText.includes('sound') || allText.includes('tune') || allText.includes('piano')) {
+    genre = 'Digital Audio Synthesizer & Music';
+    categoryBadge = 'Low-Latency Sound Engine';
+    badgeIcon = Music;
+    architecturePattern = 'DSP Audio Engine • Reactive Keybed';
+    coreHighlights = ['Polyphonic Sound Engine', 'Low-Latency Buffering', 'Reactive Neon UI'];
+    performanceBadge = 'Under 10ms Latency';
+  } else if (allText.includes('note') || allText.includes('task') || allText.includes('todo') || allText.includes('keep') || allText.includes('list')) {
+    genre = 'Productivity & Offline Task Engine';
+    categoryBadge = 'Local Persistence';
+    badgeIcon = FileText;
+    architecturePattern = 'Clean Architecture • Repository Pattern';
+    coreHighlights = ['Encrypted Local Storage', 'Instant Search Indexing', 'Tag Grouping System'];
+    performanceBadge = 'Instant Instant I/O';
+  } else if (allText.includes('quote') || allText.includes('wisdom') || allText.includes('saying')) {
+    genre = 'Typography & Curated Quotes';
+    categoryBadge = 'Public REST API';
+    badgeIcon = Quote;
+    architecturePattern = 'RESTful Client • Responsive Typography';
+    coreHighlights = ['Curated Quote Feeds', 'One-Tap Social Sharing', 'Dynamic Typography'];
+    performanceBadge = 'Instant Asynchronous Fetch';
+  } else if (allText.includes('tool') || allText.includes('util') || allText.includes('devkit') || allText.includes('cli')) {
+    genre = 'Developer Toolkit & System Utilities';
+    categoryBadge = 'Developer Tooling';
+    badgeIcon = Terminal;
+    architecturePattern = 'Modular Architecture • Clean Separation';
+    coreHighlights = ['Automated Pipelines', 'Optimized I/O Streams', 'Strict Type Guarantees'];
+    performanceBadge = 'Benchmarked Throughput';
+  } else {
+    // General mobile architectural fallback
+    genre = `${language || 'Cross-Platform'} Mobile Architecture`;
+    categoryBadge = `${language || 'Production'} System`;
+    badgeIcon = Layers;
+    architecturePattern = 'Clean Architecture • SOLID Principles';
+    coreHighlights = ['State Machine Lifecycle', 'Decoupled HTTP Layer', 'Component Modularity'];
+    performanceBadge = 'Production Ready';
+  }
+
+  // Synthesize clean concise tagline from description or title
+  const cleanDescription = (description || '').trim();
+  const tagline = cleanDescription.length > 10 && cleanDescription.length < 80
+    ? cleanDescription
+    : `Production-ready ${formattedTitle} application built with modern architecture standards.`;
+
+  // Generate unique stable harmonious color palette
+  const { accentColor, secondaryAccent, glowRgb } = hashStringToColor(repoName || formattedTitle);
+
+  return {
+    appTitle: formattedTitle,
+    genre,
+    categoryBadge,
+    badgeIcon,
+    tagline,
+    architecturePattern,
+    coreHighlights,
+    performanceBadge,
+    accentColor,
+    secondaryAccent,
+    glowRgb,
+  };
+}
+
+/**
  * Validates whether a candidate image is strictly a cover image in the screenshots directory:
  * e.g. "screenshots/cover.png", "screenshots/cover.jpg", "screenshots/cover.webp"
  */
@@ -209,6 +401,8 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   repoName,
   language,
   coverUrl,
+  description,
+  topics,
 }) => {
   // Candidate screenshot cover url: strictly screenshots/cover.*
   const targetCoverUrl =
@@ -245,7 +439,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     };
   }, [targetCoverUrl]);
 
-  // Gentle auto-rotation between Standard Cover and Real Screenshot ONLY when real cover exists
+  // Snappy auto-rotation between Standard Cover and Real Screenshot ONLY when real cover exists
   useEffect(() => {
     if (!hasRealCover) {
       setActiveView('standard');
@@ -254,40 +448,22 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
 
     const timer = setInterval(() => {
       setActiveView((prev) => (prev === 'standard' ? 'screenshot' : 'standard'));
-    }, 4000);
+    }, 2800);
 
     return () => clearInterval(timer);
   }, [hasRealCover]);
 
-  // Resolve project blueprint
-  const cleanKey = repoName.toLowerCase().replace(/[-_\s]/g, '');
-  const matchedBlueprint = Object.entries(PROJECT_BLUEPRINTS).find(
-    ([key]) => key.replace(/[-_\s]/g, '') === cleanKey
-  )?.[1];
-
-  const langColor = getLanguageColor(language);
-
-  // Dynamic calm fallback for any repository
-  const blueprint: ProjectBlueprintSpec = matchedBlueprint || {
-    appTitle: repoName,
-    genre: `${language || 'Dart'} Mobile Architecture`,
-    categoryBadge: `${language || 'Dart'} Repository`,
-    badgeIcon: Smartphone,
-    tagline: 'Clean Architecture Mobile Application Codebase',
-    architecturePattern: 'Clean Architecture • Modular State Management',
-    coreHighlights: [`${language || 'Dart'} Ecosystem`, 'Repository Pattern', 'SOLID Principles'],
-    performanceBadge: 'Scalable Component Hierarchy',
-    accentColor: langColor || '#00B4AB',
-    secondaryAccent: '#0284C7',
-    glowRgb: '0, 180, 171',
-  };
+  // Dynamically synthesize a custom, unique blueprint for each and every project automatically
+  const blueprint: ProjectBlueprintSpec = useMemo(() => {
+    return synthesizeProjectBlueprint(repoName, language, description, topics);
+  }, [repoName, language, description, topics]);
 
   const BadgeIcon = blueprint.badgeIcon;
   const isShowingScreenshot = activeView === 'screenshot' && hasRealCover;
 
   return (
     <div
-      className="relative w-full aspect-[16/9.5] sm:aspect-[16/9] bg-[#090a14] overflow-hidden select-none cursor-pointer border-b-2 border-slate-900/40 dark:border-white/10 group/cover shadow-[inset_0_-10px_20px_rgba(0,0,0,0.35)]"
+      className="relative w-full aspect-[16/9.5] sm:aspect-[16/9] bg-[#080911] overflow-hidden select-none cursor-pointer border-b border-slate-900/40 dark:border-white/10 group/cover shadow-[inset_0_-10px_20px_rgba(0,0,0,0.35)]"
       onClick={(e) => {
         if (hasRealCover) {
           e.stopPropagation();
@@ -301,41 +477,41 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
       }
     >
       {/* ========================================================
-          LAYER 1: REDESIGNED STANDARD COVER (الغلاف الاستاندرد)
+          LAYER 1: AUTOMATIC CUSTOM STANDARD COVER (الغلاف الاستاندرد المخصص أوتوماتيكياً)
           Professional, Unique, Eye-Comfortable Studio Canvas
           ======================================================== */}
       <div
-        className={`absolute inset-0 bg-[#090b14] flex flex-col justify-between transition-all duration-500 ease-in-out ${
+        className={`absolute inset-0 bg-[#080911] flex flex-col justify-between transition-all duration-200 ease-out ${
           !isShowingScreenshot
             ? 'opacity-100 z-10 scale-100'
             : 'opacity-0 z-0 scale-95 pointer-events-none'
         }`}
       >
-        {/* 1. Ambient Background Atmosphere (Comfortable & Distinct) */}
+        {/* 1. Ambient Background Atmosphere (Eye-Comfortable & Distinct) */}
         {/* Geometric Micro-Dot Grid */}
         <div
-          className="absolute inset-0 opacity-[0.07] pointer-events-none"
+          className="absolute inset-0 opacity-[0.06] pointer-events-none"
           style={{
             backgroundImage: `radial-gradient(circle, #ffffff 1px, transparent 1px)`,
-            backgroundSize: '24px 24px',
+            backgroundSize: '22px 22px',
           }}
         />
 
         {/* Ambient Brand Color Radial Spotlights */}
         <div
-          className="absolute -top-16 -right-16 w-60 h-60 rounded-full pointer-events-none blur-3xl opacity-25 transition-all duration-700"
+          className="absolute -top-16 -right-16 w-64 h-64 rounded-full pointer-events-none blur-3xl opacity-20 transition-all duration-700"
           style={{
             background: `radial-gradient(circle, ${blueprint.accentColor} 0%, transparent 70%)`,
           }}
         />
         <div
-          className="absolute -bottom-16 -left-16 w-52 h-52 rounded-full pointer-events-none blur-3xl opacity-15 transition-all duration-700"
+          className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full pointer-events-none blur-3xl opacity-15 transition-all duration-700"
           style={{
             background: `radial-gradient(circle, ${blueprint.secondaryAccent} 0%, transparent 70%)`,
           }}
         />
 
-        {/* 2. Top Header Bar: Clean Category Badge & Tech Micro-Tag */}
+        {/* 2. Top Header Bar: Clean Category Badge & Platform Micro-Tag */}
         <div className="relative z-10 flex items-center justify-between gap-3 px-4 sm:px-5 pt-3.5 sm:pt-4">
           {/* Left Category Indicator */}
           <div className="flex items-center gap-2 min-w-0">
@@ -354,7 +530,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
               className="text-[11px] font-semibold tracking-wide px-2.5 py-0.5 rounded-full border shadow-xs truncate backdrop-blur-md"
               style={{
                 backgroundColor: `rgba(${blueprint.glowRgb}, 0.12)`,
-                borderColor: `rgba(${blueprint.glowRgb}, 0.28)`,
+                borderColor: `rgba(${blueprint.glowRgb}, 0.3)`,
                 color: blueprint.accentColor,
               }}
             >
@@ -384,7 +560,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
               boxShadow: `0 8px 24px -4px rgba(${blueprint.glowRgb}, 0.35)`,
             }}
           >
-            <div className="w-full h-full rounded-[14px] bg-[#0c0e18] flex items-center justify-center relative overflow-hidden">
+            <div className="w-full h-full rounded-[14px] bg-[#0b0d17] flex items-center justify-center relative overflow-hidden">
               {/* Inner ambient glow */}
               <div
                 className="absolute inset-0 opacity-20 pointer-events-none"
@@ -434,7 +610,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
         </div>
 
         {/* 4. Bottom Shelf: Architectural Bar & Highlight Metric */}
-        {/* This creates a crisp, clear separation from the card body below */}
+        {/* Crisp separation from the card body below */}
         <div className="relative z-10 px-4 sm:px-5 py-2.5 bg-black/60 backdrop-blur-md border-t border-white/10 flex items-center justify-between text-[11px] gap-2">
           <div className="flex items-center gap-1.5 min-w-0 text-slate-300">
             <Layers size={12} className="shrink-0 text-slate-400" />
@@ -458,7 +634,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
           ======================================================== */}
       {hasRealCover && (
         <div
-          className={`absolute inset-0 bg-[#090b14] transition-all duration-500 ease-in-out ${
+          className={`absolute inset-0 bg-[#080911] transition-all duration-200 ease-out ${
             isShowingScreenshot
               ? 'opacity-100 z-20 scale-100 pointer-events-auto'
               : 'opacity-0 z-0 scale-105 pointer-events-none'

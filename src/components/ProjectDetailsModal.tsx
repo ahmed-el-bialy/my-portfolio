@@ -19,7 +19,9 @@ import {
   ShieldCheck,
   Cpu,
   PackageCheck,
-  FileCode
+  FileCode,
+  Copy,
+  Check
 } from 'lucide-react';
 import { Project } from '../data/portfolioData';
 import { ProjectCardCover } from './ProjectCardCover';
@@ -27,7 +29,9 @@ import {
   fetchRepoScreenshots,
   checkRepoRelease,
   getLanguageColor,
-  VERIFIED_REPO_SCREENSHOTS
+  VERIFIED_REPO_SCREENSHOTS,
+  RepoReleaseInfo,
+  formatFileSize
 } from '../services/githubService';
 import { useScrollLock } from '../hooks/useScrollLock';
 
@@ -51,9 +55,18 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
   const [screenshots, setScreenshots] = useState<string[]>([]);
   const [loadingScreens, setLoadingScreens] = useState<boolean>(false);
-  const [releaseInfo, setReleaseInfo] = useState<{ hasRelease: boolean; releaseUrl?: string; apkDownloadUrl?: string }>({
+  const [releaseInfo, setReleaseInfo] = useState<RepoReleaseInfo>({
     hasRelease: false
   });
+  const [copiedClone, setCopiedClone] = useState<boolean>(false);
+
+  const handleCopyClone = () => {
+    if (!project?.links.github) return;
+    const cloneUrl = `${project.links.github}.git`;
+    navigator.clipboard.writeText(`git clone ${cloneUrl}`);
+    setCopiedClone(true);
+    setTimeout(() => setCopiedClone(false), 2000);
+  };
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -267,6 +280,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     repoName={project.repoName}
                     language={project.technologies[0] || 'Dart'}
                     coverUrl={project.image}
+                    description={project.description}
+                    topics={project.technologies}
                   />
                 )}
               </div>
@@ -495,6 +510,9 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               >
                 <Download size={14} />
                 <span>{project.links.apkDownloadUrl || releaseInfo.apkDownloadUrl ? 'Download APK' : 'View Release'}</span>
+                <span className="px-1.5 py-0.5 rounded bg-purple-800/80 text-[10px] font-mono font-bold text-purple-100">
+                  {formatFileSize(releaseInfo.apkSize)}
+                </span>
               </a>
             )}
 
@@ -509,7 +527,24 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             )}
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 ml-auto flex-wrap">
+            {project.links.github && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-xs">
+                <span className="text-slate-400 select-none hidden sm:inline">$</span>
+                <span className="text-slate-700 dark:text-cyan-300 font-medium text-[11px] truncate max-w-[130px] sm:max-w-[200px]">
+                  git clone {project.repoName}.git
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyClone}
+                  className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-gray-300 transition-colors cursor-pointer"
+                  title="Copy git clone command"
+                >
+                  {copiedClone ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+                </button>
+              </div>
+            )}
+
             {project.links.github && (
               <a
                 href={project.links.github}
@@ -518,7 +553,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/15 text-slate-800 dark:text-white border border-slate-300 dark:border-white/10 font-semibold text-xs transition-colors shadow-xs"
               >
                 <Github size={14} />
-                <span>View Source Code</span>
+                <span>Source Code</span>
                 <ExternalLink size={12} />
               </a>
             )}

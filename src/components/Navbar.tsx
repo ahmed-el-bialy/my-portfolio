@@ -49,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <img
                   src="https://avatars.githubusercontent.com/u/245139141?v=4"
                   alt="Ahmed El-Bialy"
-                  className="w-full h-full rounded-[10px] object-cover bg-[#0f111a]"
+                  className="w-full h-full rounded-[10px] object-cover bg-slate-100 dark:bg-[#0f111a]"
                 />
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#090a0f] ring-1 ring-emerald-400/50" />
@@ -57,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-xs sm:text-base tracking-tight text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition-colors truncate">
+                <span className="font-extrabold text-xs sm:text-base tracking-tight text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition-colors truncate max-w-[120px] sm:max-w-none">
                   Ahmed El-Bialy
                 </span>
                 <span className="hidden sm:inline-block text-[10px] font-mono text-cyan-700 dark:text-cyan-300 px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 font-bold shrink-0">

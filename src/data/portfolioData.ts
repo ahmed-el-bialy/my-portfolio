@@ -281,8 +281,8 @@ export const FEATURED_PROJECTS: Project[] = [
     name: "Movura",
     repoName: "Movura",
     subtitle: "Premium movie & TV series tracker with TMDB API and YouTube trailers",
-    description: "A premium entertainment tracking mobile app consuming the TMDB API. Delivers dynamic content discovery, real-time media updates, and intelligent search suggestions with a dark-theme UI, Sliver-based scrolling layouts, shimmer loading skeletons, YouTube trailer player, and offline-first image caching.",
-    technologies: ["Flutter", "Dart", "TMDB API", "BLoC/Cubit", "YouTube Player", "Sliver UI"],
+    description: "A premium movie and TV series tracking mobile application utilizing TMDB API. Built with Clean Architecture, Cubit and BLoC reactive state management, Sliver-based parallax layouts, shimmer loading skeletons, and YouTube trailers.",
+    technologies: ["Flutter", "Dart", "Cubit", "BLoC", "Clean Architecture", "TMDB API", "Sliver UI"],
     features: [
       "Real-time media discovery from The Movie Database (TMDB) API",
       "Shimmer loading animations and seamless offline image caching",

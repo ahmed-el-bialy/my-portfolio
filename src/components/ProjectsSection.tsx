@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import {
   FolderGit2,
@@ -24,9 +25,11 @@ import {
   fetchAllRepoReleases,
   RepoReleaseInfo,
   getLanguageColor,
-  AHMED_DEFAULT_REPOS
+  AHMED_DEFAULT_REPOS,
+  formatFileSize
 } from '../services/githubService';
-import { ProjectCardCover } from './ProjectCardCover';
+import { ProjectCardCover, synthesizeProjectBlueprint } from './ProjectCardCover';
+import { extractRepoTechTags } from '../utils/techTagExtractor';
 import { ProjectDetailsModal } from './ProjectDetailsModal';
 import { VideoDemoModal } from './VideoDemoModal';
 import { ApkDownloadModal } from './ApkDownloadModal';
@@ -53,6 +56,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
   const [githubUser] = useState<string>(currentGithubUser || 'ahmed-el-bialy');
   const [repoSearch, setRepoSearch] = useState<string>('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
+  const [frameworkFilter, setFrameworkFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'pushed' | 'stars' | 'name'>('pushed');
 
   // Automatic Instant GitHub Live Data Fetch on Mount
@@ -174,24 +178,82 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
     };
   };
 
+  const filteredFeaturedProjects = useMemo(() => {
+    return FEATURED_PROJECTS.filter((proj) => {
+      const tags = extractRepoTechTags({
+        repoName: proj.repoName,
+        language: 'Dart',
+        description: proj.description,
+        technologies: proj.technologies,
+      });
+      const tagIds = tags.map((t) => t.id.toLowerCase());
+      const tagLabels = tags.map((t) => t.label.toLowerCase());
+      const combinedText = `${proj.name} ${proj.repoName} ${proj.subtitle} ${proj.description} ${proj.technologies.join(' ')} ${tagLabels.join(' ')}`.toLowerCase();
+
+      if (frameworkFilter !== 'all') {
+        if (frameworkFilter === 'flutter' && !combinedText.includes('flutter')) return false;
+        if (frameworkFilter === 'cubit' && !combinedText.includes('cubit') && !combinedText.includes('bloc') && !tagIds.includes('cubit') && !tagIds.includes('bloc')) return false;
+        if (frameworkFilter === 'clean-arch' && !combinedText.includes('clean architecture') && !combinedText.includes('clean-architecture') && !tagIds.includes('cleanarchitecture')) return false;
+        if (frameworkFilter === 'hive' && !combinedText.includes('hive') && !combinedText.includes('sqlite') && !combinedText.includes('sqflite') && !tagIds.includes('hive-ce')) return false;
+        if (frameworkFilter === 'api' && !combinedText.includes('api') && !combinedText.includes('rest') && !combinedText.includes('tmdb') && !combinedText.includes('weatherapi')) return false;
+        if (frameworkFilter === 'google-play' && !proj.links.googlePlay && !combinedText.includes('google play')) return false;
+      }
+
+      if (!repoSearch.trim()) return true;
+      const q = repoSearch.toLowerCase();
+      return (
+        proj.name.toLowerCase().includes(q) ||
+        proj.subtitle.toLowerCase().includes(q) ||
+        proj.description.toLowerCase().includes(q) ||
+        proj.technologies.some((t) => t.toLowerCase().includes(q)) ||
+        tagLabels.some((tl) => tl.includes(q))
+      );
+    });
+  }, [frameworkFilter, repoSearch]);
+
   const filteredRepos = useMemo(() => {
     return githubRepos.filter((repo) => {
+      const matched = FEATURED_PROJECTS.find(
+        (p) =>
+          p.repoName.toLowerCase() === repo.name.toLowerCase() ||
+          p.name.toLowerCase() === repo.name.toLowerCase()
+      );
+      const tags = extractRepoTechTags({
+        repoName: repo.name,
+        language: repo.language,
+        topics: repo.topics,
+        description: repo.description,
+        technologies: matched?.technologies,
+      });
+      const tagIds = tags.map((t) => t.id.toLowerCase());
+      const tagLabels = tags.map((t) => t.label.toLowerCase());
+      const text = `${repo.name} ${repo.description || ''} ${repo.topics.join(' ')} ${matched?.technologies.join(' ') || ''} ${tagLabels.join(' ')}`.toLowerCase();
+
       if (selectedLanguage !== 'all' && repo.language !== selectedLanguage) {
         return false;
+      }
+      if (frameworkFilter !== 'all') {
+        if (frameworkFilter === 'flutter' && !text.includes('flutter') && repo.language !== 'Dart') return false;
+        if (frameworkFilter === 'cubit' && !text.includes('cubit') && !text.includes('bloc') && !tagIds.includes('cubit') && !tagIds.includes('bloc')) return false;
+        if (frameworkFilter === 'clean-arch' && !text.includes('clean') && !text.includes('architecture') && !tagIds.includes('cleanarchitecture')) return false;
+        if (frameworkFilter === 'hive' && !text.includes('hive') && !text.includes('sqlite') && !text.includes('sqflite') && !tagIds.includes('hive-ce')) return false;
+        if (frameworkFilter === 'api' && !text.includes('api') && !text.includes('rest') && !text.includes('tmdb') && !text.includes('weatherapi')) return false;
+        if (frameworkFilter === 'google-play' && !matched?.links.googlePlay && !text.includes('google play')) return false;
       }
       if (!repoSearch.trim()) return true;
       const q = repoSearch.toLowerCase();
       return (
         repo.name.toLowerCase().includes(q) ||
         (repo.description && repo.description.toLowerCase().includes(q)) ||
-        repo.topics.some((t) => t.toLowerCase().includes(q))
+        repo.topics.some((t) => t.toLowerCase().includes(q)) ||
+        tagLabels.some((tl) => tl.includes(q))
       );
     }).sort((a, b) => {
       if (sortBy === 'stars') return b.stargazers_count - a.stargazers_count;
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       return new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime();
     });
-  }, [githubRepos, selectedLanguage, repoSearch, sortBy]);
+  }, [githubRepos, selectedLanguage, frameworkFilter, repoSearch, sortBy]);
 
   const allLanguages = useMemo(() => {
     return Array.from(
@@ -265,33 +327,47 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
             </div>
           </div>
 
-          {/* Accurate Metrics Badges */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs shadow-xs">
-              <FolderGit2 size={14} className="text-blue-500" />
-              <span className="text-slate-600 dark:text-gray-400 font-medium">Public Repos:</span>
-              <span className="font-bold text-slate-900 dark:text-white font-mono">{githubStats?.public_repos || githubRepos.length}</span>
-            </div>
-
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs shadow-xs">
-              <Star size={14} className="text-amber-500" />
-              <span className="text-slate-600 dark:text-gray-400 font-medium">Stars:</span>
-              <span className="font-bold text-slate-900 dark:text-white font-mono">{githubStats?.totalStars || 16}</span>
-            </div>
-
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs shadow-xs">
-              <GitFork size={14} className="text-cyan-500" />
-              <span className="text-slate-600 dark:text-gray-400 font-medium">Forks:</span>
-              <span className="font-bold text-slate-900 dark:text-white font-mono">{githubStats?.totalForks || 5}</span>
-            </div>
-
-            {mostRecentRepo && (
-              <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs shadow-xs">
-                <GitCommit size={14} className="text-emerald-500" />
-                <span className="text-slate-600 dark:text-gray-400 font-medium">Latest:</span>
-                <span className="font-bold text-cyan-700 dark:text-cyan-400 font-mono">{mostRecentRepo.name}</span>
+          {/* Accurate Metrics Badges - High Precision Responsive Grid (Mobile 2x2, Tablet/Desktop 4x1) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 w-full lg:w-auto mt-2 lg:mt-0">
+            <div className="flex items-center gap-2.5 p-2.5 sm:px-3 sm:py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs shadow-xs min-h-[44px]">
+              <FolderGit2 size={16} className="text-blue-500 shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="text-[10px] text-slate-500 dark:text-gray-400 font-medium leading-none">Public Repos</span>
+                <span className="font-bold text-slate-900 dark:text-white font-mono text-xs sm:text-sm mt-0.5 leading-none">
+                  {githubStats?.public_repos || githubRepos.length}
+                </span>
               </div>
-            )}
+            </div>
+
+            <div className="flex items-center gap-2.5 p-2.5 sm:px-3 sm:py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs shadow-xs min-h-[44px]">
+              <Star size={16} className="text-amber-500 shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="text-[10px] text-slate-500 dark:text-gray-400 font-medium leading-none">Total Stars</span>
+                <span className="font-bold text-slate-900 dark:text-white font-mono text-xs sm:text-sm mt-0.5 leading-none">
+                  {githubStats?.totalStars || 16}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 p-2.5 sm:px-3 sm:py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs shadow-xs min-h-[44px]">
+              <GitFork size={16} className="text-cyan-500 shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="text-[10px] text-slate-500 dark:text-gray-400 font-medium leading-none">Total Forks</span>
+                <span className="font-bold text-slate-900 dark:text-white font-mono text-xs sm:text-sm mt-0.5 leading-none">
+                  {githubStats?.totalForks || 5}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 p-2.5 sm:px-3 sm:py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs shadow-xs min-h-[44px]">
+              <GitCommit size={16} className="text-emerald-500 shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="text-[10px] text-slate-500 dark:text-gray-400 font-medium leading-none">Latest Commit</span>
+                <span className="font-bold text-cyan-700 dark:text-cyan-400 font-mono text-xs sm:text-sm mt-0.5 truncate leading-none">
+                  {mostRecentRepo?.name || 'Revio'}
+                </span>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -307,13 +383,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
 
       {/* Tab Toggle Switch */}
       <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-        <div className="p-1 rounded-2xl sm:rounded-full bg-slate-200/80 dark:bg-[#14151f] border border-black/10 dark:border-white/10 flex flex-wrap sm:flex-nowrap items-center justify-center shadow-md gap-1">
+        <div className="p-1 rounded-2xl sm:rounded-full bg-slate-100 dark:bg-[#14151f] border border-slate-200 dark:border-white/10 flex flex-wrap sm:flex-nowrap items-center justify-center shadow-md gap-1">
           <button
             onClick={() => setActiveTab('featured')}
             className={`flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl sm:rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer min-h-[44px] ${
               activeTab === 'featured'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                : 'text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+                : 'text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/5'
             }`}
           >
             <Sparkles size={16} />
@@ -324,7 +400,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
             className={`flex items-center justify-center gap-2 px-5 sm:px-6 py-3 rounded-xl sm:rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer min-h-[44px] ${
               activeTab === 'github'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                : 'text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+                : 'text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/5'
             }`}
           >
             <Github size={16} />
@@ -333,10 +409,100 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
         </div>
       </div>
 
+      {/* Universal Search & Architecture Filter Toolbar (Applies seamlessly across both tabs) */}
+      <div className="space-y-4 mb-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="relative w-full sm:w-80">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder={activeTab === 'featured' ? "Search apps (e.g. Movura, Revio, Cubit)..." : "Search repos (e.g. Movura, Sky-Cast)..."}
+              value={repoSearch}
+              onChange={(e) => setRepoSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors shadow-xs"
+            />
+          </div>
+
+          {activeTab === 'github' && (
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              <select
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+                className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#131522] border border-slate-200 dark:border-white/10 text-xs text-slate-700 dark:text-gray-300 focus:outline-none cursor-pointer shadow-xs"
+              >
+                <option value="all">All Languages</option>
+                {allLanguages.map((lang) => (
+                  <option key={lang} value={lang}>
+                    {lang}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#131522] border border-slate-200 dark:border-white/10 text-xs text-slate-700 dark:text-gray-300 focus:outline-none cursor-pointer shadow-xs"
+              >
+                <option value="pushed">Recently Pushed</option>
+                <option value="stars">Most Stars</option>
+                <option value="name">Alphabetical</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Filter Chips (Cubit & BLoC, Clean Architecture, Hive CE, APIs, Google Play) */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+          <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-gray-400 mr-1">Filter by:</span>
+          {[
+            { id: 'all', label: 'All Projects' },
+            { id: 'cubit', label: 'Cubit & BLoC' },
+            { id: 'clean-arch', label: 'Clean Architecture' },
+            { id: 'hive', label: 'Hive CE & Offline' },
+            { id: 'api', label: 'REST APIs & TMDB' },
+            { id: 'google-play', label: 'Google Play & Live' },
+          ].map((chip) => {
+            const isChipActive = frameworkFilter === chip.id;
+            return (
+              <button
+                key={chip.id}
+                onClick={() => setFrameworkFilter(chip.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-medium transition-all cursor-pointer ${
+                  isChipActive
+                    ? 'bg-blue-600 text-white shadow-xs font-bold'
+                    : 'bg-white dark:bg-white/5 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-200 dark:border-white/10 hover:border-blue-400'
+                }`}
+              >
+                {chip.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* TAB 1: FEATURED PRODUCTION APPS */}
       {activeTab === 'featured' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 sm:gap-8">
-          {FEATURED_PROJECTS.map((project) => {
+        <>
+          {filteredFeaturedProjects.length === 0 ? (
+            <div className="p-12 text-center rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 my-6">
+              <FolderGit2 size={36} className="mx-auto text-slate-400 mb-3" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">No applications match your filter</h3>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
+                Try clearing your search query or selecting &quot;All Projects&quot;.
+              </p>
+              <button
+                onClick={() => {
+                  setFrameworkFilter('all');
+                  setRepoSearch('');
+                }}
+                className="mt-4 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 transition-colors cursor-pointer"
+              >
+                Reset Filters
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 sm:gap-8">
+              {filteredFeaturedProjects.map((project) => {
             const liveRelease =
               repoReleases?.[project.repoName] ||
               repoReleases?.[project.name] ||
@@ -358,25 +524,59 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               }
             };
 
+            const cardBlueprint = synthesizeProjectBlueprint(
+              project.repoName,
+              'Dart',
+              project.description,
+              project.technologies
+            );
+            const cardAccent = cardBlueprint.accentColor;
+            const cardGlowRgb = cardBlueprint.glowRgb;
+
+            // Automatically extract and harmonize tags for programming language and frameworks
+            const techTags = extractRepoTechTags({
+              repoName: project.repoName,
+              language: 'Dart',
+              description: project.description,
+              technologies: project.technologies,
+            });
+
             return (
-              <div
+              <motion.div
                 key={project.id}
                 onClick={() => setSelectedProject(dynamicProject)}
-                className="group rounded-2xl overflow-hidden bg-white dark:bg-[#121422] border border-slate-200 dark:border-white/10 flex flex-col justify-between hover:border-blue-500/50 cursor-pointer transition-all duration-300 shadow-md hover:shadow-2xl"
+                whileHover={{
+                  y: -5,
+                  scale: 1.018,
+                  boxShadow: `0 18px 38px -10px rgba(${cardGlowRgb}, 0.28), 0 0 0 1.5px ${cardAccent}`,
+                }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 380,
+                  damping: 24,
+                }}
+                className="group relative rounded-2xl overflow-hidden bg-white dark:bg-[#111322] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-colors duration-300 shadow-md"
               >
                 <div>
-                  {/* Dynamic Smart Cover */}
+                  {/* Dynamic Smart Cover with full automatic custom standard cover */}
                   <ProjectCardCover
                     repoName={project.repoName}
                     language="Dart"
                     coverUrl={project.image}
                     isHighlight={project.highlight}
+                    description={project.description}
+                    topics={project.technologies}
                   />
 
                   {/* Body Content with Generous Margins & Vertical Rhythm */}
                   <div className="p-6">
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition-colors title-contrast truncate">
+                      <h3
+                        className="text-xl font-bold text-slate-900 dark:text-white transition-colors title-contrast truncate"
+                        style={{
+                          ['--card-accent' as string]: cardAccent,
+                        }}
+                      >
                         {project.name}
                       </h3>
                       {project.links.googlePlay && (
@@ -386,7 +586,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                       )}
                     </div>
 
-                    <p className="text-xs font-semibold text-cyan-700 dark:text-cyan-400 line-clamp-1 mb-2.5">
+                    <p
+                      className="text-xs font-semibold line-clamp-1 mb-2.5"
+                      style={{ color: cardAccent }}
+                    >
                       {project.subtitle}
                     </p>
 
@@ -394,19 +597,26 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                       {project.description}
                     </p>
 
-                    {/* Distinct Technology Badges with Clean Rectangles & Proper Spacing */}
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      {project.technologies.slice(0, 4).map((tech) => (
+                    {/* Automatically Extracted Programming Languages & Frameworks Tag System */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      {techTags.slice(0, 5).map((tag) => (
                         <span
-                          key={tech}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs text-slate-800 dark:text-cyan-300 font-mono font-medium"
+                          key={tag.id}
+                          title={`${tag.label} (${tag.category})`}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 text-[11px] font-mono font-medium text-slate-800 dark:text-gray-200 transition-colors shadow-2xs hover:border-blue-400 dark:hover:border-white/20"
                         >
-                          {tech}
+                          {tag.color && (
+                            <span
+                              className="w-1.5 h-1.5 rounded-full shrink-0"
+                              style={{ backgroundColor: tag.color }}
+                            />
+                          )}
+                          <span>{tag.label}</span>
                         </span>
                       ))}
-                      {project.technologies.length > 4 && (
-                        <span className="px-2 py-1 rounded-lg bg-slate-100/80 dark:bg-white/5 text-[11px] text-slate-700 dark:text-cyan-400 font-mono font-bold border border-slate-200 dark:border-white/10">
-                          +{project.technologies.length - 4}
+                      {techTags.length > 6 && (
+                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-[10px] text-slate-600 dark:text-cyan-400 font-mono font-bold border border-slate-200 dark:border-white/10">
+                          +{techTags.length - 6}
                         </span>
                       )}
                     </div>
@@ -484,63 +694,31 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                             e.stopPropagation();
                             setApkModalProject(dynamicProject);
                           }}
-                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-600 hover:text-white text-cyan-700 dark:text-cyan-400 border border-cyan-500/25 transition-all text-xs font-bold min-h-[44px] cursor-pointer"
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 border border-purple-500/25 transition-all text-xs font-bold min-h-[44px] cursor-pointer"
                         >
-                          <Download size={15} />
+                          <Download size={14} />
                           <span>Download APK</span>
+                          {liveRelease?.apkSize ? (
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-600/20 text-purple-700 dark:text-purple-200 font-bold ml-0.5">
+                              {formatFileSize(liveRelease.apkSize)}
+                            </span>
+                          ) : null}
                         </button>
                       )}
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
       )}
+    </>
+  )}
 
       {/* TAB 2: LIVE GITHUB REPOSITORIES */}
       {activeTab === 'github' && (
         <div className="space-y-6">
-          {/* Filters & Search */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="relative w-full sm:w-80">
-              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search repos (e.g. Revio, Movura...)"
-                value={repoSearch}
-                onChange={(e) => setRepoSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors shadow-xs"
-              />
-            </div>
-
-            <div className="flex items-center gap-2.5 w-full sm:w-auto">
-              <select
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#131522] border border-slate-200 dark:border-white/10 text-xs text-slate-700 dark:text-gray-300 focus:outline-none cursor-pointer shadow-xs"
-              >
-                <option value="all">All Languages</option>
-                {allLanguages.map((lang) => (
-                  <option key={lang} value={lang}>
-                    {lang}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#131522] border border-slate-200 dark:border-white/10 text-xs text-slate-700 dark:text-gray-300 focus:outline-none cursor-pointer shadow-xs"
-              >
-                <option value="pushed">Recently Pushed</option>
-                <option value="stars">Most Stars</option>
-                <option value="name">Alphabetical</option>
-              </select>
-            </div>
-          </div>
-
           {/* Repos Grid */}
           {isPending && filteredRepos.length === 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
@@ -549,9 +727,22 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               ))}
             </div>
           ) : filteredRepos.length === 0 ? (
-            <div className="py-16 text-center text-slate-700 dark:text-gray-300 card-techno rounded-2xl p-8 bg-white dark:bg-[#131522] border border-slate-200 dark:border-white/10 shadow-md">
-              <FolderGit2 size={36} className="mx-auto mb-2 opacity-50 text-blue-500" />
-              <p className="text-sm font-semibold">No repositories matched your search.</p>
+            <div className="p-12 text-center rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 my-6">
+              <FolderGit2 size={36} className="mx-auto text-slate-400 mb-3" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">No repositories match your filter</h3>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
+                Try clearing your search query or selecting &quot;All Projects&quot;.
+              </p>
+              <button
+                onClick={() => {
+                  setFrameworkFilter('all');
+                  setSelectedLanguage('all');
+                  setRepoSearch('');
+                }}
+                className="mt-4 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 transition-colors cursor-pointer"
+              >
+                Reset Filters
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 sm:gap-8">
@@ -576,11 +767,39 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
 
                 const hasDemo = Boolean(projectObj.links.youtubeDemo);
 
+                const repoBlueprint = synthesizeProjectBlueprint(
+                  repo.name,
+                  repo.language,
+                  repo.description,
+                  repo.topics
+                );
+                const repoAccent = repoBlueprint.accentColor;
+                const repoGlowRgb = repoBlueprint.glowRgb;
+
+                // Automatically extract and harmonize tags for programming language and frameworks
+                const repoTechTags = extractRepoTechTags({
+                  repoName: repo.name,
+                  language: repo.language,
+                  description: repo.description,
+                  topics: repo.topics,
+                  technologies: projectObj.technologies,
+                });
+
                 return (
-                  <div
+                  <motion.div
                     key={repo.id}
                     onClick={() => setSelectedProject(dynamicRepoProject)}
-                    className="group rounded-2xl overflow-hidden bg-white dark:bg-[#121422] border border-slate-200 dark:border-white/10 flex flex-col justify-between hover:border-blue-500/50 transition-all duration-300 cursor-pointer shadow-md hover:shadow-2xl"
+                    whileHover={{
+                      y: -5,
+                      scale: 1.018,
+                      boxShadow: `0 18px 38px -10px rgba(${repoGlowRgb}, 0.28), 0 0 0 1.5px ${repoAccent}`,
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 380,
+                      damping: 24,
+                    }}
+                    className="group relative rounded-2xl overflow-hidden bg-white dark:bg-[#111322] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between transition-colors duration-300 cursor-pointer shadow-md"
                   >
                     <div>
                       {/* Dynamic Smart Cover */}
@@ -589,13 +808,19 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                         language={repo.language}
                         coverUrl={repo.coverImageUrl}
                         isHighlight={Boolean(projectObj.links.googlePlay || hasDemo || hasReleaseOrApk)}
+                        description={repo.description}
+                        topics={repo.topics}
                       />
 
                       {/* Content Area with High Vertical Rhythm */}
                       <div className="p-6">
                         <div className="flex items-start justify-between gap-3 mb-2">
-                          <span className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition-colors flex items-center gap-2 title-contrast truncate">
-                            <FolderGit2 size={18} className="text-blue-500 shrink-0" />
+                          <span className="text-lg font-bold text-slate-900 dark:text-white transition-colors flex items-center gap-2 title-contrast truncate">
+                            <FolderGit2
+                              size={18}
+                              className="shrink-0"
+                              style={{ color: repoAccent }}
+                            />
                             <span className="truncate">{repo.name}</span>
                           </span>
                           <div className="flex items-center gap-1.5">
@@ -615,19 +840,29 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                           {repo.description || 'Clean Architecture production-ready mobile codebase.'}
                         </p>
 
-                        {/* Topics Badges with Proper Padding */}
-                        {repo.topics && repo.topics.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {repo.topics.slice(0, 3).map((topic) => (
-                              <span
-                                key={topic}
-                                className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-900 dark:text-cyan-400 border border-blue-200 dark:border-blue-500/20 text-xs font-mono font-medium"
-                              >
-                                #{topic}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                        {/* Automatically Extracted Programming Languages & Frameworks Tag System */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          {repoTechTags.slice(0, 5).map((tag) => (
+                            <span
+                              key={tag.id}
+                              title={`${tag.label} (${tag.category})`}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 text-[11px] font-mono font-medium text-slate-800 dark:text-gray-200 transition-colors shadow-2xs hover:border-blue-400 dark:hover:border-white/20"
+                            >
+                              {tag.color && (
+                                <span
+                                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                                  style={{ backgroundColor: tag.color }}
+                                />
+                              )}
+                              <span>{tag.label}</span>
+                            </span>
+                          ))}
+                          {repoTechTags.length > 5 && (
+                            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-[10px] text-slate-600 dark:text-cyan-400 font-mono font-bold border border-slate-200 dark:border-white/10">
+                              +{repoTechTags.length - 5}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -670,10 +905,15 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                             e.stopPropagation();
                             setApkModalProject(dynamicRepoProject);
                           }}
-                          className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-600 hover:text-white text-cyan-700 dark:text-cyan-400 border border-cyan-500/25 transition-all text-xs font-bold min-h-[40px] cursor-pointer"
+                          className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 border border-purple-500/25 transition-all text-xs font-bold min-h-[40px] cursor-pointer"
                         >
                           <Download size={14} />
-                          <span>Download APK / Release</span>
+                          <span>Download APK</span>
+                          {repoRelease?.apkSize ? (
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-600/20 text-purple-700 dark:text-purple-200 font-bold ml-0.5">
+                              {formatFileSize(repoRelease.apkSize)}
+                            </span>
+                          ) : null}
                         </button>
                       )}
 
@@ -716,7 +956,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                         )}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>

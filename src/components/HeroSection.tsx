@@ -266,8 +266,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               }`}
             />
 
-            {/* Container Card with High-End Obsidian Backdrop */}
-            <div className="relative w-full h-full rounded-2xl overflow-hidden border-2 border-slate-300 dark:border-white/20 bg-[#090b14] shadow-2xl transition-shadow duration-300">
+            {/* Container Card with High-End Backdrop */}
+            <div className="relative w-full h-full rounded-2xl overflow-hidden border-2 border-slate-300 dark:border-white/20 bg-white dark:bg-[#090b14] shadow-2xl transition-shadow duration-300">
               
               {/* Ahmed's Headshot Photo */}
               <img
@@ -288,18 +288,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 }}
               />
 
-              {/* Gradient Bottom Scrim */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-transparent to-transparent opacity-85 pointer-events-none" />
+              {/* Gradient Bottom Scrim - Dark fog only in dark mode; subtle contrast in light mode */}
+              <div className="absolute inset-0 dark:bg-gradient-to-t dark:from-slate-950/85 dark:via-transparent dark:to-transparent bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
 
               {/* Top Side Badge */}
-              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md border border-white/25 text-[10px] font-mono text-cyan-300 font-bold shadow-md pointer-events-none">
+              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-white/95 dark:bg-black/80 backdrop-blur-md border border-slate-300 dark:border-white/25 text-[10px] font-mono text-blue-700 dark:text-cyan-300 font-bold shadow-md pointer-events-none">
                 FLUTTER SPECIALIST
               </div>
 
               {/* Bottom Card Info Overlay */}
-              <div className="absolute bottom-4 left-4 right-4 p-3.5 rounded-xl bg-[#0d101d]/95 backdrop-blur-md border border-white/15 shadow-xl text-white">
-                <div className="text-sm font-bold text-white tracking-wide">{profile.name}</div>
-                <div className="text-xs text-cyan-400 font-medium mt-0.5">Mobile App Developer</div>
+              <div className="hero-photo-name-card absolute bottom-4 left-4 right-4 p-3.5 rounded-xl bg-white/95 dark:bg-[#0d101d]/95 backdrop-blur-md border border-slate-300 dark:border-white/15 shadow-xl transition-colors">
+                <div className="text-sm font-bold text-slate-900 dark:text-white tracking-wide">{profile.name}</div>
+                <div className="text-xs text-blue-600 dark:text-cyan-400 font-semibold mt-0.5">Mobile App Developer</div>
               </div>
 
             </div>

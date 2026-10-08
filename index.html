@@ -17,6 +17,25 @@
     <meta name="theme-color" content="#08090d" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
 
+    <!-- Instant Pre-Hydration Theme Script -->
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('ahmed_portfolio_theme');
+          var isDark = saved ? saved === 'dark' : true;
+          if (!isDark) {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+            document.documentElement.setAttribute('data-theme', 'light');
+          } else {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+            document.documentElement.setAttribute('data-theme', 'dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- OpenGraph Social Cards -->
     <meta property="og:type" content="profile" />
     <meta property="og:title" content="Ahmed El-Bialy | Mobile App Developer & Flutter Specialist" />

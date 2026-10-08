@@ -155,7 +155,7 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen relative flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+      <div className="min-h-screen relative flex flex-col justify-between selection:bg-cyan-500 selection:text-black bg-slate-50 dark:bg-[#08090d] text-slate-900 dark:text-gray-100 transition-colors duration-200">
         
         {/* Top Scroll Position Progress Bar */}
         <ScrollProgressBar />
@@ -252,7 +252,7 @@ export default function App() {
         />
 
         {/* Footer */}
-        <footer className="w-full border-t border-black/10 dark:border-white/5 bg-slate-100 dark:bg-[#090a0f] py-10 px-4 sm:px-8 text-xs text-slate-600 dark:text-gray-400">
+        <footer className="w-full border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#090a0f] py-10 px-4 sm:px-8 text-xs text-slate-600 dark:text-gray-400 transition-colors shadow-inner">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
             
             {/* Column 1: Identity & Live Sync Status Indicator */}
@@ -260,14 +260,14 @@ export default function App() {
               <div>
                 <div className="flex items-center justify-center sm:justify-start gap-2">
                   <span className="font-bold text-slate-900 dark:text-white text-sm">{profile.name}</span>
-                  <span className="text-cyan-600 dark:text-cyan-400 font-mono text-xs">• Flutter Specialist</span>
+                  <span className="text-blue-600 dark:text-cyan-400 font-mono text-xs font-semibold">• Flutter Specialist</span>
                 </div>
                 <div className="flex items-center justify-center sm:justify-start gap-2 mt-1 font-mono text-[11px]">
-                  <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                  <span className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span>Sync Status: {isOnline ? 'Online (Real-Time)' : 'Offline Cache'}</span>
                   </span>
-                  <span className="text-slate-500 dark:text-gray-500">Synced: {lastSyncTime}</span>
+                  <span className="text-slate-500 dark:text-gray-400 font-medium">Synced: {lastSyncTime}</span>
                 </div>
               </div>
 
@@ -275,10 +275,10 @@ export default function App() {
               <button
                 onClick={handleManualRefresh}
                 disabled={isSyncing}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-gray-200 border border-slate-300 dark:border-white/10 text-xs font-mono font-medium transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-900 dark:text-gray-200 border border-slate-300 dark:border-white/10 text-xs font-mono font-semibold transition-all cursor-pointer shadow-xs disabled:opacity-50"
                 title="Force refresh GitHub repository data and live activity"
               >
-                <RefreshCw size={12} className={isSyncing ? 'animate-spin text-blue-500' : 'text-slate-500'} />
+                <RefreshCw size={12} className={isSyncing ? 'animate-spin text-blue-500' : 'text-slate-600 dark:text-slate-400'} />
                 <span>{isSyncing ? 'Syncing...' : 'Refresh Data'}</span>
               </button>
             </div>
@@ -289,7 +289,7 @@ export default function App() {
                 href={profile.githubUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105"
+                className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105 shadow-2xs"
                 title="GitHub Profile"
               >
                 <Github size={15} />
@@ -298,7 +298,7 @@ export default function App() {
                 href={profile.linkedinUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-xl bg-white dark:bg-white/5 hover:bg-blue-600/15 text-slate-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105"
+                className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-blue-600/15 text-slate-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105 shadow-2xs"
                 title="LinkedIn Profile"
               >
                 <Linkedin size={15} />
@@ -307,7 +307,7 @@ export default function App() {
                 href={profile.youtubeUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-xl bg-white dark:bg-white/5 hover:bg-red-600/15 text-slate-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105"
+                className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-red-600/15 text-slate-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105 shadow-2xs"
                 title="YouTube Demos Channel"
               >
                 <Youtube size={15} />
@@ -316,7 +316,7 @@ export default function App() {
                 href={profile.tiktokUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-xl bg-white dark:bg-white/5 hover:bg-pink-600/15 text-slate-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105"
+                className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-pink-600/15 text-slate-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105 shadow-2xs"
                 title="TikTok Profile"
               >
                 <TikTokLogo size={14} />
@@ -325,7 +325,7 @@ export default function App() {
                 href="https://wa.me/201022121573"
                 target="_blank"
                 rel="noreferrer"
-                className="w-8 h-8 rounded-xl bg-white dark:bg-white/5 hover:bg-emerald-600/15 text-slate-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105"
+                className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-emerald-600/15 text-slate-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105 shadow-2xs"
                 title="WhatsApp Direct Chat"
               >
                 <WhatsAppLogo size={16} />
@@ -333,7 +333,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => openEmailClient(profile.email, 'Mobile App Project Inquiry - Flutter Specialist')}
-                className="w-8 h-8 rounded-xl bg-white dark:bg-white/5 hover:bg-cyan-600/15 text-slate-700 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105 cursor-pointer"
+                className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-cyan-600/15 text-slate-700 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105 shadow-2xs cursor-pointer"
                 title="Send Email via Gmail / Email app"
               >
                 <Mail size={14} />
@@ -341,9 +341,9 @@ export default function App() {
             </div>
           </div>
 
-          <div className="max-w-7xl mx-auto mt-4 pt-4 border-t border-black/5 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 dark:text-gray-500 gap-2">
+          <div className="max-w-7xl mx-auto mt-6 pt-4 border-t border-slate-200 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 dark:text-gray-400 gap-2 font-medium">
             <span>© {new Date().getFullYear()} Ahmed El-Bialy. All rights reserved.</span>
-            <span>Production Mobile Developer Portfolio</span>
+            <span>Production Mobile Developer Portfolio • Flutter & AI</span>
           </div>
         </footer>
 

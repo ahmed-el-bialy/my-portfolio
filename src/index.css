@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --bg: #08090d;
@@ -49,6 +50,18 @@ body {
   letter-spacing: -0.011em;
   overflow-x: hidden;
   transition: background-color 0.25s ease, color 0.25s ease;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -15%, rgba(59, 130, 246, 0.12), transparent 75%),
+    radial-gradient(ellipse 60% 40% at 85% 20%, rgba(6, 182, 212, 0.08), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 15% 55%, rgba(139, 92, 246, 0.06), transparent 70%);
+  background-attachment: fixed;
+}
+
+html.light body {
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -15%, rgba(37, 99, 235, 0.05), transparent 75%),
+    radial-gradient(ellipse 60% 40% at 85% 20%, rgba(2, 132, 199, 0.04), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 15% 55%, rgba(124, 58, 237, 0.03), transparent 70%);
 }
 
 /* =========================================================
@@ -136,8 +149,111 @@ html.light .bg-slate-50 {
 
 html.light .border-black\/10,
 html.light .border-black\/15,
-html.light .border-black\/5 {
+html.light .border-black\/5,
+html.light .border-white\/5,
+html.light .border-white\/10,
+html.light .border-white\/15,
+html.light .border-white\/20 {
   border-color: #cbd5e1 !important;
+}
+
+html.light .dark\:bg-\[\#111322\],
+html.light .dark\:bg-\[\#121422\],
+html.light .dark\:bg-\[\#131522\],
+html.light .dark\:bg-\[\#121420\],
+html.light .dark\:bg-\[\#090a0f\],
+html.light .dark\:bg-\[\#090a0f\]\/95,
+html.light .dark\:bg-\[\#090b14\],
+html.light .dark\:bg-\[\#0d101d\],
+html.light .dark\:bg-\[\#0d101d\]\/95,
+html.light .dark\:bg-\[\#10121d\],
+html.light .dark\:bg-\[\#14151f\] {
+  background-color: #ffffff !important;
+}
+
+html.light .dark\:border-white\/5,
+html.light .dark\:border-white\/10,
+html.light .dark\:border-white\/15,
+html.light .dark\:border-white\/20,
+html.light .dark\:border-white\/25 {
+  border-color: #cbd5e1 !important;
+}
+
+html.light .dark\:text-gray-100,
+html.light .dark\:text-gray-200,
+html.light .dark\:text-gray-300 {
+  color: #1e293b !important;
+}
+
+html.light .dark\:text-gray-400,
+html.light .dark\:text-gray-500 {
+  color: #475569 !important;
+}
+
+html.light .dark\:text-white {
+  color: #0f172a !important;
+}
+
+html.light,
+html.light body,
+[data-theme="light"],
+[data-theme="light"] body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+html.light header,
+[data-theme="light"] header {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  border-bottom-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html.light footer,
+[data-theme="light"] footer {
+  background-color: #ffffff !important;
+  border-top-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+html.light footer .font-bold,
+html.light footer span,
+html.light footer p {
+  color: #1e293b !important;
+}
+
+html.light footer .text-slate-500,
+html.light footer .text-gray-400 {
+  color: #475569 !important;
+}
+
+html.light footer a,
+html.light footer button {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+html.light footer a:hover,
+html.light footer button:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+
+html.light .hero-photo-name-card,
+[data-theme="light"] .hero-photo-name-card {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06) !important;
+}
+
+html.light .hero-photo-name-card * {
+  color: #0f172a !important;
+}
+
+html.light .hero-photo-name-card .text-blue-600 {
+  color: #2563eb !important;
 }
 
 .font-marker {
