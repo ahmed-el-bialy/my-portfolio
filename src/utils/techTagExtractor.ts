@@ -326,6 +326,102 @@ const KNOWN_TECH_MAP: Record<string, TechTag> = {
   }
 };
 
+// Verified specifications & architectural data extracted directly from project READMEs
+export interface RepoReadmeSpecs {
+  hasCubit: boolean;
+  hasBloc: boolean;
+  architecture: string[];
+  storage: string[];
+  apis: string[];
+  isGooglePlay?: boolean;
+}
+
+export const REPO_README_METADATA: Record<string, RepoReadmeSpecs> = {
+  revio: {
+    hasCubit: true,
+    hasBloc: true,
+    architecture: ['Clean Architecture'],
+    storage: ['Hive CE'],
+    apis: [],
+    isGooglePlay: true
+  },
+  movura: {
+    hasCubit: true,
+    hasBloc: true,
+    architecture: ['Clean Architecture'],
+    storage: [],
+    apis: ['TMDB API', 'REST API']
+  },
+  'vibrant-store': {
+    hasCubit: true,
+    hasBloc: false,
+    architecture: ['Service Layer Pattern'],
+    storage: [],
+    apis: ['REST API', 'DummyJSON API']
+  },
+  'sky-cast': {
+    hasCubit: true,
+    hasBloc: false,
+    architecture: ['Clean Architecture'],
+    storage: [],
+    apis: ['WeatherAPI', 'REST API']
+  },
+  'news-cloud': {
+    hasCubit: true,
+    hasBloc: false,
+    architecture: ['Repository Pattern', 'Clean Architecture'],
+    storage: [],
+    apis: ['Retrofit / Dio', 'REST API']
+  },
+  shaats: {
+    hasCubit: true,
+    hasBloc: false,
+    architecture: ['Clean Architecture'],
+    storage: ['Firebase', 'Cloud Firestore'],
+    apis: []
+  },
+  'nihon-seed': {
+    hasCubit: true,
+    hasBloc: false,
+    architecture: [],
+    storage: [],
+    apis: []
+  },
+  'nbn-basketball': {
+    hasCubit: true,
+    hasBloc: false,
+    architecture: [],
+    storage: [],
+    apis: []
+  },
+  'piano-tunes': {
+    hasCubit: false,
+    hasBloc: false,
+    architecture: [],
+    storage: [],
+    apis: []
+  },
+  'note-keep': {
+    hasCubit: true,
+    hasBloc: false,
+    architecture: ['Clean Architecture'],
+    storage: ['Sqflite / SQLite'],
+    apis: []
+  },
+  quotely: {
+    hasCubit: true,
+    hasBloc: false,
+    architecture: [],
+    storage: [],
+    apis: ['REST API']
+  }
+};
+
+export function getRepoReadmeSpecs(repoName: string): RepoReadmeSpecs | undefined {
+  const key = repoName.toLowerCase().replace(/[\s_]/g, '-');
+  return REPO_README_METADATA[key] || REPO_README_METADATA[key.replace(/-/g, '')];
+}
+
 /**
  * Automatically analyzes repo attributes (language, topics, description, repo name)
  * and extracts a rich, deduplicated and beautifully categorised list of technology badges.
@@ -340,13 +436,24 @@ export function extractRepoTechTags(params: {
   const { repoName, language, topics = [], description = '', technologies = [] } = params;
   const extractedMap = new Map<string, TechTag>();
 
+  const addTag = (tag: TechTag) => {
+    if (!tag || !tag.id) return;
+    const normalizedKey = tag.id.toLowerCase().replace(/[-_\s]/g, '');
+    extractedMap.set(normalizedKey, tag);
+  };
+
+  const hasTag = (id: string) => {
+    const normalizedKey = id.toLowerCase().replace(/[-_\s]/g, '');
+    return extractedMap.has(normalizedKey);
+  };
+
   // 1. Primary Language Extraction
   const primaryLang = (language || 'Dart').trim();
   const langKey = primaryLang.toLowerCase();
   if (KNOWN_TECH_MAP[langKey]) {
-    extractedMap.set(KNOWN_TECH_MAP[langKey].label.toLowerCase(), KNOWN_TECH_MAP[langKey]);
+    addTag(KNOWN_TECH_MAP[langKey]);
   } else if (primaryLang) {
-    extractedMap.set(primaryLang.toLowerCase(), {
+    addTag({
       id: langKey,
       label: primaryLang,
       category: 'language',
@@ -363,7 +470,7 @@ export function extractRepoTechTags(params: {
   // 2. Framework Detection
   // If it uses Dart, default Framework is Flutter
   if (primaryLang.toLowerCase() === 'dart' || (description && /flutter/i.test(description)) || topics.includes('flutter')) {
-    extractedMap.set('flutter', KNOWN_TECH_MAP['flutter']);
+    addTag(KNOWN_TECH_MAP['flutter']);
   }
 
   // 3. Process explicit technologies array (if coming from portfolio data)
@@ -372,9 +479,9 @@ export function extractRepoTechTags(params: {
     const directKey = tech.toLowerCase().replace(/[\s_-]/g, '');
     const matched = KNOWN_TECH_MAP[key] || KNOWN_TECH_MAP[directKey];
     if (matched) {
-      extractedMap.set(matched.label.toLowerCase(), matched);
+      addTag(matched);
     } else {
-      extractedMap.set(tech.toLowerCase(), {
+      addTag({
         id: key,
         label: tech,
         category: 'architecture',
@@ -392,20 +499,19 @@ export function extractRepoTechTags(params: {
   // 4. Process GitHub Topics
   for (const topic of topics) {
     const cleanTopic = topic.trim().toLowerCase();
-    if (cleanTopic === 'dart' && extractedMap.has('dart')) continue;
-    if (cleanTopic === 'flutter' && extractedMap.has('flutter')) continue;
+    if (cleanTopic === 'dart' && hasTag('dart')) continue;
+    if (cleanTopic === 'flutter' && hasTag('flutter')) continue;
 
     const matched = KNOWN_TECH_MAP[cleanTopic] || KNOWN_TECH_MAP[cleanTopic.replace(/-/g, '')];
     if (matched) {
-      extractedMap.set(matched.label.toLowerCase(), matched);
+      addTag(matched);
     } else {
-      // Format topic title case
       const formattedLabel = cleanTopic
         .split('-')
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
         .join(' ');
 
-      extractedMap.set(cleanTopic, {
+      addTag({
         id: cleanTopic,
         label: formattedLabel,
         category: 'state',
@@ -420,37 +526,82 @@ export function extractRepoTechTags(params: {
     }
   }
 
-  // 5. Intelligent NLP extraction from repository description & name
+  // 5. Intelligent NLP & verified README specifications extraction
+  const cleanKey = repoName.toLowerCase().replace(/[\s_]/g, '-');
+  const readmeData = REPO_README_METADATA[cleanKey] || REPO_README_METADATA[cleanKey.replace(/-/g, '')];
+
+  if (readmeData) {
+    if (readmeData.hasCubit && !hasTag('cubit')) {
+      addTag(KNOWN_TECH_MAP['cubit']);
+    }
+    if (readmeData.hasBloc && !hasTag('bloc')) {
+      addTag(KNOWN_TECH_MAP['bloc']);
+    }
+    if (readmeData.isGooglePlay && !hasTag('google-play')) {
+      addTag(KNOWN_TECH_MAP['google-play']);
+    }
+    for (const arch of readmeData.architecture) {
+      if (arch.toLowerCase().includes('clean') && !hasTag('clean-architecture')) {
+        addTag(KNOWN_TECH_MAP['clean-architecture']);
+      }
+    }
+    for (const store of readmeData.storage) {
+      if (store.toLowerCase().includes('hive') && !hasTag('hive-ce')) {
+        addTag(KNOWN_TECH_MAP['hive-ce']);
+      }
+      if (store.toLowerCase().includes('firebase') && !hasTag('firebase')) {
+        addTag(KNOWN_TECH_MAP['firebase']);
+      }
+      if ((store.toLowerCase().includes('sqlite') || store.toLowerCase().includes('sqflite')) && !hasTag('sqflite')) {
+        addTag(KNOWN_TECH_MAP['sqflite']);
+      }
+    }
+    for (const apiItem of readmeData.apis) {
+      if (apiItem.toLowerCase().includes('tmdb') && !hasTag('tmdb-api')) {
+        addTag(KNOWN_TECH_MAP['tmdb-api']);
+      }
+      if (apiItem.toLowerCase().includes('weather') && !hasTag('weatherapi')) {
+        addTag(KNOWN_TECH_MAP['weatherapi']);
+      }
+      if (apiItem.toLowerCase().includes('retrofit') && !hasTag('retrofit')) {
+        addTag(KNOWN_TECH_MAP['retrofit']);
+      }
+      if (apiItem.toLowerCase().includes('rest') && !hasTag('rest-api')) {
+        addTag(KNOWN_TECH_MAP['rest-api']);
+      }
+    }
+  }
+
   const textCorpus = `${repoName} ${description || ''}`.toLowerCase();
 
   // Explicit check for Cubit
-  if ((textCorpus.includes('cubit') || repoName.toLowerCase().includes('movura') || repoName.toLowerCase().includes('revio')) && !extractedMap.has('cubit')) {
-    extractedMap.set('cubit', KNOWN_TECH_MAP['cubit']);
+  if ((textCorpus.includes('cubit') || repoName.toLowerCase().includes('movura') || repoName.toLowerCase().includes('revio')) && !hasTag('cubit')) {
+    addTag(KNOWN_TECH_MAP['cubit']);
   }
   // Explicit check for BLoC (both can coexist as reactive state management)
-  if ((textCorpus.includes('bloc') || textCorpus.includes('b-loc') || repoName.toLowerCase().includes('movura')) && !extractedMap.has('bloc')) {
-    extractedMap.set('bloc', KNOWN_TECH_MAP['bloc']);
+  if ((textCorpus.includes('bloc') || textCorpus.includes('b-loc') || repoName.toLowerCase().includes('movura')) && !hasTag('bloc')) {
+    addTag(KNOWN_TECH_MAP['bloc']);
   }
-  if ((textCorpus.includes('hive ce') || textCorpus.includes('hive')) && !extractedMap.has('hive-ce') && !extractedMap.has('hive')) {
-    extractedMap.set('hive-ce', KNOWN_TECH_MAP['hive-ce']);
+  if ((textCorpus.includes('hive ce') || textCorpus.includes('hive')) && !hasTag('hive-ce') && !hasTag('hive')) {
+    addTag(KNOWN_TECH_MAP['hive-ce']);
   }
-  if ((textCorpus.includes('clean architecture') || textCorpus.includes('clean-architecture') || textCorpus.includes('clean arch')) && !extractedMap.has('clean architecture')) {
-    extractedMap.set('clean architecture', KNOWN_TECH_MAP['clean-architecture']);
+  if ((textCorpus.includes('clean architecture') || textCorpus.includes('clean-architecture') || textCorpus.includes('clean arch')) && !hasTag('cleanarchitecture') && !hasTag('clean-architecture')) {
+    addTag(KNOWN_TECH_MAP['clean-architecture']);
   }
-  if ((textCorpus.includes('tmdb') || textCorpus.includes('themoviedb')) && !extractedMap.has('tmdb-api') && !extractedMap.has('tmdb')) {
-    extractedMap.set('tmdb-api', KNOWN_TECH_MAP['tmdb-api']);
+  if ((textCorpus.includes('tmdb') || textCorpus.includes('themoviedb')) && !hasTag('tmdb-api') && !hasTag('tmdb')) {
+    addTag(KNOWN_TECH_MAP['tmdb-api']);
   }
-  if ((textCorpus.includes('weatherapi') || textCorpus.includes('weather api')) && !extractedMap.has('weatherapi')) {
-    extractedMap.set('weatherapi', KNOWN_TECH_MAP['weatherapi']);
+  if ((textCorpus.includes('weatherapi') || textCorpus.includes('weather api')) && !hasTag('weatherapi')) {
+    addTag(KNOWN_TECH_MAP['weatherapi']);
   }
-  if ((textCorpus.includes('sqlite') || textCorpus.includes('sqflite')) && !extractedMap.has('sqlite') && !extractedMap.has('sqflite')) {
-    extractedMap.set('sqflite', KNOWN_TECH_MAP['sqflite']);
+  if ((textCorpus.includes('sqlite') || textCorpus.includes('sqflite')) && !hasTag('sqlite') && !hasTag('sqflite')) {
+    addTag(KNOWN_TECH_MAP['sqflite']);
   }
-  if (textCorpus.includes('google play') && !extractedMap.has('google play')) {
-    extractedMap.set('google play', KNOWN_TECH_MAP['google-play']);
+  if (textCorpus.includes('google play') && !hasTag('google-play')) {
+    addTag(KNOWN_TECH_MAP['google-play']);
   }
-  if (textCorpus.includes('rest api') && !extractedMap.has('rest api')) {
-    extractedMap.set('rest api', KNOWN_TECH_MAP['rest-api']);
+  if (textCorpus.includes('rest api') && !hasTag('rest-api')) {
+    addTag(KNOWN_TECH_MAP['rest-api']);
   }
 
   // State Management (Cubit/BLoC) & Core Architecture rank TOP priority so they are never truncated
@@ -464,7 +615,15 @@ export function extractRepoTechTags(params: {
     language: 7       // Dart
   };
 
-  return Array.from(extractedMap.values()).sort((a, b) => {
+  // Guarantee strict deduplication by tag.id
+  const uniqueTagsMap = new Map<string, TechTag>();
+  for (const tag of extractedMap.values()) {
+    if (!uniqueTagsMap.has(tag.id)) {
+      uniqueTagsMap.set(tag.id, tag);
+    }
+  }
+
+  return Array.from(uniqueTagsMap.values()).sort((a, b) => {
     const orderA = categoryOrder[a.category] ?? 10;
     const orderB = categoryOrder[b.category] ?? 10;
     return orderA - orderB;

@@ -463,7 +463,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
 
   return (
     <div
-      className="relative w-full aspect-[16/9.5] sm:aspect-[16/9] bg-[#080911] overflow-hidden select-none cursor-pointer border-b border-slate-900/40 dark:border-white/10 group/cover shadow-[inset_0_-10px_20px_rgba(0,0,0,0.35)]"
+      className="relative w-full aspect-[16/9.5] sm:aspect-[16/9] bg-slate-50 dark:bg-[#080911] overflow-hidden select-none cursor-pointer border-b border-slate-200 dark:border-white/10 group/cover shadow-none dark:shadow-[inset_0_-10px_20px_rgba(0,0,0,0.35)] transition-colors"
       onClick={(e) => {
         if (hasRealCover) {
           e.stopPropagation();
@@ -478,10 +478,10 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     >
       {/* ========================================================
           LAYER 1: AUTOMATIC CUSTOM STANDARD COVER (الغلاف الاستاندرد المخصص أوتوماتيكياً)
-          Professional, Unique, Eye-Comfortable Studio Canvas
+          Professional, Unique, Eye-Comfortable Studio Canvas (Adaptive Dark & Light Modes)
           ======================================================== */}
       <div
-        className={`absolute inset-0 bg-[#080911] flex flex-col justify-between transition-all duration-200 ease-out ${
+        className={`absolute inset-0 bg-white dark:bg-[#080911] flex flex-col justify-between transition-all duration-200 ease-out ${
           !isShowingScreenshot
             ? 'opacity-100 z-10 scale-100'
             : 'opacity-0 z-0 scale-95 pointer-events-none'
@@ -490,22 +490,22 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
         {/* 1. Ambient Background Atmosphere (Eye-Comfortable & Distinct) */}
         {/* Geometric Micro-Dot Grid */}
         <div
-          className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          className="absolute inset-0 opacity-[0.06] dark:opacity-[0.06] text-slate-700 dark:text-white pointer-events-none"
           style={{
-            backgroundImage: `radial-gradient(circle, #ffffff 1px, transparent 1px)`,
+            backgroundImage: `radial-gradient(circle, currentColor 1px, transparent 1px)`,
             backgroundSize: '22px 22px',
           }}
         />
 
         {/* Ambient Brand Color Radial Spotlights */}
         <div
-          className="absolute -top-16 -right-16 w-64 h-64 rounded-full pointer-events-none blur-3xl opacity-20 transition-all duration-700"
+          className="absolute -top-16 -right-16 w-64 h-64 rounded-full pointer-events-none blur-3xl opacity-10 dark:opacity-20 transition-all duration-700"
           style={{
             background: `radial-gradient(circle, ${blueprint.accentColor} 0%, transparent 70%)`,
           }}
         />
         <div
-          className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full pointer-events-none blur-3xl opacity-15 transition-all duration-700"
+          className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full pointer-events-none blur-3xl opacity-8 dark:opacity-15 transition-all duration-700"
           style={{
             background: `radial-gradient(circle, ${blueprint.secondaryAccent} 0%, transparent 70%)`,
           }}
@@ -530,7 +530,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
               className="text-[11px] font-semibold tracking-wide px-2.5 py-0.5 rounded-full border shadow-xs truncate backdrop-blur-md"
               style={{
                 backgroundColor: `rgba(${blueprint.glowRgb}, 0.12)`,
-                borderColor: `rgba(${blueprint.glowRgb}, 0.3)`,
+                borderColor: `rgba(${blueprint.glowRgb}, 0.35)`,
                 color: blueprint.accentColor,
               }}
             >
@@ -539,12 +539,12 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
           </div>
 
           {/* Right Platform Micro-Tag */}
-          <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-0.5 rounded-md bg-white/[0.06] border border-white/10 backdrop-blur-md">
+          <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 backdrop-blur-md">
             <span
               className="w-1.5 h-1.5 rounded-full"
               style={{ backgroundColor: blueprint.accentColor }}
             />
-            <span className="text-[10px] font-mono font-medium text-slate-300 tracking-wider">
+            <span className="text-[10px] font-mono font-medium text-slate-700 dark:text-slate-300 tracking-wider">
               {language || 'Flutter • Dart'}
             </span>
           </div>
@@ -554,13 +554,13 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
         <div className="relative z-10 px-4 sm:px-5 my-auto flex items-center gap-3.5 sm:gap-4.5">
           {/* App Brand Icon Box */}
           <div
-            className="relative shrink-0 w-13 h-13 sm:w-15 sm:h-15 rounded-2xl p-[1.5px] transition-transform duration-300 group-hover/cover:scale-105 shadow-xl"
+            className="relative shrink-0 w-13 h-13 sm:w-15 sm:h-15 rounded-2xl p-[1.5px] transition-transform duration-300 group-hover/cover:scale-105 shadow-md dark:shadow-xl"
             style={{
-              background: `linear-gradient(135deg, ${blueprint.accentColor}, rgba(255,255,255,0.15))`,
+              background: `linear-gradient(135deg, ${blueprint.accentColor}, rgba(255,255,255,0.25))`,
               boxShadow: `0 8px 24px -4px rgba(${blueprint.glowRgb}, 0.35)`,
             }}
           >
-            <div className="w-full h-full rounded-[14px] bg-[#0b0d17] flex items-center justify-center relative overflow-hidden">
+            <div className="w-full h-full rounded-[14px] bg-white dark:bg-[#0b0d17] flex items-center justify-center relative overflow-hidden border border-slate-200/90 dark:border-transparent shadow-xs">
               {/* Inner ambient glow */}
               <div
                 className="absolute inset-0 opacity-20 pointer-events-none"
@@ -579,7 +579,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
           {/* App Title & Identity Description */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="text-base sm:text-lg font-black text-white tracking-tight truncate group-hover/cover:text-cyan-300 transition-colors">
+              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight truncate group-hover/cover:text-blue-600 dark:group-hover/cover:text-cyan-300 transition-colors">
                 {blueprint.appTitle}
               </h3>
             </div>
@@ -591,7 +591,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
               {blueprint.genre}
             </p>
 
-            <p className="text-[11px] text-slate-300/90 line-clamp-1 mt-0.5 leading-tight font-medium">
+            <p className="text-[11px] text-slate-600 dark:text-slate-300/90 line-clamp-1 mt-0.5 leading-tight font-medium">
               {blueprint.tagline}
             </p>
 
@@ -600,7 +600,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
               {blueprint.coreHighlights.slice(0, 3).map((feat, idx) => (
                 <span
                   key={idx}
-                  className="px-2 py-0.5 rounded-md bg-white/[0.06] border border-white/10 text-[10px] text-slate-200 font-medium font-mono tracking-tight"
+                  className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-200 font-medium font-mono tracking-tight"
                 >
                   {feat}
                 </span>
@@ -611,10 +611,10 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
 
         {/* 4. Bottom Shelf: Architectural Bar & Highlight Metric */}
         {/* Crisp separation from the card body below */}
-        <div className="relative z-10 px-4 sm:px-5 py-2.5 bg-black/60 backdrop-blur-md border-t border-white/10 flex items-center justify-between text-[11px] gap-2">
-          <div className="flex items-center gap-1.5 min-w-0 text-slate-300">
-            <Layers size={12} className="shrink-0 text-slate-400" />
-            <span className="font-mono text-[10px] sm:text-[11px] truncate text-slate-300">
+        <div className="relative z-10 px-4 sm:px-5 py-2.5 bg-slate-50 dark:bg-black/60 backdrop-blur-md border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-[11px] gap-2">
+          <div className="flex items-center gap-1.5 min-w-0 text-slate-700 dark:text-slate-300">
+            <Layers size={12} className="shrink-0 text-slate-500 dark:text-slate-400" />
+            <span className="font-mono text-[10px] sm:text-[11px] truncate text-slate-700 dark:text-slate-300">
               {blueprint.architecturePattern}
             </span>
           </div>
@@ -634,7 +634,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
           ======================================================== */}
       {hasRealCover && (
         <div
-          className={`absolute inset-0 bg-[#080911] transition-all duration-200 ease-out ${
+          className={`absolute inset-0 bg-slate-100 dark:bg-[#080911] transition-all duration-200 ease-out ${
             isShowingScreenshot
               ? 'opacity-100 z-20 scale-100 pointer-events-auto'
               : 'opacity-0 z-0 scale-105 pointer-events-none'
@@ -649,7 +649,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
           />
 
           {/* Subtle bottom gradient overlay to cleanly ground the image */}
-          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 dark:from-black/80 to-transparent pointer-events-none" />
         </div>
       )}
 
@@ -658,7 +658,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
           ======================================================== */}
       {hasRealCover && (
         <div
-          className="absolute bottom-3 right-3 z-30 flex items-center gap-1.5 p-1 rounded-full bg-black/80 backdrop-blur-md border border-white/15 shadow-xl transition-all duration-200"
+          className="absolute bottom-3 right-3 z-30 flex items-center gap-1.5 p-1 rounded-full bg-white/95 dark:bg-black/85 backdrop-blur-md border border-slate-200 dark:border-white/15 shadow-md dark:shadow-xl transition-all duration-200"
           onClick={(e) => {
             e.stopPropagation();
             setActiveView((prev) => (prev === 'standard' ? 'screenshot' : 'standard'));
@@ -667,10 +667,10 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
         >
           <button
             type="button"
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold transition-all cursor-pointer ${
               activeView === 'standard'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-blue-600 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
             <Palette size={10} />
@@ -678,10 +678,10 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
           </button>
           <button
             type="button"
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold transition-all cursor-pointer ${
               activeView === 'screenshot'
-                ? 'bg-cyan-500 text-slate-950 shadow-xs'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-blue-600 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
             <ImageIcon size={10} />

@@ -21,7 +21,8 @@ import {
   PackageCheck,
   FileCode,
   Copy,
-  Check
+  Check,
+  Palette
 } from 'lucide-react';
 import { Project } from '../data/portfolioData';
 import { ProjectCardCover } from './ProjectCardCover';
@@ -51,6 +52,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   useScrollLock(isOpen);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'screenshots' | 'specs'>('overview');
+  const [mediaView, setMediaView] = useState<'video' | 'cover'>('video');
   const [activeScreenIndex, setActiveScreenIndex] = useState<number>(0);
   const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
   const [screenshots, setScreenshots] = useState<string[]>([]);
@@ -265,25 +267,58 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           {/* TAB 1: OVERVIEW & VIDEO */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              {/* Media Preview (YouTube Video Embed or Cover Image) */}
-              <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 dark:border-white/10 shadow-lg">
-                {youtubeIframeSrc ? (
-                  <iframe
-                    src={youtubeIframeSrc}
-                    title={`${project.name} Demonstration`}
-                    className="w-full h-full border-0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                ) : (
-                  <ProjectCardCover
-                    repoName={project.repoName}
-                    language={project.technologies[0] || 'Dart'}
-                    coverUrl={project.image}
-                    description={project.description}
-                    topics={project.technologies}
-                  />
+              {/* Media Preview (YouTube Video Embed or Cover Image Artwork) */}
+              <div className="space-y-2">
+                {youtubeIframeSrc && (
+                  <div className="flex items-center justify-end gap-1.5 pb-1">
+                    <div className="inline-flex items-center p-1 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setMediaView('video')}
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                          mediaView === 'video'
+                            ? 'bg-blue-600 text-white shadow-xs font-bold'
+                            : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        <Play size={12} />
+                        <span>فيديو العرض (Video Demo)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMediaView('cover')}
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                          mediaView === 'cover'
+                            ? 'bg-blue-600 text-white shadow-xs font-bold'
+                            : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        <Palette size={12} />
+                        <span>غلاف المشروع التفاعلي (Interactive Cover)</span>
+                      </button>
+                    </div>
+                  </div>
                 )}
+
+                <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 shadow-lg">
+                  {youtubeIframeSrc && mediaView === 'video' ? (
+                    <iframe
+                      src={youtubeIframeSrc}
+                      title={`${project.name} Demonstration`}
+                      className="w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <ProjectCardCover
+                      repoName={project.repoName}
+                      language={project.technologies[0] || 'Dart'}
+                      coverUrl={project.image}
+                      description={project.description}
+                      topics={project.technologies}
+                    />
+                  )}
+                </div>
               </div>
 
               {/* APK & Distribution Status Banner */}
@@ -407,7 +442,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         setActiveScreenIndex(i);
                         setLightboxOpen(true);
                       }}
-                      className="group relative aspect-[9/16] rounded-xl overflow-hidden bg-slate-900 border border-slate-200 dark:border-white/10 cursor-pointer shadow-md hover:border-blue-500 transition-all"
+                      className="group relative aspect-[9/16] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 cursor-pointer shadow-md hover:border-blue-500 transition-all"
                     >
                       <img
                         src={url}
