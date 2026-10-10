@@ -109,7 +109,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
 
             <button
               onClick={onClose}
-              className="w-9 h-9 rounded-xl bg-red-500/15 hover:bg-red-500 text-red-600 hover:text-white border border-red-500/30 flex items-center justify-center transition-all cursor-pointer shadow-xs ml-1"
+              className="w-9 h-9 rounded-xl bg-red-500/15 hover:bg-red-500 text-red-600 hover:text-white border border-red-500/30 flex items-center justify-center transition-all cursor-pointer shadow-xs ms-1"
               aria-label="Close CV Dialog"
             >
               <X size={18} strokeWidth={2.5} />

@@ -30,7 +30,7 @@ export const ScrollProgressBar: React.FC = () => {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-[60] h-[3px] bg-transparent pointer-events-none"
+      className="fixed top-0 inset-x-0 z-[60] h-[3px] bg-transparent pointer-events-none"
       aria-hidden="true"
     >
       <div

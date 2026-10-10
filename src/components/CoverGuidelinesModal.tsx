@@ -25,7 +25,7 @@ export const CoverGuidelinesModal: React.FC<CoverGuidelinesModalProps> = ({ isOp
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white flex items-center justify-center cursor-pointer transition-colors"
+          className="absolute top-5 end-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white flex items-center justify-center cursor-pointer transition-colors"
         >
           <X size={16} />
         </button>
@@ -88,20 +88,20 @@ export const CoverGuidelinesModal: React.FC<CoverGuidelinesModalProps> = ({ isOp
             <div className="flex items-center gap-2 text-blue-400 font-bold">
               <Folder size={14} /> My-Flutter-Project/
             </div>
-            <div className="flex items-center gap-2 pl-4 text-emerald-400 font-bold">
+            <div className="flex items-center gap-2 ps-4 text-emerald-400 font-bold">
               <Folder size={14} /> screenshots/
             </div>
-            <div className="flex items-center gap-2 pl-8 text-cyan-300 font-bold bg-cyan-950/60 p-1 rounded">
+            <div className="flex items-center gap-2 ps-8 text-cyan-300 font-bold bg-cyan-950/60 p-1 rounded">
               <FileImage size={14} /> cover.png <span className="text-[11px] text-gray-400">(أو cover.jpg) ← الغلاف التلقائي</span>
             </div>
-            <div className="flex items-center gap-2 pl-4 text-gray-500">
+            <div className="flex items-center gap-2 ps-4 text-gray-500">
               <Folder size={14} /> lib/
             </div>
-            <div className="flex items-center gap-2 pl-4 text-gray-500">
+            <div className="flex items-center gap-2 ps-4 text-gray-500">
               <Folder size={14} /> assets/
             </div>
-            <div className="pl-4 text-gray-500">├── pubspec.yaml</div>
-            <div className="pl-4 text-gray-500">└── README.md</div>
+            <div className="ps-4 text-gray-500">├── pubspec.yaml</div>
+            <div className="ps-4 text-gray-500">└── README.md</div>
           </div>
         </div>
 

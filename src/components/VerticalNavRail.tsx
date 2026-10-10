@@ -29,7 +29,7 @@ export const VerticalNavRail: React.FC<VerticalNavRailProps> = ({ activeTab, onN
     <div
       id="vertical-nav-rail"
       className={`fixed top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center gap-3 p-2 rounded-full bg-white/80 dark:bg-[#0c0d14]/85 backdrop-blur-md border border-slate-300 dark:border-white/10 shadow-xl transition-all select-none ${
-        isRtl ? 'left-3 sm:left-5' : 'right-3 sm:right-5'
+        isRtl ? 'start-3 sm:start-5' : 'end-3 sm:end-5'
       }`}
       aria-label="Section Navigation Indicator"
     >
@@ -47,7 +47,7 @@ export const VerticalNavRail: React.FC<VerticalNavRailProps> = ({ activeTab, onN
             {/* Tooltip */}
             <div
               className={`absolute px-2.5 py-1 rounded-lg text-[11px] font-semibold tracking-wide whitespace-nowrap pointer-events-none transition-all duration-200 shadow-md ${
-                isRtl ? 'left-7' : 'right-7'
+                isRtl ? 'start-7' : 'end-7'
               } ${
                 isHovered
                   ? `opacity-100 ${isRtl ? 'translate-x-1' : '-translate-x-1'}`

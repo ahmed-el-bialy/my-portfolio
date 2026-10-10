@@ -444,15 +444,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
       <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3">
           <div className="relative w-full sm:w-80">
-            <Search size={14} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${dir === 'rtl' ? 'right-3.5' : 'left-3.5'}`} />
+            <Search size={14} className="absolute top-1/2 -translate-y-1/2 text-slate-400 start-3.5" />
             <input
               type="text"
               placeholder={activeTab === 'featured' ? t.projects.searchPlaceholderFeatured : t.projects.searchPlaceholderGithub}
               value={repoSearch}
               onChange={(e) => setRepoSearch(e.target.value)}
-              className={`w-full py-2.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors shadow-xs min-h-[42px] ${
-                dir === 'rtl' ? 'pr-9 pl-3.5' : 'pl-9 pr-3.5'
-              }`}
+              className="w-full py-2.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors shadow-xs min-h-[42px] ps-9 pe-3.5"
             />
           </div>
 
@@ -486,7 +484,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
 
         {/* Quick Filter Chips (Cubit & BLoC, Clean Architecture, Hive CE, APIs, Google Play) */}
         <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 pt-0.5">
-          <span className="text-[10px] sm:text-[11px] font-mono font-semibold text-slate-500 dark:text-gray-400 mr-0.5">
+          <span className="text-[10px] sm:text-[11px] font-mono font-semibold text-slate-500 dark:text-gray-400 me-0.5">
             {lang === 'ar' ? 'تصفية:' : 'Filter:'}
           </span>
           {[
@@ -734,7 +732,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                           <Download size={13} className="shrink-0" />
                           <span>{t.projects.actions.downloadApk}</span>
                           {liveRelease?.apkSize ? (
-                            <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-600/20 text-purple-700 dark:text-purple-200 font-bold ml-0.5">
+                            <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-600/20 text-purple-700 dark:text-purple-200 font-bold ms-0.5">
                               {formatFileSize(liveRelease.apkSize)}
                             </span>
                           ) : null}
@@ -945,7 +943,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                           <Download size={14} />
                           <span>Download APK</span>
                           {repoRelease?.apkSize ? (
-                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-600/20 text-purple-700 dark:text-purple-200 font-bold ml-0.5">
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-600/20 text-purple-700 dark:text-purple-200 font-bold ms-0.5">
                               {formatFileSize(repoRelease.apkSize)}
                             </span>
                           ) : null}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Code2, Sparkles, FolderGit2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { Code2, Sparkles, FolderGit2 } from 'lucide-react';
 
 interface LanguageStat {
   name: string;
@@ -37,21 +37,21 @@ export const TechDistributionChart: React.FC<TechDistributionChartProps> = ({ la
 
       {/* GitHub-style Segmented Progress Bar */}
       <div className="relative w-full h-3.5 rounded-full overflow-hidden bg-slate-100 dark:bg-white/10 flex p-0.5 border border-slate-200/80 dark:border-white/10 shadow-inner">
-        {languages.map((lang, idx) => (
+        {languages.map((l, idx) => (
           <div
-            key={lang.name}
-            onMouseEnter={() => setHoveredLang(lang)}
+            key={l.name}
+            onMouseEnter={() => setHoveredLang(l)}
             onMouseLeave={() => setHoveredLang(null)}
             className={`h-full transition-all duration-300 relative cursor-pointer ${
               idx === 0 ? 'rounded-l-full' : ''
             } ${idx === languages.length - 1 ? 'rounded-r-full' : ''}`}
             style={{
-              width: `${Math.max(lang.percentage, 2)}%`,
-              backgroundColor: lang.color || '#00B4AB',
-              opacity: hoveredLang && hoveredLang.name !== lang.name ? 0.45 : 1,
-              transform: hoveredLang?.name === lang.name ? 'scaleY(1.15)' : 'none',
+              width: `${Math.max(l.percentage, 2)}%`,
+              backgroundColor: l.color || '#00B4AB',
+              opacity: hoveredLang && hoveredLang.name !== l.name ? 0.45 : 1,
+              transform: hoveredLang?.name === l.name ? 'scaleY(1.15)' : 'none',
             }}
-            title={`${lang.name}: ${lang.percentage}% (${lang.count} repos)`}
+            title={`${l.name}: ${l.percentage}% (${l.count} repos)`}
           />
         ))}
       </div>
@@ -59,13 +59,13 @@ export const TechDistributionChart: React.FC<TechDistributionChartProps> = ({ la
       {/* Interactive Details / Hover Card / Legend Chips */}
       <div className="flex flex-wrap items-center justify-between gap-2 mt-2.5">
         <div className="flex flex-wrap items-center gap-2 xs:gap-3">
-          {languages.map((lang) => {
-            const isHovered = hoveredLang?.name === lang.name;
+          {languages.map((l) => {
+            const isHovered = hoveredLang?.name === l.name;
             return (
               <button
-                key={lang.name}
+                key={l.name}
                 type="button"
-                onMouseEnter={() => setHoveredLang(lang)}
+                onMouseEnter={() => setHoveredLang(l)}
                 onMouseLeave={() => setHoveredLang(null)}
                 className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] xs:text-[11px] font-mono transition-all cursor-pointer ${
                   isHovered
@@ -75,16 +75,16 @@ export const TechDistributionChart: React.FC<TechDistributionChartProps> = ({ la
               >
                 <span
                   className="w-2 h-2 rounded-full shrink-0 shadow-xs"
-                  style={{ backgroundColor: lang.color || '#00B4AB' }}
+                  style={{ backgroundColor: l.color || '#00B4AB' }}
                 />
                 <span className="font-bold text-slate-900 dark:text-white">
-                  {lang.name}
+                  {l.name}
                 </span>
                 <span className="text-slate-600 dark:text-gray-400 font-semibold">
-                  {lang.percentage}%
+                  {l.percentage}%
                 </span>
                 <span className="text-[9px] text-slate-500 dark:text-gray-400 font-mono">
-                  ({lang.count} {lang === 'ar' ? 'مشروع' : (lang.count === 1 ? 'repo' : 'repos')})
+                  ({l.count} {lang === 'ar' ? 'مشروع' : (l.count === 1 ? 'repo' : 'repos')})
                 </span>
               </button>
             );

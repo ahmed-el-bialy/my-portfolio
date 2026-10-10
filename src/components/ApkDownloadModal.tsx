@@ -115,7 +115,7 @@ export const ApkDownloadModal: React.FC<ApkDownloadModalProps> = ({
             {lang === 'ar' ? 'إلغاء' : 'Cancel'}
           </button>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 ms-auto">
             {project.links.googlePlay && (
               <a
                 href={project.links.googlePlay}

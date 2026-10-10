@@ -34,7 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <>
       {/* 1. TOP HEADER NAVBAR (Desktop, Tablet & Mobile Viewport Optimization) */}
-      <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-200 border-b border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-[#090a0f]/95 backdrop-blur-xl shadow-xs">
+      <header className="fixed top-0 inset-x-0 z-50 transition-all duration-200 border-b border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-[#090a0f]/95 backdrop-blur-xl shadow-xs">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-6">
           
           {/* Zone 1: Brand Wordmark & Avatar Emblem */}
@@ -160,7 +160,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* 2. ERGONOMIC MOBILE BOTTOM DOCK (Screens < 1024px) */}
       <nav 
-        className="lg:hidden fixed bottom-3 left-3 right-3 sm:left-6 sm:right-6 max-w-md mx-auto z-50 bg-white/95 dark:bg-[#121420]/95 backdrop-blur-xl border border-slate-300/90 dark:border-white/15 rounded-2xl shadow-2xl p-1.5 flex items-center justify-around"
+        className="lg:hidden fixed bottom-3 start-3 end-3 sm:start-6 sm:end-6 max-w-md mx-auto z-50 bg-white/95 dark:bg-[#121420]/95 backdrop-blur-xl border border-slate-300/90 dark:border-white/15 rounded-2xl shadow-2xl p-1.5 flex items-center justify-around"
         aria-label="Mobile Bottom Navigation"
       >
         {navItems.map((item) => {

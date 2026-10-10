@@ -210,69 +210,7 @@ export interface Translations {
       button: string;
     };
   };
-  booking: {
-    title: string;
-    subtitle: string;
-    realSlotLockBadge: string;
-    headerDesc: string;
-    viewScheduleBtn: string;
-    backToBookBtn: string;
-    tabs: {
-      book: string;
-      schedule: string;
-    };
-    scheduleAuditTitle: string;
-    scheduleAuditDesc: string;
-    lockedSlotsHeader: string;
-    newBookingBtn: string;
-    noBookingsYet: string;
-    confirmedAndProtected: string;
-    whatsappBannerTitle: string;
-    whatsappBannerSubtitle: string;
-    whatsappBannerButton: string;
-    googleCalendarTitle: string;
-    googleCalendarSubtitle: string;
-    googleCalendarConnected: string;
-    googleCalendarConnectedDesc: string;
-    googleCalendarConnectBtn: string;
-    googleCalendarConnectingBtn: string;
-    googleCalendarDisconnectBtn: string;
-    step1Title: string;
-    step2Title: string;
-    step3Title: string;
-    step4Title: string;
-    step5Title: string;
-    cairoTimeZone: string;
-    slotsRemaining: string;
-    orCustomDate: string;
-    availableBadge: string;
-    completedBadge: string;
-    slotTakenTitle: string;
-    slotTakenLabel: string;
-    slotAvailableLabel: string;
-    cancelBtn: string;
-    lockAndConfirmBtn: string;
-    lockingSlotBtn: string;
-    fullNamePlaceholder: string;
-    emailPlaceholder: string;
-    phonePlaceholder: string;
-    notesPlaceholder: string;
-    successReference: string;
-    successLockedTitle: string;
-    successLockedMessage: string;
-    statusBadgeConfirmed: string;
-    platformLabel: string;
-    copyLinkBtn: string;
-    copiedLinkBtn: string;
-    joinRoomBtn: string;
-    emailNoticeTitle: string;
-    emailNoticeBody: string;
-    sendWhatsAppNoticeBtn: string;
-    addToGoogleCalendarBtn: string;
-    downloadIcsBtn: string;
-    doneBtn: string;
-    bookAnotherBtn: string;
-  };
+  booking: Record<string, any>;
   resume: {
     title: string;
     subtitle: string;
@@ -295,6 +233,10 @@ export interface Translations {
     syncing: string;
     rightsReserved: string;
     brandingTagline: string;
+    syncStatus: string;
+    lastSynced: string;
+    rights: string;
+    builtWith: string;
   };
 }
 
@@ -314,6 +256,13 @@ export const translations: Record<Language, Translations> = {
       currentLangName: "English",
       otherLangName: "العربية",
       brandRole: "Mobile App Developer",
+      mobileNav: {
+        overview: "Overview",
+        projects: "Projects",
+        stack: "Stack",
+        experience: "Experience",
+        contact: "Contact",
+      },
     },
     hero: {
       statusBadge: "Available for Mobile Roles & Projects",
@@ -321,6 +270,7 @@ export const translations: Record<Language, Translations> = {
       thisIs: "This is",
       name: "Ahmed El-Bialy",
       specializedIn: "Specialized in",
+      specialistBadge: "Flutter & AI Specialist",
       rotatingWords: [
         "Flutter & Dart Architecture",
         "Clean Architecture Standards",
@@ -365,6 +315,9 @@ export const translations: Record<Language, Translations> = {
       },
       languagesTitle: "Spoken & Technical Languages",
       languagesSubtitle: "Proficiency in Arabic (Native) and technical communication in English.",
+      bilingualBadge: "Bilingual (Arabic / English)",
+      proficiencyLevel: "Proficiency Level",
+      noTechFound: "No technologies found matching your search.",
     },
     projects: {
       badge: "Production Mobile Engineering",
@@ -387,6 +340,15 @@ export const translations: Record<Language, Translations> = {
       searchPlaceholderGithub: "Search repos (e.g. Movura, Sky-Cast)...",
       filterAll: "All Languages",
       filterFrameworkAll: "All Architectures",
+      filterLabel: "Filter by Tech",
+      filterChips: {
+        all: "All",
+        cubit: "Cubit",
+        cleanArch: "Clean Arch",
+        hive: "Hive",
+        api: "API",
+        googlePlay: "Google Play",
+      },
       sortBy: "Sort by",
       sortRecentlyPushed: "Recently Pushed",
       sortMostStars: "Most Stars",
@@ -403,6 +365,7 @@ export const translations: Record<Language, Translations> = {
       noProjectsFound: "No projects match your current filters.",
       resetFilters: "Reset all filters",
       reposFound: "repositories found",
+      localizedProjects: {},
     },
     experience: {
       badge: "Certifications, Courses & Track Record",
@@ -422,20 +385,33 @@ export const translations: Record<Language, Translations> = {
       university: "Kafrelsheikh University",
       period: "Undergraduate Student (In Progress)",
       gpa: "Strong Academic Standing",
+      degreeBadge: "B.Sc. Degree",
+      activeStatus: "Active",
+      undergradStatus: "Undergraduate",
       courseworkTitle: "Core Academic Coursework:",
       credentialButton: "Verify Credential",
+      verifiedCourse: "Verified Credential",
+      courseworkList: [],
+      localizedExperiences: [],
+      localizedCertificates: [],
     },
     contact: {
       badge: "Direct Communication",
       title: "Let's Build Something Exceptional",
       subtitle: "Whether you have a mobile app idea, career opportunity, or architectural question, I'm just a message away.",
       directChannels: "Direct Channels",
+      directChannelsDesc: "Connect via phone, email, or direct messaging channels.",
       phoneLabel: "Phone / WhatsApp",
       emailLabel: "Official Email",
       locationLabel: "Location",
       workAvailability: "Availability",
       workAvailabilityValue: "Open to Full-Time, Freelance & Remote contracts",
       sendMessageTitle: "Send a Message",
+      replyTimeNotice: "Typical reply within 24 hours.",
+      sendEmailBtn: "Send Email",
+      copiedBtn: "Copied!",
+      copyBtn: "Copy",
+      chatWhatsAppBtn: "Chat on WhatsApp",
       form: {
         nameLabel: "Your Name",
         namePlaceholder: "Ahmed Mohamed",
@@ -506,6 +482,10 @@ export const translations: Record<Language, Translations> = {
       syncing: "Syncing...",
       rightsReserved: "All rights reserved.",
       brandingTagline: "Production Mobile Developer Portfolio • Flutter & AI",
+      syncStatus: "Sync Status",
+      lastSynced: "Last Synced",
+      rights: "All rights reserved.",
+      builtWith: "Built with React & Tailwind",
     },
   },
   ar: {
@@ -523,6 +503,13 @@ export const translations: Record<Language, Translations> = {
       currentLangName: "العربية",
       otherLangName: "English",
       brandRole: "مطور تطبيقات هواتف",
+      mobileNav: {
+        overview: "الرئيسية",
+        projects: "المشاريع",
+        stack: "المهارات",
+        experience: "الخبرات",
+        contact: "التواصل",
+      },
     },
     hero: {
       statusBadge: "متاح لفرص العمل وتطوير التطبيقات",
@@ -530,6 +517,7 @@ export const translations: Record<Language, Translations> = {
       thisIs: "أهلاً بك، أنا",
       name: "أحمد البيلي",
       specializedIn: "متخصص في",
+      specialistBadge: "أخصائي Flutter والذكاء الاصطناعي",
       rotatingWords: [
         "معمارية تطبيقات Flutter & Dart الحديثة",
         "معايير الـ Clean Architecture الصارمة",
@@ -574,6 +562,9 @@ export const translations: Record<Language, Translations> = {
       },
       languagesTitle: "اللغات المحكية والتواصل التقني",
       languagesSubtitle: "الطلاقة التامة باللغة العربية (اللغة الأم) وتواصل تقني احترافي بالإنجليزية.",
+      bilingualBadge: "ثنائي اللغة (عربي / إنجليزي)",
+      proficiencyLevel: "مستوى الإتقان",
+      noTechFound: "لم يتم العثور على تقنيات تطابق بحثك.",
     },
     projects: {
       badge: "هندسة تطبيقات الموبايل",
@@ -596,6 +587,15 @@ export const translations: Record<Language, Translations> = {
       searchPlaceholderGithub: "بحث في المستودعات (مثل Movura, Sky-Cast)...",
       filterAll: "كافة لغات البرمجة",
       filterFrameworkAll: "كافة المعماريات التقنية",
+      filterLabel: "تصفية بالتقنية",
+      filterChips: {
+        all: "الكل",
+        cubit: "Cubit",
+        cleanArch: "Clean Arch",
+        hive: "Hive",
+        api: "API",
+        googlePlay: "Google Play",
+      },
       sortBy: "ترتيب حسب",
       sortRecentlyPushed: "الأحدث تعديلاً",
       sortMostStars: "الأكثر نجوماً",
@@ -612,6 +612,7 @@ export const translations: Record<Language, Translations> = {
       noProjectsFound: "لم يتم العثور على مشاريع تطابق البحث الحالي.",
       resetFilters: "إعادة ضبط الفلاتر",
       reposFound: "مستودع متوفر",
+      localizedProjects: {},
     },
     experience: {
       badge: "الشهادات والمسار المهني والتعليم",
@@ -631,20 +632,33 @@ export const translations: Record<Language, Translations> = {
       university: "جامعة كفر الشيخ",
       period: "طالب جامعي (قيد الدراسة)",
       gpa: "مستوى أكاديمي متميز",
+      degreeBadge: "درجة البكالوريوس",
+      activeStatus: "نشط",
+      undergradStatus: "قيد الدراسة الجامعية",
       courseworkTitle: "أبرز المقررات الأكاديمية:",
       credentialButton: "التحقق من الشهادة",
+      verifiedCourse: "شهادة معتمدة",
+      courseworkList: [],
+      localizedExperiences: [],
+      localizedCertificates: [],
     },
     contact: {
       badge: "تواصل مباشر وسريع",
       title: "دعنا نتحدث عن مشروعك القادم",
       subtitle: "سواء كان لديك فكرة تطبيق مبتكرة، فرصة عمل، أو رغبة في استشارة تقنية، يسعدني التواصل معك.",
       directChannels: "قنوات التواصل المباشرة",
+      directChannelsDesc: "تواصل عبر الهاتف، البريد الإلكتروني، أو قنوات المراسلة المباشرة.",
       phoneLabel: "الهاتف / واتساب",
       emailLabel: "البريد الإلكتروني الرسمي",
       locationLabel: "الموقع الجغرافي",
       workAvailability: "حالة التفرغ",
       workAvailabilityValue: "متاح لفرص العمل بدوام كامل، العمل الحر وعقود عن بُعد",
       sendMessageTitle: "أرسل رسالة مباشرة",
+      replyTimeNotice: "الرد خلال 24 ساعة عادةً.",
+      sendEmailBtn: "إرسال بريد",
+      copiedBtn: "تم النسخ!",
+      copyBtn: "نسخ",
+      chatWhatsAppBtn: "محادثة واتساب",
       form: {
         nameLabel: "الاسم الكريم",
         namePlaceholder: "أحمد محمد",
@@ -715,6 +729,10 @@ export const translations: Record<Language, Translations> = {
       syncing: "جاري التحديث...",
       rightsReserved: "جميع الحقوق محفوظة.",
       brandingTagline: "معرض أعمال مطور تطبيقات الهواتف • تقنيات Flutter والذكاء الاصطناعي",
+      syncStatus: "حالة المزامنة",
+      lastSynced: "آخر مزامنة",
+      rights: "جميع الحقوق محفوظة.",
+      builtWith: "مبني بـ React & Tailwind",
     },
   },
 };

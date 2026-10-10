@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DEFAULT_PROFILE, openEmailClient, FEATURED_PROJECTS } from './data/portfolioData';
-import { fetchGitHubUserStats } from './services/githubService';
+import { fetchGitHubUserStats, clearAllGitHubLocalCache } from './services/githubService';
 import { Navbar, NavTab } from './components/Navbar';
 import { VerticalNavRail } from './components/VerticalNavRail';
 import { ScrollProgressBar } from './components/ScrollProgressBar';
@@ -45,8 +45,9 @@ export default function App() {
   const handleManualRefresh = async () => {
     setIsSyncing(true);
     try {
-      await queryClient.invalidateQueries({ queryKey: ['github-data'] });
-      await queryClient.invalidateQueries({ queryKey: ['github-contributions-30d'] });
+      clearAllGitHubLocalCache();
+      await queryClient.invalidateQueries();
+      await queryClient.refetchQueries();
       setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     } catch (e) {
     } finally {
@@ -167,7 +168,7 @@ export default function App() {
 
         {/* Top Preloader Bar */}
         {isInitialLoading && (
-          <div className="fixed top-0 left-0 right-0 z-[60] h-1 bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-500 animate-pulse" />
+          <div className="fixed top-0 inset-x-0 z-[60] h-1 bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-500 animate-pulse" />
         )}
 
         {/* Top Header Navbar & Mobile Dock with Auto-ScrollSpy */}

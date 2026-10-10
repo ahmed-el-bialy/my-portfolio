@@ -638,7 +638,8 @@ export const VERIFIED_REPO_SCREENSHOTS: Record<string, string[]> = {
 export async function fetchRepoScreenshots(repoName: string, username: string = 'ahmed-el-bialy'): Promise<string[]> {
   const cleanName = repoName.trim();
   const cacheKey = `repo-screens-${username}-${cleanName}`;
-  if (typeof window !== 'undefined') {
+
+  if (typeof window !== 'undefined' && !navigator.onLine) {
     try {
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
@@ -657,7 +658,8 @@ export async function fetchRepoScreenshots(repoName: string, username: string = 
 
   try {
     const res = await fetch(`https://api.github.com/repos/${username}/${cleanName}/contents/screenshots`, {
-      headers: { Accept: "application/vnd.github+json" }
+      headers: { Accept: "application/vnd.github+json" },
+      cache: 'no-store'
     });
     if (res.ok) {
       const files = await res.json();
@@ -687,6 +689,16 @@ export async function fetchRepoScreenshots(repoName: string, username: string = 
     // API rate limits or network issues fallback
   }
 
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+  }
+
   if (verifiedFallback && verifiedFallback.length > 0) {
     return verifiedFallback;
   }
@@ -710,8 +722,225 @@ export interface RepoReleaseInfo {
   body?: string;
 }
 
+export interface ParsedReadmeLinks {
+  youtubeUrl?: string;
+  playStoreUrl?: string;
+  apkUrl?: string;
+}
+
 /**
- * Fetches latest repository release data from GitHub API with full asset and APK inspection
+ * Parses links dynamically from README text (YouTube, Google Play, APK) handling arbitrary structure.
+ */
+export function parseLinksFromReadme(readmeText?: string | null): ParsedReadmeLinks {
+  if (!readmeText) return {};
+  const result: ParsedReadmeLinks = {};
+
+  const ytRegex = /(https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|@)|youtu\.be\/)[^\s)"]+)/gi;
+  const ytMatch = readmeText.match(ytRegex);
+  if (ytMatch && ytMatch[0]) {
+    result.youtubeUrl = ytMatch[0];
+  }
+
+  const playRegex = /(https?:\/\/(?:www\.)?play\.google\.com\/store\/apps\/details\?[^\s)"]+)/gi;
+  const playMatch = readmeText.match(playRegex);
+  if (playMatch && playMatch[0]) {
+    result.playStoreUrl = playMatch[0];
+  }
+
+  const apkRegex = /(https?:\/\/[^\s)"]+\.apk)/gi;
+  const apkMatch = readmeText.match(apkRegex);
+  if (apkMatch && apkMatch[0]) {
+    result.apkUrl = apkMatch[0];
+  }
+
+  return result;
+}
+
+/**
+ * Intercepts raw GitHub image paths and Markdown/HTML image tags in README documentation
+ * and automatically wraps them in a responsive container with lazy-loading placeholders
+ * to prevent layout shifts (CLS) when high-resolution assets load.
+ */
+export function interceptAndWrapReadmeImages(readmeText?: string | null): string {
+  if (!readmeText) return '';
+  let processed = readmeText;
+
+  // 1. Intercept Markdown images: ![alt](url)
+  processed = processed.replace(
+    /!\[([^\]]*)\]\((https?:\/\/[^\s)]+\.(?:png|jpg|jpeg|webp|gif)(?:\?[^\s)]*)?)\)/gi,
+    (match, alt, url) => {
+      return `<div class="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 my-4 shadow-md flex items-center justify-center">
+  <img src="${url}" alt="${alt || 'Repository Asset'}" loading="lazy" class="w-full h-full object-cover transition-opacity duration-300" />
+</div>`;
+    }
+  );
+
+  // 2. Intercept HTML img tags: <img src="url" ...>
+  processed = processed.replace(
+    /<img\s+([^>]*src=["']([^"']+)["'][^>]*)>/gi,
+    (match, inner, url) => {
+      const hasLazy = inner.includes('loading="lazy"') ? inner : `loading="lazy" ${inner}`;
+      return `<div class="relative w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 my-4 shadow-md"><img ${hasLazy} class="w-full h-full object-cover" /></div>`;
+    }
+  );
+
+  return processed;
+}
+
+/**
+ * Regex-based pre-processor that strips outdated HTML or legacy formatting, normalizing the content structure before it's rendered.
+ */
+export function preprocessReadmeContent(readmeText?: string | null): string {
+  if (!readmeText) return '';
+  let processed = readmeText;
+
+  // 1. Strip HTML comments
+  processed = processed.replace(/<!--[\s\S]*?-->/g, '');
+
+  // 2. Normalize legacy alignment / center tags
+  processed = processed.replace(/<\/?center>/gi, '');
+  processed = processed.replace(/<p align="[^"]+">/gi, '<p>');
+
+  // 3. Normalize broken or legacy header formatting if structure changes
+  processed = processed.replace(/<div[^>]*>/gi, '\n');
+  processed = processed.replace(/<\/div>/gi, '\n');
+
+  // 4. Intercept and wrap raw GitHub / Markdown image paths in responsive lazy-loading containers
+  processed = interceptAndWrapReadmeImages(processed);
+
+  return processed.trim();
+}
+
+export function clearAllGitHubLocalCache(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (
+        key &&
+        (key.startsWith('gh_') ||
+         key.startsWith('ahmed_gh_cache') ||
+         key.startsWith('releases_cache_') ||
+         key.startsWith('repo-'))
+      ) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+  } catch {}
+}
+
+export interface GitHubWebhookPayload {
+  ref?: string;
+  repository?: {
+    name?: string;
+    full_name?: string;
+    updated_at?: string;
+  };
+  commits?: Array<{
+    added?: string[];
+    modified?: string[];
+    removed?: string[];
+  }>;
+  action?: string;
+  release?: any;
+}
+
+/**
+ * Service layer function that uses GitHub Webhooks (or simulated webhooks) to trigger
+ * a manual cache invalidation via the QueryClient and localStorage when a repository README or metadata is updated.
+ */
+export async function handleGitHubWebhookInvalidation(
+  payload: GitHubWebhookPayload,
+  queryClient?: any
+): Promise<{ success: boolean; invalidatedKeys: string[]; repoName?: string }> {
+  const repoName = payload?.repository?.name || '';
+  const invalidatedKeys: string[] = [];
+
+  clearAllGitHubLocalCache();
+
+  // Invalidate QueryClient cache if provided
+  if (queryClient && typeof queryClient.invalidateQueries === 'function') {
+    try {
+      await queryClient.invalidateQueries();
+      invalidatedKeys.push('all-queries');
+    } catch {}
+  }
+
+  return {
+    success: true,
+    invalidatedKeys,
+    repoName: repoName.trim(),
+  };
+}
+
+/**
+ * Fetches repository README with strict cache-busting and no-cache headers to bypass CDN caching instantly.
+ */
+export async function fetchRepoReadme(repoName: string, username: string = 'ahmed-el-bialy'): Promise<string | null> {
+  if (!repoName) return null;
+  const cleanRepo = repoName.trim();
+  const cacheKey = `gh_readme_${username}_${cleanRepo}`;
+  const timestamp = Date.now();
+
+  try {
+    // 1. Try GitHub REST API first with strict no-cache headers to bypass CDN edge cache
+    const apiRes = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/readme?t=${timestamp}`, {
+      headers: {
+        Accept: "application/vnd.github.raw+json",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache"
+      },
+      cache: 'no-store'
+    });
+    if (apiRes.ok) {
+      const text = await apiRes.text();
+      if (text && text.length > 10) {
+        const processed = preprocessReadmeContent(text);
+        if (typeof window !== 'undefined') {
+          try { localStorage.setItem(cacheKey, processed); } catch {}
+        }
+        return processed;
+      }
+    }
+
+    // 2. Fallback to raw branches with timestamp & no-cache headers
+    const branches = ['main', 'master'];
+    for (const branch of branches) {
+      const url = `https://raw.githubusercontent.com/${username}/${cleanRepo}/${branch}/README.md?t=${timestamp}`;
+      const res = await fetch(url, {
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache"
+        },
+        cache: 'no-store'
+      });
+      if (res.ok) {
+        const text = await res.text();
+        if (text && text.length > 10) {
+          const processed = preprocessReadmeContent(text);
+          if (typeof window !== 'undefined') {
+            try { localStorage.setItem(cacheKey, processed); } catch {}
+          }
+          return processed;
+        }
+      }
+    }
+  } catch {}
+
+  // 3. Fallback to localStorage if offline
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) return preprocessReadmeContent(cached);
+    } catch {}
+  }
+  return null;
+}
+
+/**
+ * Fetches latest repository release data from GitHub API with full asset and APK inspection with cache-busting
  */
 export async function fetchRepositoryReleaseData(
   repoName: string,
@@ -720,19 +949,17 @@ export async function fetchRepositoryReleaseData(
   if (!repoName) return { hasRelease: false };
   const cleanRepo = repoName.trim();
   const cacheKey = `gh_rel_${username}_${cleanRepo}`;
-
-  // Try memory/session cache
-  if (typeof window !== 'undefined' && !navigator.onLine) {
-    try {
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) return JSON.parse(cached);
-    } catch {}
-  }
+  const timestamp = Date.now();
 
   try {
-    // 1. Query latest published release
-    let res = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/releases/latest`, {
-      headers: { Accept: "application/vnd.github+json" }
+    // 1. Query latest published release live from GitHub (no-cache, no-store)
+    let res = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/releases/latest?t=${timestamp}`, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache"
+      },
+      cache: 'no-store'
     });
 
     let releaseData: any = null;
@@ -741,8 +968,13 @@ export async function fetchRepositoryReleaseData(
       releaseData = await res.json();
     } else {
       // 2. Query release list for pre-releases or recent tags
-      const listRes = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/releases?per_page=1`, {
-        headers: { Accept: "application/vnd.github+json" }
+      const listRes = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/releases?per_page=1&t=${timestamp}`, {
+        headers: {
+          Accept: "application/vnd.github+json",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache"
+        },
+        cache: 'no-store'
       });
       if (listRes.ok) {
         const listData = await listRes.json();

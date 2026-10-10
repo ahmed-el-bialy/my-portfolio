@@ -162,18 +162,10 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
               <span className="text-[11px] sm:text-xs font-mono text-cyan-600 dark:text-cyan-400 font-semibold">{lang === 'ar' ? 'نشط' : 'Active'}</span>
             </div>
 
-            <div className={`relative border-slate-300 dark:border-white/10 space-y-3.5 sm:space-y-6 ${
-              dir === 'rtl' 
-                ? 'border-r-2 mr-1.5 xs:mr-2 sm:mr-3 pr-3 xs:pr-4 sm:pr-6' 
-                : 'border-l-2 ml-1.5 xs:ml-2 sm:ml-3 pl-3 xs:pl-4 sm:pl-6'
-            }`}>
+            <div className="relative border-slate-300 dark:border-white/10 space-y-3.5 sm:space-y-6 border-s-2 ms-1.5 xs:ms-2 sm:ms-3 ps-3 xs:ps-4 sm:ps-6">
               {EXPERIENCES.map((exp, idx) => (
                 <div key={idx} className="relative group">
-                  <div className={`absolute top-2.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-white dark:bg-[#090a0f] border-2 border-cyan-500 group-hover:scale-125 transition-transform ${
-                    dir === 'rtl'
-                      ? '-right-[19px] xs:-right-[23px] sm:-right-[31px]'
-                      : '-left-[19px] xs:-left-[23px] sm:-left-[31px]'
-                  }`} />
+                  <div className="absolute top-2.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-white dark:bg-[#090a0f] border-2 border-cyan-500 group-hover:scale-125 transition-transform -start-[19px] xs:-start-[23px] sm:-start-[31px]" />
 
                   <div className="card-techno rounded-2xl p-3.5 xs:p-4 sm:p-6 bg-white dark:bg-[#131522] border border-black/10 dark:border-white/10 shadow-sm">
                     <div className="flex flex-col xs:flex-row xs:items-start justify-between gap-1.5 xs:gap-2">

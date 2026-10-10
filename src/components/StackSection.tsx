@@ -292,15 +292,13 @@ export const StackSection: React.FC = () => {
           </div>
 
           <div className="relative w-full sm:w-64">
-            <Search size={14} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${dir === 'rtl' ? 'right-3.5' : 'left-3.5'}`} />
+            <Search size={14} className="absolute top-1/2 -translate-y-1/2 text-slate-400 start-3.5" />
             <input
               type="text"
               placeholder={t.stack.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full py-1.5 rounded-full bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors ${
-                dir === 'rtl' ? 'pr-9 pl-3.5' : 'pl-9 pr-3.5'
-              }`}
+              className="w-full py-1.5 rounded-full bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors ps-9 pe-3.5"
             />
           </div>
         </div>

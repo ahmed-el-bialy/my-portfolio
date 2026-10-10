@@ -216,7 +216,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 ml-2">
+          <div className="flex items-center gap-2 shrink-0 ms-2">
             <button
               onClick={onClose}
               className="w-9 h-9 rounded-xl bg-slate-200/70 dark:bg-white/10 hover:bg-red-500 hover:text-white text-slate-700 dark:text-gray-300 flex items-center justify-center transition-colors cursor-pointer"
@@ -564,7 +564,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             )}
           </div>
 
-          <div className="flex items-center gap-2 ml-auto flex-wrap">
+          <div className="flex items-center gap-2 ms-auto flex-wrap">
             {project.links.github && (
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-xs">
                 <span className="text-slate-400 select-none hidden sm:inline">$</span>
@@ -607,7 +607,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         >
           <button
             onClick={() => setLightboxOpen(false)}
-            className="absolute top-4 right-4 text-white hover:text-red-400 p-2 cursor-pointer"
+            className="absolute top-4 end-4 text-white hover:text-red-400 p-2 cursor-pointer"
           >
             <X size={28} />
           </button>
@@ -617,7 +617,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               e.stopPropagation();
               prevScreen();
             }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+            className="absolute start-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer"
           >
             <ChevronLeft size={24} />
           </button>
@@ -634,7 +634,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               e.stopPropagation();
               nextScreen();
             }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+            className="absolute end-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer"
           >
             <ChevronRight size={24} />
           </button>

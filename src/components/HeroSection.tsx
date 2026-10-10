@@ -289,12 +289,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <div className="absolute inset-0 dark:bg-gradient-to-t dark:from-slate-950/85 dark:via-transparent dark:to-transparent bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
 
               {/* Top Side Badge */}
-              <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-white/95 dark:bg-black/80 backdrop-blur-md border border-slate-300 dark:border-white/25 text-[10px] font-mono text-blue-700 dark:text-cyan-300 font-bold shadow-md pointer-events-none">
+              <div className="absolute top-3 end-3 px-2.5 py-1 rounded-md bg-white/95 dark:bg-black/80 backdrop-blur-md border border-slate-300 dark:border-white/25 text-[10px] font-mono text-blue-700 dark:text-cyan-300 font-bold shadow-md pointer-events-none">
                 FLUTTER SPECIALIST
               </div>
 
               {/* Bottom Card Info Overlay */}
-              <div className="hero-photo-name-card absolute bottom-4 left-4 right-4 p-3.5 rounded-xl bg-white/95 dark:bg-[#0d101d]/95 backdrop-blur-md border border-slate-300 dark:border-white/15 shadow-xl transition-colors">
+              <div className="hero-photo-name-card absolute bottom-4 inset-x-4 p-3.5 rounded-xl bg-white/95 dark:bg-[#0d101d]/95 backdrop-blur-md border border-slate-300 dark:border-white/15 shadow-xl transition-colors">
                 <div className="text-sm font-bold text-slate-900 dark:text-white tracking-wide">{displayName}</div>
                 <div className="text-xs text-blue-600 dark:text-cyan-400 font-semibold mt-0.5">{t.nav.brandRole}</div>
               </div>
@@ -333,7 +333,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <span className="text-2xl sm:text-3xl font-extrabold tracking-tight title-contrast text-slate-900 dark:text-white">
                 {displayValue}
                 {localizedSuffix && (
-                  <span className={`text-xs sm:text-sm font-bold text-blue-700 dark:text-cyan-400 ${dir === 'rtl' ? 'mr-1.5' : 'ml-1.5'}`}>
+                  <span className={`text-xs sm:text-sm font-bold text-blue-700 dark:text-cyan-400 ms-1.5`}>
                     {localizedSuffix}
                   </span>
                 )}

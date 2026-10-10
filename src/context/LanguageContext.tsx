@@ -20,7 +20,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved === 'ar' || saved === 'en') return saved;
     }
-    return 'ar';
+    return 'en';
   });
 
   const dir: 'ltr' | 'rtl' = lang === 'ar' ? 'rtl' : 'ltr';
