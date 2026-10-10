@@ -18,6 +18,7 @@ import { BookingMeetingModal } from './components/BookingMeetingModal';
 import { RevealOnScroll } from './components/RevealOnScroll';
 import { ShieldCheck, Github, Linkedin, Youtube, Mail, RefreshCw, Radio } from 'lucide-react';
 import { WhatsAppLogo, TikTokLogo } from './components/TechLogos';
+import { useLanguage } from './context/LanguageContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +31,7 @@ const queryClient = new QueryClient({
 });
 
 export default function App() {
+  const { lang, dir, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<NavTab>('hero');
   const [isResumeOpen, setIsResumeOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
@@ -260,14 +262,14 @@ export default function App() {
               <div>
                 <div className="flex items-center justify-center sm:justify-start gap-2">
                   <span className="font-bold text-slate-900 dark:text-white text-sm">{profile.name}</span>
-                  <span className="text-blue-600 dark:text-cyan-400 font-mono text-xs font-semibold">• Flutter Specialist</span>
+                  <span className="text-blue-600 dark:text-cyan-400 font-mono text-xs font-semibold">• {lang === 'ar' ? 'مهندس تطبيقات فلاتر وذكاء اصطناعي' : 'Flutter & AI Mobile Specialist'}</span>
                 </div>
                 <div className="flex items-center justify-center sm:justify-start gap-2 mt-1 font-mono text-[11px]">
                   <span className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Sync Status: {isOnline ? 'Online (Real-Time)' : 'Offline Cache'}</span>
+                    <span>{t.footer.syncStatus}: {isOnline ? (lang === 'ar' ? 'متصل (تزامن لحظي)' : 'Online (Real-Time)') : (lang === 'ar' ? 'تخزين مؤقت محلي' : 'Offline Cache')}</span>
                   </span>
-                  <span className="text-slate-500 dark:text-gray-400 font-medium">Synced: {lastSyncTime}</span>
+                  <span className="text-slate-500 dark:text-gray-400 font-medium">{t.footer.lastSynced}: {lastSyncTime}</span>
                 </div>
               </div>
 
@@ -279,7 +281,7 @@ export default function App() {
                 title="Force refresh GitHub repository data and live activity"
               >
                 <RefreshCw size={12} className={isSyncing ? 'animate-spin text-blue-500' : 'text-slate-600 dark:text-slate-400'} />
-                <span>{isSyncing ? 'Syncing...' : 'Refresh Data'}</span>
+                <span>{isSyncing ? (lang === 'ar' ? 'جارٍ التحديث...' : 'Syncing...') : t.footer.refreshData}</span>
               </button>
             </div>
 
@@ -342,8 +344,8 @@ export default function App() {
           </div>
 
           <div className="max-w-7xl mx-auto mt-6 pt-4 border-t border-slate-200 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 dark:text-gray-400 gap-2 font-medium">
-            <span>© {new Date().getFullYear()} Ahmed El-Bialy. All rights reserved.</span>
-            <span>Production Mobile Developer Portfolio • Flutter & AI</span>
+            <span>{t.footer.rights}</span>
+            <span>{t.footer.builtWith}</span>
           </div>
         </footer>
 

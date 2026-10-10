@@ -19,6 +19,7 @@ import {
 import { DeveloperProfile, EDUCATION_DATA, EXPERIENCES, FEATURED_PROJECTS } from '../data/portfolioData';
 import { WhatsAppLogo } from './TechLogos';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ResumeModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ interface ResumeModalProps {
 
 export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profile }) => {
   useScrollLock(isOpen);
+  const { lang, dir, t } = useLanguage();
 
   const [copiedLink, setCopiedLink] = useState(false);
 
@@ -62,8 +64,12 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
               <Award size={18} />
             </span>
             <div className="truncate">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white title-contrast truncate">Curriculum Vitae</h3>
-              <p className="text-[11px] text-slate-500 dark:text-gray-400 truncate">{profile.name} • Flutter Developer</p>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white title-contrast truncate">
+                {t.resume.title}
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-gray-400 truncate">
+                {profile.name} • {lang === 'ar' ? 'مطور تطبيقات هواتف فلاتر' : 'Flutter Mobile Developer'}
+              </p>
             </div>
           </div>
 
@@ -74,31 +80,31 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs text-white font-medium shadow-sm transition-colors cursor-pointer"
-                title="Download Official PDF"
+                title={t.resume.downloadPdf}
               >
                 <Download size={13} />
-                <span className="hidden xs:inline">Download</span>
+                <span className="hidden xs:inline">{lang === 'ar' ? 'تحميل' : 'Download'}</span>
                 <span>PDF</span>
-                <ArrowUpRight size={12} />
+                <ArrowUpRight size={12} className={dir === 'rtl' ? 'rotate-180' : ''} />
               </a>
             )}
 
             <button
               onClick={handlePrint}
               className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-xs text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 transition-colors cursor-pointer"
-              title="Print CV"
+              title={t.resume.print}
             >
               <Printer size={13} />
-              <span className="hidden md:inline">Print</span>
+              <span className="hidden md:inline">{lang === 'ar' ? 'طباعة' : 'Print'}</span>
             </button>
 
             <button
               onClick={handleCopyLink}
               className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-xs text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 transition-colors cursor-pointer"
-              title="Copy CV link"
+              title={t.resume.copyLink}
             >
               {copiedLink ? <Check size={13} className="text-emerald-500" /> : <Share2 size={13} />}
-              <span className="hidden md:inline">{copiedLink ? 'Copied' : 'Share'}</span>
+              <span className="hidden md:inline">{copiedLink ? (lang === 'ar' ? 'تم النسخ' : 'Copied') : (lang === 'ar' ? 'مشاركة' : 'Share')}</span>
             </button>
 
             <button
@@ -181,7 +187,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
             </div>
 
             <p className="text-slate-700 dark:text-gray-300 text-xs sm:text-sm mt-4 leading-relaxed body-contrast">
-              {profile.bio} Proven track record building and deploying production-grade mobile applications with a focus on Clean Architecture, predictable state management (BLoC/Cubit), offline-first caching with Hive CE, and secure RESTful API integrations. Creator of &apos;Revio&apos; live on Google Play.
+              {t.hero.bio}
             </p>
           </div>
 
@@ -189,19 +195,19 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
           <div>
             <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2 title-contrast">
               <GraduationCap size={16} className="text-blue-600 dark:text-blue-400" />
-              <span>Academic Education</span>
+              <span>{t.resume.educationTitle}</span>
             </h2>
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-black/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-sm title-contrast">{EDUCATION_DATA.degree}</h3>
-                <div className="text-xs text-blue-700 dark:text-cyan-400 font-bold mt-0.5">{EDUCATION_DATA.faculty} • {EDUCATION_DATA.university}</div>
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm title-contrast">{t.experience.degreeTitle}</h3>
+                <div className="text-xs text-blue-700 dark:text-cyan-400 font-bold mt-0.5">{t.experience.faculty} • {t.experience.university}</div>
                 <div className="text-[11px] text-slate-700 dark:text-gray-300 mt-2 font-medium">
-                  Core Foundations: {EDUCATION_DATA.coursework.slice(0, 5).join(' • ')}
+                  {t.experience.courseworkTitle} {EDUCATION_DATA.coursework.slice(0, 5).join(' • ')}
                 </div>
               </div>
               <div className="text-left sm:text-right shrink-0">
-                <div className="text-xs font-mono text-slate-600 dark:text-gray-400">{EDUCATION_DATA.period}</div>
-                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{EDUCATION_DATA.gpa}</div>
+                <div className="text-xs font-mono text-slate-600 dark:text-gray-400">{t.experience.period}</div>
+                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{t.experience.gpa}</div>
               </div>
             </div>
           </div>
@@ -210,7 +216,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
           <div>
             <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2 title-contrast">
               <Briefcase size={16} className="text-blue-600 dark:text-blue-400" />
-              <span>Engineering Experience</span>
+              <span>{t.resume.experienceTitle}</span>
             </h2>
             <div className="space-y-3.5">
               {EXPERIENCES.map((exp, idx) => (
@@ -237,7 +243,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
           <div>
             <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2 title-contrast">
               <FolderGit2 size={16} className="text-blue-600 dark:text-blue-400" />
-              <span>Published Applications</span>
+              <span>{t.resume.projectsTitle}</span>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {FEATURED_PROJECTS.map((proj) => (

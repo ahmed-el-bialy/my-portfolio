@@ -2,12 +2,14 @@ import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Activity, Flame, Calendar, GitCommit, CheckCircle2 } from 'lucide-react';
 import { fetchContributionCalendar, ContributionDay } from '../services/githubService';
+import { useLanguage } from '../context/LanguageContext';
 
 interface GitHubActivityProps {
   username?: string;
 }
 
 export const GitHubActivity: React.FC<GitHubActivityProps> = ({ username = 'ahmed-el-bialy' }) => {
+  const { lang } = useLanguage();
   const { data: contributions, isLoading } = useQuery<ContributionDay[]>({
     queryKey: ['github-contributions-30d', username],
     queryFn: () => fetchContributionCalendar(username),
@@ -73,17 +75,17 @@ export const GitHubActivity: React.FC<GitHubActivityProps> = ({ username = 'ahme
         <div className="flex items-center gap-2">
           <Activity size={14} className="text-emerald-500" />
           <span className="text-xs font-bold text-slate-900 dark:text-white">
-            Recent 30-Day Activity & GitHub Commits
+            {lang === 'ar' ? 'سجل النشاط والمساهمات البرمجية خلال 30 يوماً' : 'Recent 30-Day Activity & GitHub Commits'}
           </span>
         </div>
 
         <div className="flex items-center gap-3 text-xs font-mono text-slate-500 dark:text-gray-400">
           <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
-            <GitCommit size={13} /> {total30dCommits} Contributions
+            <GitCommit size={13} /> {total30dCommits} {lang === 'ar' ? 'مساهمة' : 'Contributions'}
           </span>
           <span>•</span>
           <span className="flex items-center gap-1 text-amber-500 font-bold">
-            <Flame size={13} /> {currentStreak > 0 ? `${currentStreak}d streak` : `${activeDaysCount} active days`}
+            <Flame size={13} /> {currentStreak > 0 ? (lang === 'ar' ? `استمرارية ${currentStreak} أيام` : `${currentStreak}d streak`) : (lang === 'ar' ? `${activeDaysCount} يوم نشط` : `${activeDaysCount} active days`)}
           </span>
         </div>
       </div>
@@ -114,16 +116,16 @@ export const GitHubActivity: React.FC<GitHubActivityProps> = ({ username = 'ahme
       {/* Heatmap Legend */}
       <div className="flex items-center justify-between mt-2.5 text-[10px] text-slate-500 dark:text-gray-400 font-mono">
         <span className="flex items-center gap-1">
-          <Calendar size={11} /> Last 30 days
+          <Calendar size={11} /> {lang === 'ar' ? 'آخر 30 يوماً' : 'Last 30 days'}
         </span>
         <div className="flex items-center gap-1.5">
-          <span>Less</span>
+          <span>{lang === 'ar' ? 'أقل' : 'Less'}</span>
           <span className="w-2.5 h-2.5 rounded-xs bg-slate-200 dark:bg-white/5 border border-slate-300 dark:border-white/10" />
           <span className="w-2.5 h-2.5 rounded-xs bg-emerald-950 border border-emerald-800" />
           <span className="w-2.5 h-2.5 rounded-xs bg-emerald-800 border border-emerald-600" />
           <span className="w-2.5 h-2.5 rounded-xs bg-emerald-600 border border-emerald-400" />
           <span className="w-2.5 h-2.5 rounded-xs bg-emerald-400 border border-emerald-200" />
-          <span>More</span>
+          <span>{lang === 'ar' ? 'أكثر' : 'More'}</span>
         </div>
       </div>
     </div>

@@ -49,6 +49,7 @@ import {
   OfficialBooking,
 } from '../services/bookingManager';
 import { User as FirebaseUser } from 'firebase/auth';
+import { useLanguage } from '../context/LanguageContext';
 
 interface BookingMeetingModalProps {
   isOpen: boolean;
@@ -101,6 +102,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
   profile,
 }) => {
   useScrollLock(isOpen);
+  const { lang, dir, t } = useLanguage();
 
   // Tab views within modal: Booking form vs Official Schedule
   const [activeView, setActiveView] = useState<'book' | 'schedule'>('book');

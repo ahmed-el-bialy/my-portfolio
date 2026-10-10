@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Code2, Sparkles, FolderGit2 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface LanguageStat {
   name: string;
@@ -14,6 +15,7 @@ interface TechDistributionChartProps {
 
 export const TechDistributionChart: React.FC<TechDistributionChartProps> = ({ languages }) => {
   const [hoveredLang, setHoveredLang] = useState<LanguageStat | null>(null);
+  const { lang, dir } = useLanguage();
 
   if (!languages || languages.length === 0) return null;
 
@@ -25,11 +27,11 @@ export const TechDistributionChart: React.FC<TechDistributionChartProps> = ({ la
         <div className="flex items-center gap-1.5 xs:gap-2">
           <Code2 size={14} className="text-cyan-500 shrink-0" />
           <span className="text-[11px] xs:text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
-            Repository Stack Distribution
+            {lang === 'ar' ? 'توزيع التقنيات البرمجية للمستودعات' : 'Repository Stack Distribution'}
           </span>
         </div>
         <span className="text-[10px] xs:text-[11px] font-mono text-slate-500 dark:text-gray-400">
-          Dart Ecosystem Focused
+          {lang === 'ar' ? 'تركيز رئيسي على بيئة Dart & Flutter' : 'Dart Ecosystem Focused'}
         </span>
       </div>
 
@@ -82,7 +84,7 @@ export const TechDistributionChart: React.FC<TechDistributionChartProps> = ({ la
                   {lang.percentage}%
                 </span>
                 <span className="text-[9px] text-slate-500 dark:text-gray-400 font-mono">
-                  ({lang.count} {lang.count === 1 ? 'repo' : 'repos'})
+                  ({lang.count} {lang === 'ar' ? 'مشروع' : (lang.count === 1 ? 'repo' : 'repos')})
                 </span>
               </button>
             );

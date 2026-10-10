@@ -17,6 +17,7 @@ import confetti from 'canvas-confetti';
 import { DeveloperProfile, openEmailClient } from '../data/portfolioData';
 import { WhatsAppLogo } from './TechLogos';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
   onOpenBooking,
 }) => {
   useScrollLock(isOpen);
+  const { lang, dir, t } = useLanguage();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -116,13 +118,13 @@ export const ContactModal: React.FC<ContactModalProps> = ({
         <div className="mb-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-2">
             <Mail size={13} />
-            <span>Direct Message</span>
+            <span>{t.contact.badge}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight title-contrast">
-            Let&apos;s Build Something Great Together
+            {t.contact.title}
           </h2>
           <p className="text-slate-600 dark:text-gray-400 text-xs sm:text-sm mt-1">
-            Looking for a production Flutter developer, code audit, or mobile project discussion?
+            {t.contact.subtitle}
           </p>
         </div>
 
@@ -131,7 +133,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
           <div className="md:col-span-2 space-y-4 text-xs sm:text-sm">
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-3">
               <div className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
-                Direct Channels
+                {t.contact.directChannels}
               </div>
 
               <div className="space-y-2">
@@ -144,7 +146,9 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     <Mail size={15} className="text-cyan-500 shrink-0" />
                     <span className="text-xs text-slate-800 dark:text-gray-200 font-medium truncate">{profile.email}</span>
                   </div>
-                  <span className="text-[10px] text-blue-600 dark:text-cyan-400 font-semibold group-hover:underline shrink-0">Open</span>
+                  <span className="text-[10px] text-blue-600 dark:text-cyan-400 font-semibold group-hover:underline shrink-0">
+                    {lang === 'ar' ? 'فتح' : 'Open'}
+                  </span>
                 </button>
 
                 <a
@@ -171,7 +175,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-semibold text-xs transition-all shadow-sm cursor-pointer"
                 >
                   <Video size={13} />
-                  <span>Book a 1-on-1 Meeting</span>
+                  <span>{t.hero.bookMeeting}</span>
                 </button>
               )}
             </div>
@@ -179,9 +183,9 @@ export const ContactModal: React.FC<ContactModalProps> = ({
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs text-slate-600 dark:text-gray-400 space-y-1.5 font-mono">
               <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold">
                 <Clock size={12} />
-                <span>Response Time: &lt; 12 Hours</span>
+                <span>{lang === 'ar' ? 'زمن الاستجابة: أقل من 12 ساعة' : 'Response Time: < 12 Hours'}</span>
               </div>
-              <div>Location: {profile.location}</div>
+              <div>{t.contact.locationLabel}: {t.hero.location}</div>
             </div>
           </div>
 
@@ -192,64 +196,64 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                 <div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center mb-3">
                   <Check size={24} />
                 </div>
-                <h4 className="text-base font-bold text-slate-900 dark:text-white">Message Sent Successfully!</h4>
+                <h4 className="text-base font-bold text-slate-900 dark:text-white">{t.contact.form.sentSuccess}</h4>
                 <p className="text-xs text-slate-600 dark:text-gray-300 mt-1">
-                  Thank you! Ahmed will get back to you shortly at {email}.
+                  {lang === 'ar' ? `شكراً لك! سيتم الرد عليك قريباً عبر البريد: ${email}` : `Thank you! Ahmed will get back to you shortly at ${email}.`}
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-3.5">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                    Your Name *
+                    {t.contact.form.nameLabel} *
                   </label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Sarah Jenkins"
+                    placeholder={t.contact.form.namePlaceholder}
                     className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                    Your Email *
+                    {t.contact.form.emailLabel} *
                   </label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. sarah@company.com"
+                    placeholder={t.contact.form.emailPlaceholder}
                     className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                    Subject (Optional)
+                    {t.contact.form.subjectLabel}
                   </label>
                   <input
                     type="text"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    placeholder="Flutter Mobile App Project / Role inquiry"
+                    placeholder={t.contact.form.subjectPlaceholder}
                     className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
-                    Message Details *
+                    {t.contact.form.messageLabel} *
                   </label>
                   <textarea
                     required
                     rows={3}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Tell me about your mobile app project, timelines, or role details..."
+                    placeholder={t.contact.form.messagePlaceholder}
                     className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 resize-none"
                   />
                 </div>
@@ -260,11 +264,11 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-blue-600/30 transition-all cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? (
-                    <span>Sending...</span>
+                    <span>{t.contact.form.sendingButton}</span>
                   ) : (
                     <>
                       <Send size={14} />
-                      <span>Send Direct Message</span>
+                      <span>{t.contact.form.sendButton}</span>
                     </>
                   )}
                 </button>

@@ -57,6 +57,48 @@ body {
   background-attachment: fixed;
 }
 
+/* Authentic Arabic Typography (Cairo) & RTL polish */
+html[dir="rtl"] body,
+html.rtl-mode body {
+  font-family: 'Cairo', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  letter-spacing: normal !important;
+  line-height: 1.8 !important;
+  word-spacing: 0.05em;
+}
+
+html[dir="rtl"] h1,
+html[dir="rtl"] h2,
+html[dir="rtl"] h3,
+html[dir="rtl"] h4,
+html[dir="rtl"] h5,
+html[dir="rtl"] h6,
+html[dir="rtl"] .fluid-section-title,
+html[dir="rtl"] .fluid-card-title {
+  font-family: 'Cairo', system-ui, sans-serif !important;
+  letter-spacing: normal !important;
+  line-height: 1.35 !important;
+}
+
+html[dir="rtl"] p,
+html[dir="rtl"] span,
+html[dir="rtl"] button,
+html[dir="rtl"] input,
+html[dir="rtl"] textarea,
+html[dir="rtl"] select {
+  font-family: 'Cairo', system-ui, sans-serif;
+  letter-spacing: normal !important;
+}
+
+/* Precise font-mono preservation for code & tech metrics in Arabic */
+html[dir="rtl"] .font-mono,
+html[dir="rtl"] code,
+html[dir="rtl"] pre {
+  font-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  direction: ltr;
+  display: inline-block;
+  unicode-bidi: isolate;
+}
+
 html.light body {
   background-image: 
     radial-gradient(ellipse 80% 50% at 50% -15%, rgba(37, 99, 235, 0.05), transparent 75%),

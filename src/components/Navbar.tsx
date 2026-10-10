@@ -1,5 +1,6 @@
 import React from 'react';
-import { Home, Layers, FolderGit2, Briefcase, Mail, FileText, Sun, Moon, Video, Calendar } from 'lucide-react';
+import { Home, Layers, FolderGit2, Briefcase, Mail, FileText, Sun, Moon, Video, Languages } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export type NavTab = 'hero' | 'projects' | 'stack' | 'experience' | 'contact';
 
@@ -20,12 +21,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   isDark,
   onToggleTheme,
 }) => {
+  const { lang, toggleLang, t } = useLanguage();
+
   const navItems = [
-    { id: 'hero' as NavTab, label: 'Overview', icon: Home },
-    { id: 'projects' as NavTab, label: 'Projects', icon: FolderGit2 },
-    { id: 'stack' as NavTab, label: 'Tech Stack', icon: Layers },
-    { id: 'experience' as NavTab, label: 'Experience', icon: Briefcase },
-    { id: 'contact' as NavTab, label: 'Contact', icon: Mail },
+    { id: 'hero' as NavTab, label: t.nav.overview, icon: Home },
+    { id: 'projects' as NavTab, label: t.nav.projects, icon: FolderGit2 },
+    { id: 'stack' as NavTab, label: t.nav.stack, icon: Layers },
+    { id: 'experience' as NavTab, label: t.nav.experience, icon: Briefcase },
+    { id: 'contact' as NavTab, label: t.nav.contact, icon: Mail },
   ];
 
   return (
@@ -58,14 +61,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-xs sm:text-base tracking-tight text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition-colors truncate max-w-[120px] sm:max-w-none">
-                  Ahmed El-Bialy
+                  {lang === 'ar' ? 'أحمد البيلي' : 'Ahmed El-Bialy'}
                 </span>
                 <span className="hidden sm:inline-block text-[10px] font-mono text-cyan-700 dark:text-cyan-300 px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 font-bold shrink-0">
                   Flutter
                 </span>
               </div>
               <span className="text-[10px] sm:text-[11px] text-cyan-700 dark:text-cyan-400 font-mono -mt-0.5 font-medium truncate">
-                Mobile App Developer
+                {t.nav.brandRole}
               </span>
             </div>
           </div>
@@ -90,17 +93,30 @@ export const Navbar: React.FC<NavbarProps> = ({
             })}
           </nav>
 
-          {/* Zone 3: Primary Actions (Guaranteed Theme Toggle Visibility on ALL Screen Sizes) */}
+          {/* Zone 3: Primary Actions (Guaranteed Theme Toggle + Bilingual Toggle) */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Bilingual Language Switcher Button (Desktop & Tablet & Mobile) */}
+            <button
+              onClick={toggleLang}
+              className="h-9 sm:h-10 px-2.5 sm:px-3 rounded-xl flex items-center gap-1.5 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 border border-slate-300 dark:border-white/20 text-xs font-bold text-slate-800 dark:text-gray-100 transition-all cursor-pointer shrink-0 shadow-xs active:scale-95"
+              aria-label={t.nav.switchLangTooltip}
+              title={t.nav.switchLangTooltip}
+            >
+              <Languages size={15} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
+              <span className="font-bold text-[11px] sm:text-xs tracking-tight">
+                {lang === 'en' ? 'العربية' : 'English'}
+              </span>
+            </button>
+
             {/* Book Meeting Button (Desktop & Tablet) */}
             {onOpenBooking && (
               <button
                 onClick={onOpenBooking}
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-600/15 to-cyan-500/15 hover:from-blue-600 hover:to-cyan-500 hover:text-white text-blue-700 dark:text-cyan-300 border border-blue-500/30 text-xs font-bold transition-all cursor-pointer whitespace-nowrap shadow-xs"
-                title="Book a 1-on-1 meeting directly with Ahmed"
+                title={t.nav.bookMeeting}
               >
                 <Video size={13} className="text-blue-600 dark:text-cyan-400 group-hover:text-white" />
-                <span>Book Meeting</span>
+                <span>{t.nav.bookMeeting}</span>
               </button>
             )}
 
@@ -108,11 +124,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onOpenResume}
               className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl sm:rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-xs font-semibold text-slate-800 dark:text-gray-200 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 transition-all cursor-pointer whitespace-nowrap"
-              title="View Resume / CV"
+              title={t.nav.resume}
             >
               <FileText size={13} className="text-emerald-500" />
-              <span className="hidden sm:inline">Resume</span>
-              <span className="sm:hidden text-[11px] font-bold">CV</span>
+              <span className="hidden sm:inline">{t.nav.resume}</span>
+              <span className="sm:hidden text-[11px] font-bold">{t.nav.cvShort}</span>
             </button>
 
             {/* Direct Contact Button (Desktop) */}
@@ -121,7 +137,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="hidden md:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-600/30 transition-all cursor-pointer whitespace-nowrap"
             >
               <Mail size={13} />
-              <span>Contact</span>
+              <span>{t.nav.contact}</span>
             </button>
 
             {/* High-Visibility Light / Dark Theme Toggle Button */}
@@ -154,7 +170,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`flex flex-col items-center justify-center min-h-[44px] min-w-[44px] py-1 px-2 rounded-xl transition-all cursor-pointer ${
+              className={`flex flex-col items-center justify-center min-h-[44px] min-w-[44px] py-1 px-1.5 rounded-xl transition-all cursor-pointer ${
                 isActive 
                   ? 'text-blue-600 dark:text-cyan-400 font-bold scale-105 bg-blue-50/80 dark:bg-white/10 shadow-xs' 
                   : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
@@ -166,10 +182,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           );
         })}
 
+        {/* Mobile Language Switcher Button in Dock */}
+        <button
+          onClick={toggleLang}
+          className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] py-1 px-1.5 rounded-xl transition-all cursor-pointer text-slate-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95"
+          aria-label={t.nav.switchLangTooltip}
+          title={t.nav.switchLangTooltip}
+        >
+          <Languages size={17} className="text-cyan-600 dark:text-cyan-400" />
+          <span className="text-[9px] mt-0.5 leading-tight font-bold text-cyan-700 dark:text-cyan-300">
+            {lang === 'en' ? 'عربي' : 'EN'}
+          </span>
+        </button>
+
         {/* Mobile Theme Toggle Button in the Dock */}
         <button
           onClick={onToggleTheme}
-          className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] py-1 px-2 rounded-xl transition-all cursor-pointer text-slate-700 dark:text-amber-300 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95"
+          className="flex flex-col items-center justify-center min-h-[44px] min-w-[44px] py-1 px-1.5 rounded-xl transition-all cursor-pointer text-slate-700 dark:text-amber-300 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95"
           aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
           title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >

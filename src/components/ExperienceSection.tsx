@@ -8,12 +8,14 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import { EDUCATION_DATA, EXPERIENCES, CERTIFICATES } from '../data/portfolioData';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ExperienceSectionProps {
   onOpenResume: () => void;
 }
 
 export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResume }) => {
+  const { lang, dir, t } = useLanguage();
   const [activeSubTab, setActiveSubTab] = useState<'all' | 'certs' | 'experience'>('all');
 
   return (
@@ -22,13 +24,13 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
       <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-6 xs:mb-8 sm:mb-10 w-full px-1 sm:px-0">
         <div className="inline-flex items-center gap-1.5 xs:gap-2 px-2.5 xs:px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-[10px] xs:text-[11px] sm:text-xs font-semibold uppercase tracking-wider mb-2 sm:mb-3">
           <Award size={13} className="shrink-0" />
-          <span>Certifications, Courses & Track Record</span>
+          <span>{t.experience.badge}</span>
         </div>
         <h2 className="fluid-section-title font-extrabold text-slate-900 dark:text-white tracking-tight title-contrast">
-          Experience, Courses &amp; Certifications
+          {t.experience.title}
         </h2>
         <p className="fluid-section-sub text-slate-600 dark:text-gray-400 mt-1.5 sm:mt-2 max-w-2xl px-1 sm:px-0 body-contrast">
-          Verified technical certifications, engineering apprenticeships, and academic computer science background.
+          {t.experience.subtitle}
         </p>
 
         {/* Sub-filter tabs */}
@@ -41,7 +43,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
                 : 'text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            All Background
+            {t.experience.subTabs.all}
           </button>
           <button
             onClick={() => setActiveSubTab('certs')}
@@ -52,7 +54,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
             }`}
           >
             <FileCheck2 size={13} className="shrink-0" />
-            <span>Courses ({CERTIFICATES.length})</span>
+            <span>{t.experience.subTabs.certs} ({CERTIFICATES.length})</span>
           </button>
           <button
             onClick={() => setActiveSubTab('experience')}
@@ -63,7 +65,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
             }`}
           >
             <Briefcase size={13} className="shrink-0" />
-            <span>Experience & Degree</span>
+            <span>{t.experience.subTabs.experience}</span>
           </button>
         </div>
       </div>
@@ -74,14 +76,14 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
           <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-1.5 xs:gap-2 mb-3.5 sm:mb-5">
             <h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 title-contrast">
               <FileCheck2 size={16} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
-              <span>Verified Certifications &amp; Specialized Programs</span>
+              <span>{t.experience.certsSectionTitle}</span>
             </h3>
             <button
               onClick={onOpenResume}
               className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center gap-1 cursor-pointer self-end xs:self-auto"
             >
-              <span>View Original CV</span>
-              <ArrowUpRight size={13} />
+              <span>{t.experience.viewOriginalCv}</span>
+              <ArrowUpRight size={13} className={dir === 'rtl' ? 'rotate-180' : ''} />
             </button>
           </div>
 
@@ -126,7 +128,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
 
                 <div className="mt-3.5 sm:mt-4 pt-2.5 sm:pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between text-xs">
                   <span className="text-[10px] xs:text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                    <CheckCircle2 size={13} className="shrink-0" /> Verified Course
+                    <CheckCircle2 size={13} className="shrink-0" /> {lang === 'ar' ? 'برنامج معتمد' : 'Verified Course'}
                   </span>
                   {cert.credentialUrl && (
                     <a
@@ -135,8 +137,8 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
                       rel="noreferrer"
                       className="inline-flex items-center gap-1 text-[10px] xs:text-[11px] sm:text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
                     >
-                      <span>Open Document</span>
-                      <ArrowUpRight size={13} />
+                      <span>{t.experience.credentialButton}</span>
+                      <ArrowUpRight size={13} className={dir === 'rtl' ? 'rotate-180' : ''} />
                     </a>
                   )}
                 </div>
@@ -155,15 +157,23 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
             <div className="flex items-center justify-between mb-1 sm:mb-2">
               <h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 title-contrast">
                 <Briefcase size={16} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
-                <span>Mobile Development &amp; Track Record</span>
+                <span>{t.experience.experienceSectionTitle}</span>
               </h3>
-              <span className="text-[11px] sm:text-xs font-mono text-cyan-600 dark:text-cyan-400 font-semibold">Active</span>
+              <span className="text-[11px] sm:text-xs font-mono text-cyan-600 dark:text-cyan-400 font-semibold">{lang === 'ar' ? 'نشط' : 'Active'}</span>
             </div>
 
-            <div className="relative border-l-2 border-slate-300 dark:border-white/10 ml-1.5 xs:ml-2 sm:ml-3 space-y-3.5 sm:space-y-6 pl-3 xs:pl-4 sm:pl-6">
+            <div className={`relative border-slate-300 dark:border-white/10 space-y-3.5 sm:space-y-6 ${
+              dir === 'rtl' 
+                ? 'border-r-2 mr-1.5 xs:mr-2 sm:mr-3 pr-3 xs:pr-4 sm:pr-6' 
+                : 'border-l-2 ml-1.5 xs:ml-2 sm:ml-3 pl-3 xs:pl-4 sm:pl-6'
+            }`}>
               {EXPERIENCES.map((exp, idx) => (
                 <div key={idx} className="relative group">
-                  <div className="absolute -left-[19px] xs:-left-[23px] sm:-left-[31px] top-2.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-white dark:bg-[#090a0f] border-2 border-cyan-500 group-hover:scale-125 transition-transform" />
+                  <div className={`absolute top-2.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-white dark:bg-[#090a0f] border-2 border-cyan-500 group-hover:scale-125 transition-transform ${
+                    dir === 'rtl'
+                      ? '-right-[19px] xs:-right-[23px] sm:-right-[31px]'
+                      : '-left-[19px] xs:-left-[23px] sm:-left-[31px]'
+                  }`} />
 
                   <div className="card-techno rounded-2xl p-3.5 xs:p-4 sm:p-6 bg-white dark:bg-[#131522] border border-black/10 dark:border-white/10 shadow-sm">
                     <div className="flex flex-col xs:flex-row xs:items-start justify-between gap-1.5 xs:gap-2">
@@ -206,40 +216,40 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
             <div className="flex items-center justify-between mb-1 sm:mb-2">
               <h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 title-contrast">
                 <GraduationCap size={16} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
-                <span>Academic Foundations</span>
+                <span>{t.experience.educationTitle}</span>
               </h3>
-              <span className="text-[11px] sm:text-xs font-mono text-emerald-600 dark:text-emerald-400 font-semibold">Undergraduate</span>
+              <span className="text-[11px] sm:text-xs font-mono text-emerald-600 dark:text-emerald-400 font-semibold">{lang === 'ar' ? 'طالب جامعي' : 'Undergraduate'}</span>
             </div>
 
             <div className="card-techno rounded-2xl p-3.5 xs:p-4 sm:p-6 bg-white dark:bg-[#131522] border border-black/10 dark:border-white/10 space-y-3 sm:space-y-4 shadow-sm">
               <div>
                 <span className="text-[9px] xs:text-[10px] font-mono text-cyan-700 dark:text-cyan-300 px-2 xs:px-2.5 py-0.5 rounded-md bg-cyan-500/10 uppercase tracking-wider font-semibold">
-                  Undergraduate Degree
+                  {lang === 'ar' ? 'درجة جامعية' : 'Undergraduate Degree'}
                 </span>
                 <h4 className="fluid-card-title font-bold text-slate-900 dark:text-white mt-1.5 title-contrast leading-snug">
                   {EDUCATION_DATA.degree}
                 </h4>
                 <div className="text-xs sm:text-sm font-bold text-blue-700 dark:text-cyan-400 mt-1">
-                  Faculty of Artificial Intelligence (كلية الذكاء الاصطناعي)
+                  {t.experience.faculty}
                 </div>
                 <div className="text-[11px] sm:text-xs text-slate-700 dark:text-gray-300 font-semibold mt-0.5">
-                  Kafrelsheikh University (جامعة كفر الشيخ)
+                  {t.experience.university}
                 </div>
               </div>
 
               <div className="flex items-center justify-between text-xs py-2 px-2.5 sm:px-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5">
-                <span className="text-slate-600 dark:text-gray-400 font-medium text-[10px] xs:text-[11px] sm:text-xs">Academic Period</span>
-                <span className="font-mono text-slate-900 dark:text-white font-bold text-xs">{EDUCATION_DATA.period}</span>
+                <span className="text-slate-600 dark:text-gray-400 font-medium text-[10px] xs:text-[11px] sm:text-xs">{lang === 'ar' ? 'الفترة الأكاديمية' : 'Academic Period'}</span>
+                <span className="font-mono text-slate-900 dark:text-white font-bold text-xs">{t.experience.period}</span>
               </div>
 
               <div className="flex items-center justify-between text-xs py-2 px-2.5 sm:px-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5">
-                <span className="text-slate-600 dark:text-gray-400 font-medium text-[10px] xs:text-[11px] sm:text-xs">Standing</span>
-                <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold text-xs">{EDUCATION_DATA.gpa}</span>
+                <span className="text-slate-600 dark:text-gray-400 font-medium text-[10px] xs:text-[11px] sm:text-xs">{lang === 'ar' ? 'المستوى الأكاديمي' : 'Standing'}</span>
+                <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold text-xs">{t.experience.gpa}</span>
               </div>
 
               <div>
                 <h5 className="text-[10px] xs:text-[11px] sm:text-xs font-bold text-slate-900 dark:text-gray-200 uppercase tracking-wider mb-2">
-                  Core Academic Coursework:
+                  {t.experience.courseworkTitle}
                 </h5>
                 <div className="flex flex-wrap gap-1 sm:gap-1.5">
                   {EDUCATION_DATA.coursework.map((c, i) => (
@@ -258,7 +268,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
                   onClick={onOpenResume}
                   className="w-full py-2.5 rounded-xl bg-blue-600/10 hover:bg-blue-600 text-blue-700 dark:text-cyan-300 hover:text-white text-xs font-semibold border border-blue-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs min-h-[38px] sm:min-h-[40px]"
                 >
-                  <span>Open Full CV Document</span>
+                  <span>{t.experience.viewOriginalCv}</span>
                   <Award size={14} />
                 </button>
               </div>

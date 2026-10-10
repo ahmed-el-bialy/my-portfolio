@@ -44,7 +44,18 @@ The portfolio provides an interactive showcase of published Flutter mobile appli
 - **Categorized Filter Matrix**: Segment skills across Mobile Core, State & Storage, APIs & Cloud, and Tooling.
 - **Academic Degree & Experience Roadmap**: Details undergraduate AI degree coursework, CodeAlpha internship certifications, and verified credentials.
 
-### 4. 🎨 Design & Experience Polish
+### 4. 🌐 Full Bilingual Architecture (Arabic / English & Instant RTL Switching)
+- **Instant Toggle & RTL Layout**: Seamless one-click switching between Arabic (العربية) and English with automatic HTML `dir="rtl"` and `dir="ltr"` management.
+- **Localized Typography**: Dynamic typography using the **Cairo** Google Font for Arabic and **Inter** for English, ensuring natural line-height, letter spacing, and optical alignment across all devices.
+- **Comprehensive Localization Matrix**: All UI elements, navigation labels, filter tabs, hero punchlines, technical blueprints, and booking modals are fully localized with persistent language preferences saved in `localStorage`.
+
+### 5. 📅 Real-Time Slot Locking Booking System & Google Calendar Integration
+- **Strict Anti Double-Booking (`BookingValidationService`)**: Slot reservations are guarded against race conditions with atomic slot locking across clients, preventing duplicate bookings.
+- **Google Calendar API Integration**: Automatic meeting generation with synchronized Google Meet video rooms and direct `.ics` calendar file downloads.
+- **Direct Real-Time Notification Streams**: Instant WhatsApp notification pings and multi-recipient email confirmations dispatched to host and client.
+- **Public Audit Schedule**: Interactive view of reserved and available consultation slots from 03:00 PM to 08:00 PM CLT.
+
+### 6. 🎨 Design & Experience Polish
 - **Full Light & Dark Theme Support**: Persistent theme toggle with high-contrast styling and WCAG accessibility standards.
 - **Responsive & Adaptive Layout**: Optimized for mobile touchscreens (>44px touch targets), tablets, and widescreen desktop displays.
 - **Framer Motion Micro-Interactions**: Scroll-triggered section reveals, smooth scrollspy navigation rail, and custom interactive cursor for desktop.

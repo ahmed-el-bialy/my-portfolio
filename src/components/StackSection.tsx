@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, Sparkles, Layers, Globe } from 'lucide-react';
 import { SpotlightCard } from './SpotlightCard';
 import { LANGUAGES_DATA } from '../data/portfolioData';
+import { useLanguage } from '../context/LanguageContext';
 import {
   FlutterLogo,
   DartLogo,
@@ -230,16 +231,17 @@ export const DEDICATED_TECHS: TechItem[] = [
 ];
 
 export const StackSection: React.FC = () => {
+  const { lang, dir, t } = useLanguage();
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const filterTabs = [
-    { id: 'all', label: 'All Technologies' },
-    { id: 'mobile', label: 'Mobile Core' },
-    { id: 'state-storage', label: 'State & Storage' },
-    { id: 'network-backend', label: 'APIs & Cloud' },
-    { id: 'ai-cs', label: 'AI & Engineering' },
-    { id: 'tools', label: 'Developer Tools' },
+    { id: 'all', label: t.stack.categories.all },
+    { id: 'mobile', label: t.stack.categories.mobile },
+    { id: 'state-storage', label: t.stack.categories.stateStorage },
+    { id: 'network-backend', label: t.stack.categories.networkBackend },
+    { id: 'ai-cs', label: t.stack.categories.aiCs },
+    { id: 'tools', label: t.stack.categories.tools },
   ];
 
   const filteredTechs = DEDICATED_TECHS.filter((item) => {
@@ -262,13 +264,13 @@ export const StackSection: React.FC = () => {
       <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-10">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-3">
           <Sparkles size={13} />
-          <span>Core Engineering Toolkit</span>
+          <span>{t.stack.badge}</span>
         </div>
         <h2 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight title-contrast">
-          Tech Stack & Architecture Arsenal
+          {t.stack.title}
         </h2>
         <p className="text-slate-600 dark:text-gray-400 mt-2 text-sm sm:text-base body-contrast">
-          Frameworks, state architectures, and tools used to build robust, scalable mobile applications.
+          {t.stack.subtitle}
         </p>
 
         {/* Filter Tabs & Live Search */}
@@ -290,13 +292,15 @@ export const StackSection: React.FC = () => {
           </div>
 
           <div className="relative w-full sm:w-64">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={14} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${dir === 'rtl' ? 'right-3.5' : 'left-3.5'}`} />
             <input
               type="text"
-              placeholder="Search stack (e.g. Flutter, BLoC...)"
+              placeholder={t.stack.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-1.5 rounded-full bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors"
+              className={`w-full py-1.5 rounded-full bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors ${
+                dir === 'rtl' ? 'pr-9 pl-3.5' : 'pl-9 pr-3.5'
+              }`}
             />
           </div>
         </div>
@@ -381,15 +385,15 @@ export const StackSection: React.FC = () => {
             </div>
             <div>
               <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white title-contrast">
-                Language Proficiency & Technical Communication
+                {t.stack.languagesTitle}
               </h3>
               <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
-                Professional communication across Arabic (Native) and English (Technical & Documentation)
+                {t.stack.languagesSubtitle}
               </p>
             </div>
           </div>
           <span className="text-xs font-mono px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20 self-start sm:self-auto">
-            Bilingual Capability
+            {lang === 'ar' ? 'إتقان ثنائي اللغة' : 'Bilingual Capability'}
           </span>
         </div>
 

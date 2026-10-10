@@ -1,5 +1,6 @@
 import React from 'react';
 import { WifiOff, ShieldCheck, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface GitHubFallbackNoticeProps {
   isRateLimited?: boolean;
@@ -14,6 +15,8 @@ export const GitHubFallbackNotice: React.FC<GitHubFallbackNoticeProps> = ({
   onRetry,
   isRefreshing = false,
 }) => {
+  const { lang } = useLanguage();
+
   return (
     <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-900 dark:text-amber-200">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -23,15 +26,23 @@ export const GitHubFallbackNotice: React.FC<GitHubFallbackNoticeProps> = ({
           </div>
           <div className="space-y-0.5">
             <h5 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
-              <span>{isOffline ? 'Offline Mode Active' : 'Cached GitHub Repository Snapshot Active'}</span>
+              <span>
+                {isOffline 
+                  ? (lang === 'ar' ? 'الوضع غير المتصل بالإنترنت نشط' : 'Offline Mode Active')
+                  : (lang === 'ar' ? 'عرض نسخة المستودعات المخزنة مؤقتاً (كاش آمن)' : 'Cached GitHub Repository Snapshot Active')}
+              </span>
               <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold">
-                Protected
+                {lang === 'ar' ? 'محمي' : 'Protected'}
               </span>
             </h5>
             <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed font-sans">
               {isOffline
-                ? 'Network is currently offline. Viewing high-fidelity cached repositories snapshot. Hint: Check your internet connection.'
-                : 'GitHub API rate limit protected. Displaying verified real repository snapshot and architecture metrics without disruption.'}
+                ? (lang === 'ar' 
+                    ? 'الجهاز غير متصل بالشبكة حالياً. يتم عرض أحدث نسخة مخزنة مؤقتاً للمستودعات بدقة تامة.'
+                    : 'Network is currently offline. Viewing high-fidelity cached repositories snapshot. Hint: Check your internet connection.')
+                : (lang === 'ar'
+                    ? 'تم حماية الطلب من حدود معدل GitHub API. يتم عرض بيانات المستودعات المعتمدة ومقاييس المعمارية دون أي انقطاع.'
+                    : 'GitHub API rate limit protected. Displaying verified real repository snapshot and architecture metrics without disruption.')}
             </p>
           </div>
         </div>
@@ -43,7 +54,7 @@ export const GitHubFallbackNotice: React.FC<GitHubFallbackNoticeProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-white/10 hover:bg-amber-100 dark:hover:bg-white/20 text-slate-900 dark:text-white border border-amber-400/30 text-xs font-semibold transition-all cursor-pointer shrink-0 disabled:opacity-50"
           >
             <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
-            <span>Check Connection</span>
+            <span>{isRefreshing ? (lang === 'ar' ? 'جارٍ الفحص...' : 'Checking...') : (lang === 'ar' ? 'فحص الاتصال' : 'Check Connection')}</span>
           </button>
         )}
       </div>

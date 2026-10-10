@@ -35,6 +35,7 @@ import {
   formatFileSize
 } from '../services/githubService';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ProjectDetailsModalProps {
   isOpen: boolean;
@@ -50,6 +51,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   onWatchDemo,
 }) => {
   useScrollLock(isOpen);
+  const { lang, dir } = useLanguage();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'screenshots' | 'specs'>('overview');
   const [mediaView, setMediaView] = useState<'video' | 'cover'>('video');
@@ -235,7 +237,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 : 'border-transparent text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            Overview & Demo
+            {lang === 'ar' ? 'نظرة عامة وعرض' : 'Overview & Demo'}
           </button>
           <button
             onClick={() => setActiveTab('screenshots')}
@@ -246,7 +248,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             }`}
           >
             <ImageIcon size={13} />
-            <span>Screenshots ({screenshots.length})</span>
+            <span>{lang === 'ar' ? `لقطات الشاشة (${screenshots.length})` : `Screenshots (${screenshots.length})`}</span>
           </button>
           <button
             onClick={() => setActiveTab('specs')}
@@ -257,7 +259,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             }`}
           >
             <Layers size={13} />
-            <span>Architecture & Specs</span>
+            <span>{lang === 'ar' ? 'المعمارية والمواصفات' : 'Architecture & Specs'}</span>
           </button>
         </div>
 

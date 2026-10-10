@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavTab } from './Navbar';
+import { useLanguage } from '../context/LanguageContext';
 
 interface VerticalNavRailProps {
   activeTab: NavTab;
@@ -9,24 +10,27 @@ interface VerticalNavRailProps {
 interface NavSection {
   id: NavTab;
   label: string;
-  shortLabel: string;
 }
 
 export const VerticalNavRail: React.FC<VerticalNavRailProps> = ({ activeTab, onNavigate }) => {
   const [hoveredTab, setHoveredTab] = useState<NavTab | null>(null);
+  const { dir, t } = useLanguage();
+  const isRtl = dir === 'rtl';
 
   const sections: NavSection[] = [
-    { id: 'hero', label: 'Overview', shortLabel: 'Top' },
-    { id: 'projects', label: 'Projects & Repos', shortLabel: 'Projects' },
-    { id: 'stack', label: 'Tech Stack', shortLabel: 'Stack' },
-    { id: 'experience', label: 'Experience & CV', shortLabel: 'Experience' },
-    { id: 'contact', label: 'Contact', shortLabel: 'Contact' },
+    { id: 'hero', label: t.nav.overview },
+    { id: 'projects', label: t.nav.projects },
+    { id: 'stack', label: t.nav.stack },
+    { id: 'experience', label: t.nav.experience },
+    { id: 'contact', label: t.nav.contact },
   ];
 
   return (
     <div
       id="vertical-nav-rail"
-      className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center gap-3 p-2 rounded-full bg-white/80 dark:bg-[#0c0d14]/85 backdrop-blur-md border border-slate-300 dark:border-white/10 shadow-xl transition-all select-none"
+      className={`fixed top-1/2 -translate-y-1/2 z-40 hidden md:flex flex-col items-center gap-3 p-2 rounded-full bg-white/80 dark:bg-[#0c0d14]/85 backdrop-blur-md border border-slate-300 dark:border-white/10 shadow-xl transition-all select-none ${
+        isRtl ? 'left-3 sm:left-5' : 'right-3 sm:right-5'
+      }`}
       aria-label="Section Navigation Indicator"
     >
       {sections.map((section) => {
@@ -40,12 +44,14 @@ export const VerticalNavRail: React.FC<VerticalNavRailProps> = ({ activeTab, onN
             onMouseEnter={() => setHoveredTab(section.id)}
             onMouseLeave={() => setHoveredTab(null)}
           >
-            {/* Tooltip on the left */}
+            {/* Tooltip */}
             <div
-              className={`absolute right-7 px-2.5 py-1 rounded-lg text-[11px] font-semibold tracking-wide whitespace-nowrap pointer-events-none transition-all duration-200 shadow-md ${
+              className={`absolute px-2.5 py-1 rounded-lg text-[11px] font-semibold tracking-wide whitespace-nowrap pointer-events-none transition-all duration-200 shadow-md ${
+                isRtl ? 'left-7' : 'right-7'
+              } ${
                 isHovered
-                  ? 'opacity-100 -translate-x-1'
-                  : 'opacity-0 translate-x-2'
+                  ? `opacity-100 ${isRtl ? 'translate-x-1' : '-translate-x-1'}`
+                  : `opacity-0 ${isRtl ? '-translate-x-2' : 'translate-x-2'}`
               } ${
                 isActive
                   ? 'bg-blue-600 text-white shadow-blue-500/25'
@@ -54,10 +60,18 @@ export const VerticalNavRail: React.FC<VerticalNavRailProps> = ({ activeTab, onN
             >
               {section.label}
               <div
-                className={`absolute right-[-4px] top-1/2 -translate-y-1/2 border-solid border-l-4 border-y-4 border-y-transparent border-r-0 ${
-                  isActive
-                    ? 'border-l-blue-600'
-                    : 'border-l-slate-900 dark:border-l-white'
+                className={`absolute top-1/2 -translate-y-1/2 border-solid border-y-4 border-y-transparent ${
+                  isRtl
+                    ? `left-[-4px] border-r-4 border-l-0 ${
+                        isActive
+                          ? 'border-r-blue-600'
+                          : 'border-r-slate-900 dark:border-r-white'
+                      }`
+                    : `right-[-4px] border-l-4 border-r-0 ${
+                        isActive
+                          ? 'border-l-blue-600'
+                          : 'border-l-slate-900 dark:border-l-white'
+                      }`
                 }`}
               />
             </div>

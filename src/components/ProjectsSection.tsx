@@ -37,6 +37,7 @@ import { ProjectSkeletonCard } from './ProjectSkeletonCard';
 import { GitHubActivity } from './GitHubActivity';
 import { TechDistributionChart } from './TechDistributionChart';
 import { GitHubFallbackNotice } from './GitHubFallbackNotice';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ProjectsSectionProps {
   currentGithubUser: string;
@@ -44,6 +45,7 @@ interface ProjectsSectionProps {
 }
 
 export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubUser, onRepoCountChange }) => {
+  const { lang, dir, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'featured' | 'github'>('featured');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [apkModalProject, setApkModalProject] = useState<Project | null>(null);
@@ -302,13 +304,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
         <div className="flex flex-col items-start text-start max-w-2xl px-1 sm:px-0">
           <div className="inline-flex items-center gap-1.5 xs:gap-2 px-2.5 xs:px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-700 dark:text-cyan-400 text-[10px] xs:text-[11px] sm:text-xs font-semibold uppercase tracking-wider mb-2 sm:mb-3">
             <FolderGit2 size={13} className="shrink-0" />
-            <span>Production Mobile Engineering</span>
+            <span>{t.projects.badge}</span>
           </div>
           <h2 className="fluid-section-title font-extrabold text-slate-900 dark:text-white tracking-tight title-contrast">
-            Mobile Applications &amp; GitHub Repos
+            {t.projects.title}
           </h2>
           <p className="fluid-section-sub text-slate-600 dark:text-gray-400 mt-1.5 sm:mt-2 max-w-xl body-contrast">
-            Showcase of published Flutter apps, clean architecture implementations, and live GitHub repositories.
+            {t.projects.subtitle}
           </p>
         </div>
 
@@ -324,7 +326,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               }`}
             >
               <Sparkles size={15} className="shrink-0" />
-              <span>Production Apps ({FEATURED_PROJECTS.length})</span>
+              <span>{t.projects.tabs.featured} ({FEATURED_PROJECTS.length})</span>
             </button>
             <button
               onClick={() => setActiveTab('github')}
@@ -335,7 +337,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               }`}
             >
               <Github size={15} className="shrink-0" />
-              <span>GitHub Repositories ({githubRepos.length})</span>
+              <span>{t.projects.tabs.github} ({githubRepos.length})</span>
             </button>
           </div>
         </div>
@@ -375,11 +377,11 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                 </span>
                 <span className="inline-flex items-center gap-1 xs:gap-1.5 px-2 py-0.5 rounded-full text-[9px] xs:text-[10px] font-mono font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
                   <Radio size={10} className="animate-pulse shrink-0" />
-                  <span>{githubStats?.isFromCache ? 'Auto Synced (Cached)' : 'Live Connected'}</span>
+                  <span>{githubStats?.isFromCache ? t.projects.hud.syncedCached : t.projects.hud.liveConnected}</span>
                 </span>
               </div>
               <div className="flex items-center gap-2 text-[10px] xs:text-[11px] sm:text-xs text-slate-600 dark:text-gray-400 mt-0.5 font-mono truncate">
-                <span className="truncate">{githubStats?.bio || 'Flutter Specialist & AI Student'}</span>
+                <span className="truncate">{githubStats?.bio || t.projects.hud.bioFallback}</span>
               </div>
             </div>
           </div>
@@ -389,7 +391,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
             <div className="flex items-center gap-2 xs:gap-2.5 p-2 xs:p-2.5 sm:px-3 sm:py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs shadow-xs min-h-[42px] sm:min-h-[44px]">
               <FolderGit2 size={15} className="text-blue-500 shrink-0" />
               <div className="flex flex-col min-w-0">
-                <span className="text-[9px] xs:text-[10px] text-slate-500 dark:text-gray-400 font-medium leading-none">Public Repos</span>
+                <span className="text-[9px] xs:text-[10px] text-slate-500 dark:text-gray-400 font-medium leading-none">{t.projects.hud.publicRepos}</span>
                 <span className="font-bold text-slate-900 dark:text-white font-mono text-xs sm:text-sm mt-0.5 leading-none">
                   {githubStats?.public_repos || githubRepos.length}
                 </span>
@@ -399,7 +401,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
             <div className="flex items-center gap-2 xs:gap-2.5 p-2 xs:p-2.5 sm:px-3 sm:py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs shadow-xs min-h-[42px] sm:min-h-[44px]">
               <Star size={15} className="text-amber-500 shrink-0" />
               <div className="flex flex-col min-w-0">
-                <span className="text-[9px] xs:text-[10px] text-slate-500 dark:text-gray-400 font-medium leading-none">Total Stars</span>
+                <span className="text-[9px] xs:text-[10px] text-slate-500 dark:text-gray-400 font-medium leading-none">{t.projects.hud.totalStars}</span>
                 <span className="font-bold text-slate-900 dark:text-white font-mono text-xs sm:text-sm mt-0.5 leading-none">
                   {githubStats?.totalStars || 16}
                 </span>
@@ -409,7 +411,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
             <div className="flex items-center gap-2 xs:gap-2.5 p-2 xs:p-2.5 sm:px-3 sm:py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs shadow-xs min-h-[42px] sm:min-h-[44px]">
               <GitFork size={15} className="text-cyan-500 shrink-0" />
               <div className="flex flex-col min-w-0">
-                <span className="text-[9px] xs:text-[10px] text-slate-500 dark:text-gray-400 font-medium leading-none">Total Forks</span>
+                <span className="text-[9px] xs:text-[10px] text-slate-500 dark:text-gray-400 font-medium leading-none">{t.projects.hud.totalForks}</span>
                 <span className="font-bold text-slate-900 dark:text-white font-mono text-xs sm:text-sm mt-0.5 leading-none">
                   {githubStats?.totalForks || 5}
                 </span>
@@ -419,7 +421,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
             <div className="flex items-center gap-2 xs:gap-2.5 p-2 xs:p-2.5 sm:px-3 sm:py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs shadow-xs min-h-[42px] sm:min-h-[44px]">
               <GitCommit size={15} className="text-emerald-500 shrink-0" />
               <div className="flex flex-col min-w-0">
-                <span className="text-[9px] xs:text-[10px] text-slate-500 dark:text-gray-400 font-medium leading-none">Latest Commit</span>
+                <span className="text-[9px] xs:text-[10px] text-slate-500 dark:text-gray-400 font-medium leading-none">{t.projects.hud.latestCommit}</span>
                 <span className="font-bold text-cyan-700 dark:text-cyan-400 font-mono text-xs sm:text-sm mt-0.5 truncate leading-none">
                   {mostRecentRepo?.name || 'Revio'}
                 </span>
@@ -442,13 +444,15 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
       <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3">
           <div className="relative w-full sm:w-80">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={14} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${dir === 'rtl' ? 'right-3.5' : 'left-3.5'}`} />
             <input
               type="text"
-              placeholder={activeTab === 'featured' ? "Search apps (e.g. Movura, Revio, Cubit)..." : "Search repos (e.g. Movura, Sky-Cast)..."}
+              placeholder={activeTab === 'featured' ? t.projects.searchPlaceholderFeatured : t.projects.searchPlaceholderGithub}
               value={repoSearch}
               onChange={(e) => setRepoSearch(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors shadow-xs min-h-[42px]"
+              className={`w-full py-2.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors shadow-xs min-h-[42px] ${
+                dir === 'rtl' ? 'pr-9 pl-3.5' : 'pl-9 pr-3.5'
+              }`}
             />
           </div>
 
@@ -459,10 +463,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                 onChange={(e) => setSelectedLanguage(e.target.value)}
                 className="w-full sm:w-auto px-3 py-2 sm:py-2.5 rounded-xl bg-white dark:bg-[#131522] border border-slate-200 dark:border-white/10 text-[11px] sm:text-xs text-slate-700 dark:text-gray-300 focus:outline-none cursor-pointer shadow-xs min-h-[40px]"
               >
-                <option value="all">All Languages</option>
-                {allLanguages.map((lang) => (
-                  <option key={lang} value={lang}>
-                    {lang}
+                <option value="all">{t.projects.filterAll}</option>
+                {allLanguages.map((langItem) => (
+                  <option key={langItem} value={langItem}>
+                    {langItem}
                   </option>
                 ))}
               </select>
@@ -472,9 +476,9 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="w-full sm:w-auto px-3 py-2 sm:py-2.5 rounded-xl bg-white dark:bg-[#131522] border border-slate-200 dark:border-white/10 text-[11px] sm:text-xs text-slate-700 dark:text-gray-300 focus:outline-none cursor-pointer shadow-xs min-h-[40px]"
               >
-                <option value="pushed">Recently Pushed</option>
-                <option value="stars">Most Stars</option>
-                <option value="name">Alphabetical</option>
+                <option value="pushed">{t.projects.sortRecentlyPushed}</option>
+                <option value="stars">{t.projects.sortMostStars}</option>
+                <option value="name">{t.projects.sortAlphabetical}</option>
               </select>
             </div>
           )}
@@ -482,14 +486,16 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
 
         {/* Quick Filter Chips (Cubit & BLoC, Clean Architecture, Hive CE, APIs, Google Play) */}
         <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 pt-0.5">
-          <span className="text-[10px] sm:text-[11px] font-mono font-semibold text-slate-500 dark:text-gray-400 mr-0.5">Filter:</span>
+          <span className="text-[10px] sm:text-[11px] font-mono font-semibold text-slate-500 dark:text-gray-400 mr-0.5">
+            {lang === 'ar' ? 'تصفية:' : 'Filter:'}
+          </span>
           {[
-            { id: 'all', label: 'All Projects' },
+            { id: 'all', label: lang === 'ar' ? 'كافة المشاريع' : 'All Projects' },
             { id: 'cubit', label: 'Cubit & BLoC' },
             { id: 'clean-arch', label: 'Clean Architecture' },
-            { id: 'hive', label: 'Hive CE & Offline' },
+            { id: 'hive', label: lang === 'ar' ? 'تخزين Hive CE' : 'Hive CE & Offline' },
             { id: 'api', label: 'REST APIs & TMDB' },
-            { id: 'google-play', label: 'Google Play & Live' },
+            { id: 'google-play', label: lang === 'ar' ? 'Google Play وتطبيقات حية' : 'Google Play & Live' },
           ].map((chip) => {
             const isChipActive = frameworkFilter === chip.id;
             return (
@@ -665,7 +671,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                       title="View App Details & Specs"
                     >
                       <Eye size={14} className="shrink-0" />
-                      <span>Details</span>
+                      <span>{t.projects.actions.viewSpecs}</span>
                     </button>
 
                     {hasVideo && (
@@ -682,7 +688,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                         title="Watch YouTube Demo Video"
                       >
                         <Play size={13} fill="currentColor" className="shrink-0" />
-                        <span>Demo</span>
+                        <span>{t.projects.actions.liveDemo}</span>
                       </button>
                     )}
 
@@ -696,7 +702,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                         title="View GitHub Code"
                       >
                         <Github size={14} className="shrink-0" />
-                        <span>Code</span>
+                        <span>{t.projects.actions.sourceCode}</span>
                       </a>
                     )}
                   </div>
@@ -713,7 +719,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                           className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2.5 sm:px-3.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 hover:text-white text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 transition-all text-[11px] sm:text-xs font-bold min-h-[38px] sm:min-h-[44px]"
                         >
                           <ArrowUpRight size={14} className="shrink-0" />
-                          <span>Google Play</span>
+                          <span>{t.projects.actions.playStore}</span>
                         </a>
                       )}
 
@@ -726,7 +732,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                           className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2.5 sm:px-3.5 rounded-xl bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 border border-purple-500/25 transition-all text-[11px] sm:text-xs font-bold min-h-[38px] sm:min-h-[44px] cursor-pointer"
                         >
                           <Download size={13} className="shrink-0" />
-                          <span>Download APK</span>
+                          <span>{t.projects.actions.downloadApk}</span>
                           {liveRelease?.apkSize ? (
                             <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-600/20 text-purple-700 dark:text-purple-200 font-bold ml-0.5">
                               {formatFileSize(liveRelease.apkSize)}

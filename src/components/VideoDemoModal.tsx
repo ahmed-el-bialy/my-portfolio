@@ -2,6 +2,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, Youtube, ExternalLink, Play, Sparkles } from 'lucide-react';
 import { useScrollLock } from '../hooks/useScrollLock';
+import { useLanguage } from '../context/LanguageContext';
 
 interface VideoDemoModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export const VideoDemoModal: React.FC<VideoDemoModalProps> = ({
   youtubeChannelUrl = 'https://youtube.com/@ahmedel-bialy',
 }) => {
   useScrollLock(isOpen);
+  const { lang } = useLanguage();
 
   if (!isOpen) return null;
 
@@ -66,10 +68,12 @@ export const VideoDemoModal: React.FC<VideoDemoModalProps> = ({
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 truncate">
                 <span className="truncate">{projectName}</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-500/10 text-red-600 dark:text-red-400 font-semibold shrink-0">
-                  Demo
+                  {lang === 'ar' ? 'فيديو تجريبي' : 'Demo'}
                 </span>
               </h3>
-              <p className="text-[11px] text-slate-500 dark:text-gray-400 truncate">Mobile App Demonstration Video</p>
+              <p className="text-[11px] text-slate-500 dark:text-gray-400 truncate">
+                {lang === 'ar' ? 'فيديو استعراض ومحاكاة ميزات التطبيق' : 'Mobile App Demonstration Video'}
+              </p>
             </div>
           </div>
 
@@ -99,10 +103,12 @@ export const VideoDemoModal: React.FC<VideoDemoModalProps> = ({
               <Youtube size={32} />
             </div>
             <h4 className="text-base sm:text-lg font-bold text-white mb-1">
-              Watch Demo on Official YouTube Channel
+              {lang === 'ar' ? 'مشاهدة الفيديو على قناة YouTube الرسمية' : 'Watch Demo on Official YouTube Channel'}
             </h4>
             <p className="text-xs text-gray-300 max-w-md mb-4 leading-relaxed font-sans">
-              Watch interactive app walkthroughs, feature showcases, and UI demonstrations on Ahmed El-Bialy&apos;s YouTube channel.
+              {lang === 'ar' 
+                ? 'شاهد جولات تفاعلية ومحاكاة لميزات التطبيق وواجهات المستخدم على القناة الرسمية للمهندس أحمد البيلي على يوتيوب.'
+                : 'Watch interactive app walkthroughs, feature showcases, and UI demonstrations on Ahmed El-Bialy\'s YouTube channel.'}
             </p>
             <a
               href={youtubeChannelUrl}
@@ -111,7 +117,7 @@ export const VideoDemoModal: React.FC<VideoDemoModalProps> = ({
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs transition-all shadow-lg shadow-red-600/30"
             >
               <Play size={14} fill="currentColor" />
-              <span>Open YouTube Channel (@ahmedel-bialy)</span>
+              <span>{lang === 'ar' ? 'فتح قناة اليوتيوب (@ahmedel-bialy)' : 'Open YouTube Channel (@ahmedel-bialy)'}</span>
               <ExternalLink size={13} />
             </a>
           </div>
@@ -129,7 +135,7 @@ export const VideoDemoModal: React.FC<VideoDemoModalProps> = ({
             rel="noreferrer"
             className="text-red-600 dark:text-red-400 hover:underline flex items-center gap-1 font-semibold transition-colors"
           >
-            <span>Open in YouTube</span>
+            <span>{lang === 'ar' ? 'فتح على YouTube' : 'Open in YouTube'}</span>
             <ExternalLink size={12} />
           </a>
         </div>

@@ -17,12 +17,12 @@
     <meta name="theme-color" content="#08090d" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
 
-    <!-- Instant Pre-Hydration Theme Script -->
+    <!-- Instant Pre-Hydration Theme & Language Script -->
     <script>
       (function() {
         try {
-          var saved = localStorage.getItem('ahmed_portfolio_theme');
-          var isDark = saved ? saved === 'dark' : true;
+          var savedTheme = localStorage.getItem('ahmed_portfolio_theme');
+          var isDark = savedTheme ? savedTheme === 'dark' : true;
           if (!isDark) {
             document.documentElement.classList.remove('dark');
             document.documentElement.classList.add('light');
@@ -31,6 +31,17 @@
             document.documentElement.classList.add('dark');
             document.documentElement.classList.remove('light');
             document.documentElement.setAttribute('data-theme', 'dark');
+          }
+
+          var savedLang = localStorage.getItem('ahmed_portfolio_lang') || 'ar';
+          document.documentElement.lang = savedLang;
+          document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+          if (savedLang === 'ar') {
+            document.documentElement.classList.add('rtl-mode');
+            document.documentElement.classList.remove('ltr-mode');
+          } else {
+            document.documentElement.classList.add('ltr-mode');
+            document.documentElement.classList.remove('rtl-mode');
           }
         } catch (e) {}
       })();
@@ -49,10 +60,10 @@
     <meta name="twitter:description" content="Professional portfolio of Ahmed El-Bialy, Flutter Specialist & AI Student. Features automatic GitHub repository synchronization, live contributions, and published apps on Google Play." />
     <meta name="twitter:image" content="https://avatars.githubusercontent.com/u/245139141?v=4" />
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts (Cairo for Arabic, Inter for Latin, Fira Code, Permanent Marker) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800;900&family=Permanent+Marker&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800;900&family=Permanent+Marker&display=swap" rel="stylesheet" />
 
     <!-- Schema.org Structured Data (JSON-LD) for Person Profile -->
     <script type="application/ld+json">
