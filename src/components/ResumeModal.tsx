@@ -17,6 +17,8 @@ import {
   FileText,
   Layout,
   ExternalLink,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { DeveloperProfile, EDUCATION_DATA, EXPERIENCES, FEATURED_PROJECTS } from '../data/portfolioData';
 import { WhatsAppLogo } from './TechLogos';
@@ -34,6 +36,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
   const { lang, dir, t } = useLanguage();
 
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
   // View mode: 'web' for interactive layout, 'pdf' for native PDF viewer
   const [viewMode, setViewMode] = useState<'web' | 'pdf'>('web');
 
@@ -52,19 +55,21 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-xs overflow-y-auto"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-xs overflow-hidden"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className="relative w-full max-w-4xl my-auto bg-white dark:bg-[#12131b] border border-slate-200 dark:border-white/15 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden"
+        className={`relative w-full ${
+          isMaximized ? 'max-w-[98vw] h-[97vh]' : 'max-w-5xl lg:max-w-6xl h-[90vh] sm:h-[93vh]'
+        } bg-white dark:bg-[#12131b] border border-slate-200 dark:border-white/15 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-200`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Action Bar */}
-        <div className="p-3.5 sm:p-5 bg-slate-50 dark:bg-[#171823] border-b border-slate-200 dark:border-white/10 flex items-center justify-between shrink-0 no-print gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="p-2 rounded-lg bg-blue-600/10 text-blue-600 dark:text-cyan-400 shrink-0">
+        <div className="p-3 sm:p-4 md:p-5 bg-slate-50 dark:bg-[#171823] border-b border-slate-200 dark:border-white/10 flex items-center justify-between shrink-0 no-print gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="p-2 rounded-xl bg-blue-600/10 text-blue-600 dark:text-cyan-400 shrink-0">
               <Award size={18} />
             </span>
             <div className="truncate">
@@ -89,7 +94,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
               title={
                 viewMode === 'pdf'
                   ? (lang === 'ar' ? 'الرجوع لعرض الويب التفاعلي' : 'Back to Web View')
-                  : (lang === 'ar' ? 'عرض السيرة الذاتية كملف PDF طبيعي' : 'View CV as natural PDF')
+                  : (lang === 'ar' ? 'عرض السيرة الذاتية كملف PDF كبير' : 'View CV as large PDF')
               }
             >
               {viewMode === 'pdf' ? (
@@ -129,6 +134,16 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
               <span className="hidden md:inline">{copiedLink ? (lang === 'ar' ? 'تم النسخ' : 'Copied') : (lang === 'ar' ? 'مشاركة' : 'Share')}</span>
             </button>
 
+            {/* Maximize Toggle */}
+            <button
+              onClick={() => setIsMaximized((prev) => !prev)}
+              className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 flex items-center justify-center transition-colors cursor-pointer hidden sm:flex"
+              title={isMaximized ? (lang === 'ar' ? 'تصغير الحجم' : 'Restore size') : (lang === 'ar' ? 'تكبير ملء الشاشة' : 'Maximize window')}
+              aria-label="Toggle Fullscreen"
+            >
+              {isMaximized ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+            </button>
+
             <button
               onClick={onClose}
               className="w-9 h-9 rounded-xl bg-red-500/15 hover:bg-red-500 text-red-600 hover:text-white border border-red-500/30 flex items-center justify-center transition-all cursor-pointer shadow-xs ms-1"
@@ -141,13 +156,13 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
 
         {viewMode === 'pdf' ? (
           /* Native Embedded PDF Document Viewer */
-          <div className="flex-1 flex flex-col h-[75vh] sm:h-[80vh] bg-slate-100 dark:bg-[#0c0d14] relative">
+          <div className="flex-1 min-h-0 flex flex-col w-full h-full bg-slate-100 dark:bg-[#0c0d14] relative">
             {/* Sub-toolbar for PDF */}
             <div className="px-4 py-2.5 bg-slate-200/70 dark:bg-white/[0.04] border-b border-slate-300 dark:border-white/10 flex items-center justify-between text-xs text-slate-700 dark:text-gray-300 shrink-0">
               <div className="flex items-center gap-2">
                 <FileText size={15} className="text-blue-600 dark:text-cyan-400" />
-                <span className="font-semibold">
-                  {lang === 'ar' ? 'مستند السيرة الذاتية الأصلي بصيغة PDF' : 'Original PDF Document'}
+                <span className="font-semibold text-xs sm:text-sm">
+                  {lang === 'ar' ? 'مستند السيرة الذاتية (ملف PDF الأصلي)' : 'Original PDF Document'}
                 </span>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold hidden sm:inline">
                   Google Drive Hosted
@@ -160,7 +175,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                     href={profile.cvDriveUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1 text-blue-600 dark:text-cyan-400 hover:underline font-medium text-xs"
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-white/5 hover:bg-blue-100 dark:hover:bg-white/10 text-blue-600 dark:text-cyan-400 font-medium text-xs transition-colors"
                   >
                     <span>{lang === 'ar' ? 'فتح في نافذة كاملة' : 'Open in new tab'}</span>
                     <ExternalLink size={12} />
@@ -170,7 +185,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
             </div>
 
             {/* Embedded Iframe */}
-            <div className="flex-1 w-full h-full relative">
+            <div className="flex-1 min-h-0 w-full h-full relative">
               <iframe
                 src={pdfPreviewUrl}
                 className="w-full h-full border-0 rounded-b-2xl sm:rounded-b-3xl"
@@ -181,7 +196,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
           </div>
         ) : (
           /* Scrollable CV Body */
-          <div className="overflow-y-auto p-5 sm:p-8 space-y-7 text-slate-700 dark:text-gray-300 text-xs sm:text-sm print:bg-white print:text-black body-contrast">
+          <div className="flex-1 min-h-0 overflow-y-auto p-5 sm:p-8 space-y-7 text-slate-700 dark:text-gray-300 text-xs sm:text-sm print:bg-white print:text-black body-contrast">
           
           {/* Header Info */}
           <div className="border-b border-black/10 dark:border-white/10 pb-5">
