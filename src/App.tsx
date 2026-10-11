@@ -16,7 +16,7 @@ import { ContactModal } from './components/ContactModal';
 import { ResumeModal } from './components/ResumeModal';
 import { BookingMeetingModal } from './components/BookingMeetingModal';
 import { RevealOnScroll } from './components/RevealOnScroll';
-import { ShieldCheck, Github, Linkedin, Youtube, Mail, RefreshCw, Radio } from 'lucide-react';
+import { ShieldCheck, Github, Linkedin, Youtube, Mail, RefreshCw, Radio, ArrowUp } from 'lucide-react';
 import { WhatsAppLogo, TikTokLogo } from './components/TechLogos';
 import { useLanguage } from './context/LanguageContext';
 
@@ -92,6 +92,16 @@ export default function App() {
     };
   }, []);
 
+  // Back to Top button listener (for Laptop, Desktop, and Mobile)
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Automatic Initial Mount Data & Asset Prefetching
   useEffect(() => {
     // 1. Prefetch GitHub User Stats & Repositories immediately
@@ -123,6 +133,12 @@ export default function App() {
     const sections: NavTab[] = ['hero', 'projects', 'stack', 'experience', 'contact'];
     
     const handleScroll = () => {
+      // Bottom of page detection
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 60) {
+        setActiveTab('contact');
+        return;
+      }
+
       const scrollThreshold = window.innerHeight * 0.4;
       for (let i = sections.length - 1; i >= 0; i--) {
         const sectionId = sections[i];
@@ -179,6 +195,7 @@ export default function App() {
           onOpenBooking={() => setIsBookingOpen(true)}
           isDark={isDark}
           onToggleTheme={() => setIsDark((prev) => !prev)}
+          isAnyModalOpen={isResumeOpen || isContactOpen || isBookingOpen}
         />
 
         {/* Vertical Progress Navigation Rail (Desktop & Tablet) */}
@@ -188,7 +205,7 @@ export default function App() {
         />
 
         {/* All Sections Sequentially Rendered with Section Dividers and Reveal */}
-        <main className="flex-1 pb-28 lg:pb-12">
+        <main className="flex-1 pb-24 md:pb-12">
           <RevealOnScroll threshold={0.05}>
             <HeroSection
               profile={profile}
@@ -253,6 +270,18 @@ export default function App() {
           onClose={() => setIsBookingOpen(false)}
           profile={profile}
         />
+
+        {/* Floating Back to Top Button (Desktop, Tablet, Laptop & Mobile) */}
+        {showBackToTop && (
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-20 lg:bottom-6 end-4 sm:end-6 z-40 p-2.5 sm:p-3 rounded-full bg-blue-600/90 hover:bg-blue-600 text-white shadow-lg shadow-blue-600/35 backdrop-blur-xs transition-all duration-300 hover:scale-110 cursor-pointer focus-visible:ring-2 focus-visible:ring-white border border-white/20 active:scale-95 flex items-center justify-center"
+            aria-label={lang === 'ar' ? 'الرجوع للأعلى' : 'Back to top'}
+            title={lang === 'ar' ? 'الرجوع للأعلى' : 'Back to top'}
+          >
+            <ArrowUp size={16} />
+          </button>
+        )}
 
         {/* Footer */}
         <footer className="w-full border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#090a0f] py-10 px-4 sm:px-8 text-xs text-slate-600 dark:text-gray-400 transition-colors shadow-inner">

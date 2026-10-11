@@ -1,6 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { FileText, Github, Linkedin, Mail, Check, ArrowRight, Sparkles, MapPin, Video, Youtube } from 'lucide-react';
+import {
+  FileText,
+  Github,
+  Linkedin,
+  Mail,
+  Check,
+  ArrowRight,
+  Sparkles,
+  MapPin,
+  Video,
+  Youtube,
+  Smartphone,
+  FolderGit2,
+  Layers,
+  Award,
+} from 'lucide-react';
 import { DeveloperProfile } from '../data/portfolioData';
 import { WhatsAppLogo, TikTokLogo } from './TechLogos';
 import { useLanguage } from '../context/LanguageContext';
@@ -133,12 +148,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {t.hero.bio}
           </p>
 
-          {/* Action CTAs: High Intent, Organized & No Clutter */}
-          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-2 w-full sm:w-auto">
+          {/* Action CTAs: High Intent, Harmonized 2x2 on Mobile, Inline on Desktop */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 pt-2 w-full sm:w-auto">
             {/* Explore Apps */}
             <button
               onClick={onExploreProjects}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm transition-all shadow-md shadow-blue-600/30 hover:scale-[1.02] cursor-pointer min-h-[44px]"
+              className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm transition-all shadow-md shadow-blue-600/30 hover:scale-[1.02] cursor-pointer min-h-[44px]"
             >
               <span>{t.hero.exploreApps}</span>
               <ArrowRight size={15} className={dir === 'rtl' ? 'rotate-180' : ''} />
@@ -147,37 +162,37 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {/* View Resume */}
             <button
               onClick={onOpenResume}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-white/10 hover:bg-slate-100 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold text-xs sm:text-sm border border-slate-300 dark:border-white/20 shadow-xs transition-all cursor-pointer min-h-[44px]"
+              className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 rounded-xl bg-white dark:bg-white/10 hover:bg-slate-100 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold text-xs sm:text-sm border border-slate-300 dark:border-white/20 shadow-xs transition-all cursor-pointer min-h-[44px]"
             >
-              <FileText size={15} className="text-emerald-500" />
-              <span>{t.hero.resumeCv}</span>
+              <FileText size={15} className="text-emerald-500 shrink-0" />
+              <span className="truncate">{t.hero.resumeCv}</span>
             </button>
 
             {/* Book a Meeting (In-App Modal) */}
             {onOpenBooking && (
               <button
                 onClick={onOpenBooking}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600/15 to-cyan-500/15 hover:from-blue-600 hover:to-cyan-500 hover:text-white text-blue-700 dark:text-cyan-300 font-bold text-xs sm:text-sm border border-blue-500/30 transition-all cursor-pointer shadow-xs min-h-[44px]"
+                className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600/15 to-cyan-500/15 hover:from-blue-600 hover:to-cyan-500 hover:text-white text-blue-700 dark:text-cyan-300 font-bold text-xs sm:text-sm border border-blue-500/30 transition-all cursor-pointer shadow-xs min-h-[44px]"
                 title={t.hero.bookMeeting}
               >
-                <Video size={15} className="text-blue-600 dark:text-cyan-400 group-hover:text-white" />
-                <span>{t.hero.bookMeeting}</span>
+                <Video size={15} className="text-blue-600 dark:text-cyan-400 group-hover:text-white shrink-0" />
+                <span className="truncate">{t.hero.bookMeeting}</span>
               </button>
             )}
 
             {/* Contact Me (In-App Modal) */}
             <button
               onClick={onOpenContact}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-gray-200 text-xs sm:text-sm font-bold border border-slate-300 dark:border-white/15 shadow-xs transition-all cursor-pointer min-h-[44px]"
+              className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-gray-200 text-xs sm:text-sm font-bold border border-slate-300 dark:border-white/15 shadow-xs transition-all cursor-pointer min-h-[44px]"
             >
-              <Mail size={15} className="text-cyan-600 dark:text-cyan-400" />
+              <Mail size={15} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
               <span>{t.hero.getInTouch}</span>
             </button>
           </div>
 
           {/* Social Channels Row */}
-          <div className="flex flex-wrap items-center gap-3 pt-2 text-xs sm:text-sm text-slate-700 dark:text-gray-300">
-            <span className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-gray-400 font-bold">{t.hero.channelsLabel}</span>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-2 text-xs sm:text-sm text-slate-700 dark:text-gray-300">
+            <span className="text-[10px] sm:text-[11px] uppercase tracking-wider text-slate-500 dark:text-gray-400 font-bold me-1">{t.hero.channelsLabel}</span>
             
             <a
               href="https://wa.me/201022121573"
@@ -194,7 +209,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.githubUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 hover:text-blue-600 dark:hover:text-white transition-colors font-semibold"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white transition-colors font-semibold border border-slate-200/80 dark:border-white/5 text-xs"
             >
               <Github size={14} />
               <span>GitHub</span>
@@ -204,7 +219,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.linkedinUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-semibold"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-semibold border border-slate-200/80 dark:border-white/5 text-xs"
             >
               <Linkedin size={14} />
               <span>LinkedIn</span>
@@ -214,7 +229,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.youtubeUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 hover:text-red-600 dark:hover:text-red-400 transition-colors font-semibold"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-red-600 dark:hover:text-red-400 transition-colors font-semibold border border-slate-200/80 dark:border-white/5 text-xs"
             >
               <Youtube size={14} />
               <span>YouTube</span>
@@ -224,7 +239,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.tiktokUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 hover:text-pink-600 dark:hover:text-pink-400 transition-colors font-semibold"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-pink-600 dark:hover:text-pink-400 transition-colors font-semibold border border-slate-200/80 dark:border-white/5 text-xs"
             >
               <TikTokLogo size={13} />
               <span>TikTok</span>
@@ -305,42 +320,72 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
       </div>
 
-      {/* Realistic Stats Bar at Bottom */}
-      <div className="max-w-7xl mx-auto w-full mt-10 pt-6 border-t border-slate-300 dark:border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+      {/* Realistic Stats Bar at Bottom (Responsive Cards Grid with Micro-Interactions) */}
+      <div className="max-w-7xl mx-auto w-full mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-slate-200 dark:border-white/10 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
         {profile.stats.map((stat, idx) => {
           const isRepoStat = stat.label.toLowerCase().includes('repo');
           const displayValue = isRepoStat && totalReposCount ? `${totalReposCount}` : stat.value;
 
           let localizedLabel = stat.label;
           let localizedSuffix = stat.suffix;
+          let IconComponent = Smartphone;
+          let accentColor = 'text-blue-600 dark:text-cyan-400';
+          let bgColor = 'bg-blue-500/10 dark:bg-cyan-500/10 border-blue-500/20';
 
           if (stat.label.includes('Play')) {
             localizedLabel = t.hero.stats.playStore.label;
             localizedSuffix = t.hero.stats.playStore.suffix;
+            IconComponent = Smartphone;
+            accentColor = 'text-emerald-600 dark:text-emerald-400';
+            bgColor = 'bg-emerald-500/10 border-emerald-500/20';
           } else if (stat.label.includes('Repo')) {
             localizedLabel = t.hero.stats.repos.label;
             localizedSuffix = t.hero.stats.repos.suffix;
+            IconComponent = FolderGit2;
+            accentColor = 'text-blue-600 dark:text-blue-400';
+            bgColor = 'bg-blue-500/10 border-blue-500/20';
           } else if (stat.label.includes('Architecture')) {
             localizedLabel = t.hero.stats.cleanArch.label;
             localizedSuffix = t.hero.stats.cleanArch.suffix;
+            IconComponent = Layers;
+            accentColor = 'text-cyan-600 dark:text-cyan-300';
+            bgColor = 'bg-cyan-500/10 border-cyan-500/20';
           } else if (stat.label.includes('Platform')) {
             localizedLabel = t.hero.stats.crossPlatform.label;
             localizedSuffix = t.hero.stats.crossPlatform.suffix;
+            IconComponent = Award;
+            accentColor = 'text-indigo-600 dark:text-indigo-400';
+            bgColor = 'bg-indigo-500/10 border-indigo-500/20';
           }
 
           return (
-            <div key={idx} className="flex flex-col">
-              <span className="text-2xl sm:text-3xl font-extrabold tracking-tight title-contrast text-slate-900 dark:text-white">
-                {displayValue}
-                {localizedSuffix && (
-                  <span className={`text-xs sm:text-sm font-bold text-blue-700 dark:text-cyan-400 ms-1.5`}>
-                    {localizedSuffix}
+            <div
+              key={idx}
+              className="p-3 sm:p-4 rounded-2xl bg-white/80 dark:bg-[#111322]/80 backdrop-blur-xs border border-slate-200/90 dark:border-white/10 hover:border-blue-400/50 dark:hover:border-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-md shadow-2xs group flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-2 sm:mb-2.5">
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border ${bgColor} ${accentColor} group-hover:scale-110 transition-transform`}>
+                  <IconComponent size={16} />
+                </div>
+                <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-gray-500 uppercase">
+                  METRIC 0{idx + 1}
+                </span>
+              </div>
+              <div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight title-contrast text-slate-900 dark:text-white">
+                    {displayValue}
                   </span>
-                )}
-              </span>
-              <span className="text-xs text-slate-700 dark:text-gray-300 font-bold mt-1 body-contrast">
-                {localizedLabel}
-              </span>
+                  {localizedSuffix && (
+                    <span className="text-xs sm:text-sm font-bold text-blue-600 dark:text-cyan-400">
+                      {localizedSuffix}
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] sm:text-xs text-slate-600 dark:text-gray-300 font-semibold mt-1 leading-snug body-contrast">
+                  {localizedLabel}
+                </div>
+              </div>
             </div>
           );
         })}

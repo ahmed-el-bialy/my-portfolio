@@ -23,7 +23,9 @@ import {
   GitHubStats,
   fetchGitHubUserStats,
   fetchAllRepoReleases,
+  fetchAllReposLiveMetadata,
   RepoReleaseInfo,
+  RepoLiveMetadata,
   getLanguageColor,
   AHMED_DEFAULT_REPOS,
   formatFileSize
@@ -60,6 +62,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [frameworkFilter, setFrameworkFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'pushed' | 'stars' | 'name'>('pushed');
+  const [hoveredCardId, setHoveredCardId] = useState<string | number | null>(null);
 
   // Automatic Instant GitHub Live Data Fetch on Mount
   const {
@@ -123,6 +126,15 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
     refetchInterval: 1000 * 60 * 5,
   });
 
+  // Real-time live README & dynamic media extraction query (bypasses stale cached videos)
+  const { data: liveMediaMap } = useQuery<Record<string, RepoLiveMetadata>>({
+    queryKey: ['github-live-media-map', githubUser, allTargetRepoNames.join(',')],
+    queryFn: () => fetchAllReposLiveMetadata(allTargetRepoNames, githubUser),
+    enabled: allTargetRepoNames.length > 0,
+    staleTime: 1000 * 60 * 2, // Refresh every 2 minutes
+    refetchInterval: 1000 * 60 * 5,
+  });
+
   useEffect(() => {
     if (githubRepos.length > 0 && onRepoCountChange) {
       onRepoCountChange(githubRepos.length);
@@ -131,6 +143,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
 
   // Helper to resolve or enrich repo metadata to a complete Project object
   const getProjectFromRepo = (repo: GitHubRepo): Project => {
+    const liveMedia = liveMediaMap?.[repo.name] || liveMediaMap?.[repo.name.toLowerCase()];
     const matched = FEATURED_PROJECTS.find(
       (p) =>
         p.repoName.toLowerCase() === repo.name.toLowerCase() ||
@@ -144,8 +157,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
         links: {
           ...matched.links,
           github: repo.html_url || matched.links.github,
-          googlePlay: repo.googlePlayUrl || matched.links.googlePlay,
-          youtubeDemo: repo.youtubeDemoUrl || matched.links.youtubeDemo,
+          googlePlay: liveMedia?.googlePlayUrl || repo.googlePlayUrl || matched.links.googlePlay,
+          youtubeDemo: liveMedia?.youtubeDemoUrl || repo.youtubeDemoUrl || matched.links.youtubeDemo,
+          apkDownloadUrl: liveMedia?.apkDownloadUrl || matched.links.apkDownloadUrl,
+          releaseUrl: liveMedia?.releaseUrl || matched.links.releaseUrl,
         }
       };
     }
@@ -174,8 +189,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
       hasApk: false,
       links: {
         github: repo.html_url,
-        youtubeDemo: repo.youtubeDemoUrl,
-        googlePlay: repo.googlePlayUrl,
+        youtubeDemo: liveMedia?.youtubeDemoUrl || repo.youtubeDemoUrl,
+        googlePlay: liveMedia?.googlePlayUrl || repo.googlePlayUrl,
+        apkDownloadUrl: liveMedia?.apkDownloadUrl,
+        releaseUrl: liveMedia?.releaseUrl,
       }
     };
   };
@@ -354,7 +371,24 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
       )}
 
       {/* Real-time GitHub Live Sync HUD Bar with Automatic Instant Loading */}
-      <div className="mb-6 xs:mb-8 sm:mb-12 p-3 xs:p-3.5 sm:p-5 md:p-6 rounded-2xl bg-white dark:bg-[#10121d] border border-slate-200 dark:border-white/10 shadow-lg transition-colors">
+      <div className="mb-6 xs:mb-8 sm:mb-12 p-3.5 xs:p-4 sm:p-5 md:p-6 rounded-2xl bg-white dark:bg-[#10121d] border border-slate-200 dark:border-white/10 shadow-lg transition-colors">
+        {/* Terminal Header Chrome */}
+        <div className="flex items-center justify-between pb-2.5 mb-3.5 border-b border-slate-100 dark:border-white/5 text-[11px] font-mono text-slate-500 dark:text-gray-400">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-400/80 inline-block" />
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400/80 inline-block" />
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80 inline-block" />
+            </div>
+            <span className="font-semibold text-slate-600 dark:text-gray-300 ms-1.5">
+              ahmed-el-bialy ~ zsh (git:main)
+            </span>
+          </div>
+          <span className="hidden sm:inline-block text-[10px] text-cyan-600 dark:text-cyan-400 font-bold">
+            Realtime GitHub API v3
+          </span>
+        </div>
+
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 sm:gap-4">
           
           {/* GitHub Profile & Sync Status */}
@@ -534,26 +568,38 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-5 sm:gap-7 md:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 xs:gap-5 sm:gap-6 lg:gap-7">
               {filteredFeaturedProjects.map((project) => {
+            const liveMedia =
+              liveMediaMap?.[project.repoName] ||
+              liveMediaMap?.[project.name] ||
+              liveMediaMap?.[project.repoName.toLowerCase()];
             const liveRelease =
               repoReleases?.[project.repoName] ||
               repoReleases?.[project.name] ||
               repoReleases?.[project.repoName.toLowerCase()];
-            const hasLiveRelease = Boolean(
-              liveRelease?.hasRelease && (liveRelease.apkDownloadUrl || liveRelease.releaseUrl)
-            );
-            const hasApkFile = Boolean(project.links.apkDownloadUrl || hasLiveRelease);
-            const hasVideo = Boolean(project.links.youtubeDemo);
 
-            // Dynamic project with live release info
+            const dynamicVideoUrl = liveMedia?.youtubeDemoUrl || project.links.youtubeDemo;
+            const dynamicPlayUrl = liveMedia?.googlePlayUrl || project.links.googlePlay;
+            const dynamicApkUrl = liveMedia?.apkDownloadUrl || liveRelease?.apkDownloadUrl || project.links.apkDownloadUrl;
+            const dynamicReleaseUrl = liveMedia?.releaseUrl || liveRelease?.releaseUrl || project.links.releaseUrl;
+
+            const hasLiveRelease = Boolean(
+              (liveRelease?.hasRelease || liveMedia?.hasRelease) && (dynamicApkUrl || dynamicReleaseUrl)
+            );
+            const hasApkFile = Boolean(dynamicApkUrl || hasLiveRelease);
+            const hasVideo = Boolean(dynamicVideoUrl);
+
+            // Dynamic project with live release info and real-time parsed README media
             const dynamicProject: Project = {
               ...project,
               hasApk: hasApkFile,
               links: {
                 ...project.links,
-                apkDownloadUrl: liveRelease?.apkDownloadUrl || project.links.apkDownloadUrl,
-                releaseUrl: liveRelease?.releaseUrl || project.links.releaseUrl,
+                youtubeDemo: dynamicVideoUrl,
+                googlePlay: dynamicPlayUrl,
+                apkDownloadUrl: dynamicApkUrl,
+                releaseUrl: dynamicReleaseUrl,
               }
             };
 
@@ -578,20 +624,31 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               <motion.div
                 key={project.id}
                 onClick={() => setSelectedProject(dynamicProject)}
+                onMouseEnter={() => setHoveredCardId(project.id)}
+                onMouseLeave={() => setHoveredCardId(null)}
                 whileHover={{
-                  y: -5,
+                  y: -6,
                   scale: 1.018,
-                  boxShadow: `0 18px 38px -10px rgba(${cardGlowRgb}, 0.28), 0 0 0 1.5px ${cardAccent}`,
+                  borderColor: cardAccent,
+                  boxShadow: `0 20px 42px -10px rgba(${cardGlowRgb}, 0.35), 0 0 0 2px ${cardAccent}`,
+                }}
+                whileTap={{
+                  scale: 0.98,
+                  borderColor: cardAccent,
+                  boxShadow: `0 10px 24px -4px rgba(${cardGlowRgb}, 0.55), 0 0 0 3px ${cardAccent}`,
                 }}
                 transition={{
                   type: 'spring',
                   stiffness: 380,
                   damping: 24,
                 }}
-                className="group relative rounded-2xl overflow-hidden bg-white dark:bg-[#111322] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-colors duration-300 shadow-md"
+                style={{
+                  ['--card-accent' as string]: cardAccent,
+                }}
+                className="group relative rounded-2xl overflow-hidden bg-white dark:bg-[#111322] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-all duration-300 shadow-md active:border-[var(--card-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
                 <div>
-                  {/* Dynamic Smart Cover with full automatic custom standard cover */}
+                  {/* Dynamic Smart Cover with full automatic custom standard cover & framer-motion gradient shift */}
                   <ProjectCardCover
                     repoName={project.repoName}
                     language="Dart"
@@ -599,6 +656,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                     isHighlight={project.highlight}
                     description={project.description}
                     topics={project.technologies}
+                    isCardHovered={hoveredCardId === project.id}
                   />
 
                   {/* Body Content with Generous Margins & Vertical Rhythm */}
@@ -679,7 +737,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                           setVideoModalData({
                             open: true,
                             title: project.name,
-                            url: project.links.youtubeDemo
+                            url: dynamicVideoUrl
                           });
                         }}
                         className="w-full flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-2 sm:px-3.5 rounded-xl bg-red-600/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 font-bold text-[11px] sm:text-xs border border-red-500/25 transition-all cursor-pointer shadow-xs min-h-[40px] sm:min-h-[44px]"
@@ -778,7 +836,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 sm:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 xs:gap-5 sm:gap-6 lg:gap-7">
               {filteredRepos.map((repo) => {
                 const projectObj = getProjectFromRepo(repo);
                 const repoRelease = repoReleases?.[repo.name] || repoReleases?.[repo.name.toLowerCase()];
@@ -822,20 +880,31 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                   <motion.div
                     key={repo.id}
                     onClick={() => setSelectedProject(dynamicRepoProject)}
+                    onMouseEnter={() => setHoveredCardId(repo.id)}
+                    onMouseLeave={() => setHoveredCardId(null)}
                     whileHover={{
-                      y: -5,
+                      y: -6,
                       scale: 1.018,
-                      boxShadow: `0 18px 38px -10px rgba(${repoGlowRgb}, 0.28), 0 0 0 1.5px ${repoAccent}`,
+                      borderColor: repoAccent,
+                      boxShadow: `0 20px 42px -10px rgba(${repoGlowRgb}, 0.35), 0 0 0 2px ${repoAccent}`,
+                    }}
+                    whileTap={{
+                      scale: 0.98,
+                      borderColor: repoAccent,
+                      boxShadow: `0 10px 24px -4px rgba(${repoGlowRgb}, 0.55), 0 0 0 3px ${repoAccent}`,
                     }}
                     transition={{
                       type: 'spring',
                       stiffness: 380,
                       damping: 24,
                     }}
-                    className="group relative rounded-2xl overflow-hidden bg-white dark:bg-[#111322] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between transition-colors duration-300 cursor-pointer shadow-md"
+                    style={{
+                      ['--card-accent' as string]: repoAccent,
+                    }}
+                    className="group relative rounded-2xl overflow-hidden bg-white dark:bg-[#111322] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between transition-all duration-300 cursor-pointer shadow-md active:border-[var(--card-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   >
                     <div>
-                      {/* Dynamic Smart Cover */}
+                      {/* Dynamic Smart Cover with full automatic custom standard cover & framer-motion gradient shift */}
                       <ProjectCardCover
                         repoName={repo.name}
                         language={repo.language}
@@ -843,6 +912,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                         isHighlight={Boolean(projectObj.links.googlePlay || hasDemo || hasReleaseOrApk)}
                         description={repo.description}
                         topics={repo.topics}
+                        isCardHovered={hoveredCardId === repo.id}
                       />
 
                       {/* Content Area with High Vertical Rhythm */}

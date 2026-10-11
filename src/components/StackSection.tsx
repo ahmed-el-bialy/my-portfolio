@@ -275,14 +275,14 @@ export const StackSection: React.FC = () => {
 
         {/* Filter Tabs & Live Search */}
         <div className="w-full mt-7 flex flex-col sm:flex-row items-center gap-3 justify-between">
-          <div className="flex flex-wrap items-center justify-center gap-1.5 p-1 rounded-full bg-slate-200/70 dark:bg-white/5 border border-black/10 dark:border-white/10">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 p-1 rounded-2xl sm:rounded-full bg-slate-200/70 dark:bg-white/5 border border-black/10 dark:border-white/10">
             {filterTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setSelectedFilter(tab.id)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none ${
                   selectedFilter === tab.id
-                    ? 'bg-blue-600 text-white shadow-sm'
+                    ? 'bg-blue-600 text-white shadow-sm font-bold scale-[1.02]'
                     : 'text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >

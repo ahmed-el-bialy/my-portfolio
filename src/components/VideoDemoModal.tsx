@@ -1,8 +1,9 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { X, Youtube, ExternalLink, Play, Sparkles } from 'lucide-react';
+import { X, Youtube, ExternalLink, Play, Sparkles, Smartphone } from 'lucide-react';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
+import { extractYouTubeVideoId } from '../services/githubService';
 
 interface VideoDemoModalProps {
   isOpen: boolean;
@@ -24,27 +25,8 @@ export const VideoDemoModal: React.FC<VideoDemoModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Extract YouTube ID from shorts, standard watch URLs, or short links
-  const extractVideoId = (url?: string): string | null => {
-    if (!url) return null;
-    try {
-      if (url.includes('/shorts/')) {
-        const id = url.split('/shorts/')[1]?.split('?')[0]?.split('&')[0];
-        if (id && id.length >= 5) return id;
-      }
-      if (url.includes('watch?v=') || url.includes('&v=')) {
-        const id = url.split('v=')[1]?.split('&')[0]?.split('?')[0];
-        if (id && id.length >= 5) return id;
-      }
-      if (url.includes('youtu.be/')) {
-        const id = url.split('youtu.be/')[1]?.split('?')[0]?.split('&')[0];
-        if (id && id.length >= 5) return id;
-      }
-    } catch (e) {}
-    return null;
-  };
-
-  const videoId = extractVideoId(videoUrl);
+  const videoId = extractYouTubeVideoId(videoUrl);
+  const isShorts = Boolean(videoUrl && videoUrl.includes('/shorts/'));
   const targetRedirectUrl = videoUrl && videoId ? videoUrl : youtubeChannelUrl;
 
   const node = (
@@ -67,9 +49,16 @@ export const VideoDemoModal: React.FC<VideoDemoModalProps> = ({
             <div className="truncate">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 truncate">
                 <span className="truncate">{projectName}</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-500/10 text-red-600 dark:text-red-400 font-semibold shrink-0">
-                  {lang === 'ar' ? 'فيديو تجريبي' : 'Demo'}
-                </span>
+                {isShorts ? (
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-500/10 text-red-600 dark:text-red-400 font-bold shrink-0 flex items-center gap-1">
+                    <Smartphone size={10} />
+                    <span>Shorts Demo</span>
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-500/10 text-red-600 dark:text-red-400 font-semibold shrink-0">
+                    {lang === 'ar' ? 'فيديو تجريبي' : 'Demo'}
+                  </span>
+                )}
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-gray-400 truncate">
                 {lang === 'ar' ? 'فيديو استعراض ومحاكاة ميزات التطبيق' : 'Mobile App Demonstration Video'}

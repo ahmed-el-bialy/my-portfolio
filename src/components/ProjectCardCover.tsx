@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Smartphone,
   Layers,
@@ -42,6 +43,7 @@ export interface ProjectCardCoverProps {
   isHighlight?: boolean;
   description?: string | null;
   topics?: string[];
+  isCardHovered?: boolean;
 }
 
 export interface ProjectBlueprintSpec {
@@ -403,6 +405,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   coverUrl,
   description,
   topics,
+  isCardHovered = false,
 }) => {
   // Candidate screenshot cover url: strictly screenshots/cover.*
   const targetCoverUrl =
@@ -413,6 +416,9 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   // Image availability state: only true if candidate loads successfully
   const [hasRealCover, setHasRealCover] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<'standard' | 'screenshot'>('standard');
+  const [isSelfHovered, setIsSelfHovered] = useState<boolean>(false);
+
+  const isHovered = Boolean(isCardHovered || isSelfHovered);
 
   // Verify whether the candidate screenshots/cover exists by pre-loading it
   useEffect(() => {
@@ -463,7 +469,9 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
 
   return (
     <div
-      className="relative w-full aspect-[16/9.5] sm:aspect-[16/9] bg-slate-50 dark:bg-[#080911] overflow-hidden select-none cursor-pointer border-b border-slate-200 dark:border-white/10 group/cover shadow-none dark:shadow-[inset_0_-10px_20px_rgba(0,0,0,0.35)] transition-colors"
+      className="relative w-full aspect-[16/9.5] sm:aspect-[16/9] bg-slate-50 dark:bg-[#070810] overflow-hidden select-none cursor-pointer border-b border-slate-200/90 dark:border-white/10 group/cover shadow-none dark:shadow-[inset_0_-12px_24px_rgba(0,0,0,0.4)] transition-all duration-300"
+      onMouseEnter={() => setIsSelfHovered(true)}
+      onMouseLeave={() => setIsSelfHovered(false)}
       onClick={(e) => {
         if (hasRealCover) {
           e.stopPropagation();
@@ -477,37 +485,109 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
       }
     >
       {/* ========================================================
-          LAYER 1: AUTOMATIC CUSTOM STANDARD COVER (الغلاف الاستاندرد المخصص أوتوماتيكياً)
-          Professional, Unique, Eye-Comfortable Studio Canvas (Adaptive Dark & Light Modes)
+          LAYER 1: DYNAMIC GENERATIVE BACKGROUND & REDESIGNED STANDARD COVER
+          Framer-Motion Powered Gradient Shift, Ambient Mesh, & Specular Sheen
           ======================================================== */}
       <div
-        className={`absolute inset-0 bg-white dark:bg-[#080911] flex flex-col justify-between transition-all duration-200 ease-out ${
+        className={`absolute inset-0 flex flex-col justify-between transition-all duration-300 ease-out ${
           !isShowingScreenshot
             ? 'opacity-100 z-10 scale-100'
             : 'opacity-0 z-0 scale-95 pointer-events-none'
         }`}
       >
-        {/* 1. Ambient Background Atmosphere (Eye-Comfortable & Distinct) */}
-        {/* Geometric Micro-Dot Grid */}
+        {/* 1.1 Dynamic Generative Light Theme Background with Framer-Motion cross-fade */}
         <div
-          className="absolute inset-0 opacity-[0.06] dark:opacity-[0.06] text-slate-700 dark:text-white pointer-events-none"
+          className="absolute inset-0 pointer-events-none opacity-100 dark:opacity-0 transition-opacity duration-300"
           style={{
-            backgroundImage: `radial-gradient(circle, currentColor 1px, transparent 1px)`,
-            backgroundSize: '22px 22px',
+            background: `radial-gradient(ellipse 75% 60% at 50% 15%, rgba(${blueprint.glowRgb}, 0.08) 0%, transparent 60%), linear-gradient(130deg, rgba(${blueprint.glowRgb}, 0.05) 0%, #ffffff 45%, #f8fafc 100%)`,
+          }}
+        />
+        <motion.div
+          className="absolute inset-0 pointer-events-none opacity-100 dark:opacity-0"
+          initial={false}
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          style={{
+            background: `radial-gradient(ellipse 85% 75% at 75% 20%, rgba(${blueprint.glowRgb}, 0.18) 0%, transparent 68%), linear-gradient(145deg, rgba(${blueprint.glowRgb}, 0.12) 0%, #f8fafc 45%, #f1f5f9 100%)`,
           }}
         />
 
-        {/* Ambient Brand Color Radial Spotlights */}
+        {/* 1.2 Dynamic Generative Dark Theme Background with Framer-Motion cross-fade */}
         <div
-          className="absolute -top-16 -right-16 w-64 h-64 rounded-full pointer-events-none blur-3xl opacity-10 dark:opacity-20 transition-all duration-700"
+          className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-100 transition-opacity duration-300"
+          style={{
+            background: `radial-gradient(ellipse 80% 65% at 50% 12%, rgba(${blueprint.glowRgb}, 0.11) 0%, transparent 65%), linear-gradient(130deg, rgba(${blueprint.glowRgb}, 0.08) 0%, #090b16 40%, #04050a 100%)`,
+          }}
+        />
+        <motion.div
+          className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-100"
+          initial={false}
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          style={{
+            background: `radial-gradient(ellipse 90% 80% at 80% 20%, rgba(${blueprint.glowRgb}, 0.25) 0%, transparent 72%), linear-gradient(145deg, rgba(${blueprint.glowRgb}, 0.18) 0%, #0e1022 40%, #05060c 100%)`,
+          }}
+        />
+
+        {/* 1.3 Precision Studio Dot Matrix Overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.06] dark:opacity-[0.08] text-slate-800 dark:text-cyan-400 pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle, currentColor 1px, transparent 1px)`,
+            backgroundSize: '18px 18px',
+          }}
+        />
+
+        {/* 1.4 Framer-Motion Animated Primary Glowing Orb */}
+        <motion.div
+          className="absolute -top-16 -right-16 w-64 h-64 rounded-full blur-3xl pointer-events-none"
+          animate={{
+            x: isHovered ? [0, 10, -8, 0] : 0,
+            y: isHovered ? [0, -12, 6, 0] : 0,
+            scale: isHovered ? [1, 1.22, 1.10, 1] : 1,
+            opacity: isHovered ? 0.38 : 0.18,
+          }}
+          transition={{
+            duration: 3.8,
+            repeat: isHovered ? Infinity : 0,
+            ease: 'easeInOut',
+          }}
           style={{
             background: `radial-gradient(circle, ${blueprint.accentColor} 0%, transparent 70%)`,
           }}
         />
-        <div
-          className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full pointer-events-none blur-3xl opacity-8 dark:opacity-15 transition-all duration-700"
+
+        {/* 1.5 Framer-Motion Animated Secondary Harmonic Orb */}
+        <motion.div
+          className="absolute -bottom-16 -left-16 w-60 h-60 rounded-full blur-3xl pointer-events-none"
+          animate={{
+            x: isHovered ? [0, -10, 10, 0] : 0,
+            y: isHovered ? [0, 10, -6, 0] : 0,
+            scale: isHovered ? [1, 1.18, 1.05, 1] : 1,
+            opacity: isHovered ? 0.32 : 0.14,
+          }}
+          transition={{
+            duration: 4.2,
+            repeat: isHovered ? Infinity : 0,
+            ease: 'easeInOut',
+          }}
           style={{
             background: `radial-gradient(circle, ${blueprint.secondaryAccent} 0%, transparent 70%)`,
+          }}
+        />
+
+        {/* 1.6 Framer-Motion Animated Specular Sheen Sweep */}
+        <motion.div
+          className="absolute inset-y-0 w-32 bg-gradient-to-r from-transparent via-white/16 dark:via-white/[0.08] to-transparent pointer-events-none -skew-x-20"
+          initial={{ left: '-40%', opacity: 0 }}
+          animate={
+            isHovered
+              ? { left: '140%', opacity: [0, 1, 0] }
+              : { left: '-40%', opacity: 0 }
+          }
+          transition={{
+            duration: 0.95,
+            ease: [0.22, 1, 0.36, 1],
           }}
         />
 
@@ -527,10 +607,10 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
             </span>
 
             <span
-              className="text-[11px] font-semibold tracking-wide px-2.5 py-0.5 rounded-full border shadow-xs truncate backdrop-blur-md"
+              className="text-[11px] font-bold tracking-wide px-3 py-1 rounded-full border shadow-xs truncate backdrop-blur-md transition-transform duration-300 group-hover/cover:scale-[1.02]"
               style={{
-                backgroundColor: `rgba(${blueprint.glowRgb}, 0.12)`,
-                borderColor: `rgba(${blueprint.glowRgb}, 0.35)`,
+                backgroundColor: `rgba(${blueprint.glowRgb}, 0.14)`,
+                borderColor: `rgba(${blueprint.glowRgb}, 0.4)`,
                 color: blueprint.accentColor,
               }}
             >
@@ -539,42 +619,51 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
           </div>
 
           {/* Right Platform Micro-Tag */}
-          <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 backdrop-blur-md">
+          <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg bg-slate-200/80 dark:bg-white/[0.06] border border-slate-300/60 dark:border-white/10 backdrop-blur-md shadow-xs">
             <span
               className="w-1.5 h-1.5 rounded-full"
               style={{ backgroundColor: blueprint.accentColor }}
             />
-            <span className="text-[10px] font-mono font-medium text-slate-700 dark:text-slate-300 tracking-wider">
+            <span className="text-[10px] font-mono font-bold text-slate-800 dark:text-slate-200 tracking-wider">
               {language || 'Flutter • Dart'}
             </span>
           </div>
         </div>
 
-        {/* 3. Centerpiece: Brand Icon Emblem + App Identity Hero */}
+        {/* 3. Centerpiece: Harmonized App Brand Emblem + Identity Typography */}
         <div className="relative z-10 px-4 sm:px-5 my-auto flex items-center gap-3.5 sm:gap-4.5">
-          {/* App Brand Icon Box */}
-          <div
-            className="relative shrink-0 w-13 h-13 sm:w-15 sm:h-15 rounded-2xl p-[1.5px] transition-transform duration-300 group-hover/cover:scale-105 shadow-md dark:shadow-xl"
+          {/* App Brand Icon Box with Framer-Motion interactive response */}
+          <motion.div
+            className="relative shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-[2px] shadow-lg dark:shadow-2xl"
+            animate={{
+              scale: isHovered ? 1.08 : 1,
+              rotate: isHovered ? 2.5 : 0,
+            }}
+            transition={{
+              type: 'spring',
+              stiffness: 400,
+              damping: 22,
+            }}
             style={{
-              background: `linear-gradient(135deg, ${blueprint.accentColor}, rgba(255,255,255,0.25))`,
-              boxShadow: `0 8px 24px -4px rgba(${blueprint.glowRgb}, 0.35)`,
+              background: `linear-gradient(135deg, ${blueprint.accentColor}, ${blueprint.secondaryAccent}, rgba(255,255,255,0.4))`,
+              boxShadow: `0 12px 28px -6px rgba(${blueprint.glowRgb}, ${isHovered ? '0.5' : '0.3'})`,
             }}
           >
-            <div className="w-full h-full rounded-[14px] bg-white dark:bg-[#0b0d17] flex items-center justify-center relative overflow-hidden border border-slate-200/90 dark:border-transparent shadow-xs">
-              {/* Inner ambient glow */}
+            <div className="w-full h-full rounded-[14px] bg-white dark:bg-[#0a0c16] flex items-center justify-center relative overflow-hidden border border-slate-200/90 dark:border-white/10 shadow-inner">
+              {/* Inner ambient radial glow */}
               <div
-                className="absolute inset-0 opacity-20 pointer-events-none"
+                className="absolute inset-0 opacity-30 pointer-events-none"
                 style={{
                   background: `radial-gradient(circle at 50% 30%, ${blueprint.accentColor}, transparent 70%)`,
                 }}
               />
               <BadgeIcon
-                size={26}
-                className="relative z-10 transition-transform duration-300 group-hover/cover:scale-110 drop-shadow-md"
+                size={28}
+                className="relative z-10 transition-transform duration-300 group-hover/cover:scale-110 drop-shadow-lg"
                 style={{ color: blueprint.accentColor }}
               />
             </div>
-          </div>
+          </motion.div>
 
           {/* App Title & Identity Description */}
           <div className="min-w-0 flex-1">
@@ -585,22 +674,22 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
             </div>
 
             <p
-              className="text-xs font-semibold truncate mt-0.5 tracking-tight"
+              className="text-xs font-bold truncate mt-0.5 tracking-tight"
               style={{ color: blueprint.accentColor }}
             >
               {blueprint.genre}
             </p>
 
-            <p className="text-[11px] text-slate-600 dark:text-slate-300/90 line-clamp-1 mt-0.5 leading-tight font-medium">
+            <p className="text-[11px] text-slate-600 dark:text-slate-300/95 line-clamp-1 mt-0.5 leading-tight font-medium">
               {blueprint.tagline}
             </p>
 
             {/* Micro Feature Tags */}
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+            <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
               {blueprint.coreHighlights.slice(0, 3).map((feat, idx) => (
                 <span
                   key={idx}
-                  className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-200 font-medium font-mono tracking-tight"
+                  className="px-2.5 py-0.5 rounded-md bg-slate-200/80 dark:bg-white/[0.08] border border-slate-300/70 dark:border-white/10 text-[10px] text-slate-800 dark:text-slate-200 font-semibold font-mono tracking-tight shadow-2xs"
                 >
                   {feat}
                 </span>
@@ -610,20 +699,19 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
         </div>
 
         {/* 4. Bottom Shelf: Architectural Bar & Highlight Metric */}
-        {/* Crisp separation from the card body below */}
-        <div className="relative z-10 px-4 sm:px-5 py-2.5 bg-slate-50 dark:bg-black/60 backdrop-blur-md border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-[11px] gap-2">
+        <div className="relative z-10 px-4 sm:px-5 py-3 bg-slate-100/90 dark:bg-[#04050a]/90 backdrop-blur-md border-t border-slate-200/90 dark:border-white/10 flex items-center justify-between text-[11px] gap-2">
           <div className="flex items-center gap-1.5 min-w-0 text-slate-700 dark:text-slate-300">
-            <Layers size={12} className="shrink-0 text-slate-500 dark:text-slate-400" />
-            <span className="font-mono text-[10px] sm:text-[11px] truncate text-slate-700 dark:text-slate-300">
+            <Layers size={13} className="shrink-0 text-slate-500 dark:text-cyan-400" />
+            <span className="font-mono text-[10px] sm:text-[11px] truncate font-semibold text-slate-700 dark:text-slate-300">
               {blueprint.architecturePattern}
             </span>
           </div>
 
           <div
-            className="flex items-center gap-1 shrink-0 font-medium text-[11px]"
+            className="flex items-center gap-1 shrink-0 font-bold text-[11px]"
             style={{ color: blueprint.accentColor }}
           >
-            <Zap size={11} className="shrink-0" />
+            <Zap size={12} className="shrink-0" />
             <span className="truncate">{blueprint.performanceBadge}</span>
           </div>
         </div>

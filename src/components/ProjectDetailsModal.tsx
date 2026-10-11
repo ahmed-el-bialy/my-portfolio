@@ -29,6 +29,8 @@ import { ProjectCardCover } from './ProjectCardCover';
 import {
   fetchRepoScreenshots,
   checkRepoRelease,
+  fetchRepoLiveMetadata,
+  extractYouTubeVideoId,
   getLanguageColor,
   VERIFIED_REPO_SCREENSHOTS,
   RepoReleaseInfo,
@@ -63,6 +65,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     hasRelease: false
   });
   const [copiedClone, setCopiedClone] = useState<boolean>(false);
+  const [liveYoutubeUrl, setLiveYoutubeUrl] = useState<string | undefined>(project?.links.youtubeDemo);
+  const [livePlayUrl, setLivePlayUrl] = useState<string | undefined>(project?.links.googlePlay);
 
   const handleCopyClone = () => {
     if (!project?.links.github) return;
@@ -74,22 +78,13 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Extract YouTube ID safely
-  const extractYouTubeVideoId = (url?: string): string | null => {
-    if (!url) return null;
-    try {
-      if (url.includes('/shorts/')) return url.split('/shorts/')[1]?.split('?')[0]?.split('&')[0] || null;
-      if (url.includes('v=')) return url.split('v=')[1]?.split('&')[0]?.split('?')[0] || null;
-      if (url.includes('youtu.be/')) return url.split('youtu.be/')[1]?.split('?')[0]?.split('&')[0] || null;
-    } catch {}
-    return null;
-  };
-
   useEffect(() => {
     if (isOpen && project) {
       setActiveTab('overview');
       setActiveScreenIndex(0);
       setLightboxOpen(false);
+      setLiveYoutubeUrl(project.links.youtubeDemo);
+      setLivePlayUrl(project.links.googlePlay);
 
       if (scrollRef.current) {
         scrollRef.current.scrollTop = 0;
@@ -108,7 +103,27 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         setLoadingScreens(true);
       }
 
-      // 2. Fetch dynamic contents from GitHub API in parallel
+      // 2. Fetch fresh live README and media from GitHub (bypasses stale cached videos)
+      fetchRepoLiveMetadata(project.repoName)
+        .then((liveMeta) => {
+          if (liveMeta.youtubeDemoUrl) {
+            setLiveYoutubeUrl(liveMeta.youtubeDemoUrl);
+          }
+          if (liveMeta.googlePlayUrl) {
+            setLivePlayUrl(liveMeta.googlePlayUrl);
+          }
+          if (liveMeta.apkDownloadUrl) {
+            setReleaseInfo((prev) => ({
+              ...prev,
+              hasRelease: true,
+              apkDownloadUrl: liveMeta.apkDownloadUrl,
+              releaseUrl: liveMeta.releaseUrl || prev.releaseUrl,
+            }));
+          }
+        })
+        .catch(() => {});
+
+      // 3. Fetch dynamic contents from GitHub API in parallel
       fetchRepoScreenshots(project.repoName)
         .then((urls) => {
           if (urls.length > 0) {
@@ -151,7 +166,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
   if (!isOpen || !project) return null;
 
-  const parsedVideoId = extractYouTubeVideoId(project.links.youtubeDemo);
+  const currentVideoUrl = liveYoutubeUrl || project.links.youtubeDemo;
+  const currentPlayUrl = livePlayUrl || project.links.googlePlay;
+  const parsedVideoId = extractYouTubeVideoId(currentVideoUrl);
+  const isShorts = Boolean(currentVideoUrl && currentVideoUrl.includes('/shorts/'));
   const youtubeIframeSrc = parsedVideoId ? `https://www.youtube-nocookie.com/embed/${parsedVideoId}?rel=0&modestbranding=1` : null;
 
   const nextScreen = () => {
@@ -170,7 +188,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     (releaseInfo.hasRelease && releaseInfo.releaseUrl) ||
     project.hasApk
   );
-  const hasPlayStore = Boolean(project.links.googlePlay);
+  const hasPlayStore = Boolean(currentPlayUrl);
 
   const modalNode = (
     <div

@@ -9,12 +9,14 @@ import {
   GraduationCap,
   Briefcase,
   FolderGit2,
-  Printer,
   Mail,
   MapPin,
   Github,
   Linkedin,
-  ArrowUpRight
+  ArrowUpRight,
+  FileText,
+  Layout,
+  ExternalLink,
 } from 'lucide-react';
 import { DeveloperProfile, EDUCATION_DATA, EXPERIENCES, FEATURED_PROJECTS } from '../data/portfolioData';
 import { WhatsAppLogo } from './TechLogos';
@@ -32,12 +34,14 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
   const { lang, dir, t } = useLanguage();
 
   const [copiedLink, setCopiedLink] = useState(false);
+  // View mode: 'web' for interactive layout, 'pdf' for native PDF viewer
+  const [viewMode, setViewMode] = useState<'web' | 'pdf'>('web');
 
   if (!isOpen) return null;
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const pdfPreviewUrl = (profile.cvDriveUrl || '')
+    .replace('/view?usp=drive_link', '/preview')
+    .replace('/view', '/preview');
 
   const handleCopyLink = () => {
     const url = profile.cvDriveUrl || window.location.href;
@@ -74,6 +78,33 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* View as Native PDF Button replacing the unused print button */}
+            <button
+              onClick={() => setViewMode((prev) => (prev === 'pdf' ? 'web' : 'pdf'))}
+              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                viewMode === 'pdf'
+                  ? 'bg-blue-600 hover:bg-blue-500 text-white border-blue-500 shadow-sm'
+                  : 'bg-blue-50 dark:bg-blue-600/15 hover:bg-blue-100 dark:hover:bg-blue-600/25 text-blue-700 dark:text-cyan-300 border-blue-200 dark:border-blue-500/30'
+              }`}
+              title={
+                viewMode === 'pdf'
+                  ? (lang === 'ar' ? 'الرجوع لعرض الويب التفاعلي' : 'Back to Web View')
+                  : (lang === 'ar' ? 'عرض السيرة الذاتية كملف PDF طبيعي' : 'View CV as natural PDF')
+              }
+            >
+              {viewMode === 'pdf' ? (
+                <>
+                  <Layout size={13} />
+                  <span>{lang === 'ar' ? 'عرض الويب' : 'Web View'}</span>
+                </>
+              ) : (
+                <>
+                  <FileText size={13} />
+                  <span>{lang === 'ar' ? 'عرض كـ PDF' : 'View PDF'}</span>
+                </>
+              )}
+            </button>
+
             {profile.cvDriveUrl && (
               <a
                 href={profile.cvDriveUrl}
@@ -88,15 +119,6 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                 <ArrowUpRight size={12} className={dir === 'rtl' ? 'rotate-180' : ''} />
               </a>
             )}
-
-            <button
-              onClick={handlePrint}
-              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-xs text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 transition-colors cursor-pointer"
-              title={t.resume.print}
-            >
-              <Printer size={13} />
-              <span className="hidden md:inline">{lang === 'ar' ? 'طباعة' : 'Print'}</span>
-            </button>
 
             <button
               onClick={handleCopyLink}
@@ -117,8 +139,49 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
           </div>
         </div>
 
-        {/* Scrollable CV Body */}
-        <div className="overflow-y-auto p-5 sm:p-8 space-y-7 text-slate-700 dark:text-gray-300 text-xs sm:text-sm print:bg-white print:text-black body-contrast">
+        {viewMode === 'pdf' ? (
+          /* Native Embedded PDF Document Viewer */
+          <div className="flex-1 flex flex-col h-[75vh] sm:h-[80vh] bg-slate-100 dark:bg-[#0c0d14] relative">
+            {/* Sub-toolbar for PDF */}
+            <div className="px-4 py-2.5 bg-slate-200/70 dark:bg-white/[0.04] border-b border-slate-300 dark:border-white/10 flex items-center justify-between text-xs text-slate-700 dark:text-gray-300 shrink-0">
+              <div className="flex items-center gap-2">
+                <FileText size={15} className="text-blue-600 dark:text-cyan-400" />
+                <span className="font-semibold">
+                  {lang === 'ar' ? 'مستند السيرة الذاتية الأصلي بصيغة PDF' : 'Original PDF Document'}
+                </span>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold hidden sm:inline">
+                  Google Drive Hosted
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {profile.cvDriveUrl && (
+                  <a
+                    href={profile.cvDriveUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1 text-blue-600 dark:text-cyan-400 hover:underline font-medium text-xs"
+                  >
+                    <span>{lang === 'ar' ? 'فتح في نافذة كاملة' : 'Open in new tab'}</span>
+                    <ExternalLink size={12} />
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* Embedded Iframe */}
+            <div className="flex-1 w-full h-full relative">
+              <iframe
+                src={pdfPreviewUrl}
+                className="w-full h-full border-0 rounded-b-2xl sm:rounded-b-3xl"
+                title={`${profile.name} CV PDF Document`}
+                allow="autoplay"
+              />
+            </div>
+          </div>
+        ) : (
+          /* Scrollable CV Body */
+          <div className="overflow-y-auto p-5 sm:p-8 space-y-7 text-slate-700 dark:text-gray-300 text-xs sm:text-sm print:bg-white print:text-black body-contrast">
           
           {/* Header Info */}
           <div className="border-b border-black/10 dark:border-white/10 pb-5">
@@ -289,6 +352,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
           </div>
 
         </div>
+        )}
       </div>
     </div>
   );

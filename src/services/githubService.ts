@@ -726,31 +726,68 @@ export interface ParsedReadmeLinks {
   youtubeUrl?: string;
   playStoreUrl?: string;
   apkUrl?: string;
+  liveDemoUrl?: string;
 }
 
 /**
- * Parses links dynamically from README text (YouTube, Google Play, APK) handling arbitrary structure.
+ * Robustly extracts the 11-character YouTube video ID from any format
+ * (shorts, watch?v=, youtu.be, embed, timestamp parameters, query strings)
+ */
+export function extractYouTubeVideoId(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    const clean = url.trim().replace(/[)\]"'>.,;]+$/, '');
+    const match = clean.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|live\/))([a-zA-Z0-9_-]{11})/i);
+    if (match && match[1]) {
+      return match[1];
+    }
+  } catch (e) {}
+  return null;
+}
+
+/**
+ * Parses links dynamically from README text (YouTube, Google Play, APK, Live Demo)
+ * Handles arbitrary Markdown & HTML structure, prioritizing direct video demos over channel handles.
  */
 export function parseLinksFromReadme(readmeText?: string | null): ParsedReadmeLinks {
   if (!readmeText) return {};
   const result: ParsedReadmeLinks = {};
 
-  const ytRegex = /(https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|@)|youtu\.be\/)[^\s)"]+)/gi;
-  const ytMatch = readmeText.match(ytRegex);
-  if (ytMatch && ytMatch[0]) {
-    result.youtubeUrl = ytMatch[0];
+  // 1. YouTube video extraction with strict preference for actual video/shorts over channels
+  const allYtMatches = Array.from(
+    readmeText.matchAll(/(https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=[^\s)"]+|shorts\/[^\s)"]+|embed\/[^\s)"]+|@[^\s)"]+)|youtu\.be\/[^\s)"]+))/gi)
+  ).map((m) => m[1].replace(/[)\]"'>.,;]+$/, '').trim());
+
+  if (allYtMatches.length > 0) {
+    // Priority A: URLs that have an actual 11-char video ID (e.g. /shorts/xxx, watch?v=xxx, youtu.be/xxx)
+    const directVideoUrl = allYtMatches.find((u) => Boolean(extractYouTubeVideoId(u)));
+    if (directVideoUrl) {
+      result.youtubeUrl = directVideoUrl;
+    } else {
+      // Fallback: Generic channel link if no video ID found
+      result.youtubeUrl = allYtMatches[0];
+    }
   }
 
+  // 2. Google Play Store badge / URL extraction
   const playRegex = /(https?:\/\/(?:www\.)?play\.google\.com\/store\/apps\/details\?[^\s)"]+)/gi;
   const playMatch = readmeText.match(playRegex);
   if (playMatch && playMatch[0]) {
-    result.playStoreUrl = playMatch[0];
+    result.playStoreUrl = playMatch[0].replace(/[)\]"'>.,;]+$/, '').trim();
   }
 
-  const apkRegex = /(https?:\/\/[^\s)"]+\.apk)/gi;
+  // 3. Direct APK download link extraction
+  const apkRegex = /(https?:\/\/[^\s)"]+\.apk(?:[^\s)"]*)?)/gi;
   const apkMatch = readmeText.match(apkRegex);
   if (apkMatch && apkMatch[0]) {
-    result.apkUrl = apkMatch[0];
+    result.apkUrl = apkMatch[0].replace(/[)\]"'>.,;]+$/, '').trim();
+  }
+
+  // 4. Live web demo / app preview link extraction
+  const webDemoRegex = /(https?:\/\/(?:[a-zA-Z0-9-]+\.)*(?:vercel\.app|netlify\.app|github\.io|web\.app|firebaseapp\.com)[^\s)"]*)/gi;
+  const webDemoMatch = readmeText.match(webDemoRegex);
+  if (webDemoMatch && webDemoMatch[0]) {
+    result.liveDemoUrl = webDemoMatch[0].replace(/[)\]"'>.,;]+$/, '').trim();
   }
 
   return result;
@@ -822,6 +859,7 @@ export function clearAllGitHubLocalCache(): void {
         (key.startsWith('gh_') ||
          key.startsWith('ahmed_gh_cache') ||
          key.startsWith('releases_cache_') ||
+         key.startsWith('live_media_') ||
          key.startsWith('repo-'))
       ) {
         keysToRemove.push(key);
@@ -1041,6 +1079,9 @@ export async function checkRepoRelease(repoName: string, username: string = 'ahm
 /**
  * Automatically checks and fetches releases across all repositories and production apps
  */
+/**
+  * Automatically checks and fetches releases across all repositories and production apps
+  */
 export async function fetchAllRepoReleases(
   repoNames: string[],
   username: string = 'ahmed-el-bialy'
@@ -1075,6 +1116,101 @@ export async function fetchAllRepoReleases(
       localStorage.setItem(cacheKey, JSON.stringify(results));
     } catch {}
   }
+
+  return results;
+}
+
+export interface RepoLiveMetadata {
+  repoName: string;
+  youtubeDemoUrl?: string;
+  googlePlayUrl?: string;
+  apkDownloadUrl?: string;
+  releaseUrl?: string;
+  liveDemoUrl?: string;
+  hasRelease: boolean;
+  readmeText?: string;
+  lastChecked: number;
+}
+
+/**
+ * Live repository media resolver:
+ * Fetches latest README with timestamp cache-busting, parses real-time YouTube demos,
+ * Google Play badges, and APK assets directly from GitHub.
+ */
+export async function fetchRepoLiveMetadata(
+  repoName: string,
+  username: string = 'ahmed-el-bialy',
+  forceRefresh: boolean = false
+): Promise<RepoLiveMetadata> {
+  const cleanName = repoName.trim();
+  const cacheKey = `live_media_${username}_${cleanName}`;
+
+  if (!forceRefresh && typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        // Short freshness window of 2 minutes to ensure real-time responsiveness
+        if (Date.now() - (parsed.lastChecked || 0) < 1000 * 60 * 2) {
+          return parsed;
+        }
+      }
+    } catch {}
+  }
+
+  // 1. Fetch live fresh README with cache-busting timestamp & no-cache headers in parallel with releases
+  const [readme, releaseInfo] = await Promise.all([
+    fetchRepoReadme(cleanName, username).catch(() => null),
+    fetchRepositoryReleaseData(cleanName, username).catch((): RepoReleaseInfo => ({ hasRelease: false }))
+  ]);
+
+  // 2. Parse links dynamically from fresh README
+  const parsedLinks = parseLinksFromReadme(readme);
+
+  // 3. Fallbacks from verified list if README didn't have one
+  const known = KNOWN_REPO_MEDIA[cleanName] || KNOWN_REPO_MEDIA[cleanName.toLowerCase()] || {};
+
+  const metadata: RepoLiveMetadata = {
+    repoName: cleanName,
+    youtubeDemoUrl: parsedLinks.youtubeUrl || known.youtube,
+    googlePlayUrl: parsedLinks.playStoreUrl || known.playStore,
+    apkDownloadUrl: releaseInfo.apkDownloadUrl || parsedLinks.apkUrl,
+    releaseUrl: releaseInfo.releaseUrl,
+    liveDemoUrl: parsedLinks.liveDemoUrl,
+    hasRelease: Boolean(releaseInfo.hasRelease),
+    readmeText: readme || undefined,
+    lastChecked: Date.now()
+  };
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(metadata));
+    } catch {}
+  }
+
+  return metadata;
+}
+
+/**
+ * Resolves live real-time media across all repositories and production apps
+ */
+export async function fetchAllReposLiveMetadata(
+  repoNames: string[],
+  username: string = 'ahmed-el-bialy',
+  forceRefresh: boolean = false
+): Promise<Record<string, RepoLiveMetadata>> {
+  const unique = Array.from(new Set(repoNames.filter(Boolean))).slice(0, 25);
+  const results: Record<string, RepoLiveMetadata> = {};
+
+  await Promise.all(
+    unique.map(async (name) => {
+      try {
+        const meta = await fetchRepoLiveMetadata(name, username, forceRefresh);
+        results[name] = meta;
+        results[name.toLowerCase()] = meta;
+      } catch {}
+    })
+  );
 
   return results;
 }

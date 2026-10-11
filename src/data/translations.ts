@@ -215,7 +215,9 @@ export interface Translations {
     title: string;
     subtitle: string;
     downloadPdf: string;
-    print: string;
+    viewPdf: string;
+    viewWeb: string;
+    print?: string;
     copyLink: string;
     linkCopied: string;
     summaryTitle: string;
@@ -464,6 +466,8 @@ export const translations: Record<Language, Translations> = {
       title: "Curriculum Vitae",
       subtitle: "Professional profile, certified credentials, and Flutter engineering experience.",
       downloadPdf: "Download PDF (Drive)",
+      viewPdf: "View as PDF",
+      viewWeb: "Web View",
       print: "Print / Save PDF",
       copyLink: "Copy Link",
       linkCopied: "Link Copied!",
@@ -711,6 +715,8 @@ export const translations: Record<Language, Translations> = {
       title: "السيرة الذاتية والملف المهني",
       subtitle: "الملف التعريفي والشهادات المعتمدة وخبرات تطوير تطبيقات الهاتف المحمول.",
       downloadPdf: "تحميل نسخة PDF (Google Drive)",
+      viewPdf: "عرض كـ PDF",
+      viewWeb: "عرض الويب",
       print: "طباعة / حفظ كملف PDF",
       copyLink: "نسخ رابط السيرة الذاتية",
       linkCopied: "تم نسخ الرابط بنجاح!",
