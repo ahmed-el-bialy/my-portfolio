@@ -52,11 +52,16 @@ The application serves as an interactive showcase of published mobile applicatio
 - **Viewport Scroll Containment:** Modal overlay prevents background body scrolling; scrolling is isolated exclusively to the PDF document or web view container.
 - **Direct Drive Actions:** Immediate download access, one-click open in Google Drive tab, and clipboard link sharing.
 
-### 2. 📅 Re-Engineered Bilingual Booking System (`BookingMeetingModal`)
-- **Full Automatic Language Sync:** Automatically reflects the active portfolio language (Arabic RTL or English LTR) with localized labels, steps, and day indicators.
-- **Preserved International Digital Timestamps:** Consultation slots retain standardized international digital numerals (e.g. `03:00 PM CLT`, `04:00 PM CLT`) across Arabic and English interfaces to prevent formatting ambiguity.
-- **Smart Duration & Date Picker:** Multi-tiered duration options (15, 30, 45, 60 minutes) alongside date selection with relative day badges (*اليوم / Today*, *غداً / Tomorrow*).
-- **Anti Double-Booking Guard (`BookingValidationService`):** Prevents race conditions and duplicate slot scheduling through client-side slot state locking.
+### 2. 📅 Multi-Step Wizard Booking System & Expandable Modal (`BookingMeetingModal`)
+- **Step-by-Step Guided Wizard Flow:** Replaced single-page form with an intuitive 4-step wizard:
+  1. **Contact & Strict Email Verification:** Client name and real-time email/Gmail validator with instant syntax checks and domain typo corrections (e.g. `@gmai.com` -> `@gmail.com`).
+  2. **Session Type & Platform Selection:** Consultation objective (Project Discussion, Technical Interview, Quick Coffee), duration, and preferred video platform (Google Meet, WhatsApp Video, Zoom).
+  3. **Date & Available Time Slot:** Live slot availability, Cairo Local Time (CLT / GMT+2), with preserved English numerals (e.g. `03:00 PM CLT`).
+  4. **Review & Instant Slot Lock:** Comprehensive summary card before final confirmation.
+- **Expandable Modal Sizing (`Maximize2` / `Minimize2`):** Mirrors the Resume modal architecture with one-click toggling between default balanced dialog and expanded full-screen viewport (`98vw` × `97vh`).
+- **Real-Time Gmail / Email Validation Engine:** Validates email syntax, detects missing `@` or domain extensions, and features a one-tap typo corrector for common provider misspellings.
+- **Full Automatic Language Sync:** Seamlessly adapts to Arabic (RTL) or English (LTR) with localized labels while strictly keeping digital time numbers in international format.
+- **Anti Double-Booking Guard (`BookingValidationService`):** Prevents race conditions and duplicate slot scheduling through atomic slot locking and transparent official schedule auditing.
 - **Multi-Channel Calendar Integrations:**
   - Direct synchronization with **Google Calendar** and automated **Google Meet** video conference links.
   - Direct `.ics` iCalendar file generation for Apple Calendar, Outlook, and offline scheduling.
