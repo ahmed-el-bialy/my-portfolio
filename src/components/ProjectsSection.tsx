@@ -17,7 +17,7 @@ import {
   Radio,
   ExternalLink,
 } from 'lucide-react';
-import { FEATURED_PROJECTS, Project } from '../data/portfolioData';
+import { FEATURED_PROJECTS, Project, AHMED_PROFILE } from '../data/portfolioData';
 import {
   GitHubRepo,
   GitHubStats,
@@ -33,7 +33,6 @@ import {
 import { ProjectCardCover, synthesizeProjectBlueprint } from './ProjectCardCover';
 import { extractRepoTechTags, getRepoReadmeSpecs } from '../utils/techTagExtractor';
 import { ProjectDetailsModal } from './ProjectDetailsModal';
-import { VideoDemoModal } from './VideoDemoModal';
 import { ApkDownloadModal } from './ApkDownloadModal';
 import { ProjectSkeletonCard } from './ProjectSkeletonCard';
 import { GitHubActivity } from './GitHubActivity';
@@ -51,11 +50,6 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
   const [activeTab, setActiveTab] = useState<'featured' | 'github'>('featured');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [apkModalProject, setApkModalProject] = useState<Project | null>(null);
-  const [videoModalData, setVideoModalData] = useState<{ open: boolean; title: string; url?: string }>({
-    open: false,
-    title: '',
-    url: ''
-  });
 
   const [githubUser] = useState<string>(currentGithubUser || 'ahmed-el-bialy');
   const [repoSearch, setRepoSearch] = useState<string>('');
@@ -550,6 +544,37 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
       {/* TAB 1: FEATURED PRODUCTION APPS */}
       {activeTab === 'featured' && (
         <>
+          {/* Social Proof & Play Store Verified Review Bar */}
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/5 to-transparent border border-emerald-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="flex text-amber-400 shrink-0 text-sm tracking-tighter">
+                ★★★★★
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>{lang === 'ar' ? 'تقييم 5.0 نجوم على Google Play (تطبيق Revio)' : '5.0 Rating on Google Play Store (Revio App)'}</span>
+                  <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold">
+                    VERIFIED
+                  </span>
+                </span>
+                <p className="text-[11px] text-slate-600 dark:text-gray-300 mt-0.5">
+                  {lang === 'ar'
+                    ? '«حركة قلب الكروت ثلاثية الأبعاد ونظام التخزين المحلي بدون إنترنت يقدمان أداءً فائق السلاسة!» — مراجعة مستخدم حقيقية'
+                    : '"The 3D flip card animations and offline-first storage deliver flawless 60 FPS performance!" — Verified User Feedback'}
+                </p>
+              </div>
+            </div>
+            <a
+              href="https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors shrink-0 shadow-xs"
+            >
+              <span>{lang === 'ar' ? 'عرض على المتجر' : 'View on Play Store'}</span>
+              <ExternalLink size={12} />
+            </a>
+          </div>
+
           {filteredFeaturedProjects.length === 0 ? (
             <div className="p-12 text-center rounded-2xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 my-6">
               <FolderGit2 size={36} className="mx-auto text-slate-400 mb-3" />
@@ -694,20 +719,14 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                         <span
                           key={`${project.id}-${tag.id}-${tagIdx}`}
                           title={`${tag.label} (${tag.category})`}
-                          className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 fluid-tag font-mono font-medium text-slate-800 dark:text-gray-200 transition-colors shadow-2xs hover:border-blue-400 dark:hover:border-white/20"
+                          className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 text-[11px] font-mono font-medium text-slate-700 dark:text-gray-300 transition-colors shadow-2xs hover:border-blue-400 dark:hover:border-cyan-400/50"
                         >
-                          {tag.color && (
-                            <span
-                              className="w-1.5 h-1.5 rounded-full shrink-0"
-                              style={{ backgroundColor: tag.color }}
-                            />
-                          )}
                           <span>{tag.label}</span>
                         </span>
                       ))}
-                      {techTags.length > 6 && (
-                        <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 fluid-tag text-slate-600 dark:text-cyan-400 font-mono font-bold border border-slate-200 dark:border-white/10">
-                          +{techTags.length - 6}
+                      {techTags.length > 5 && (
+                        <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-[10px] text-slate-600 dark:text-cyan-400 font-mono font-bold border border-slate-200 dark:border-white/10">
+                          +{techTags.length - 5}
                         </span>
                       )}
                     </div>
@@ -734,14 +753,11 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setVideoModalData({
-                            open: true,
-                            title: project.name,
-                            url: dynamicVideoUrl
-                          });
+                          const url = dynamicVideoUrl || AHMED_PROFILE.youtubeUrl;
+                          window.open(url, '_blank');
                         }}
                         className="w-full flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-2 sm:px-3.5 rounded-xl bg-red-600/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 font-bold text-[11px] sm:text-xs border border-red-500/25 transition-all cursor-pointer shadow-xs min-h-[40px] sm:min-h-[44px]"
-                        title="Watch YouTube Demo Video"
+                        title="Watch on YouTube"
                       >
                         <Play size={13} fill="currentColor" className="shrink-0" />
                         <span>{t.projects.actions.liveDemo}</span>
@@ -949,19 +965,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                             <span
                               key={`${repo.id}-${tag.id}-${tagIdx}`}
                               title={`${tag.label} (${tag.category})`}
-                              className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 fluid-tag font-mono font-medium text-slate-800 dark:text-gray-200 transition-colors shadow-2xs hover:border-blue-400 dark:hover:border-white/20"
+                              className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 text-[11px] font-mono font-medium text-slate-700 dark:text-gray-300 transition-colors shadow-2xs hover:border-blue-400 dark:hover:border-cyan-400/50"
                             >
-                              {tag.color && (
-                                <span
-                                  className="w-1.5 h-1.5 rounded-full shrink-0"
-                                  style={{ backgroundColor: tag.color }}
-                                />
-                              )}
                               <span>{tag.label}</span>
                             </span>
                           ))}
                           {repoTechTags.length > 5 && (
-                            <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 fluid-tag text-slate-600 dark:text-cyan-400 font-mono font-bold border border-slate-200 dark:border-white/10">
+                            <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-[10px] text-slate-600 dark:text-cyan-400 font-mono font-bold border border-slate-200 dark:border-white/10">
                               +{repoTechTags.length - 5}
                             </span>
                           )}
@@ -1044,14 +1054,11 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setVideoModalData({
-                                open: true,
-                                title: repo.name,
-                                url: projectObj.links.youtubeDemo
-                              });
+                              const url = projectObj.links.youtubeDemo || AHMED_PROFILE.youtubeUrl;
+                              window.open(url, '_blank');
                             }}
                             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500 hover:text-white text-red-600 dark:text-red-400 font-bold text-xs border border-red-500/20 transition-all cursor-pointer shadow-xs min-h-[38px]"
-                            title="Watch YouTube Demo Video"
+                            title="Watch on YouTube"
                           >
                             <Play size={13} fill="currentColor" />
                             <span>Watch Demo</span>
@@ -1072,10 +1079,6 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
         isOpen={Boolean(selectedProject)}
         onClose={() => setSelectedProject(null)}
         project={selectedProject}
-        onWatchDemo={(title, url) => {
-          setSelectedProject(null);
-          setVideoModalData({ open: true, title, url });
-        }}
       />
 
       {/* Conditional APK Download Modal with Security Notice */}
@@ -1083,14 +1086,6 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
         isOpen={Boolean(apkModalProject)}
         onClose={() => setApkModalProject(null)}
         project={apkModalProject}
-      />
-
-      {/* Video Demo Modal */}
-      <VideoDemoModal
-        isOpen={videoModalData.open}
-        onClose={() => setVideoModalData({ open: false, title: '', url: '' })}
-        projectName={videoModalData.title}
-        videoUrl={videoModalData.url}
       />
     </section>
   );

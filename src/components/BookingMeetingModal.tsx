@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   Calendar,
@@ -26,6 +27,8 @@ import {
   Maximize2,
   Minimize2,
   Sparkles,
+  CalendarSync,
+  Loader2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { DeveloperProfile } from '../data/portfolioData';
@@ -38,6 +41,9 @@ import {
   initCalendarAuth,
   signOutGoogle,
   CreatedCalendarEventResult,
+  fetchCalendarFreeBusy,
+  isSlotOverlappingGoogleBusy,
+  CalendarBusyPeriod,
 } from '../services/googleCalendarService';
 import {
   lockAndConfirmSlotAsync,
@@ -253,6 +259,9 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isAuthenticatingGoogle, setIsAuthenticatingGoogle] = useState(false);
   const [createdEventResult, setCreatedEventResult] = useState<CreatedCalendarEventResult | null>(null);
+  const [googleBusyPeriods, setGoogleBusyPeriods] = useState<CalendarBusyPeriod[]>([]);
+  const [isLoadingGoogleAvailability, setIsLoadingGoogleAvailability] = useState(false);
+  const [isGoogleAvailabilitySynced, setIsGoogleAvailabilitySynced] = useState(false);
 
   // Booking Execution State
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -349,6 +358,9 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
         connectingGoogle: 'جاري الاتصال...',
         connectedAs: 'متصل بحساب:',
         disconnect: 'فصل الحساب',
+        googleCalLiveActive: 'مزامنة حية مع Google Calendar: تم استبعاد أوقات انشغالك التلقائية ⚡',
+        googleCalSyncingSlots: 'جاري فحص التوافر المباشر من Google Calendar...',
+        slotGoogleBusy: 'مشغول في تقويمك',
         btnNext: 'المتابعة للخطوة التالية',
         btnBack: 'الرجوع للخطوة السابقة',
         cancelBtn: 'إلغاء',
@@ -476,6 +488,9 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
       connectingGoogle: 'Connecting...',
       connectedAs: 'Connected as:',
       disconnect: 'Disconnect',
+      googleCalLiveActive: 'Live Google Calendar Sync: Your conflicting busy times are automatically excluded ⚡',
+      googleCalSyncingSlots: 'Checking real-time availability with Google Calendar...',
+      slotGoogleBusy: 'Busy in your Calendar',
       btnNext: 'Continue to Next Step',
       btnBack: 'Back to Previous Step',
       cancelBtn: 'Cancel',
@@ -554,15 +569,56 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
     return unsubscribe;
   }, [meetingDate]);
 
-  // Adjust selected slot if user picks a date where current slot is already booked
+  // Query Google Calendar FreeBusy when user is connected and selects a date
   useEffect(() => {
-    if (bookedSlots.includes(selectedSlot)) {
-      const firstAvailable = TIME_SLOTS.find((s) => !bookedSlots.includes(s));
+    const currentToken = accessToken || getCalendarAccessToken();
+    if (!currentToken || !meetingDate) {
+      setGoogleBusyPeriods([]);
+      setIsGoogleAvailabilitySynced(false);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingGoogleAvailability(true);
+
+    fetchCalendarFreeBusy(currentToken, meetingDate)
+      .then((busy) => {
+        if (!isMounted) return;
+        setGoogleBusyPeriods(busy);
+        setIsGoogleAvailabilitySynced(true);
+      })
+      .catch((err) => {
+        console.warn('Could not fetch Google Calendar FreeBusy availability:', err);
+        if (!isMounted) return;
+        setGoogleBusyPeriods([]);
+        setIsGoogleAvailabilitySynced(false);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingGoogleAvailability(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [accessToken, meetingDate]);
+
+  // Adjust selected slot if user picks a date where current slot is already booked or Google busy
+  useEffect(() => {
+    const isSlotBlocked =
+      bookedSlots.includes(selectedSlot) ||
+      isSlotOverlappingGoogleBusy(meetingDate, selectedSlot, googleBusyPeriods);
+
+    if (isSlotBlocked) {
+      const firstAvailable = TIME_SLOTS.find(
+        (s) =>
+          !bookedSlots.includes(s) &&
+          !isSlotOverlappingGoogleBusy(meetingDate, s, googleBusyPeriods)
+      );
       if (firstAvailable) {
         setSelectedSlot(firstAvailable);
       }
     }
-  }, [meetingDate, bookedSlots, selectedSlot]);
+  }, [meetingDate, bookedSlots, googleBusyPeriods, selectedSlot]);
 
   // Initialize Auth state
   useEffect(() => {
@@ -584,12 +640,25 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
     setIsAuthenticatingGoogle(true);
     try {
       const result = await signInWithGoogleCalendar();
+      if (!result) {
+        // User closed the popup, cancel gracefully without error
+        return;
+      }
       setCurrentUser(result.user);
       setAccessToken(result.accessToken);
       if (result.user.displayName) setName(result.user.displayName);
       if (result.user.email) setEmail(result.user.email);
       setNotificationToast(ui.toastCalSuccess);
     } catch (err: any) {
+      const errorStr = String(err?.code || '') + ' ' + String(err?.message || '') + ' ' + String(err || '');
+      if (
+        errorStr.includes('popup-closed-by-user') ||
+        errorStr.includes('cancelled-popup-request') ||
+        errorStr.includes('user-cancelled') ||
+        errorStr.includes('popup-blocked')
+      ) {
+        return;
+      }
       console.error('Google Sign In error:', err);
       setNotificationToast(ui.toastCalFailed);
     } finally {
@@ -629,8 +698,16 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
   // Step 1 Validation Guard
   const isStep1Valid = name.trim().length >= 2 && emailValidation.isValid;
 
-  // Step 3 Validation Guard
-  const isStep3Valid = !!meetingDate && !!selectedSlot && !bookedSlots.includes(selectedSlot);
+  // Step 3 Validation Guard: Must not be booked in system nor busy in connected Google Calendar
+  const isSelectedSlotGoogleBusy = useMemo(() => {
+    return isSlotOverlappingGoogleBusy(meetingDate, selectedSlot, googleBusyPeriods);
+  }, [meetingDate, selectedSlot, googleBusyPeriods]);
+
+  const isStep3Valid =
+    !!meetingDate &&
+    !!selectedSlot &&
+    !bookedSlots.includes(selectedSlot) &&
+    !isSelectedSlotGoogleBusy;
 
   const handleNextStep = () => {
     setBookingError(null);
@@ -654,6 +731,14 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
     } else if (currentStep === 3) {
       if (bookedSlots.includes(selectedSlot)) {
         setBookingError(ui.errorDoubleBooking);
+        return;
+      }
+      if (isSelectedSlotGoogleBusy) {
+        setBookingError(
+          isArabic
+            ? '⚠️ هذا التوقيت يتعارض مع موعد مسجل في تقويم Google الخاص بك. يرجى اختيار موعد آخر.'
+            : '⚠️ This time conflicts with an existing event on your Google Calendar. Please choose another slot.'
+        );
         return;
       }
       setCurrentStep(4);
@@ -1578,18 +1663,42 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
                   </div>
 
                   {/* Cairo Time Note - Keeps numbers in English format */}
-                  <div className="text-[11px] text-cyan-700 dark:text-cyan-400 font-mono font-medium mb-2 flex items-center gap-1.5">
-                    <Clock size={12} />
-                    <span>{ui.cairoTimeHeader}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
+                    <div className="text-[11px] text-cyan-700 dark:text-cyan-400 font-mono font-medium flex items-center gap-1.5">
+                      <Clock size={12} />
+                      <span>{ui.cairoTimeHeader}</span>
+                    </div>
+
+                    {currentUser && (
+                      <div className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-cyan-300 flex items-center gap-1 w-fit">
+                        {isLoadingGoogleAvailability ? (
+                          <>
+                            <Loader2 size={11} className="animate-spin text-blue-500" />
+                            <span>{ui.googleCalSyncingSlots}</span>
+                          </>
+                        ) : isGoogleAvailabilitySynced ? (
+                          <>
+                            <CalendarSync size={11} className="text-emerald-500" />
+                            <span>{ui.googleCalLiveActive}</span>
+                          </>
+                        ) : null}
+                      </div>
+                    )}
                   </div>
 
                   {/* Time Slots Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {TIME_SLOTS.map((slot) => {
-                      const isSlotTaken = bookedSlots.includes(slot);
+                      const isSystemBooked = bookedSlots.includes(slot);
+                      const isGoogleBusy = isSlotOverlappingGoogleBusy(
+                        meetingDate,
+                        slot,
+                        googleBusyPeriods
+                      );
+                      const isSlotTaken = isSystemBooked || isGoogleBusy;
                       const isSelected = selectedSlot === slot && !isSlotTaken;
 
-                      if (isSlotTaken) {
+                      if (isSystemBooked) {
                         return (
                           <div
                             key={slot}
@@ -1602,6 +1711,24 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
                             <span className="text-[9px] font-bold text-rose-600 dark:text-rose-400 flex items-center gap-0.5 mt-0.5">
                               <Lock size={9} />
                               <span>{ui.slotBooked}</span>
+                            </span>
+                          </div>
+                        );
+                      }
+
+                      if (isGoogleBusy) {
+                        return (
+                          <div
+                            key={slot}
+                            title={ui.slotGoogleBusy}
+                            className="py-2.5 px-3 rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/70 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-mono text-xs flex flex-col items-center justify-center min-h-[52px] opacity-75 cursor-not-allowed select-none"
+                          >
+                            <span className="line-through text-[11px] opacity-80">
+                              {formatSlotLabel(slot)}
+                            </span>
+                            <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-0.5 mt-0.5">
+                              <Calendar size={9} />
+                              <span>{ui.slotGoogleBusy}</span>
                             </span>
                           </div>
                         );
@@ -1794,12 +1921,58 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
           ) : (
             /* OFFICIAL CONFIRMATION & SUCCESS SCREEN */
             <div className="py-4 text-center space-y-4 max-w-2xl mx-auto animate-in fade-in zoom-in-95 duration-300">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 text-emerald-500 flex items-center justify-center mx-auto shadow-md">
-                <CheckCircle2 size={36} />
+              {/* Framer Motion Animated Success Checkmark */}
+              <div className="relative flex items-center justify-center my-3">
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: [0, 1.25, 1], opacity: 1 }}
+                  transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+                  className="w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border-2 border-emerald-500/40 flex items-center justify-center shadow-lg shadow-emerald-500/25 relative"
+                >
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
+                    transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
+                    className="absolute inset-0 rounded-full bg-emerald-500/20"
+                  />
+                  <svg
+                    className="w-12 h-12 text-emerald-500 relative z-10"
+                    viewBox="0 0 52 52"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <motion.circle
+                      cx="26"
+                      cy="26"
+                      r="24"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.55, ease: 'easeOut' }}
+                    />
+                    <motion.path
+                      d="M15 27L23 35L37 19"
+                      stroke="currentColor"
+                      strokeWidth="3.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.45, delay: 0.35, ease: 'easeOut' }}
+                    />
+                  </svg>
+                </motion.div>
               </div>
 
               <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-cyan-400 text-xs font-mono font-bold mb-2">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.3 }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-cyan-400 text-xs font-mono font-bold mb-2"
+                >
                   <ShieldCheck size={14} />
                   <span>
                     {ui.refCodeLabel} {finalBookingId}
@@ -1812,15 +1985,25 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
                   >
                     {copiedRef ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
                   </button>
-                </div>
-                <h4 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                </motion.div>
+                <motion.h4
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.3 }}
+                  className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white"
+                >
                   {ui.successTitle}
-                </h4>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-300 mt-1 max-w-md mx-auto leading-relaxed">
+                </motion.h4>
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.3 }}
+                  className="text-xs sm:text-sm text-slate-600 dark:text-gray-300 mt-1 max-w-md mx-auto leading-relaxed"
+                >
                   {ui.clientGreeting} <strong className="text-blue-600 dark:text-cyan-400">{name}</strong>. {ui.confirmedOnDate}{' '}
                   <strong>{meetingDate}</strong> {ui.confirmedAtTime}{' '}
                   <strong>{formatSlotLabel(selectedSlot)}</strong> {ui.noConflictNotice}
-                </p>
+                </motion.p>
               </div>
 
               {/* Locked Badge Box & Meet Link */}

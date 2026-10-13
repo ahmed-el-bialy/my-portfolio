@@ -31,7 +31,7 @@ export const initCalendarAuth = (
   });
 };
 
-export const signInWithGoogleCalendar = async (): Promise<{ user: User; accessToken: string }> => {
+export const signInWithGoogleCalendar = async (): Promise<{ user: User; accessToken: string } | null> => {
   try {
     isSigningIn = true;
     const result = await signInWithPopup(auth, provider);
@@ -42,6 +42,16 @@ export const signInWithGoogleCalendar = async (): Promise<{ user: User; accessTo
     cachedAccessToken = credential.accessToken;
     return { user: result.user, accessToken: cachedAccessToken };
   } catch (error: any) {
+    const errorStr = String(error?.code || '') + ' ' + String(error?.message || '') + ' ' + String(error || '');
+    if (
+      errorStr.includes('popup-closed-by-user') ||
+      errorStr.includes('cancelled-popup-request') ||
+      errorStr.includes('user-cancelled') ||
+      errorStr.includes('popup-blocked')
+    ) {
+      // User deliberately closed the popup window - benign user cancellation
+      return null;
+    }
     console.error('Google Sign In Error:', error);
     throw error;
   } finally {
@@ -77,6 +87,74 @@ export interface CreatedCalendarEventResult {
   summary: string;
   status: string;
 }
+
+export interface CalendarBusyPeriod {
+  start: string;
+  end: string;
+}
+
+/**
+ * Queries Google Calendar FreeBusy API to fetch real-time busy intervals
+ * on the user's primary calendar for a given date.
+ */
+export const fetchCalendarFreeBusy = async (
+  accessToken: string,
+  date: string // YYYY-MM-DD
+): Promise<CalendarBusyPeriod[]> => {
+  try {
+    const timeMin = `${date}T00:00:00+02:00`;
+    const timeMax = `${date}T23:59:59+02:00`;
+
+    const response = await fetch('https://www.googleapis.com/calendar/v3/freeBusy', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        timeMin,
+        timeMax,
+        timeZone: 'Africa/Cairo',
+        items: [{ id: 'primary' }],
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn('Google Calendar FreeBusy query returned non-ok:', response.status);
+      return [];
+    }
+
+    const data = await response.json();
+    const busy = data?.calendars?.primary?.busy || [];
+    return busy;
+  } catch (err) {
+    console.warn('Failed to query Google Calendar FreeBusy:', err);
+    return [];
+  }
+};
+
+/**
+ * Checks whether a given timeSlot on a specific date overlaps with any Google Calendar busy intervals
+ */
+export const isSlotOverlappingGoogleBusy = (
+  date: string,
+  timeSlot: string,
+  busyPeriods: CalendarBusyPeriod[],
+  durationMinutes: number = 30
+): boolean => {
+  if (!busyPeriods || busyPeriods.length === 0) return false;
+
+  const { startIso, endIso } = calculateMeetingDateTimes(date, timeSlot, durationMinutes);
+  const slotStart = new Date(startIso).getTime();
+  const slotEnd = new Date(endIso).getTime();
+
+  return busyPeriods.some((busy) => {
+    const busyStart = new Date(busy.start).getTime();
+    const busyEnd = new Date(busy.end).getTime();
+    // Overlap condition: slotStart < busyEnd && slotEnd > busyStart
+    return slotStart < busyEnd && slotEnd > busyStart;
+  });
+};
 
 /**
  * Parses timeSlot like "03:00 PM CLT" and date "2026-10-07" into ISO Date Strings with Cairo time (+02:00)

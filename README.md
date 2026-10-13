@@ -56,9 +56,13 @@ The application serves as an interactive showcase of published mobile applicatio
 - **Step-by-Step Guided Wizard Flow:** Replaced single-page form with an intuitive 4-step wizard:
   1. **Contact & Strict Email Verification:** Client name and real-time email/Gmail validator with instant syntax checks and domain typo corrections (e.g. `@gmai.com` -> `@gmail.com`).
   2. **Session Type & Platform Selection:** Consultation objective (Project Discussion, Technical Interview, Quick Coffee), duration, and preferred video platform (Google Meet, WhatsApp Video, Zoom).
-  3. **Date & Available Time Slot:** Live slot availability, Cairo Local Time (CLT / GMT+2), with preserved English numerals (e.g. `03:00 PM CLT`).
-  4. **Review & Instant Slot Lock:** Comprehensive summary card before final confirmation.
-- **Expandable Modal Sizing (`Maximize2` / `Minimize2`):** Mirrors the Resume modal architecture with one-click toggling between default balanced dialog and expanded full-screen viewport (`98vw` × `97vh`).
+  3. **Date & Available Time Slot with Google Calendar FreeBusy Sync:** Live slot availability in Cairo Local Time (CLT / GMT+2) with preserved English numerals (e.g. `03:00 PM CLT`). Real-time integration with Google Calendar API queries FreeBusy data to dynamically exclude conflicting appointments.
+  4. **Review & Instant Slot Lock with Framer Motion Success:** Comprehensive summary card before final confirmation, followed by a fluid Framer Motion animated success checkmark with expanding ripples upon submission.
+- **Real-Time Google Calendar API Connection:**
+  - Connects to Google Calendar via OAuth to query live busy slots and automatically disable times that conflict with existing calendar commitments.
+  - Generates official Google Meet video rooms and creates calendar entries with automatic email and popup reminders.
+- **Framer Motion Animated Checkmark & Micro-Interactions:** Custom SVG path-drawing animation and spring-based scale entrance for the final confirmation step, paired with celebratory particle confetti.
+- **Expandable Modal Sizing (`Maximize2` / `Minimize2`):** Mirrors the Resume modal architecture with one-click toggling between default balanced dialog (`max-w-4xl lg:max-w-5xl`) and expanded full-screen viewport (`98vw` × `97vh`).
 - **Real-Time Gmail / Email Validation Engine:** Validates email syntax, detects missing `@` or domain extensions, and features a one-tap typo corrector for common provider misspellings.
 - **Full Automatic Language Sync:** Seamlessly adapts to Arabic (RTL) or English (LTR) with localized labels while strictly keeping digital time numbers in international format.
 - **Anti Double-Booking Guard (`BookingValidationService`):** Prevents race conditions and duplicate slot scheduling through atomic slot locking and transparent official schedule auditing.

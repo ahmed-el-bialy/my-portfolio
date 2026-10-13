@@ -5,9 +5,7 @@ import {
   Github,
   Linkedin,
   Mail,
-  Check,
   ArrowRight,
-  Sparkles,
   MapPin,
   Video,
   Youtube,
@@ -15,8 +13,11 @@ import {
   FolderGit2,
   Layers,
   Award,
+  Briefcase,
+  ExternalLink,
+  Star
 } from 'lucide-react';
-import { DeveloperProfile } from '../data/portfolioData';
+import { DeveloperProfile, WORK_STATUS_INFO } from '../data/portfolioData';
 import { WhatsAppLogo, TikTokLogo } from './TechLogos';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -54,8 +55,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const smoothCardY = useSpring(cardMouseY, springConfig);
 
   // 3D rotation angles mapped strictly to card hover
-  const rotateX = useTransform(smoothCardY, [-0.5, 0.5], [16, -16]);
-  const rotateY = useTransform(smoothCardX, [-0.5, 0.5], [-16, 16]);
+  const rotateX = useTransform(smoothCardY, [-0.5, 0.5], [14, -14]);
+  const rotateY = useTransform(smoothCardX, [-0.5, 0.5], [-14, 14]);
 
   // Dynamic light sheen coordinates
   const sheenX = useTransform(smoothCardX, [-0.5, 0.5], ['0%', '100%']);
@@ -70,7 +71,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     return () => clearInterval(interval);
   }, [rotatingWords.length]);
 
-  // Card-specific 3D mouse handler (reacts when hovering over the image card)
   const handleCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
@@ -104,24 +104,26 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       {/* Main Grid: Clean Solid Text Left + Interactive 3D Tilt Card Right */}
       <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center z-10">
         
-        {/* Left Column: Stable Typography & Clean CTAs */}
-        <div className="lg:col-span-7 flex flex-col items-start gap-3.5 sm:gap-5">
+        {/* Left Column: Focused Typography & Streamlined CTAs */}
+        <div className="lg:col-span-7 flex flex-col items-start gap-3 sm:gap-4.5">
           
-          {/* Status Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-300 dark:border-white/10 text-xs text-slate-800 dark:text-gray-300 font-semibold shadow-xs">
-            <span className="relative flex h-2.5 w-2.5">
+          {/* Status Badge with 'What I'm Looking For' indicator */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-white/[0.04] border border-slate-300 dark:border-white/10 text-xs text-slate-800 dark:text-gray-300 font-semibold shadow-xs flex-wrap">
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
-            <span className="font-semibold tracking-wide text-slate-900 dark:text-gray-200">{t.hero.statusBadge}</span>
-            <span className="text-slate-400 dark:text-gray-500">•</span>
-            <span className="flex items-center gap-1 text-slate-700 dark:text-gray-300">
+            <span className="font-semibold tracking-wide text-slate-900 dark:text-gray-200">
+              {lang === 'ar' ? 'متاح للتوظيف: جونيور فلاتر (دوام كامل / عن بُعد)' : 'Open to Roles: Junior Flutter Developer (Remote / Hybrid)'}
+            </span>
+            <span className="text-slate-400 dark:text-gray-500 hidden sm:inline">•</span>
+            <span className="hidden sm:flex items-center gap-1 text-slate-700 dark:text-gray-300">
               <MapPin size={12} className="text-cyan-600 dark:text-cyan-400" /> {t.hero.location}
             </span>
           </div>
 
           {/* Script Accent */}
-          <div className="font-marker text-xl sm:text-2xl text-cyan-600 dark:text-cyan-400/90 -rotate-2 tracking-wider select-none">
+          <div className="font-marker text-lg sm:text-2xl text-cyan-600 dark:text-cyan-400/90 -rotate-2 tracking-wider select-none">
             {t.hero.thisIs}
           </div>
 
@@ -143,65 +145,59 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </span>
           </div>
 
-          {/* Bio paragraph */}
+          {/* Short, high-impact Bio paragraph */}
           <p className="text-sm sm:text-base text-slate-700 dark:text-gray-300 max-w-2xl leading-relaxed body-contrast font-medium">
-            {t.hero.bio}
+            {lang === 'ar'
+              ? 'مطور تطبيقات جوال متخصص في Flutter & Clean Architecture ومكتبات Cubit و Hive CE. صاحب تطبيق "Revio" المنشور رسمياً على Google Play.'
+              : 'Mobile Application Developer crafting high-performance Android & iOS apps with strict Clean Architecture, BLoC/Cubit, and offline-first storage. Creator of "Revio", published live on Google Play.'}
           </p>
 
-          {/* Action CTAs: High Intent, Harmonized 2x2 on Mobile, Inline on Desktop */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 pt-2 w-full sm:w-auto">
-            {/* Explore Apps */}
+          {/* Streamlined Action CTAs: 2 Main Prominent Buttons (Explore Apps + Book Meeting) + Resume link */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3.5 pt-1.5 w-full sm:w-auto">
+            {/* Primary: Explore Apps */}
             <button
               onClick={onExploreProjects}
-              className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm transition-all shadow-md shadow-blue-600/30 hover:scale-[1.02] cursor-pointer min-h-[44px]"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm sm:text-base transition-all shadow-lg shadow-blue-600/30 hover:scale-[1.02] cursor-pointer min-h-[48px]"
             >
               <span>{t.hero.exploreApps}</span>
-              <ArrowRight size={15} className={dir === 'rtl' ? 'rotate-180' : ''} />
+              <ArrowRight size={17} className={dir === 'rtl' ? 'rotate-180' : ''} />
             </button>
 
-            {/* View Resume */}
-            <button
-              onClick={onOpenResume}
-              className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 rounded-xl bg-white dark:bg-white/10 hover:bg-slate-100 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold text-xs sm:text-sm border border-slate-300 dark:border-white/20 shadow-xs transition-all cursor-pointer min-h-[44px]"
-            >
-              <FileText size={15} className="text-emerald-500 shrink-0" />
-              <span className="truncate">{t.hero.resumeCv}</span>
-            </button>
-
-            {/* Book a Meeting (In-App Modal) */}
+            {/* Secondary: Book a Meeting */}
             {onOpenBooking && (
               <button
                 onClick={onOpenBooking}
-                className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600/15 to-cyan-500/15 hover:from-blue-600 hover:to-cyan-500 hover:text-white text-blue-700 dark:text-cyan-300 font-bold text-xs sm:text-sm border border-blue-500/30 transition-all cursor-pointer shadow-xs min-h-[44px]"
-                title={t.hero.bookMeeting}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-white dark:bg-[#151828] hover:bg-slate-100 dark:hover:bg-[#1d2238] text-blue-700 dark:text-cyan-300 font-bold text-sm sm:text-base border border-blue-500/30 shadow-md transition-all cursor-pointer min-h-[48px]"
               >
-                <Video size={15} className="text-blue-600 dark:text-cyan-400 group-hover:text-white shrink-0" />
-                <span className="truncate">{t.hero.bookMeeting}</span>
+                <Video size={17} className="text-blue-600 dark:text-cyan-400 shrink-0" />
+                <span>{t.hero.bookMeeting}</span>
               </button>
             )}
 
-            {/* Contact Me (In-App Modal) */}
+            {/* Secondary Option: View Resume */}
             <button
-              onClick={onOpenContact}
-              className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-gray-200 text-xs sm:text-sm font-bold border border-slate-300 dark:border-white/15 shadow-xs transition-all cursor-pointer min-h-[44px]"
+              onClick={onOpenResume}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl bg-slate-100/80 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-gray-200 font-semibold text-xs sm:text-sm border border-slate-300 dark:border-white/10 transition-all cursor-pointer"
             >
-              <Mail size={15} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
-              <span>{t.hero.getInTouch}</span>
+              <FileText size={15} className="text-emerald-500 shrink-0" />
+              <span>{t.hero.resumeCv}</span>
             </button>
           </div>
 
           {/* Social Channels Row */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-2 text-xs sm:text-sm text-slate-700 dark:text-gray-300">
-            <span className="text-[10px] sm:text-[11px] uppercase tracking-wider text-slate-500 dark:text-gray-400 font-bold me-1">{t.hero.channelsLabel}</span>
+            <span className="text-[10px] sm:text-[11px] uppercase tracking-wider text-slate-500 dark:text-gray-400 font-bold me-1">
+              {t.hero.channelsLabel}
+            </span>
             
             <a
               href="https://wa.me/201022121573"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400 font-bold text-xs border border-emerald-500/30 transition-all hover:scale-105"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-800 dark:text-emerald-400 font-bold text-xs border border-emerald-500/30 transition-all hover:scale-105"
               title="Chat directly on WhatsApp"
             >
-              <WhatsAppLogo size={14} />
+              <WhatsAppLogo size={13} />
               <span>WhatsApp</span>
             </a>
 
@@ -209,9 +205,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.githubUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white transition-colors font-semibold border border-slate-200/80 dark:border-white/5 text-xs"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white transition-colors font-medium border border-slate-200/80 dark:border-white/5 text-xs"
             >
-              <Github size={14} />
+              <Github size={13} />
               <span>GitHub</span>
             </a>
 
@@ -219,9 +215,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.linkedinUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-semibold border border-slate-200/80 dark:border-white/5 text-xs"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium border border-slate-200/80 dark:border-white/5 text-xs"
             >
-              <Linkedin size={14} />
+              <Linkedin size={13} />
               <span>LinkedIn</span>
             </a>
 
@@ -229,9 +225,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.youtubeUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-red-600 dark:hover:text-red-400 transition-colors font-semibold border border-slate-200/80 dark:border-white/5 text-xs"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-red-600 dark:hover:text-red-400 transition-colors font-medium border border-slate-200/80 dark:border-white/5 text-xs"
             >
-              <Youtube size={14} />
+              <Youtube size={13} />
               <span>YouTube</span>
             </a>
 
@@ -239,9 +235,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.tiktokUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-pink-600 dark:hover:text-pink-400 transition-colors font-semibold border border-slate-200/80 dark:border-white/5 text-xs"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-pink-600 dark:hover:text-pink-400 transition-colors font-medium border border-slate-200/80 dark:border-white/5 text-xs"
             >
-              <TikTokLogo size={13} />
+              <TikTokLogo size={12} />
               <span>TikTok</span>
             </a>
           </div>
@@ -261,8 +257,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             }}
             animate={
               isCardHovered
-                ? { y: -12, scale: 1.03 }
-                : { y: [-6, 6, -6], scale: 1 }
+                ? { y: -10, scale: 1.02 }
+                : { y: [-5, 5, -5], scale: 1 }
             }
             transition={
               isCardHovered
@@ -300,7 +296,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 }}
               />
 
-              {/* Gradient Bottom Scrim - Dark fog only in dark mode; subtle contrast in light mode */}
+              {/* Gradient Bottom Scrim */}
               <div className="absolute inset-0 dark:bg-gradient-to-t dark:from-slate-950/85 dark:via-transparent dark:to-transparent bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
 
               {/* Top Side Badge */}
@@ -320,9 +316,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
       </div>
 
-      {/* Realistic Stats Bar at Bottom (Responsive Cards Grid with Micro-Interactions) */}
+      {/* Stats Bar at Bottom: 1 Live App on Google Play is visually Weighted and Featured */}
       <div className="max-w-7xl mx-auto w-full mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-slate-200 dark:border-white/10 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
         {profile.stats.map((stat, idx) => {
+          const isPlayStore = stat.label.includes('Play');
           const isRepoStat = stat.label.toLowerCase().includes('repo');
           const displayValue = isRepoStat && totalReposCount ? `${totalReposCount}` : stat.value;
 
@@ -332,12 +329,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           let accentColor = 'text-blue-600 dark:text-cyan-400';
           let bgColor = 'bg-blue-500/10 dark:bg-cyan-500/10 border-blue-500/20';
 
-          if (stat.label.includes('Play')) {
+          if (isPlayStore) {
             localizedLabel = t.hero.stats.playStore.label;
             localizedSuffix = t.hero.stats.playStore.suffix;
             IconComponent = Smartphone;
             accentColor = 'text-emerald-600 dark:text-emerald-400';
-            bgColor = 'bg-emerald-500/10 border-emerald-500/20';
+            bgColor = 'bg-emerald-500/15 border-emerald-500/30';
           } else if (stat.label.includes('Repo')) {
             localizedLabel = t.hero.stats.repos.label;
             localizedSuffix = t.hero.stats.repos.suffix;
@@ -361,28 +358,42 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           return (
             <div
               key={idx}
-              className="p-3 sm:p-4 rounded-2xl bg-white/80 dark:bg-[#111322]/80 backdrop-blur-xs border border-slate-200/90 dark:border-white/10 hover:border-blue-400/50 dark:hover:border-white/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-md shadow-2xs group flex flex-col justify-between"
+              className={`p-3.5 sm:p-4.5 rounded-2xl backdrop-blur-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between group ${
+                isPlayStore
+                  ? 'bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-white/90 dark:to-[#111322]/90 border-2 border-emerald-500/50 shadow-emerald-500/10 shadow-lg'
+                  : 'bg-white/80 dark:bg-[#111322]/80 border border-slate-200/90 dark:border-white/10 hover:border-blue-400/50 dark:hover:border-white/20'
+              }`}
             >
-              <div className="flex items-center justify-between mb-2 sm:mb-2.5">
-                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border ${bgColor} ${accentColor} group-hover:scale-110 transition-transform`}>
-                  <IconComponent size={16} />
+              <div className="flex items-center justify-between mb-2">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${bgColor} ${accentColor} group-hover:scale-110 transition-transform`}>
+                  <IconComponent size={17} />
                 </div>
-                <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-gray-500 uppercase">
-                  METRIC 0{idx + 1}
-                </span>
+                {isPlayStore ? (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-bold uppercase tracking-wider">
+                    ★ FEATURED
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-gray-500 uppercase">
+                    METRIC 0{idx + 1}
+                  </span>
+                )}
               </div>
               <div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight title-contrast text-slate-900 dark:text-white">
+                <div className="flex items-baseline gap-1.5">
+                  <span className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight title-contrast ${
+                    isPlayStore ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'
+                  }`}>
                     {displayValue}
                   </span>
                   {localizedSuffix && (
-                    <span className="text-xs sm:text-sm font-bold text-blue-600 dark:text-cyan-400">
+                    <span className={`text-xs sm:text-sm font-bold ${
+                      isPlayStore ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-cyan-400'
+                    }`}>
                       {localizedSuffix}
                     </span>
                   )}
                 </div>
-                <div className="text-[11px] sm:text-xs text-slate-600 dark:text-gray-300 font-semibold mt-1 leading-snug body-contrast">
+                <div className="text-[11px] sm:text-xs text-slate-700 dark:text-gray-300 font-semibold mt-1 leading-snug body-contrast">
                   {localizedLabel}
                 </div>
               </div>

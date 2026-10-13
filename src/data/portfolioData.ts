@@ -77,17 +77,17 @@ export interface DeveloperProfile {
 
 export const AHMED_PROFILE: DeveloperProfile = {
   name: "Ahmed El-Bialy",
-  title: "Mobile App Developer | Flutter Specialist",
+  title: "Junior Mobile Developer | Junior Flutter Developer",
   secondaryTitle: "Cross-Platform Android & iOS Engineer",
   greeting: "Crafting polished, high-performance mobile apps with Flutter & Clean Architecture",
-  bio: "Mobile Application Developer specializing in Flutter & Dart. Dedicated to building robust, scalable cross-platform mobile apps for Android and iOS with strict Clean Architecture, BLoC/Cubit state management, offline-first storage (Hive CE & SQLite), and resilient RESTful API integrations. Creator of 'Revio', published live on Google Play.",
+  bio: "Junior Flutter Developer who has independently built 6 Flutter mobile applications, including one published on Google Play, using Clean Architecture, BLoC/Cubit state management, and REST API integration. Currently pursuing a Bachelor's in Artificial Intelligence at Kafrelsheikh University. Seeking a junior Flutter developer role.",
   email: "ah.elbialy.dev@gmail.com",
   phone: "+20 102 212 1573",
-  location: "Egypt (Open to Remote & Relocation)",
+  location: "El Mansoura, Egypt (Open to Relocation)",
   githubUsername: "ahmed-el-bialy",
   githubUrl: "https://github.com/ahmed-el-bialy",
   linkedinUrl: "https://www.linkedin.com/in/ahmedel-bialy/",
-  youtubeUrl: "https://youtube.com/@ahmedel-bialy",
+  youtubeUrl: "https://www.youtube.com/@AhmedEl-Bialy",
   tiktokUrl: "https://www.tiktok.com/@ahmedelbialydev?is_from_webapp=1&sender_device=pc",
   cvDriveUrl: "https://drive.google.com/file/d/1lQMnmyIA100YyXLu4jqFdhWluSeig4Pn/view?usp=drive_link",
   avatarUrl: "https://avatars.githubusercontent.com/u/245139141?v=4",
@@ -149,8 +149,8 @@ export const LANGUAGES_DATA: LanguageSkill[] = [
   {
     name: "English",
     nativeName: "English",
-    proficiency: "Technical Working Proficiency (B1 - B2)",
-    level: "Intermediate / Technical (B1 - B2)",
+    proficiency: "Intermediate / Technical Working",
+    level: "Intermediate (B1 - B2)",
     percentage: 75,
     flag: "🇬🇧",
     description: "Proficient in reading engineering documentation, technical architectural writing, code commenting, and developer collaboration."
@@ -159,93 +159,83 @@ export const LANGUAGES_DATA: LanguageSkill[] = [
 
 export const DEFAULT_PROFILE = AHMED_PROFILE;
 
-// Fully verified certificates & courses
+// Fully verified certificates from the official Drive CV
 export const CERTIFICATES: CertificateItem[] = [
   {
+    id: "udemy-flutter-architecture",
+    title: "Complete Flutter & Dart Development Course [Arabic]",
+    issuer: "Udemy",
+    date: "2026-04",
+    credentialUrl: "https://www.udemy.com/certificate/UC-46b0d9a2-bf8f-4398-ae93-d3b9e54b9063/",
+    badge: "Verified Certificate",
+    description: "Comprehensive professional training covering Flutter, Dart fundamentals, Clean Architecture, BLoC/Cubit, and production mobile applications.",
+    skills: ["Flutter", "Dart", "BLoC/Cubit", "Clean Architecture", "REST APIs"]
+  },
+  {
+    id: "sprints-microsoft-summer-camp",
+    title: "Sprints x Microsoft Summer Camp – Mobile Development",
+    issuer: "Sprints x Microsoft",
+    date: "2025-07",
+    credentialUrl: "https://sprints.ai/ar-eg/journeys/learning/ID%20-%20SPR%20-%20JC9327/view-certificate-serial",
+    badge: "Verified Certification",
+    description: "Completed 45+ hours of intensive Flutter and Dart training covering widgets, responsive UI layouts, navigation, and core software engineering concepts.",
+    skills: ["Flutter", "Dart", "Responsive UI", "Navigation", "Mobile Engineering"]
+  },
+  {
     id: "codealpha-flutter",
-    title: "Mobile App Development Trainee (Flutter)",
-    issuer: "CodeAlpha Tech Internship",
-    date: "2026",
+    title: "CodeAlpha – Flutter Development Trainee",
+    issuer: "CodeAlpha",
+    date: "June 2026 – July 2026",
     credentialUrl: "https://drive.google.com/file/d/1lQMnmyIA100YyXLu4jqFdhWluSeig4Pn/view?usp=drive_link",
-    badge: "Verified Internship",
-    description: "Hands-on engineering program focused on production Flutter applications, state management with Cubit/BLoC, local storage mechanisms, and app deployment.",
-    skills: ["Flutter", "Dart", "BLoC/Cubit", "Offline Storage", "Clean Architecture"]
-  },
-  {
-    id: "flutter-complete-mastery",
-    title: "Complete Flutter & Dart Architecture Mastery",
-    issuer: "Specialized Mobile Development Program",
-    date: "2025 - 2026",
-    credentialUrl: "https://drive.google.com/file/d/1lQMnmyIA100YyXLu4jqFdhWluSeig4Pn/view?usp=drive_link",
-    badge: "Advanced Architecture",
-    description: "In-depth training on Clean Architecture (Domain, Data, Presentation layers), Dependency Injection, repository abstraction, and SOLID object-oriented principles.",
-    skills: ["Clean Architecture", "SOLID", "Repository Pattern", "Hive CE", "Slivers"]
-  },
-  {
-    id: "networking-apis-mastery",
-    title: "REST APIs & Modern Networking (Dio, Retrofit & Firebase)",
-    issuer: "Mobile Engineering Bootcamps",
-    date: "2025",
-    credentialUrl: "https://drive.google.com/file/d/1lQMnmyIA100YyXLu4jqFdhWluSeig4Pn/view?usp=drive_link",
-    badge: "Full-Stack Mobile",
-    description: "Consuming RESTful web services, handling interceptors, token refresh flows, error-handling pipelines, code-generated API clients, and real-time Firestore streams.",
-    skills: ["Dio", "Retrofit", "RESTful APIs", "Cloud Firestore", "Authentication"]
-  },
-  {
-    id: "ai-cs-foundations",
-    title: "Artificial Intelligence & Computational Foundations",
-    issuer: "Faculty of Artificial Intelligence (Undergraduate)",
-    date: "In Progress",
-    credentialUrl: "https://drive.google.com/file/d/1lQMnmyIA100YyXLu4jqFdhWluSeig4Pn/view?usp=drive_link",
-    badge: "Academic Degree",
-    description: "Formal academic coursework covering Data Structures & Algorithms, Object-Oriented Software Design, Machine Learning fundamentals, and Database Systems.",
-    skills: ["Data Structures", "Algorithms", "OOP", "Machine Learning", "Python"]
+    badge: "Technical Training",
+    description: "Completed hands-on Flutter development training, independently building two full mobile applications (Revio & Quotely) applying Clean Architecture and Cubit state management.",
+    skills: ["Clean Architecture", "Cubit", "Hive CE", "Retrofit", "REST APIs"]
   }
 ];
 
 export const EXPERIENCES: ExperienceItem[] = [
   {
-    role: "Independent Flutter Developer",
-    organization: "Google Play & Standalone Mobile Engineering",
-    period: "2026 - Present",
+    role: "Flutter Development Trainee",
+    organization: "CodeAlpha",
+    period: "June 2026 – July 2026",
     location: "Egypt",
-    badge: "Published App Developer",
-    description: "Engineered and published standalone mobile applications including 'Revio' on Google Play and 'Movura'. Managed the complete lifecycle from UI/UX and architectural planning to deployment.",
+    badge: "Hands-on Training",
+    description: "Completed hands-on Flutter development training, independently building two full mobile applications applying Clean Architecture, Cubit state management, and local/API data persistence.",
     achievements: [
-      "Published 'Revio' on Google Play with 3D flip-card animations, quiz modes, and Hive CE local storage",
-      "Engineered 'Movura' movie tracking app with TMDB API integration, shimmer skeletons, and YouTube trailers",
-      "Enforced industry-standard security by safeguarding API secrets with environment variables and .gitignore",
-      "Implemented strict Clean Architecture with BLoC and Cubit for scalable state management"
+      "Built Revio, an offline-first flashcard app using Hive local storage, Cubit state management, and Clean Architecture",
+      "Built Quotely, a minimal dark-themed app that fetches random quotes from the API Ninjas public REST API using Cubit, Retrofit with Dio, and a feature-based layered structure"
     ]
   },
   {
     role: "Mobile Development Trainee",
-    organization: "CodeAlpha & Technical Bootcamps",
-    period: "Feb 2026 - Apr 2026",
+    organization: "Sprints x Microsoft Summer Camp",
+    period: "June 2025 – July 2025",
     location: "Egypt",
-    badge: "Specialized Training",
-    description: "Hands-on training focusing on enterprise Flutter architectures, REST API integration, and performance optimization.",
+    badge: "Intensive Camp",
+    description: "Completed 45+ hours of Flutter and Dart training through the Sprints x Microsoft Summer Camp, gaining hands-on experience in building mobile applications.",
     achievements: [
-      "Engineered 'Vibrant Store' e-commerce app with product catalogs, chip filtering, and service layer architecture",
-      "Optimized 'Sky-Cast' weather application with dynamic themes and automated state transitions",
-      "Practiced Clean Architecture, Dependency Injection, and state patterns like BLoC, Cubit, and Provider"
+      "Completed 45+ hours of training in Flutter and Dart fundamentals",
+      "Learned core mobile development concepts, widgets, layouts, navigation, and responsive UI design",
+      "Built beginner-level applications and gained hands-on experience in developing mobile user interfaces"
     ]
   }
 ];
 
 export const EDUCATION_DATA = {
-  degree: "Bachelor of Science (B.Sc.) in Artificial Intelligence",
+  degree: "Bachelor's Degree – Faculty of Artificial Intelligence",
   faculty: "Faculty of Artificial Intelligence (كلية الذكاء الاصطناعي)",
-  university: "Kafrelsheikh University (جامعة كفر الشيخ)",
-  period: "Undergraduate Student (In Progress)",
+  university: "Kafrelsheikh University — Kafr El Sheikh, Egypt",
+  period: "Oct 2023 – Jun 2027 (Expected)",
   gpa: "Strong Academic Standing",
   coursework: [
-    "Artificial Intelligence Foundations",
-    "Machine Learning & Pattern Recognition",
-    "Data Structures & Algorithm Design",
+    "Programming Fundamentals (C++)",
     "Object-Oriented Programming (OOP)",
-    "Database Management Systems & SQL",
-    "Software Engineering Principles"
+    "Data Structures",
+    "Clean Architecture Fundamentals",
+    "Software Design Pattern",
+    "Cloud Computing",
+    "Operating Systems",
+    "Databases"
   ]
 };
 
@@ -270,7 +260,7 @@ export const FEATURED_PROJECTS: Project[] = [
     links: {
       github: "https://github.com/ahmed-el-bialy/Revio",
       googlePlay: "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US",
-      youtubeDemo: "https://youtube.com/shorts/-9VfbxIcZkU?si=Tcpe0iwRztryd7w4",
+      youtubeDemo: "https://youtube.com/shorts/FsG1XUAbmDY?si=lvngji7Uz-EKRROJ",
       releaseUrl: "https://github.com/ahmed-el-bialy/Revio/releases/tag/v1.0.0",
       apkDownloadUrl: "https://github.com/ahmed-el-bialy/Revio/releases/download/v1.0.0/app-release.apk"
     },
@@ -295,7 +285,6 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Movura",
-      youtubeDemo: "https://youtube.com/@ahmedel-bialy"
     },
     highlight: true
   },
@@ -317,7 +306,7 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Vibrant-store",
-      youtubeDemo: "https://youtube.com/shorts/PIg1rYA0CkQ"
+      youtubeDemo: "https://youtube.com/shorts/2qito_nmDjM?si=Jut3UuDc8mMpR5G4"
     },
     highlight: true
   },
@@ -338,7 +327,7 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Sky-Cast",
-      youtubeDemo: "https://youtube.com/shorts/u5JjIphdrAM?si=h44HWlZMZki8L_GM"
+      youtubeDemo: "https://youtube.com/shorts/u5JjIphdrAM"
     }
   },
   {
@@ -358,7 +347,7 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/News-Cloud",
-      youtubeDemo: "https://youtube.com/shorts/AKbiBjCRIis"
+      youtubeDemo: "https://youtube.com/shorts/Sxs8R9YPmBY"
     }
   },
   {
@@ -378,7 +367,6 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Shaats",
-      youtubeDemo: "https://youtube.com/@ahmedel-bialy"
     }
   },
   {
@@ -397,7 +385,6 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Nihon-Seed",
-      youtubeDemo: "https://youtube.com/shorts/OG-S_8oSN00?si=1K0SkiW8voSb4YR-"
     }
   },
   {
@@ -416,7 +403,21 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/NBN-Basketball",
-      youtubeDemo: "https://youtube.com/shorts/xJaE0pxSpAQ?si=8lF-9tGR68cHibaL"
     }
   }
 ];
+
+export const WORK_STATUS_INFO = {
+  availability: "Open for Opportunities",
+  availabilityAr: "متاح لفرص العمل الفورية",
+  roles: [
+    "Junior Flutter Developer (Full-time)",
+    "Remote Worldwide / Hybrid (Cairo / Alexandria)",
+    "Freelance Cross-Platform Mobile Projects"
+  ],
+  rolesAr: [
+    "مطور فلاتر جونيور (دوام كامل)",
+    "عن بُعد (Remote) عالمياً / هجين (القاهرة والإسكندرية)",
+    "مشاريع فريلانس وتطبيقات مستقلة Android & iOS"
+  ]
+};

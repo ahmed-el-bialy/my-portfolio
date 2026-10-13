@@ -416,9 +416,9 @@ export const translations: Record<Language, Translations> = {
       chatWhatsAppBtn: "Chat on WhatsApp",
       form: {
         nameLabel: "Your Name",
-        namePlaceholder: "Ahmed Mohamed",
+        namePlaceholder: "",
         emailLabel: "Email Address",
-        emailPlaceholder: "example@domain.com",
+        emailPlaceholder: "",
         subjectLabel: "Subject",
         subjectPlaceholder: "Mobile App Project Inquiry / Job Opportunity",
         messageLabel: "Project Details or Message",
@@ -665,9 +665,9 @@ export const translations: Record<Language, Translations> = {
       chatWhatsAppBtn: "محادثة واتساب",
       form: {
         nameLabel: "الاسم الكريم",
-        namePlaceholder: "أحمد محمد",
+        namePlaceholder: "",
         emailLabel: "البريد الإلكتروني",
-        emailPlaceholder: "example@domain.com",
+        emailPlaceholder: "",
         subjectLabel: "الموضوع",
         subjectPlaceholder: "طلب تطوير تطبيق جوال / فرصة وظيفية",
         messageLabel: "تفاصيل المشروع أو الرسالة",

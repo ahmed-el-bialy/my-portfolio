@@ -79,39 +79,29 @@ export const getLanguageColor = (lang: string | null): string => {
   return LANGUAGE_COLORS[lang] || '#6366f1';
 };
 
-// Known verified demo mappings from READMEs
+// Known verified demo mappings from the official Google Drive CV
 const KNOWN_REPO_MEDIA: Record<string, { youtube?: string; playStore?: string }> = {
   Revio: {
-    youtube: "https://youtube.com/shorts/-9VfbxIcZkU?si=Tcpe0iwRztryd7w4",
+    youtube: "https://youtube.com/shorts/FsG1XUAbmDY?si=lvngji7Uz-EKRROJ",
     playStore: "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US"
   },
-  Movura: {
-    youtube: "https://youtube.com/@ahmedel-bialy"
-  },
+  Movura: {},
   "Vibrant-store": {
-    youtube: "https://youtube.com/shorts/PIg1rYA0CkQ"
+    youtube: "https://youtube.com/shorts/2qito_nmDjM?si=Jut3UuDc8mMpR5G4"
   },
   "Sky-Cast": {
-    youtube: "https://youtube.com/shorts/u5JjIphdrAM?si=h44HWlZMZki8L_GM"
+    youtube: "https://youtube.com/shorts/u5JjIphdrAM"
   },
   "News-Cloud": {
-    youtube: "https://youtube.com/shorts/AKbiBjCRIis"
+    youtube: "https://youtube.com/shorts/Sxs8R9YPmBY"
   },
-  "Nihon-Seed": {
-    youtube: "https://youtube.com/shorts/OG-S_8oSN00?si=1K0SkiW8voSb4YR-"
-  },
-  "NBN-Basketball": {
-    youtube: "https://youtube.com/shorts/xJaE0pxSpAQ?si=8lF-9tGR68cHibaL"
-  },
-  "piano-tunes": {
-    youtube: "https://youtube.com/shorts/9PWzO0_ozQ0"
-  },
-  Shaats: {
-    youtube: "https://youtube.com/@ahmedel-bialy"
-  }
+  Shaats: {},
+  "Nihon-Seed": {},
+  "NBN-Basketball": {},
+  "piano-tunes": {},
 };
 
-// Ahmed El-Bialy's verified repositories
+// Ahmed El-Bialy's verified repositories synchronized with CV
 export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
   {
     id: 1,
@@ -131,7 +121,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     size: 5400,
     default_branch: "main",
     coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/cover.png",
-    youtubeDemoUrl: "https://youtube.com/shorts/-9VfbxIcZkU?si=Tcpe0iwRztryd7w4",
+    youtubeDemoUrl: "https://youtube.com/shorts/FsG1XUAbmDY?si=lvngji7Uz-EKRROJ",
     googlePlayUrl: "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US",
     apkDownloadUrl: "https://github.com/ahmed-el-bialy/Revio/releases/download/v1.0.0/app-release.apk",
     releaseUrl: "https://github.com/ahmed-el-bialy/Revio/releases/tag/v1.0.0"
@@ -142,7 +132,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     full_name: "ahmed-el-bialy/Movura",
     description: "A premium movie and TV series tracking mobile application consuming the TMDB API. Built with Clean Architecture, Cubit & BLoC state management, Sliver-based layouts, shimmer loading skeletons, and YouTube trailers.",
     html_url: "https://github.com/ahmed-el-bialy/Movura",
-    homepage: "https://youtube.com/@ahmedel-bialy",
+    homepage: "https://github.com/ahmed-el-bialy/Movura",
     stargazers_count: 4,
     forks_count: 2,
     language: "Dart",
@@ -154,7 +144,6 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     size: 8200,
     default_branch: "main",
     coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/cover.png",
-    youtubeDemoUrl: "https://youtube.com/@ahmedel-bialy"
   },
   {
     id: 3,
@@ -174,7 +163,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     size: 4300,
     default_branch: "main",
     coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/cover.png",
-    youtubeDemoUrl: "https://youtube.com/shorts/PIg1rYA0CkQ"
+    youtubeDemoUrl: "https://youtube.com/shorts/2qito_nmDjM?si=Jut3UuDc8mMpR5G4"
   },
   {
     id: 4,
@@ -194,7 +183,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     size: 3100,
     default_branch: "main",
     coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cover.png",
-    youtubeDemoUrl: "https://youtube.com/shorts/u5JjIphdrAM?si=h44HWlZMZki8L_GM"
+    youtubeDemoUrl: "https://youtube.com/shorts/u5JjIphdrAM"
   },
   {
     id: 5,
@@ -214,7 +203,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     size: 4700,
     default_branch: "main",
     coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/cover.png",
-    youtubeDemoUrl: "https://youtube.com/shorts/AKbiBjCRIis"
+    youtubeDemoUrl: "https://youtube.com/shorts/Sxs8R9YPmBY"
   },
   {
     id: 6,
@@ -565,53 +554,59 @@ export function parseImagesFromDescription(description: string | null): string[]
 // Verified screenshot URLs across Ahmed El-Bialy's repositories
 export const VERIFIED_REPO_SCREENSHOTS: Record<string, string[]> = {
   Revio: [
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/Samsung%20Galaxy%20S21%20Ultra%20Screenshot%201.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/Samsung%20Galaxy%20S21%20Ultra%20Screenshot%202.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/Samsung%20Galaxy%20S21%20Ultra%20Screenshot%203.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/Samsung%20Galaxy%20S21%20Ultra%20Screenshot%204.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/Samsung%20Galaxy%20S21%20Ultra%20Screenshot%205.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/home.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/quiz_mode.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/quiz_mcq.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/manage_library.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/manage_topics.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/quiz_results.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/quiz_typing.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/add_card.png",
   ],
   Movura: [
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/Movura2607089.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/Movura2607279.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/Movura2607319.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/Movura2607497.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/Movura2607994.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/home_p1.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/movie_details_p1.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/trailer_player_v.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/tv_anime_p1.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/search_results.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/reviews.png",
   ],
   "Vibrant-store": [
     "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/HomeView.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/CategoryProducts.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/ProductViewP1.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/ProductViewP2.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/cart_screen.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/SearchView.png",
   ],
   "Sky-Cast": [
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/sunny_main_weather.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cloudy_main_weather.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cloudy_initial_search.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cloudy_results_search.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/default_initial_search.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/app_icon_screenshot.jpg",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/rainy_main_weather.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/snowy_main_view.png",
   ],
   "News-Cloud": [
     "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/general_view.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/WebView.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/main_view.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/business_view.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/entertainment_view.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/app_logo.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/sports_view.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/tech_view.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/WebView.png",
   ],
   Shaats: [
     "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/LogInView.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/SenderView.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/OthersPonitView.jpg",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/LoadingDataView.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/SecurePasswordView.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/OthersPonitView.jpg",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/ErrorView.png",
   ],
   "Nihon-Seed": [
     "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/MainView.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/FamilyView.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/ColorsView.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/NumbersView.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/app_logo.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/phrasesView.png",
   ],
   "NBN-Basketball": [
     "https://raw.githubusercontent.com/ahmed-el-bialy/NBN-Basketball/main/screenshots/StartView.png",
@@ -624,10 +619,9 @@ export const VERIFIED_REPO_SCREENSHOTS: Record<string, string[]> = {
     "https://raw.githubusercontent.com/ahmed-el-bialy/piano-tunes/main/screenshots/Screenshot_20260426_182814.png"
   ],
   Quotely: [
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/splash_screen.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/quote_loaded.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/quote_loading.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/app_icon.png"
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/splash_screen.png"
   ]
 };
 
