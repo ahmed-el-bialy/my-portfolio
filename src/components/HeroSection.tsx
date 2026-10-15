@@ -239,6 +239,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <TikTokLogo size={12} />
               <span>TikTok</span>
             </a>
+
+            <a
+              href="mailto:elbailyahmed47@gmail.com"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-red-500 dark:hover:text-red-400 transition-colors font-medium border border-slate-200/80 dark:border-white/5 text-xs"
+              title="Send Email via Gmail"
+            >
+              <Mail size={13} className="text-red-500" />
+              <span>Gmail</span>
+            </a>
           </div>
 
         </div>

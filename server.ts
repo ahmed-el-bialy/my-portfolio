@@ -140,7 +140,7 @@ async function startServer() {
     }
   });
 
-  // Endpoint to fetch Study Case markdown (study-case.md or study-case-ar.md) from GitHub
+  // Endpoint to fetch Study Case markdown with smart multi-filename checking from GitHub
   app.get('/api/study-case', async (req, res) => {
     try {
       const { repo, lang = 'en' } = req.query;
@@ -148,21 +148,53 @@ async function startServer() {
         return res.status(400).json({ success: false, error: 'Repository name required' });
       }
 
-      const fileName = lang === 'ar' ? 'study-case-ar.md' : 'study-case.md';
-      const rawUrl = `https://raw.githubusercontent.com/ahmed-el-bialy/${repo}/main/${fileName}`;
-      const fallbackRawUrl = `https://raw.githubusercontent.com/ahmed-el-bialy/${repo}/master/${fileName}`;
+      const enFiles = ['CASE_STUDY.md', 'case-study.md', 'STUDY_CASE.md'];
+      const arFiles = ['CASE_STUDY_AR.md', 'case-study-ar.md', 'STUDY_CASE_AR.md'];
+      const branches = ['main', 'master'];
 
-      let mdRes = await fetch(rawUrl);
-      if (!mdRes.ok) {
-        mdRes = await fetch(fallbackRawUrl);
+      async function fetchFirstValid(filenames: string[]) {
+        for (const branch of branches) {
+          for (const filename of filenames) {
+            const url = `https://raw.githubusercontent.com/ahmed-el-bialy/${repo}/${branch}/${filename}`;
+            try {
+              const r = await fetch(url);
+              if (r.ok) {
+                const text = await r.text();
+                if (text && text.trim().length > 0) {
+                  return { content: text, filename };
+                }
+              }
+            } catch (e) {}
+          }
+        }
+        return null;
       }
 
-      if (!mdRes.ok) {
-        return res.json({ success: false, exists: false, message: 'Study case markdown not found' });
+      const enResult = await fetchFirstValid(enFiles);
+      const arResult = await fetchFirstValid(arFiles);
+
+      const existsEn = Boolean(enResult);
+      const existsAr = Boolean(arResult);
+      const exists = existsEn || existsAr;
+
+      if (!exists) {
+        return res.json({ success: false, exists: false, message: 'Case study markdown not found' });
       }
 
-      const markdownContent = await mdRes.text();
-      return res.json({ success: true, exists: true, content: markdownContent });
+      const requestedLang = lang === 'ar' && existsAr ? 'ar' : (existsEn ? 'en' : 'ar');
+      const activeResult = requestedLang === 'ar' ? arResult : enResult;
+      const content = activeResult ? activeResult.content : (enResult?.content || arResult?.content || '');
+
+      return res.json({
+        success: true,
+        exists: true,
+        existsEn,
+        existsAr,
+        contentEn: enResult?.content || '',
+        contentAr: arResult?.content || '',
+        content,
+        activeLang: requestedLang
+      });
     } catch (error: any) {
       return res.status(500).json({ success: false, error: error.message });
     }

@@ -307,7 +307,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
   }, [githubRepos]);
 
   return (
-    <section id="projects" className="max-w-7xl mx-auto px-3.5 xs:px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-20 border-t border-black/10 dark:border-white/5 transition-colors overflow-x-clip w-full">
+    <section id="projects" className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 lg:px-14 py-10 sm:py-16 md:py-20 border-t border-black/10 dark:border-white/5 transition-colors overflow-x-clip w-full">
       
       {/* Section Header & Tab Switcher (Side-by-side on laptop/desktop mode, gracefully stacked on mobile) */}
       <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 xs:gap-5 sm:gap-6 mb-6 xs:mb-8 sm:mb-10 w-full">
@@ -593,7 +593,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-5 sm:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 w-full">
               {filteredFeaturedProjects.map((project) => {
             const liveMedia =
               liveMediaMap?.[project.repoName] ||
@@ -845,7 +845,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
         <div className="space-y-6">
           {/* Repos Grid */}
           {isPending && filteredRepos.length === 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 w-full">
               {[1, 2, 3, 4, 5, 6].map((key) => (
                 <ProjectSkeletonCard key={key} />
               ))}
@@ -869,7 +869,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-5 sm:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 w-full">
               {filteredRepos.map((repo) => {
                 const projectObj = getProjectFromRepo(repo);
                 const repoRelease = repoReleases?.[repo.name] || repoReleases?.[repo.name.toLowerCase()];

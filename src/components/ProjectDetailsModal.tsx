@@ -138,6 +138,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const [livePlayUrl, setLivePlayUrl] = useState<string | undefined>(project?.links.googlePlay);
   const [studyCaseContent, setStudyCaseContent] = useState<string>('');
   const [studyCaseExists, setStudyCaseExists] = useState<boolean>(false);
+  const [studyCaseExistsEn, setStudyCaseExistsEn] = useState<boolean>(false);
+  const [studyCaseExistsAr, setStudyCaseExistsAr] = useState<boolean>(false);
+  const [studyCaseContentEn, setStudyCaseContentEn] = useState<string>('');
+  const [studyCaseContentAr, setStudyCaseContentAr] = useState<string>('');
   const [studyCaseLoading, setStudyCaseLoading] = useState<boolean>(false);
   const [studyCaseLang, setStudyCaseLang] = useState<'en' | 'ar'>('en');
 
@@ -161,6 +165,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       setLivePlayUrl(project.links.googlePlay);
       setStudyCaseContent('');
       setStudyCaseExists(false);
+      setStudyCaseExistsEn(false);
+      setStudyCaseExistsAr(false);
       setStudyCaseLoading(true);
 
       if (scrollRef.current) {
@@ -168,12 +174,19 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       }
 
       // Fetch study-case markdown from GitHub backend
-      fetch(`/api/study-case?repo=${project.repoName}&lang=${studyCaseLang}`)
+      fetch(`/api/study-case?repo=${project.repoName}`)
         .then(res => res.json())
         .then(data => {
           if (data.success && data.exists) {
-            setStudyCaseContent(data.content);
             setStudyCaseExists(true);
+            setStudyCaseExistsEn(data.existsEn);
+            setStudyCaseExistsAr(data.existsAr);
+            setStudyCaseContentEn(data.contentEn || '');
+            setStudyCaseContentAr(data.contentAr || '');
+            setStudyCaseContent(data.content || '');
+            if (data.activeLang) {
+              setStudyCaseLang(data.activeLang);
+            }
           } else {
             setStudyCaseExists(false);
           }
@@ -393,17 +406,19 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             <span>{lang === 'ar' ? `الشاشات (${screenshots.length})` : `Screenshots (${screenshots.length})`}</span>
           </button>
 
-          <button
-            onClick={() => setActiveTab('casestudy')}
-            className={`px-3 sm:px-4 py-2 text-xs font-bold rounded-t-xl transition-all border-b-2 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'casestudy'
-                ? 'border-blue-600 text-blue-600 dark:text-cyan-400 bg-white dark:bg-[#0c0f18]'
-                : 'border-transparent text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <BarChart3 size={13} />
-            <span>{lang === 'ar' ? 'دراسة الحالة والأرقام' : 'Case Study & Metrics'}</span>
-          </button>
+          {studyCaseExists && (
+            <button
+              onClick={() => setActiveTab('casestudy')}
+              className={`px-3 sm:px-4 py-2 text-xs font-bold rounded-t-xl transition-all border-b-2 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'casestudy'
+                  ? 'border-blue-600 text-blue-600 dark:text-cyan-400 bg-white dark:bg-[#0c0f18]'
+                  : 'border-transparent text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <BarChart3 size={13} />
+              <span>{lang === 'ar' ? 'دراسة الحالة والأرقام' : 'Case Study & Metrics'}</span>
+            </button>
+          )}
         </div>
 
         {/* Modal Scrollable Body */}
@@ -856,59 +871,43 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           {/* TAB 4: CASE STUDY & VERIFIED METRICS */}
           {activeTab === 'casestudy' && (
             <div className="space-y-6">
-              {/* Language Switcher for Study Case */}
-              <div className="flex items-center justify-between bg-slate-100 dark:bg-white/[0.03] p-3 rounded-xl border border-slate-200 dark:border-white/10">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-white">
-                  <FileCode size={16} className="text-cyan-400" />
-                  <span>{lang === 'ar' ? 'دراسة الحالة (Study Case Markdown)' : 'Study Case Documentation'}</span>
+              {/* Language Switcher for Study Case (Shown ONLY if both EN and AR versions exist) */}
+              {studyCaseExistsEn && studyCaseExistsAr && (
+                <div className="flex items-center justify-between bg-slate-100 dark:bg-white/[0.03] p-3 rounded-xl border border-slate-200 dark:border-white/10">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-white">
+                    <FileCode size={16} className="text-cyan-400" />
+                    <span>{lang === 'ar' ? 'دراسة الحالة (Study Case Markdown)' : 'Study Case Documentation'}</span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-white/10 p-1 rounded-lg">
+                    <button
+                      onClick={() => {
+                        setStudyCaseLang('en');
+                        if (studyCaseContentEn) setStudyCaseContent(studyCaseContentEn);
+                      }}
+                      className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                        studyCaseLang === 'en'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-600 dark:text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      English
+                    </button>
+                    <button
+                      onClick={() => {
+                        setStudyCaseLang('ar');
+                        if (studyCaseContentAr) setStudyCaseContent(studyCaseContentAr);
+                      }}
+                      className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                        studyCaseLang === 'ar'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-600 dark:text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      العربية
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-white/10 p-1 rounded-lg">
-                  <button
-                    onClick={() => {
-                      setStudyCaseLang('en');
-                      setStudyCaseLoading(true);
-                      fetch(`/api/study-case?repo=${project.repoName}&lang=en`)
-                        .then(res => res.json())
-                        .then(data => {
-                          if (data.success && data.exists) {
-                            setStudyCaseContent(data.content);
-                            setStudyCaseExists(true);
-                          }
-                        })
-                        .finally(() => setStudyCaseLoading(false));
-                    }}
-                    className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                      studyCaseLang === 'en'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-slate-600 dark:text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    English
-                  </button>
-                  <button
-                    onClick={() => {
-                      setStudyCaseLang('ar');
-                      setStudyCaseLoading(true);
-                      fetch(`/api/study-case?repo=${project.repoName}&lang=ar`)
-                        .then(res => res.json())
-                        .then(data => {
-                          if (data.success && data.exists) {
-                            setStudyCaseContent(data.content);
-                            setStudyCaseExists(true);
-                          }
-                        })
-                        .finally(() => setStudyCaseLoading(false));
-                    }}
-                    className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                      studyCaseLang === 'ar'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-slate-600 dark:text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    العربية
-                  </button>
-                </div>
-              </div>
+              )}
 
               {studyCaseLoading ? (
                 <div className="py-16 text-center text-slate-400 flex flex-col items-center justify-center space-y-3">
