@@ -294,8 +294,8 @@ export default function App() {
         )}
 
         {/* Footer */}
-        <footer className="w-full border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#090a0f] py-10 px-4 sm:px-8 text-xs text-slate-600 dark:text-gray-400 transition-colors shadow-inner">
-          <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-between gap-5 w-full">
+        <footer className="w-full border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#090a0f] py-10 px-3.5 sm:px-5 lg:px-6 text-xs text-slate-600 dark:text-gray-400 transition-colors shadow-inner">
+          <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row items-center justify-between gap-5 w-full">
             
             {/* Column 1: Identity & Live Sync Status Indicator */}
             <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-3 text-center sm:text-left">
@@ -383,7 +383,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="max-w-[1440px] mx-auto mt-6 pt-4 border-t border-slate-200 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 dark:text-gray-400 gap-2 font-medium w-full">
+          <div className="max-w-[1400px] mx-auto mt-6 pt-4 border-t border-slate-200 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 dark:text-gray-400 gap-2 font-medium w-full">
             <span>{t.footer.rights}</span>
             <span>{t.footer.builtWith}</span>
           </div>

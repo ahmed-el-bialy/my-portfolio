@@ -79,9 +79,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     <>
       {/* 1. TOP HEADER NAVBAR (Responsive & Ergonomic across Mobile, Tablet, & Desktop) */}
       <header className="fixed top-0 inset-x-0 z-50 transition-all duration-200 border-b border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-[#090a0f]/95 backdrop-blur-xl shadow-xs">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 h-14 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-3 md:gap-4 lg:gap-6 w-full">
+        <div className="max-w-[1400px] mx-auto px-3.5 sm:px-5 lg:px-6 h-14 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-3 md:gap-4 lg:gap-6 w-full">
           
-          {/* Zone 1: Brand Wordmark & Avatar Emblem */}
+          {/* Zone 1: Brand Wordmark & Circular Logo Emblem */}
           <div
             onClick={() => handleTabClick('hero')}
             className="flex items-center gap-2 sm:gap-2.5 lg:gap-3 cursor-pointer group min-w-0 shrink-0"
@@ -92,11 +92,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
           >
             <div className="relative shrink-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-xl p-[1.5px] bg-gradient-to-tr from-blue-600 via-cyan-400 to-indigo-600 shadow-md shadow-blue-500/15 group-hover:scale-105 transition-transform duration-300">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full p-[1.5px] bg-gradient-to-tr from-blue-600 via-cyan-400 to-indigo-600 shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
                 <img
-                  src="https://avatars.githubusercontent.com/u/245139141?v=4"
-                  alt="Ahmed El-Bialy"
-                  className="w-full h-full rounded-[10px] object-cover bg-slate-100 dark:bg-[#0f111a]"
+                  src="/website_logo.jpg"
+                  alt="Ahmed El-Bialy Logo"
+                  className="w-full h-full rounded-full object-cover"
                 />
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#090a0f] ring-1 ring-emerald-400/50" />

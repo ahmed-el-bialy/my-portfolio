@@ -259,7 +259,7 @@ export const StackSection: React.FC = () => {
   });
 
   return (
-    <section id="stack" className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 py-16 sm:py-20 border-t border-black/10 dark:border-white/5 w-full">
+    <section id="stack" className="max-w-[1400px] mx-auto px-3.5 sm:px-5 lg:px-6 py-16 sm:py-20 border-t border-black/10 dark:border-white/5 w-full">
       {/* Header */}
       <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-10">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-3">

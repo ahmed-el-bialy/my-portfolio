@@ -13,6 +13,7 @@ interface ContactSectionProps {
 export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenBooking }) => {
   const { lang, dir, t } = useLanguage();
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [copiedPhone, setCopiedPhone] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -25,6 +26,12 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
     navigator.clipboard.writeText(profile.email);
     setCopiedEmail(true);
     setTimeout(() => setCopiedEmail(false), 2000);
+  };
+
+  const handleCopyPhone = () => {
+    navigator.clipboard.writeText(profile.phone);
+    setCopiedPhone(true);
+    setTimeout(() => setCopiedPhone(false), 2000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,7 +81,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
   };
 
   return (
-    <section id="contact" className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 py-16 sm:py-20 border-t border-black/10 dark:border-white/5 w-full">
+    <section id="contact" className="max-w-[1400px] mx-auto px-3.5 sm:px-5 lg:px-6 py-16 sm:py-20 border-t border-black/10 dark:border-white/5 w-full">
       {/* Header */}
       <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-10 sm:mb-14">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-3">
@@ -232,20 +239,32 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
                 <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
                   <Phone size={18} />
                 </div>
-                <div>
+                <div className="overflow-hidden flex-1">
                   <div className="text-xs text-slate-500 dark:text-gray-400">{t.contact.phoneLabel}</div>
-                  <a
-                    href="https://wa.me/201022121573"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-mono text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 font-bold hover:underline transition-colors block mt-0.5"
-                    title="Open WhatsApp Chat directly"
-                  >
+                  <div className="font-mono text-xs sm:text-sm text-slate-900 dark:text-white font-semibold truncate mt-0.5">
                     {profile.phone}
-                  </a>
-                  <span className="text-[11px] text-slate-500 dark:text-gray-500 mt-0.5 inline-block">
-                    {lang === 'ar' ? 'محادثة فورية مباشرة عبر واتساب' : 'Direct messaging on WhatsApp'}
-                  </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <a
+                      href="https://wa.me/201022121573"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600/10 hover:bg-emerald-600 hover:text-white text-emerald-600 dark:text-emerald-400 font-semibold text-[11px] border border-emerald-500/25 transition-all cursor-pointer min-h-[32px]"
+                      title="Open WhatsApp Chat directly"
+                    >
+                      <WhatsAppLogo size={12} />
+                      <span>{lang === 'ar' ? 'محادثة واتساب' : 'Open WhatsApp'}</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={handleCopyPhone}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-700 dark:text-gray-300 text-[11px] font-medium transition-colors cursor-pointer min-h-[32px]"
+                      title="Copy phone number"
+                    >
+                      <Copy size={11} />
+                      <span>{copiedPhone ? (lang === 'ar' ? '✓ تم النسخ' : '✓ Copied') : (lang === 'ar' ? 'نسخ' : 'Copy')}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 

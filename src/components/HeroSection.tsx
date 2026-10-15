@@ -94,14 +94,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   return (
     <section
       id="hero"
-      className="relative min-h-[85vh] flex flex-col justify-center px-4 sm:px-8 lg:px-14 pt-20 pb-12 sm:pb-16 overflow-hidden select-none"
+      className="relative min-h-[85vh] flex flex-col justify-center px-3.5 sm:px-5 lg:px-6 pt-20 pb-12 sm:pb-16 overflow-hidden select-none w-full"
     >
       {/* Subtle Ambient Background Atmosphere */}
       <div className="ambient-glow-top absolute inset-0 pointer-events-none" />
       <div className="ambient-glow-cyan absolute inset-0 pointer-events-none" />
 
       {/* Main Grid: Clean Solid Text Left + Interactive 3D Tilt Card Right */}
-      <div className="max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center z-10">
+      <div className="max-w-[1400px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center z-10">
         
         {/* Left Column: Focused Typography & Streamlined CTAs */}
         <div className="lg:col-span-7 flex flex-col items-start gap-3 sm:gap-4.5">
@@ -325,7 +325,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* Stats Bar at Bottom: 1 Live App on Google Play is visually Weighted and Featured */}
-      <div className="max-w-[1440px] mx-auto w-full mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-slate-200 dark:border-white/10 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
+      <div className="max-w-[1400px] mx-auto w-full mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-slate-200 dark:border-white/10 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
         {profile.stats.map((stat, idx) => {
           const isPlayStore = stat.label.includes('Play');
           const isRepoStat = stat.label.toLowerCase().includes('repo');
