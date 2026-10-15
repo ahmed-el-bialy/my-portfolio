@@ -77,7 +77,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                 {t.resume.title}
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-gray-400 truncate">
-                {profile.name} • {lang === 'ar' ? 'مطور تطبيقات هواتف فلاتر' : 'Flutter Mobile Developer'}
+                {lang === 'ar' ? 'أحمد البيلي' : 'Ahmed El-Bialy'} • {lang === 'ar' ? 'مطور تطبيقات فلاتر' : 'Flutter Mobile Developer'}
               </p>
             </div>
           </div>

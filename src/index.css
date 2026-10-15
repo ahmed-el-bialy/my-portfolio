@@ -2,18 +2,19 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --bg: #08090d;
-  --bg-secondary: #0e1017;
-  --bg-card: #12141f;
-  --bg-card-hover: #171927;
+  --bg: #080c14;
+  --bg-secondary: #0d131f;
+  --bg-card: #101626;
+  --bg-card-hover: #161e33;
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  --accent: #3b82f6;
-  --accent-cyan: #06b6d4;
+  --accent: #0175c2;
+  --accent-cyan: #54c5f8;
+  --flutter-blue: #02569b;
   --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(59, 130, 246, 0.4);
-  --nav-bg: rgba(8, 9, 13, 0.9);
+  --border-hover: rgba(84, 197, 248, 0.4);
+  --nav-bg: rgba(8, 12, 20, 0.92);
 }
 
 html.light, [data-theme="light"] {

@@ -87,10 +87,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     setIsCardHovered(false);
   };
 
-  const displayName = lang === 'ar' ? 'أحمد البيلي' : profile.name;
-  const nameParts = displayName.split(' ');
-  const firstName = nameParts[0] || 'Ahmed';
-  const lastName = nameParts.slice(1).join(' ') || 'El-Bialy';
+  const displayName = lang === 'ar' ? 'أحمد البيلي' : 'Ahmed El-Bialy';
+  const firstName = lang === 'ar' ? 'أحمد' : 'Ahmed';
+  const lastName = lang === 'ar' ? 'البيلي' : 'El-Bialy';
 
   return (
     <section
@@ -145,11 +144,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </span>
           </div>
 
-          {/* Short, high-impact Bio paragraph */}
+          {/* Single impactful mission statement */}
           <p className="text-sm sm:text-base text-slate-700 dark:text-gray-300 max-w-2xl leading-relaxed body-contrast font-medium">
             {lang === 'ar'
-              ? 'مطور تطبيقات جوال متخصص في Flutter & Clean Architecture ومكتبات Cubit و Hive CE. صاحب تطبيق "Revio" المنشور رسمياً على Google Play.'
-              : 'Mobile Application Developer crafting high-performance Android & iOS apps with strict Clean Architecture, BLoC/Cubit, and offline-first storage. Creator of "Revio", published live on Google Play.'}
+              ? 'تطوير تطبيقات جوال عالية الأداء متوافقة مع مختلف المنصات باستخدام Flutter والمعمارية النظيفة Clean Architecture، مع إطلاق تطبيقات حية على Google Play مثل تطبيق "Revio".'
+              : 'Crafting production-ready, high-performance cross-platform mobile apps with Flutter & Clean Architecture. Creator of "Revio", published live on Google Play.'}
           </p>
 
           {/* Streamlined Action CTAs: 2 Main Prominent Buttons (Explore Apps + Book Meeting) + Resume link */}

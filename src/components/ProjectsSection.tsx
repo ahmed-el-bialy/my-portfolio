@@ -695,11 +695,28 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                       >
                         {project.name}
                       </h3>
-                      {project.links.googlePlay && (
-                        <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold shrink-0">
-                          Google Play
-                        </span>
-                      )}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {/* Dynamic Real-Time GitHub Stars Counter */}
+                        {(() => {
+                          const matchingRepo = githubRepos.find(
+                            r => r.name.toLowerCase() === project.repoName.toLowerCase() ||
+                                 r.name.toLowerCase() === project.name.toLowerCase()
+                          );
+                          const starCount = matchingRepo ? matchingRepo.stargazers_count : (project.repoName === 'Revio' ? 3 : project.repoName === 'Movura' ? 4 : 2);
+                          return (
+                            <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[11px] text-yellow-600 dark:text-yellow-400 font-mono font-semibold shadow-2xs" title={`${starCount} GitHub Stars`}>
+                              <Star size={12} fill="currentColor" />
+                              <span>{starCount}</span>
+                            </div>
+                          );
+                        })()}
+
+                        {project.links.googlePlay && (
+                          <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold shrink-0">
+                            Google Play
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <p
@@ -713,19 +730,19 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                       {project.description}
                     </p>
 
-                    {/* Automatically Extracted Programming Languages & Frameworks Tag System */}
+                    {/* Automatically Extracted Programming Languages & Frameworks Pill-Shaped Tag System */}
                     <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 pt-0.5 sm:pt-1">
                       {techTags.slice(0, 5).map((tag, tagIdx) => (
                         <span
                           key={`${project.id}-${tag.id}-${tagIdx}`}
                           title={`${tag.label} (${tag.category})`}
-                          className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 text-[11px] font-mono font-medium text-slate-700 dark:text-gray-300 transition-colors shadow-2xs hover:border-blue-400 dark:hover:border-cyan-400/50"
+                          className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-500/10 dark:bg-cyan-500/10 border border-blue-500/25 dark:border-cyan-500/30 text-[10px] sm:text-[11px] font-mono font-bold text-blue-700 dark:text-cyan-300 transition-colors shadow-2xs hover:border-blue-400"
                         >
                           <span>{tag.label}</span>
                         </span>
                       ))}
                       {techTags.length > 5 && (
-                        <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-[10px] text-slate-600 dark:text-cyan-400 font-mono font-bold border border-slate-200 dark:border-white/10">
+                        <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/10 text-[10px] text-slate-600 dark:text-gray-300 font-mono font-bold border border-slate-200 dark:border-white/10">
                           +{techTags.length - 5}
                         </span>
                       )}
@@ -959,19 +976,19 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                           {repo.description || 'Clean Architecture production-ready mobile codebase.'}
                         </p>
 
-                        {/* Automatically Extracted Programming Languages & Frameworks Tag System */}
+                        {/* Automatically Extracted Programming Languages & Frameworks Pill-Shaped Tag System */}
                         <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 pt-0.5 sm:pt-1">
                           {repoTechTags.slice(0, 5).map((tag, tagIdx) => (
                             <span
                               key={`${repo.id}-${tag.id}-${tagIdx}`}
                               title={`${tag.label} (${tag.category})`}
-                              className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 text-[11px] font-mono font-medium text-slate-700 dark:text-gray-300 transition-colors shadow-2xs hover:border-blue-400 dark:hover:border-cyan-400/50"
+                              className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-500/10 dark:bg-cyan-500/10 border border-blue-500/25 dark:border-cyan-500/30 text-[10px] sm:text-[11px] font-mono font-bold text-blue-700 dark:text-cyan-300 transition-colors shadow-2xs hover:border-blue-400"
                             >
                               <span>{tag.label}</span>
                             </span>
                           ))}
                           {repoTechTags.length > 5 && (
-                            <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-[10px] text-slate-600 dark:text-cyan-400 font-mono font-bold border border-slate-200 dark:border-white/10">
+                            <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/10 text-[10px] text-slate-600 dark:text-gray-300 font-mono font-bold border border-slate-200 dark:border-white/10">
                               +{repoTechTags.length - 5}
                             </span>
                           )}

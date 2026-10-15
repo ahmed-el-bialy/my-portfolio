@@ -959,7 +959,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
   const modalNode = (
     <div
       dir={dir}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md overflow-hidden"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md overflow-hidden animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -967,9 +967,17 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
       <div
         className={`relative w-full ${
           isMaximized ? 'max-w-[98vw] h-[97vh]' : 'max-w-4xl lg:max-w-5xl h-[88vh] sm:h-[92vh]'
-        } bg-white dark:bg-[#0e1020] border border-slate-200/90 dark:border-white/15 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-200`}
+        } bg-white dark:bg-[#0e1020] border-t sm:border border-slate-200/90 dark:border-white/15 rounded-t-[32px] sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300`}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Drag Handle */}
+        <div 
+          className="w-full pt-3 pb-1 flex justify-center sm:hidden cursor-pointer bg-slate-50 dark:bg-[#151728] border-b border-slate-200/50 dark:border-white/5 shrink-0" 
+          onClick={onClose}
+          aria-label="Close bottom sheet"
+        >
+          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-zinc-700" />
+        </div>
         {/* Top Action & Header Bar (like ResumeModal) */}
         <div className="p-3 sm:p-4 md:p-5 bg-slate-50 dark:bg-[#151728] border-b border-slate-200/80 dark:border-white/10 flex items-center justify-between shrink-0 gap-3">
           <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
