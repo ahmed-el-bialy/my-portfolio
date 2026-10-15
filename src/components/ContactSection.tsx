@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, Check, Github, Linkedin, Youtube, Calendar, Copy } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, Check, Github, Linkedin, Youtube, Calendar, Copy, FileText, ExternalLink } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { DeveloperProfile, openEmailClient } from '../data/portfolioData';
 import { WhatsAppLogo, TikTokLogo } from './TechLogos';
@@ -8,9 +8,10 @@ import { useLanguage } from '../context/LanguageContext';
 interface ContactSectionProps {
   profile: DeveloperProfile;
   onOpenBooking?: () => void;
+  onOpenResume?: () => void;
 }
 
-export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenBooking }) => {
+export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenBooking, onOpenResume }) => {
   const { lang, dir, t } = useLanguage();
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);

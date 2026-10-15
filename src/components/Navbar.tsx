@@ -79,8 +79,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <>
       {/* 1. TOP HEADER NAVBAR (Responsive & Ergonomic across Mobile, Tablet, & Desktop) */}
-      <header className="fixed top-0 inset-x-0 z-50 transition-all duration-200 border-b border-slate-200/80 dark:border-white/10 bg-black/95 backdrop-blur-xl shadow-xs">
-        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 h-14 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-3 md:gap-4 lg:gap-6 bg-[#000000]">
+      <header className="fixed top-0 inset-x-0 z-50 transition-all duration-200 border-b border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-[#090a0f]/95 backdrop-blur-xl shadow-xs">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6 h-14 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-3 md:gap-4 lg:gap-6">
           
           {/* Zone 1: Brand Wordmark & Circular Logo Emblem */}
           <div

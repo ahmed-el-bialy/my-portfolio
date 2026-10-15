@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { DeveloperProfile, WORK_STATUS_INFO } from '../data/portfolioData';
 import { WhatsAppLogo, TikTokLogo } from './TechLogos';
+import websiteLogo from '../assets/images/website_logo_circular.png';
 import { useLanguage } from '../context/LanguageContext';
 
 interface HeroSectionProps {
@@ -252,8 +253,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
         </div>
 
-        {/* Right Column: 3D Interactive Tilt Card */}
-        <div className="lg:col-span-5 flex justify-center lg:justify-end [perspective:1200px] mt-4 lg:mt-0">
+        {/* Right Column: 3D Interactive Tilt Card (Shifted away from right scroll indicator with generous breathing space) */}
+        <div className="lg:col-span-5 flex justify-center lg:justify-end xl:pe-6 [perspective:1200px] mt-4 lg:mt-0">
           <motion.div
             ref={cardRef}
             onMouseMove={handleCardMouseMove}
@@ -273,7 +274,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 ? { type: 'spring', stiffness: 260, damping: 18 }
                 : { y: { repeat: Infinity, duration: 4, ease: 'easeInOut' } }
             }
-            className="relative group w-[260px] sm:w-[310px] aspect-[3/4] will-change-transform cursor-pointer select-none"
+            className="relative group w-[280px] sm:w-[335px] md:w-[350px] aspect-[3/4] will-change-transform cursor-pointer select-none lg:-translate-x-6 xl:-translate-x-10"
           >
             {/* Glowing 3D Aura behind the card */}
             <div
@@ -308,14 +309,38 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <div className="absolute inset-0 dark:bg-gradient-to-t dark:from-slate-950/85 dark:via-transparent dark:to-transparent bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
 
               {/* Top Side Badge */}
-              <div className="absolute top-3 end-3 px-2.5 py-1 rounded-md bg-white/95 dark:bg-black/80 backdrop-blur-md border border-slate-300 dark:border-white/25 text-[10px] font-mono text-blue-700 dark:text-cyan-300 font-bold shadow-md pointer-events-none">
+              <div className="absolute top-3.5 end-3.5 px-3 py-1.5 rounded-lg bg-black/85 dark:bg-black/90 backdrop-blur-md border border-white/25 text-[11px] font-mono text-cyan-300 font-black shadow-xl tracking-wider pointer-events-none">
                 FLUTTER SPECIALIST
               </div>
 
-              {/* Bottom Card Info Overlay */}
-              <div className="hero-photo-name-card absolute bottom-4 inset-x-4 p-3.5 rounded-xl bg-white/95 dark:bg-[#0d101d]/95 backdrop-blur-md border border-slate-300 dark:border-white/15 shadow-xl transition-colors">
-                <div className="text-sm font-bold text-slate-900 dark:text-white tracking-wide">{displayName}</div>
-                <div className="text-xs text-blue-600 dark:text-cyan-400 font-semibold mt-0.5">{t.nav.brandRole}</div>
+              {/* Bottom Card Info Overlay with Prominent Website Logo Emblem */}
+              <div className="hero-photo-name-card absolute bottom-4 inset-x-4 p-3.5 sm:p-4 rounded-2xl bg-white/95 dark:bg-[#0b0e1b]/95 backdrop-blur-xl border border-slate-300 dark:border-white/20 shadow-2xl transition-colors flex items-center justify-between gap-3.5">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight leading-snug truncate title-contrast">
+                    {displayName}
+                  </div>
+                  <div className="text-xs sm:text-[13px] text-blue-600 dark:text-cyan-400 font-extrabold font-mono mt-1 truncate">
+                    {t.nav.brandRole}
+                  </div>
+                </div>
+
+                {/* Enlarged High-Visibility Website Logo Emblem */}
+                <div className="relative shrink-0 flex items-center justify-center group/emblem" title="Konoha • Official Emblem">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full p-[2px] bg-gradient-to-tr from-blue-600 via-cyan-400 to-indigo-600 shadow-xl shadow-cyan-500/30 flex items-center justify-center group-hover/emblem:scale-105 transition-transform duration-300">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-black flex items-center justify-center p-1 shadow-inner">
+                      <img
+                        src={websiteLogo}
+                        alt="Website Logo"
+                        className="w-full h-full rounded-full object-contain aspect-square drop-shadow-sm"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/website_logo.jpg';
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {/* Subtle pulsing accent glow behind emblem */}
+                  <span className="absolute -inset-1.5 rounded-full bg-cyan-400/30 blur-xs -z-10 animate-pulse pointer-events-none" />
+                </div>
               </div>
 
             </div>
