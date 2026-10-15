@@ -9,6 +9,7 @@
 [![GitHub Profile](https://img.shields.io/badge/GitHub-ahmed--el--bialy-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ahmed-el-bialy)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Ahmed_El--Bialy-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ahmedel-bialy/)
 [![YouTube](https://img.shields.io/badge/YouTube-@ahmedel--bialy-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/@ahmedel-bialy)
+[![Gmail](https://img.shields.io/badge/Gmail-elbailyahmed47@gmail.com-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:elbailyahmed47@gmail.com)
 [![WhatsApp](https://img.shields.io/badge/WhatsApp-Chat_Now-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/201022121573)
 
 <p align="center">

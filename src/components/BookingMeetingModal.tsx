@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, ExternalLink, Sparkles } from 'lucide-react';
+import { X, Calendar, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
 import { DeveloperProfile } from '../data/portfolioData';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
@@ -18,6 +18,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
 }) => {
   useScrollLock(isOpen);
   const { isArabic } = useLanguage();
+  const [isIframeLoading, setIsIframeLoading] = useState(true);
 
   if (!isOpen) return null;
 
@@ -74,13 +75,29 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
           </div>
         </div>
 
-        {/* Modal Body: Cal.com Inline Embed Iframe */}
-        <div className="flex-1 w-full bg-slate-950 relative overflow-hidden">
+        {/* Modal Body: Cal.com Inline Embed Iframe with Loading Spinner/Skeleton */}
+        <div className="flex-1 w-full bg-slate-950 relative overflow-hidden flex items-center justify-center">
+          {isIframeLoading && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-sm gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400 shadow-lg">
+                <Loader2 size={24} className="animate-spin text-blue-400" />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="text-sm font-bold text-white">
+                  {isArabic ? 'جاري تحميل جدول المواعيد...' : 'Loading Discovery Call Calendar...'}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {isArabic ? 'يرجى الانتظار ثوانٍ معدودة' : 'Preparing available time slots'}
+                </p>
+              </div>
+            </div>
+          )}
           <iframe
             src={calUrl}
             title="Cal.com Booking"
             className="w-full h-full border-0 bg-transparent"
             allow="camera; microphone; fullscreen; payment"
+            onLoad={() => setIsIframeLoading(false)}
           />
         </div>
 

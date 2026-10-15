@@ -593,7 +593,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 xs:gap-5 sm:gap-6 lg:gap-7">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-5 sm:gap-6">
               {filteredFeaturedProjects.map((project) => {
             const liveMedia =
               liveMediaMap?.[project.repoName] ||
@@ -869,7 +869,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 xs:gap-5 sm:gap-6 lg:gap-7">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 xs:gap-5 sm:gap-6">
               {filteredRepos.map((repo) => {
                 const projectObj = getProjectFromRepo(repo);
                 const repoRelease = repoReleases?.[repo.name] || repoReleases?.[repo.name.toLowerCase()];

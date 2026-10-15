@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DEFAULT_PROFILE, openEmailClient, FEATURED_PROJECTS } from './data/portfolioData';
 import { fetchGitHubUserStats, clearAllGitHubLocalCache } from './services/githubService';
+import { parseCvAndLinkedinProfile } from './services/cvParserService';
 import { Navbar, NavTab } from './components/Navbar';
 import { VerticalNavRail } from './components/VerticalNavRail';
 import { ScrollProgressBar } from './components/ScrollProgressBar';
@@ -102,23 +103,32 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const [parsedData, setParsedData] = useState<any>(null);
+
   // Automatic Initial Mount Data & Asset Prefetching
   useEffect(() => {
-    // 1. Prefetch GitHub User Stats & Repositories immediately
+    // 1. Parse Google Drive CV PDF and LinkedIn profile data
+    parseCvAndLinkedinProfile(profile.cvDriveUrl, profile.linkedinUrl)
+      .then((data) => {
+        if (data) setParsedData(data);
+      })
+      .catch((err) => console.error('CV Parser error:', err));
+
+    // 2. Prefetch GitHub User Stats & Repositories immediately
     queryClient.prefetchQuery({
       queryKey: ['github-data', profile.githubUsername],
       queryFn: () => fetchGitHubUserStats(profile.githubUsername),
       staleTime: 1000 * 60 * 5,
     });
 
-    // 2. Preload high-priority cover images in background
+    // 3. Preload high-priority cover images in background
     FEATURED_PROJECTS.slice(0, 3).forEach((proj) => {
       if (proj.image) {
         const img = new Image();
         img.src = proj.image;
       }
     });
-  }, [profile.githubUsername]);
+  }, [profile.githubUsername, profile.cvDriveUrl, profile.linkedinUrl]);
 
   // Initial loading indicator
   useEffect(() => {

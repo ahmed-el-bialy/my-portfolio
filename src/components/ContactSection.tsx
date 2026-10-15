@@ -315,6 +315,14 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
               >
                 <WhatsAppLogo size={17} />
               </a>
+              <button
+                type="button"
+                onClick={() => openEmailClient(profile.email, 'Mobile App Project Inquiry - Flutter Developer')}
+                className="p-2.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-cyan-600/20 text-slate-700 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center cursor-pointer"
+                title="Gmail / Email Contact"
+              >
+                <Mail size={17} />
+              </button>
             </div>
           </div>
 
