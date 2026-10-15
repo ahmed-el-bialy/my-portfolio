@@ -136,6 +136,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const [copiedClone, setCopiedClone] = useState<boolean>(false);
   const [liveYoutubeUrl, setLiveYoutubeUrl] = useState<string | undefined>(project?.links.youtubeDemo);
   const [livePlayUrl, setLivePlayUrl] = useState<string | undefined>(project?.links.googlePlay);
+  const [studyCaseContent, setStudyCaseContent] = useState<string>('');
+  const [studyCaseExists, setStudyCaseExists] = useState<boolean>(false);
+  const [studyCaseLoading, setStudyCaseLoading] = useState<boolean>(false);
+  const [studyCaseLang, setStudyCaseLang] = useState<'en' | 'ar'>('en');
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -155,10 +159,27 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       setIsPlayingInline(false);
       setLiveYoutubeUrl(project.links.youtubeDemo);
       setLivePlayUrl(project.links.googlePlay);
+      setStudyCaseContent('');
+      setStudyCaseExists(false);
+      setStudyCaseLoading(true);
 
       if (scrollRef.current) {
         scrollRef.current.scrollTop = 0;
       }
+
+      // Fetch study-case markdown from GitHub backend
+      fetch(`/api/study-case?repo=${project.repoName}&lang=${studyCaseLang}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.exists) {
+            setStudyCaseContent(data.content);
+            setStudyCaseExists(true);
+          } else {
+            setStudyCaseExists(false);
+          }
+        })
+        .catch(() => setStudyCaseExists(false))
+        .finally(() => setStudyCaseLoading(false));
 
       // 1. Immediately populate from verified list if known to avoid blank delays
       const verified =
@@ -835,109 +856,170 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           {/* TAB 4: CASE STUDY & VERIFIED METRICS */}
           {activeTab === 'casestudy' && (
             <div className="space-y-6">
-              
-              {/* Measurable Performance Metrics Strip */}
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-3 flex items-center gap-1.5">
-                  <Activity size={15} className="text-emerald-500" />
-                  <span>{lang === 'ar' ? 'مؤشرات الأداء الفعلية (Performance Metrics)' : 'Production Benchmarks & Metrics'}</span>
-                </h4>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
-                    <div className="text-[10px] font-mono text-slate-500 dark:text-gray-400 uppercase font-bold">FPS Stability</div>
-                    <div className="text-lg sm:text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-                      {project.metrics?.fpsStability || '60 FPS'}
-                    </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">Smooth Transitions</div>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
-                    <div className="text-[10px] font-mono text-slate-500 dark:text-gray-400 uppercase font-bold">Query Latency</div>
-                    <div className="text-lg sm:text-xl font-extrabold text-blue-600 dark:text-cyan-400 mt-1">
-                      {project.metrics?.loadLatency || '< 200ms'}
-                    </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">Cold Read Time</div>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
-                    <div className="text-[10px] font-mono text-slate-500 dark:text-gray-400 uppercase font-bold">Offline Support</div>
-                    <div className="text-lg sm:text-xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">
-                      {project.metrics?.offlineSupport || '100% Offline'}
-                    </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">No Remote Blocker</div>
-                  </div>
-
-                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
-                    <div className="text-[10px] font-mono text-slate-500 dark:text-gray-400 uppercase font-bold">Binary Footprint</div>
-                    <div className="text-lg sm:text-xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">
-                      {project.metrics?.buildSize || '18.4 MB'}
-                    </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">AAB / APK Release</div>
-                  </div>
+              {/* Language Switcher for Study Case */}
+              <div className="flex items-center justify-between bg-slate-100 dark:bg-white/[0.03] p-3 rounded-xl border border-slate-200 dark:border-white/10">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-white">
+                  <FileCode size={16} className="text-cyan-400" />
+                  <span>{lang === 'ar' ? 'دراسة الحالة (Study Case Markdown)' : 'Study Case Documentation'}</span>
+                </div>
+                <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-white/10 p-1 rounded-lg">
+                  <button
+                    onClick={() => {
+                      setStudyCaseLang('en');
+                      setStudyCaseLoading(true);
+                      fetch(`/api/study-case?repo=${project.repoName}&lang=en`)
+                        .then(res => res.json())
+                        .then(data => {
+                          if (data.success && data.exists) {
+                            setStudyCaseContent(data.content);
+                            setStudyCaseExists(true);
+                          }
+                        })
+                        .finally(() => setStudyCaseLoading(false));
+                    }}
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                      studyCaseLang === 'en'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    English
+                  </button>
+                  <button
+                    onClick={() => {
+                      setStudyCaseLang('ar');
+                      setStudyCaseLoading(true);
+                      fetch(`/api/study-case?repo=${project.repoName}&lang=ar`)
+                        .then(res => res.json())
+                        .then(data => {
+                          if (data.success && data.exists) {
+                            setStudyCaseContent(data.content);
+                            setStudyCaseExists(true);
+                          }
+                        })
+                        .finally(() => setStudyCaseLoading(false));
+                    }}
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                      studyCaseLang === 'ar'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    العربية
+                  </button>
                 </div>
               </div>
 
-              {/* Challenge vs Solution Narrative */}
-              <div className="space-y-4">
-                {/* The Challenge */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400">
-                    <Award size={16} />
-                    <span>{lang === 'ar' ? 'التحدي الهندسي (The Challenge)' : 'The Engineering Challenge'}</span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-slate-700 dark:text-gray-300 leading-relaxed">
-                    {project.caseStudy?.challenge ||
-                      'Overcoming framework overhead and ensuring seamless state recovery across diverse screen form-factors with zero frame drops during heavy user interactions.'}
-                  </p>
+              {studyCaseLoading ? (
+                <div className="py-16 text-center text-slate-400 flex flex-col items-center justify-center space-y-3">
+                  <Loader2 size={24} className="animate-spin text-cyan-400" />
+                  <span className="text-xs font-mono">Loading study case markdown...</span>
                 </div>
-
-                {/* The Solution */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle size={16} />
-                    <span>{lang === 'ar' ? 'الحل المعماري والتنفيذ (The Solution)' : 'Architectural Solution & Decisions'}</span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-slate-700 dark:text-gray-300 leading-relaxed">
-                    {project.caseStudy?.solution ||
-                      'Engineered using pure Dart Clean Architecture, isolating domain business logic into dedicated UseCases, coupled with Cubit event streams for predictable UI state emissions.'}
-                  </p>
+              ) : studyCaseExists && studyCaseContent ? (
+                <div className="p-5 sm:p-6 rounded-2xl bg-slate-900/90 text-slate-200 font-mono text-xs sm:text-sm leading-relaxed whitespace-pre-wrap border border-white/10 shadow-xl overflow-x-auto">
+                  {studyCaseContent}
                 </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Measurable Performance Metrics Strip */}
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-3 flex items-center gap-1.5">
+                      <Activity size={15} className="text-emerald-500" />
+                      <span>{lang === 'ar' ? 'مؤشرات الأداء الفعلية (Performance Metrics)' : 'Production Benchmarks & Metrics'}</span>
+                    </h4>
 
-                {/* Key Learnings & Takeaways */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-2">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-blue-600 dark:text-cyan-400">
-                    <Sparkles size={16} />
-                    <span>{lang === 'ar' ? 'الدروس المستفادة والأثر (Key Takeaways)' : 'Key Takeaways & Engineering Impact'}</span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-slate-700 dark:text-gray-300 leading-relaxed">
-                    {project.caseStudy?.keyLearnings ||
-                      'Refined widget lifecycle optimization and eliminated unnecessary rebuild trees using BlocSelector, reducing memory consumption by over 30%.'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Verified Metrics Highlights */}
-              {project.metrics?.highlights && project.metrics.highlights.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-2.5 flex items-center gap-1.5">
-                    <CheckCircle2 size={15} className="text-emerald-500" />
-                    <span>{lang === 'ar' ? 'إنجازات تم التحقق منها' : 'Verified Engineering Highlights'}</span>
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {project.metrics.highlights.map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 flex items-start gap-2 text-xs text-slate-700 dark:text-gray-300"
-                      >
-                        <CheckCircle2 size={14} className="text-emerald-500 shrink-0 mt-0.5" />
-                        <span>{item}</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
+                        <div className="text-[10px] font-mono text-slate-500 dark:text-gray-400 uppercase font-bold">FPS Stability</div>
+                        <div className="text-lg sm:text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
+                          {project.metrics?.fpsStability || '60 FPS'}
+                        </div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">Smooth Transitions</div>
                       </div>
-                    ))}
+
+                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
+                        <div className="text-[10px] font-mono text-slate-500 dark:text-gray-400 uppercase font-bold">Query Latency</div>
+                        <div className="text-lg sm:text-xl font-extrabold text-blue-600 dark:text-cyan-400 mt-1">
+                          {project.metrics?.loadLatency || '< 200ms'}
+                        </div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">Cold Read Time</div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
+                        <div className="text-[10px] font-mono text-slate-500 dark:text-gray-400 uppercase font-bold">Offline Support</div>
+                        <div className="text-lg sm:text-xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">
+                          {project.metrics?.offlineSupport || '100% Offline'}
+                        </div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">No Remote Blocker</div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
+                        <div className="text-[10px] font-mono text-slate-500 dark:text-gray-400 uppercase font-bold">Binary Footprint</div>
+                        <div className="text-lg sm:text-xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">
+                          {project.metrics?.buildSize || '18.4 MB'}
+                        </div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">AAB / APK Release</div>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Challenge vs Solution Narrative */}
+                  <div className="space-y-4">
+                    <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2">
+                      <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400">
+                        <Award size={16} />
+                        <span>{lang === 'ar' ? 'التحدي الهندسي (The Challenge)' : 'The Engineering Challenge'}</span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-700 dark:text-gray-300 leading-relaxed">
+                        {project.caseStudy?.challenge ||
+                          'Overcoming framework overhead and ensuring seamless state recovery across diverse screen form-factors with zero frame drops during heavy user interactions.'}
+                      </p>
+                    </div>
+
+                    <div className="p-4 sm:p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
+                      <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle size={16} />
+                        <span>{lang === 'ar' ? 'الحل المعماري والتنفيذ (The Solution)' : 'Architectural Solution & Decisions'}</span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-700 dark:text-gray-300 leading-relaxed">
+                        {project.caseStudy?.solution ||
+                          'Engineered using pure Dart Clean Architecture, isolating domain business logic into dedicated UseCases, coupled with Cubit event streams for predictable UI state emissions.'}
+                      </p>
+                    </div>
+
+                    <div className="p-4 sm:p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-2">
+                      <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-blue-600 dark:text-cyan-400">
+                        <Sparkles size={16} />
+                        <span>{lang === 'ar' ? 'الدروس المستفادة والأثر (Key Takeaways)' : 'Key Takeaways & Engineering Impact'}</span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-700 dark:text-gray-300 leading-relaxed">
+                        {project.caseStudy?.keyLearnings ||
+                          'Refined widget lifecycle optimization and eliminated unnecessary rebuild trees using BlocSelector, reducing memory consumption by over 30%.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {project.metrics?.highlights && project.metrics.highlights.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-2.5 flex items-center gap-1.5">
+                        <CheckCircle2 size={15} className="text-emerald-500" />
+                        <span>{lang === 'ar' ? 'إنجازات تم التحقق منها' : 'Verified Engineering Highlights'}</span>
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {project.metrics.highlights.map((item, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 flex items-start gap-2 text-xs text-slate-700 dark:text-gray-300"
+                          >
+                            <CheckCircle2 size={14} className="text-emerald-500 shrink-0 mt-0.5" />
+                            <span>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-
             </div>
           )}
 
