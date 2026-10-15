@@ -101,7 +101,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       <div className="ambient-glow-cyan absolute inset-0 pointer-events-none" />
 
       {/* Main Grid: Clean Solid Text Left + Interactive 3D Tilt Card Right */}
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center z-10">
+      <div className="max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center z-10">
         
         {/* Left Column: Focused Typography & Streamlined CTAs */}
         <div className="lg:col-span-7 flex flex-col items-start gap-3 sm:gap-4.5">
@@ -325,7 +325,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* Stats Bar at Bottom: 1 Live App on Google Play is visually Weighted and Featured */}
-      <div className="max-w-7xl mx-auto w-full mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-slate-200 dark:border-white/10 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
+      <div className="max-w-[1440px] mx-auto w-full mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-slate-200 dark:border-white/10 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
         {profile.stats.map((stat, idx) => {
           const isPlayStore = stat.label.includes('Play');
           const isRepoStat = stat.label.toLowerCase().includes('repo');

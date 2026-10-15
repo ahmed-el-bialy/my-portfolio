@@ -19,7 +19,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
   const [activeSubTab, setActiveSubTab] = useState<'all' | 'certs' | 'experience'>('all');
 
   return (
-    <section id="experience" className="max-w-7xl mx-auto px-3.5 xs:px-4 sm:px-6 md:px-8 py-10 sm:py-16 md:py-20 border-t border-black/10 dark:border-white/5 transition-colors overflow-x-clip w-full">
+    <section id="experience" className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 py-10 sm:py-16 md:py-20 border-t border-black/10 dark:border-white/5 transition-colors overflow-x-clip w-full">
       {/* Section Header */}
       <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-6 xs:mb-8 sm:mb-10 w-full px-1 sm:px-0">
         <div className="inline-flex items-center gap-1.5 xs:gap-2 px-2.5 xs:px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-[10px] xs:text-[11px] sm:text-xs font-semibold uppercase tracking-wider mb-2 sm:mb-3">

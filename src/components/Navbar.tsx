@@ -79,7 +79,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     <>
       {/* 1. TOP HEADER NAVBAR (Responsive & Ergonomic across Mobile, Tablet, & Desktop) */}
       <header className="fixed top-0 inset-x-0 z-50 transition-all duration-200 border-b border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-[#090a0f]/95 backdrop-blur-xl shadow-xs">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-3 md:gap-4 lg:gap-6">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 h-14 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-3 md:gap-4 lg:gap-6 w-full">
           
           {/* Zone 1: Brand Wordmark & Avatar Emblem */}
           <div

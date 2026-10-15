@@ -4,10 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, ExternalLink, Sparkles, Loader2, MessageSquare, Clock, ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
+import { DeveloperProfile } from '../data/portfolioData';
 
 interface BookingMeetingModalProps {
   isOpen: boolean;
   onClose: () => void;
+  profile?: DeveloperProfile;
 }
 
 type MeetingType = 'quick-chat' | 'discovery-cal' | 'technical-discussion';

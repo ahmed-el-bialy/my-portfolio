@@ -53,24 +53,18 @@ The application serves as an interactive showcase of published mobile applicatio
 - **Viewport Scroll Containment:** Modal overlay prevents background body scrolling; scrolling is isolated exclusively to the PDF document or web view container.
 - **Direct Drive Actions:** Immediate download access, one-click open in Google Drive tab, and clipboard link sharing.
 
-### 2. 📅 Multi-Step Wizard Booking System & Expandable Modal (`BookingMeetingModal`)
-- **Step-by-Step Guided Wizard Flow:** Replaced single-page form with an intuitive 4-step wizard:
-  1. **Contact & Strict Email Verification:** Client name and real-time email/Gmail validator with instant syntax checks and domain typo corrections (e.g. `@gmai.com` -> `@gmail.com`).
-  2. **Session Type & Platform Selection:** Consultation objective (Project Discussion, Technical Interview, Quick Coffee), duration, and preferred video platform (Google Meet, WhatsApp Video, Zoom).
-  3. **Date & Available Time Slot with Google Calendar FreeBusy Sync:** Live slot availability in Cairo Local Time (CLT / GMT+2) with preserved English numerals (e.g. `03:00 PM CLT`). Real-time integration with Google Calendar API queries FreeBusy data to dynamically exclude conflicting appointments.
-  4. **Review & Instant Slot Lock with Framer Motion Success:** Comprehensive summary card before final confirmation, followed by a fluid Framer Motion animated success checkmark with expanding ripples upon submission.
-- **Real-Time Google Calendar API Connection:**
-  - Connects to Google Calendar via OAuth to query live busy slots and automatically disable times that conflict with existing calendar commitments.
-  - Generates official Google Meet video rooms and creates calendar entries with automatic email and popup reminders.
-- **Framer Motion Animated Checkmark & Micro-Interactions:** Custom SVG path-drawing animation and spring-based scale entrance for the final confirmation step, paired with celebratory particle confetti.
-- **Expandable Modal Sizing (`Maximize2` / `Minimize2`):** Mirrors the Resume modal architecture with one-click toggling between default balanced dialog (`max-w-4xl lg:max-w-5xl`) and expanded full-screen viewport (`98vw` × `97vh`).
-- **Real-Time Gmail / Email Validation Engine:** Validates email syntax, detects missing `@` or domain extensions, and features a one-tap typo corrector for common provider misspellings.
-- **Full Automatic Language Sync:** Seamlessly adapts to Arabic (RTL) or English (LTR) with localized labels while strictly keeping digital time numbers in international format.
-- **Anti Double-Booking Guard (`BookingValidationService`):** Prevents race conditions and duplicate slot scheduling through atomic slot locking and transparent official schedule auditing.
-- **Multi-Channel Calendar Integrations:**
-  - Direct synchronization with **Google Calendar** and automated **Google Meet** video conference links.
-  - Direct `.ics` iCalendar file generation for Apple Calendar, Outlook, and offline scheduling.
-  - One-click instant **WhatsApp** dispatch with pre-filled localized appointment details.
+### 2. 📅 Cal.com Multi-Tier Live Booking Suite (`BookingMeetingModal`)
+- **3-Tier Purpose-Driven Consultation Flows:**
+  1. **Quick Chat (15 Mins):** Intro & fit alignment via `https://cal.com/ahmed-elbaily/quick-chat`.
+  2. **Discovery Call (30 Mins):** In-depth review of product scope, business goals & mobile architecture via `https://cal.com/ahmed-elbaily/discovery-cal`.
+  3. **Technical Discussion (45 Mins):** Advanced Flutter, Clean Architecture, BLoC/Cubit state management & backend review via `https://cal.com/ahmed-elbaily/technical-discussion`.
+- **Integrated Live Scheduling Embeds:** Embeds Cal.com calendar widgets directly in-modal with dedicated loading skeletons and spinners to eliminate empty screens during initial load.
+- **Direct New-Tab Navigation:** One-tap external launch option for attendees preferring full-screen booking.
+
+### 3. 📑 Smart GitHub Case Study Engine (`ProjectDetailsModal`)
+- **Automated Repository Inspection:** Dynamically probes the repository root on `main` and `master` branches for `CASE_STUDY.md` / `case-study.md` (English) and `CASE_STUDY_AR.md` / `case-study-ar.md` (Arabic).
+- **Adaptive Tab Visibility:** Automatically displays or hides the Case Study tab based on verified markdown file existence.
+- **Instant Bilingual Toggle:** Renders a clean EN / AR language switch control when both documentation versions are detected, displaying localized engineering insights seamlessly.
 
 ### 3. 📱 Responsive Multi-Device UI (Mobile, Tablet, Laptop, Desktop)
 - **Fluid Active Tab Indicator:** Framer Motion spring layout animations dynamically recalculating active navigation coordinates on any device width.
