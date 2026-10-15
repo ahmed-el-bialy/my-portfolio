@@ -23,6 +23,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { WhatsAppLogo, TikTokLogo } from './TechLogos';
+import websiteLogo from '../assets/images/website_logo_circular.png';
 import { useLanguage } from '../context/LanguageContext';
 import { DEFAULT_PROFILE } from '../data/portfolioData';
 
@@ -91,15 +92,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               if (e.key === 'Enter' || e.key === ' ') handleTabClick('hero');
             }}
           >
-            <div className="relative shrink-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full p-[1.5px] bg-gradient-to-tr from-blue-600 via-cyan-400 to-indigo-600 shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
+            <div className="relative shrink-0 flex items-center justify-center">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full p-[1.5px] bg-gradient-to-tr from-blue-600 via-cyan-400 to-indigo-600 shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300 overflow-hidden flex items-center justify-center">
                 <img
-                  src="/website_logo.jpg"
+                  src={websiteLogo}
                   alt="Ahmed El-Bialy Logo"
-                  className="w-full h-full rounded-full object-cover"
+                  className="w-full h-full rounded-full object-cover object-center aspect-square"
                 />
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#090a0f] ring-1 ring-emerald-400/50" />
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#090a0f] ring-1 ring-emerald-400/50 z-10" />
             </div>
 
             <div className="flex flex-col min-w-0">
