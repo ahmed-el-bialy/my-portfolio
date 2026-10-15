@@ -307,7 +307,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
   }, [githubRepos]);
 
   return (
-    <section id="projects" className="max-w-[1400px] mx-auto px-3.5 sm:px-5 lg:px-6 py-10 sm:py-16 md:py-20 border-t border-black/10 dark:border-white/5 transition-colors overflow-x-clip w-full">
+    <section id="projects" className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-10 sm:py-16 md:py-20 border-t border-black/10 dark:border-white/5 transition-colors overflow-x-clip w-full">
       
       {/* Section Header & Tab Switcher (Side-by-side on laptop/desktop mode, gracefully stacked on mobile) */}
       <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 xs:gap-5 sm:gap-6 mb-6 xs:mb-8 sm:mb-10 w-full">

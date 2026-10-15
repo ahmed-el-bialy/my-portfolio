@@ -81,7 +81,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
   };
 
   return (
-    <section id="contact" className="max-w-[1400px] mx-auto px-3.5 sm:px-5 lg:px-6 py-16 sm:py-20 border-t border-black/10 dark:border-white/5 w-full">
+    <section id="contact" className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-16 sm:py-20 border-t border-black/10 dark:border-white/5 w-full">
       {/* Header */}
       <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-10 sm:mb-14">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-3">
