@@ -40,6 +40,36 @@ import { TechDistributionChart } from './TechDistributionChart';
 import { GitHubFallbackNotice } from './GitHubFallbackNotice';
 import { useLanguage } from '../context/LanguageContext';
 
+const cardsContainerVariants: any = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.08,
+    },
+  },
+};
+
+const cardVariants: any = {
+  hidden: {
+    opacity: 0,
+    y: 32,
+    scale: 0.98,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 260,
+      damping: 24,
+      mass: 0.6,
+    },
+  },
+};
+
 interface ProjectsSectionProps {
   currentGithubUser: string;
   onRepoCountChange?: (count: number) => void;
@@ -593,7 +623,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 w-full">
+            <motion.div
+              variants={cardsContainerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-50px' }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 w-full"
+            >
               {filteredFeaturedProjects.map((project) => {
             const liveMedia =
               liveMediaMap?.[project.repoName] ||
@@ -648,6 +684,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
             return (
               <motion.div
                 key={project.id}
+                variants={cardVariants}
                 onClick={() => setSelectedProject(dynamicProject)}
                 onMouseEnter={() => setHoveredCardId(project.id)}
                 onMouseLeave={() => setHoveredCardId(null)}
@@ -838,7 +875,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       )}
     </>
   )}
@@ -872,7 +909,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 w-full">
+            <motion.div
+              variants={cardsContainerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-50px' }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 w-full"
+            >
               {filteredRepos.map((repo) => {
                 const projectObj = getProjectFromRepo(repo);
                 const repoRelease = repoReleases?.[repo.name] || repoReleases?.[repo.name.toLowerCase()];
@@ -915,6 +958,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                 return (
                   <motion.div
                     key={repo.id}
+                    variants={cardVariants}
                     onClick={() => setSelectedProject(dynamicRepoProject)}
                     onMouseEnter={() => setHoveredCardId(repo.id)}
                     onMouseLeave={() => setHoveredCardId(null)}
@@ -1089,7 +1133,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                   </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
           )}
         </div>
       )}

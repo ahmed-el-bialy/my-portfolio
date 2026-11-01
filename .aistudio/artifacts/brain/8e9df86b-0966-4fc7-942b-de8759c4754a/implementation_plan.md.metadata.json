@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan to refine Hero Section card sizing with balanced breathing room, add loading & download states to ResumeModal, fix custom cursor behavior over video and PDF iframes, and implement cinematic smooth transitions for language and theme switching.",
-  "updatedAt":  "2026-11-01T09:01:02.705118078Z",
+  "summary":  "Implementation plan to resolve WhatsApp OpenGraph preview image with absolute URLs and dynamic fallbacks, add staggered Framer Motion reveal animations to ProjectsSection cards, and guarantee clean two-row button hierarchy on project cards.",
+  "updatedAt":  "2026-11-01T20:36:40.190546580Z",
   "requestFeedback":  true,
   "userFacing":  true
 }

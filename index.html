@@ -49,11 +49,16 @@
       })();
     </script>
 
-    <!-- OpenGraph Social Cards -->
+    <!-- OpenGraph Social Cards (WhatsApp, Facebook, LinkedIn, Discord) -->
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ais-pre-lycsixhk4kd65f225njylg-428230060297.europe-west2.run.app/" />
     <meta property="og:title" content="Ahmed El-Bialy | Flutter & Mobile App Specialist" />
     <meta property="og:description" content="Official portfolio of Ahmed El-Bialy, Flutter Specialist & AI Student. Features automatic GitHub repository synchronization, live contributions, and published apps on Google Play." />
-    <meta property="og:image" content="/website-poster.png" />
+    <meta property="og:image" content="https://ais-pre-lycsixhk4kd65f225njylg-428230060297.europe-west2.run.app/website-poster.png" />
+    <meta property="og:image:secure_url" content="https://ais-pre-lycsixhk4kd65f225njylg-428230060297.europe-west2.run.app/website-poster.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Ahmed El-Bialy - Mobile App Developer Portfolio Preview" />
     <meta property="og:site_name" content="Ahmed El-Bialy Portfolio" />
 
@@ -61,8 +66,30 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Ahmed El-Bialy | Flutter & Mobile App Specialist" />
     <meta name="twitter:description" content="Official portfolio of Ahmed El-Bialy, Flutter Specialist & AI Student. Features automatic GitHub repository synchronization, live contributions, and published apps on Google Play." />
-    <meta name="twitter:image" content="/website-poster.png" />
+    <meta name="twitter:image" content="https://ais-pre-lycsixhk4kd65f225njylg-428230060297.europe-west2.run.app/website-poster.png" />
     <meta name="twitter:image:alt" content="Ahmed El-Bialy - Mobile App Developer Portfolio Preview" />
+
+    <!-- Dynamic Runtime OpenGraph Domain Fallback Script -->
+    <script>
+      (function() {
+        try {
+          if (typeof window !== 'undefined' && window.location && window.location.origin) {
+            var origin = window.location.origin;
+            if (!origin.includes('localhost') && !origin.includes('127.0.0.1')) {
+              var ogImg = document.querySelector('meta[property="og:image"]');
+              var ogSecure = document.querySelector('meta[property="og:image:secure_url"]');
+              var twImg = document.querySelector('meta[name="twitter:image"]');
+              var ogUrl = document.querySelector('meta[property="og:url"]');
+              var posterUrl = origin + '/website-poster.png';
+              if (ogImg) ogImg.setAttribute('content', posterUrl);
+              if (ogSecure) ogSecure.setAttribute('content', posterUrl);
+              if (twImg) twImg.setAttribute('content', posterUrl);
+              if (ogUrl) ogUrl.setAttribute('content', origin + '/');
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
 
     <!-- Google Fonts (Cairo for Arabic, Inter for Latin, Fira Code, Permanent Marker) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
