@@ -19,6 +19,8 @@ import {
   ExternalLink,
   Maximize2,
   Minimize2,
+  Loader2,
+  Sparkles,
 } from 'lucide-react';
 import { DeveloperProfile, EDUCATION_DATA, EXPERIENCES, FEATURED_PROJECTS } from '../data/portfolioData';
 import { WhatsAppLogo } from './TechLogos';
@@ -39,12 +41,23 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
   const [isMaximized, setIsMaximized] = useState(false);
   // View mode: 'web' for interactive layout, 'pdf' for native PDF viewer
   const [viewMode, setViewMode] = useState<'web' | 'pdf'>('web');
+  const [isPdfLoading, setIsPdfLoading] = useState(true);
 
   if (!isOpen) return null;
 
   const pdfPreviewUrl = (profile.cvDriveUrl || '')
     .replace('/view?usp=drive_link', '/preview')
     .replace('/view', '/preview');
+
+  const handleToggleViewMode = () => {
+    setViewMode((prev) => {
+      const next = prev === 'pdf' ? 'web' : 'pdf';
+      if (next === 'pdf') {
+        setIsPdfLoading(true);
+      }
+      return next;
+    });
+  };
 
   const handleCopyLink = () => {
     const url = profile.cvDriveUrl || window.location.href;
@@ -83,9 +96,9 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* View as Native PDF Button replacing the unused print button */}
+            {/* View as Native PDF Button */}
             <button
-              onClick={() => setViewMode((prev) => (prev === 'pdf' ? 'web' : 'pdf'))}
+              onClick={handleToggleViewMode}
               className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
                 viewMode === 'pdf'
                   ? 'bg-blue-600 hover:bg-blue-500 text-white border-blue-500 shadow-sm'
@@ -155,14 +168,14 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
         </div>
 
         {viewMode === 'pdf' ? (
-          /* Native Embedded PDF Document Viewer */
+          /* Native Embedded PDF Document Viewer with Real-Time Loading & Download UX */
           <div className="flex-1 min-h-0 flex flex-col w-full h-full bg-slate-100 dark:bg-[#0c0d14] relative">
             {/* Sub-toolbar for PDF */}
             <div className="px-4 py-2.5 bg-slate-200/70 dark:bg-white/[0.04] border-b border-slate-300 dark:border-white/10 flex items-center justify-between text-xs text-slate-700 dark:text-gray-300 shrink-0">
               <div className="flex items-center gap-2">
                 <FileText size={15} className="text-blue-600 dark:text-cyan-400" />
                 <span className="font-semibold text-xs sm:text-sm">
-                  {lang === 'ar' ? 'مستند السيرة الذاتية (ملف PDF الأصلي)' : 'Original PDF Document'}
+                  {lang === 'ar' ? 'مستند السيرة الذاتية (ملف PDF المعتمد)' : 'Official PDF Document'}
                 </span>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold hidden sm:inline">
                   Google Drive Hosted
@@ -175,19 +188,60 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                     href={profile.cvDriveUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-white/5 hover:bg-blue-100 dark:hover:bg-white/10 text-blue-600 dark:text-cyan-400 font-medium text-xs transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-all hover:scale-105 cursor-pointer"
+                    title={t.resume.downloadPdf}
                   >
-                    <span>{lang === 'ar' ? 'فتح في نافذة كاملة' : 'Open in new tab'}</span>
+                    <Download size={13} />
+                    <span>{lang === 'ar' ? 'تحميل الـ PDF' : 'Download PDF'}</span>
+                  </a>
+                )}
+                {profile.cvDriveUrl && (
+                  <a
+                    href={profile.cvDriveUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 dark:bg-white/5 hover:bg-blue-100 dark:hover:bg-white/10 text-blue-600 dark:text-cyan-400 font-medium text-xs transition-colors"
+                  >
+                    <span>{lang === 'ar' ? 'نافذة خارجية' : 'Open external'}</span>
                     <ExternalLink size={12} />
                   </a>
                 )}
               </div>
             </div>
 
-            {/* Embedded Iframe */}
-            <div className="flex-1 min-h-0 w-full h-full relative">
+            {/* Embedded Iframe Container with Loading Indicator */}
+            <div className="flex-1 min-h-0 w-full h-full relative overflow-hidden">
+              {isPdfLoading && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-slate-100/95 dark:bg-[#0c0d14]/95 backdrop-blur-sm transition-all duration-300">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-500/10 dark:bg-cyan-500/10 border border-blue-500/20 dark:border-cyan-500/30 flex items-center justify-center mb-4 text-blue-600 dark:text-cyan-400 shadow-xl shadow-cyan-500/10">
+                    <Loader2 size={28} className="animate-spin text-cyan-500" />
+                  </div>
+                  <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-1.5 text-center">
+                    {lang === 'ar' ? 'جاري تحميل وعرض ملف السيرة الذاتية (PDF)...' : 'Loading Official PDF Resume Document...'}
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-gray-400 max-w-sm text-center mb-5">
+                    {lang === 'ar'
+                      ? 'يتم جلب المستند المعتمد مباشرة عبر خدمة Google Drive، كما يمكنك البدء في تحميل الملف فوراً عبر الزر أدناه.'
+                      : 'Fetching verified document directly from Google Drive. You can also download the file directly via the button below.'}
+                  </p>
+                  {profile.cvDriveUrl && (
+                    <a
+                      href={profile.cvDriveUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/25 transition-all hover:scale-105"
+                    >
+                      <Download size={14} />
+                      <span>{lang === 'ar' ? 'تحميل مباشر لملف الـ PDF' : 'Direct Download PDF File'}</span>
+                      <ExternalLink size={12} />
+                    </a>
+                  )}
+                </div>
+              )}
+
               <iframe
                 src={pdfPreviewUrl}
+                onLoad={() => setIsPdfLoading(false)}
                 className="w-full h-full border-0 rounded-b-2xl sm:rounded-b-3xl"
                 title={`${profile.name} CV PDF Document`}
                 allow="autoplay"

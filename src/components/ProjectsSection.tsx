@@ -751,9 +751,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                 </div>
 
                 {/* Card Action Footer */}
+                {/* Card Action Footer */}
                 <div className="p-3.5 xs:p-4 sm:p-6 pt-2.5 sm:pt-3 mt-auto border-t border-slate-100 dark:border-white/5 space-y-2 sm:space-y-2.5">
-                  {/* Primary Action Buttons */}
-                  <div className={`grid ${hasVideo ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 sm:gap-2.5`}>
+                  {/* Primary Fixed Row (Always Uniform 2 Columns: View Specs + Source Code) */}
+                  <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -766,28 +767,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                       <span>{t.projects.actions.viewSpecs}</span>
                     </button>
 
-                    {hasVideo && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const url = dynamicVideoUrl || AHMED_PROFILE.youtubeUrl;
-                          window.open(url, '_blank');
-                        }}
-                        className="w-full flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-2 sm:px-3.5 rounded-xl bg-red-600/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 font-bold text-[11px] sm:text-xs border border-red-500/25 transition-all cursor-pointer shadow-xs min-h-[40px] sm:min-h-[44px]"
-                        title="Watch on YouTube"
-                      >
-                        <Play size={13} fill="currentColor" className="shrink-0" />
-                        <span>{t.projects.actions.liveDemo}</span>
-                      </button>
-                    )}
-
                     {project.links.github && (
                       <a
                         href={project.links.github}
                         target="_blank"
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-2 sm:px-3.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-800 dark:text-gray-200 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 transition-all text-[11px] sm:text-xs font-bold shadow-xs min-h-[40px] sm:min-h-[44px]"
+                        className="w-full flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-2 sm:px-3.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-800 dark:text-gray-200 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 transition-all text-[11px] sm:text-xs font-bold shadow-xs min-h-[38px] sm:min-h-[44px]"
                         title="View GitHub Code"
                       >
                         <Github size={14} className="shrink-0" />
@@ -796,16 +782,32 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                     )}
                   </div>
 
-                  {/* Secondary Row: Google Play & Conditional APK Download */}
-                  {(project.links.googlePlay || hasApkFile) && (
-                    <div className="flex items-center gap-1.5 sm:gap-2.5 pt-0.5 sm:pt-1">
+                  {/* Secondary Additions Row: Live Demo, Google Play, APK Download */}
+                  {(hasVideo || project.links.googlePlay || hasApkFile) && (
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-0.5 sm:pt-1">
+                      {hasVideo && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const url = dynamicVideoUrl || AHMED_PROFILE.youtubeUrl;
+                            window.open(url, '_blank');
+                          }}
+                          className="flex-1 min-w-[120px] flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-xl bg-red-600/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 font-bold text-[11px] sm:text-xs border border-red-500/25 transition-all cursor-pointer shadow-xs min-h-[36px] sm:min-h-[40px]"
+                          title="Watch Demonstration on YouTube"
+                        >
+                          <Play size={13} fill="currentColor" className="shrink-0" />
+                          <span>{t.projects.actions.liveDemo}</span>
+                        </button>
+                      )}
+
                       {project.links.googlePlay && (
                         <a
                           href={project.links.googlePlay}
                           target="_blank"
                           rel="noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2.5 sm:px-3.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 hover:text-white text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 transition-all text-[11px] sm:text-xs font-bold min-h-[38px] sm:min-h-[44px]"
+                          className="flex-1 min-w-[120px] flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 hover:text-white text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 transition-all text-[11px] sm:text-xs font-bold min-h-[36px] sm:min-h-[40px]"
+                          title="View on Google Play Store"
                         >
                           <ArrowUpRight size={14} className="shrink-0" />
                           <span>{t.projects.actions.playStore}</span>
@@ -818,7 +820,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                             e.stopPropagation();
                             setApkModalProject(dynamicProject);
                           }}
-                          className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2.5 sm:px-3.5 rounded-xl bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 border border-purple-500/25 transition-all text-[11px] sm:text-xs font-bold min-h-[38px] sm:min-h-[44px] cursor-pointer"
+                          className="flex-1 min-w-[120px] flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-xl bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 border border-purple-500/25 transition-all text-[11px] sm:text-xs font-bold min-h-[36px] sm:min-h-[40px] cursor-pointer"
+                          title="Download APK File"
                         >
                           <Download size={13} className="shrink-0" />
                           <span>{t.projects.actions.downloadApk}</span>

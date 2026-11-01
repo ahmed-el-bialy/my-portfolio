@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="./public/showcase-banner.jpg" alt="Ahmed El-Bialy Portfolio Showcase Banner" width="100%" style="border-radius: 12px; margin-bottom: 20px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);" />
+<img src="./public/website-poster.png" alt="Ahmed El-Bialy Portfolio Showcase Banner" width="100%" style="border-radius: 12px; margin-bottom: 20px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);" />
 
 [![Live Portfolio](https://img.shields.io/badge/Live_Portfolio-Online-00D9FF?style=for-the-badge&logo=google-chrome&logoColor=white)](https://github.com/ahmed-el-bialy)
 [![Google Play](https://img.shields.io/badge/Google_Play-Revio_Live-34A853?style=for-the-badge&logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US)

@@ -12,6 +12,7 @@ export const CustomCursor: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [isClicking, setIsClicking] = useState(false);
   const [isLightMode, setIsLightMode] = useState(false);
+  const [isOverIframe, setIsOverIframe] = useState(false);
 
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
@@ -43,6 +44,7 @@ export const CustomCursor: React.FC = () => {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
       if (!isVisible) setIsVisible(true);
+      if (isOverIframe) setIsOverIframe(false);
     };
 
     const handleMouseDown = () => setIsClicking(true);
@@ -51,6 +53,12 @@ export const CustomCursor: React.FC = () => {
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
+
+      // Check if mouse is hovering over an iframe wrapper or media element
+      if (target.tagName === 'IFRAME' || target.closest('iframe, .iframe-container, [data-media-embed="true"]')) {
+        setIsOverIframe(true);
+        return;
+      }
 
       const interactive = target.closest(
         'button, a, input, textarea, select, .card-techno, [role="button"], [data-cursor="pointer"], .cursor-pointer'
@@ -66,23 +74,52 @@ export const CustomCursor: React.FC = () => {
       setIsVisible(true);
     };
 
+    // Resiliency for when mouse enters an iframe (which steals window pointer events)
+    const handleWindowBlur = () => {
+      if (document.activeElement?.tagName === 'IFRAME') {
+        setIsOverIframe(true);
+      }
+    };
+
+    const handleWindowFocus = () => {
+      setIsOverIframe(false);
+    };
+
+    // Attach listeners to all iframes dynamically
+    const attachIframeListeners = () => {
+      const iframes = document.querySelectorAll('iframe');
+      iframes.forEach((iframe) => {
+        iframe.addEventListener('mouseenter', () => setIsOverIframe(true));
+        iframe.addEventListener('mouseleave', () => setIsOverIframe(false));
+      });
+    };
+
+    attachIframeListeners();
+    const iframeObserver = new MutationObserver(attachIframeListeners);
+    iframeObserver.observe(document.body, { childList: true, subtree: true });
+
     window.addEventListener('mousemove', moveCursor);
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
     window.addEventListener('mouseover', handleMouseOver);
+    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
     document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('mouseenter', handleMouseEnter);
 
     return () => {
       observer.disconnect();
+      iframeObserver.disconnect();
       window.removeEventListener('mousemove', moveCursor);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('mouseover', handleMouseOver);
+      window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('focus', handleWindowFocus);
       document.removeEventListener('mouseleave', handleMouseLeave);
       document.removeEventListener('mouseenter', handleMouseEnter);
     };
-  }, [cursorX, cursorY, isVisible]);
+  }, [cursorX, cursorY, isVisible, isOverIframe]);
 
   if (isTouchDevice || !isVisible) return null;
 
@@ -101,6 +138,7 @@ export const CustomCursor: React.FC = () => {
           width: isHovered ? 6 : 7,
           height: isHovered ? 6 : 7,
           scale: isClicking ? 0.7 : isHovered ? 1.2 : 1,
+          opacity: isOverIframe ? 0 : 1,
           backgroundColor: isLightMode
             ? isHovered ? '#2563eb' : '#0284c7'
             : isHovered ? '#38bdf8' : '#22d3ee',
@@ -124,6 +162,7 @@ export const CustomCursor: React.FC = () => {
           width: isHovered ? 48 : 28,
           height: isHovered ? 48 : 28,
           borderWidth: isHovered ? '1.5px' : '1.5px',
+          opacity: isOverIframe ? 0 : 1,
           borderColor: isLightMode
             ? isHovered
               ? 'rgba(37, 99, 235, 0.75)'
@@ -138,7 +177,7 @@ export const CustomCursor: React.FC = () => {
             : isHovered
               ? 'rgba(56, 189, 248, 0.12)'
               : 'rgba(34, 211, 238, 0.03)',
-          scale: isClicking ? 0.82 : 1,
+          scale: isClicking ? 0.82 : isOverIframe ? 1.3 : 1,
           boxShadow: isHovered
             ? isLightMode
               ? '0 0 16px -2px rgba(37, 99, 235, 0.25)'

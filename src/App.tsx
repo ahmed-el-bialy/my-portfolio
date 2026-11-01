@@ -20,6 +20,7 @@ import { RevealOnScroll } from './components/RevealOnScroll';
 import { ShieldCheck, Github, Linkedin, Youtube, Mail, RefreshCw, Radio, ArrowUp } from 'lucide-react';
 import { WhatsAppLogo, TikTokLogo } from './components/TechLogos';
 import { useLanguage } from './context/LanguageContext';
+import { motion } from 'framer-motion';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,7 +68,7 @@ export default function App() {
 
   const profile = DEFAULT_PROFILE;
 
-  // Dark / light theme switcher
+  // Dark / light theme switcher with smooth transition handling
   useEffect(() => {
     localStorage.setItem('ahmed_portfolio_theme', isDark ? 'dark' : 'light');
     if (isDark) {
@@ -80,6 +81,20 @@ export default function App() {
       document.documentElement.setAttribute('data-theme', 'light');
     }
   }, [isDark]);
+
+  const handleToggleTheme = () => {
+    document.documentElement.classList.add('theme-transitioning');
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      (document as any).startViewTransition(() => {
+        setIsDark((prev) => !prev);
+      });
+    } else {
+      setIsDark((prev) => !prev);
+    }
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-transitioning');
+    }, 550);
+  };
 
   // Online / Offline listener
   useEffect(() => {
@@ -204,7 +219,7 @@ export default function App() {
           onOpenResume={() => setIsResumeOpen(true)}
           onOpenBooking={() => setIsBookingOpen(true)}
           isDark={isDark}
-          onToggleTheme={() => setIsDark((prev) => !prev)}
+          onToggleTheme={handleToggleTheme}
           isAnyModalOpen={isResumeOpen || isContactOpen || isBookingOpen}
         />
 
@@ -214,8 +229,14 @@ export default function App() {
           onNavigate={handleNavigate}
         />
 
-        {/* All Sections Sequentially Rendered with Section Dividers and Reveal */}
-        <main className="flex-1 pb-24 md:pb-12">
+        {/* All Sections Sequentially Rendered with Animated Theme & Language Cross-Fade */}
+        <motion.main
+          key={`${lang}-${isDark ? 'dark' : 'light'}`}
+          initial={{ opacity: 0.35, filter: 'blur(3px)', scale: 0.996 }}
+          animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="flex-1 pb-24 md:pb-12"
+        >
           <RevealOnScroll threshold={0.05}>
             <HeroSection
               profile={profile}
@@ -254,9 +275,10 @@ export default function App() {
             <ContactSection
               profile={profile}
               onOpenBooking={() => setIsBookingOpen(true)}
+              onOpenResume={() => setIsResumeOpen(true)}
             />
           </RevealOnScroll>
-        </main>
+        </motion.main>
 
         {/* Global Modals */}
         <ContactModal
