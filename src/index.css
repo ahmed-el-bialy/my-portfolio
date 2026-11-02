@@ -58,17 +58,24 @@ body {
   background-attachment: fixed;
 }
 
-/* Luxurious Eye-Friendly Theme Cross-Fade */
+/* Luxurious Eye-Friendly Theme Cross-Fade (High Performance 60FPS) */
 html.theme-transitioning,
-html.theme-transitioning *,
-html.theme-transitioning *::before,
-html.theme-transitioning *::after {
-  transition: background-color 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-              color 0.35s ease,
-              fill 0.35s ease,
-              stroke 0.35s ease,
-              box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1) !important;
+html.theme-transitioning body,
+html.theme-transitioning header,
+html.theme-transitioning nav,
+html.theme-transitioning main,
+html.theme-transitioning section,
+html.theme-transitioning footer,
+html.theme-transitioning button,
+html.theme-transitioning a,
+html.theme-transitioning input,
+html.theme-transitioning [class*="bg-"],
+html.theme-transitioning [class*="border-"],
+html.theme-transitioning [class*="text-"] {
+  transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.3s ease,
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
   transition-delay: 0s !important;
 }
 

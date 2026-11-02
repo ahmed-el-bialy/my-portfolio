@@ -54,20 +54,23 @@
     <meta property="og:url" content="https://ahmed-el-bialy.vercel.app/" />
     <meta property="og:title" content="Ahmed El-Bialy | Flutter & Mobile App Specialist" />
     <meta property="og:description" content="Official portfolio of Ahmed El-Bialy, Flutter Specialist & AI Student. Features automatic GitHub repository synchronization, live contributions, and published apps on Google Play." />
-    <meta property="og:image" content="https://ahmed-el-bialy.vercel.app/website-poster.png" />
-    <meta property="og:image:secure_url" content="https://ahmed-el-bialy.vercel.app/website-poster.png" />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="1920" />
-    <meta property="og:image:height" content="1080" />
+    <meta property="og:image" content="https://ahmed-el-bialy.vercel.app/og-image.jpg" />
+    <meta property="og:image:secure_url" content="https://ahmed-el-bialy.vercel.app/og-image.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Ahmed El-Bialy - Flutter Mobile App Developer Portfolio Hero Section" />
     <meta property="og:site_name" content="Ahmed El-Bialy Portfolio" />
+
+    <!-- Legacy & Direct Image Link for WhatsApp & LinkedIn Web -->
+    <link rel="image_src" href="https://ahmed-el-bialy.vercel.app/og-image.jpg" />
 
     <!-- Twitter / X Cards -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://ahmed-el-bialy.vercel.app/" />
     <meta name="twitter:title" content="Ahmed El-Bialy | Flutter & Mobile App Specialist" />
     <meta name="twitter:description" content="Official portfolio of Ahmed El-Bialy, Flutter Specialist & AI Student. Features automatic GitHub repository synchronization, live contributions, and published apps on Google Play." />
-    <meta name="twitter:image" content="https://ahmed-el-bialy.vercel.app/website-poster.png" />
+    <meta name="twitter:image" content="https://ahmed-el-bialy.vercel.app/og-image.jpg" />
     <meta name="twitter:image:alt" content="Ahmed El-Bialy - Flutter Mobile App Developer Portfolio Hero Section" />
 
     <!-- Dynamic Runtime OpenGraph Domain Fallback Script -->
@@ -82,10 +85,12 @@
               var twImg = document.querySelector('meta[name="twitter:image"]');
               var ogUrl = document.querySelector('meta[property="og:url"]');
               var twUrl = document.querySelector('meta[name="twitter:url"]');
-              var posterUrl = origin + '/website-poster.png';
+              var linkImg = document.querySelector('link[rel="image_src"]');
+              var posterUrl = origin + '/og-image.jpg';
               if (ogImg) ogImg.setAttribute('content', posterUrl);
               if (ogSecure) ogSecure.setAttribute('content', posterUrl);
               if (twImg) twImg.setAttribute('content', posterUrl);
+              if (linkImg) linkImg.setAttribute('href', posterUrl);
               if (ogUrl) ogUrl.setAttribute('content', origin + '/');
               if (twUrl) twUrl.setAttribute('content', origin + '/');
             }
@@ -109,7 +114,7 @@
       "jobTitle": "Mobile Application Developer & Flutter Specialist",
       "description": "Mobile Application Developer specializing in Flutter, Dart, and Clean Architecture with published apps on Google Play and open-source GitHub repositories.",
       "url": "https://ahmed-el-bialy.vercel.app/",
-      "image": "https://ahmed-el-bialy.vercel.app/website-poster.png",
+      "image": "https://ahmed-el-bialy.vercel.app/og-image.jpg",
       "email": "mailto:ah.elbialy.dev@gmail.com",
       "telephone": "+201022121573",
       "nationality": {

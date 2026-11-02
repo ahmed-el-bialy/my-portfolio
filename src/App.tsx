@@ -82,18 +82,27 @@ export default function App() {
     }
   }, [isDark]);
 
+  // Eye-friendly theme and language transition states without remounting
+  const [isThemeFading, setIsThemeFading] = useState(false);
+  const [isLangFading, setIsLangFading] = useState(false);
+
+  // Soft crossfade effect when language toggles
+  useEffect(() => {
+    setIsLangFading(true);
+    const timer = setTimeout(() => {
+      setIsLangFading(false);
+    }, 220);
+    return () => clearTimeout(timer);
+  }, [lang]);
+
   const handleToggleTheme = () => {
     document.documentElement.classList.add('theme-transitioning');
-    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
-      (document as any).startViewTransition(() => {
-        setIsDark((prev) => !prev);
-      });
-    } else {
-      setIsDark((prev) => !prev);
-    }
+    setIsThemeFading(true);
+    setIsDark((prev) => !prev);
     setTimeout(() => {
+      setIsThemeFading(false);
       document.documentElement.classList.remove('theme-transitioning');
-    }, 550);
+    }, 450);
   };
 
   // Online / Offline listener
@@ -229,13 +238,23 @@ export default function App() {
           onNavigate={handleNavigate}
         />
 
-        {/* All Sections Sequentially Rendered with Animated Theme & Language Cross-Fade */}
-        <motion.main
-          key={`${lang}-${isDark ? 'dark' : 'light'}`}
-          initial={{ opacity: 0.35, filter: 'blur(3px)', scale: 0.996 }}
-          animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
-          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="flex-1 pb-24 md:pb-12"
+        {/* Eye-Friendly Theme Transition Ambient Veil (Softens contrast shift) */}
+        <div
+          className={`fixed inset-0 z-50 pointer-events-none transition-opacity duration-300 ease-out ${
+            isThemeFading
+              ? isDark
+                ? 'opacity-25 bg-slate-950'
+                : 'opacity-15 bg-white'
+              : 'opacity-0'
+          }`}
+          aria-hidden="true"
+        />
+
+        {/* All Sections Sequentially Rendered with Persistent DOM & Eye-Friendly Language Fade */}
+        <main
+          className={`flex-1 pb-24 md:pb-12 transition-opacity duration-200 ease-out ${
+            isLangFading ? 'opacity-80' : 'opacity-100'
+          }`}
         >
           <RevealOnScroll threshold={0.05}>
             <HeroSection
@@ -278,7 +297,7 @@ export default function App() {
               onOpenResume={() => setIsResumeOpen(true)}
             />
           </RevealOnScroll>
-        </motion.main>
+        </main>
 
         {/* Global Modals */}
         <ContactModal

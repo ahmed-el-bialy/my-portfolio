@@ -138,7 +138,7 @@ export const CustomCursor: React.FC = () => {
           width: isHovered ? 6 : 7,
           height: isHovered ? 6 : 7,
           scale: isClicking ? 0.7 : isHovered ? 1.2 : 1,
-          opacity: isOverIframe ? 0 : 1,
+          opacity: isOverIframe ? 0.55 : 1,
           backgroundColor: isLightMode
             ? isHovered ? '#2563eb' : '#0284c7'
             : isHovered ? '#38bdf8' : '#22d3ee',
@@ -162,7 +162,7 @@ export const CustomCursor: React.FC = () => {
           width: isHovered ? 48 : 28,
           height: isHovered ? 48 : 28,
           borderWidth: isHovered ? '1.5px' : '1.5px',
-          opacity: isOverIframe ? 0 : 1,
+          opacity: isOverIframe ? 0.4 : 1,
           borderColor: isLightMode
             ? isHovered
               ? 'rgba(37, 99, 235, 0.75)'
