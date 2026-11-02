@@ -688,6 +688,11 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                 onClick={() => setSelectedProject(dynamicProject)}
                 onMouseEnter={() => setHoveredCardId(project.id)}
                 onMouseLeave={() => setHoveredCardId(null)}
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                  e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+                }}
                 whileHover={{
                   y: -6,
                   scale: 1.018,
@@ -709,6 +714,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                 }}
                 className="group relative rounded-2xl overflow-hidden bg-white dark:bg-[#111322] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-all duration-300 shadow-md active:border-[var(--card-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
+                {/* Dynamic Spotlight Glow Layer (React Bits & Taste-Skill) */}
+                <div
+                  className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+                  style={{
+                    background: `radial-gradient(380px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(${cardGlowRgb}, 0.16), transparent 70%)`,
+                  }}
+                />
                 <div>
                   {/* Dynamic Smart Cover with full automatic custom standard cover & framer-motion gradient shift */}
                   <ProjectCardCover
@@ -962,6 +974,11 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                     onClick={() => setSelectedProject(dynamicRepoProject)}
                     onMouseEnter={() => setHoveredCardId(repo.id)}
                     onMouseLeave={() => setHoveredCardId(null)}
+                    onMouseMove={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                      e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+                    }}
                     whileHover={{
                       y: -6,
                       scale: 1.018,
@@ -983,6 +1000,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                     }}
                     className="group relative rounded-2xl overflow-hidden bg-white dark:bg-[#111322] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between transition-all duration-300 cursor-pointer shadow-md active:border-[var(--card-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                   >
+                    {/* Dynamic Spotlight Glow Layer (React Bits & Taste-Skill) */}
+                    <div
+                      className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+                      style={{
+                        background: `radial-gradient(380px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(${repoGlowRgb}, 0.16), transparent 70%)`,
+                      }}
+                    />
                     <div>
                       {/* Dynamic Smart Cover with full automatic custom standard cover & framer-motion gradient shift */}
                       <ProjectCardCover

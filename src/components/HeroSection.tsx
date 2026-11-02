@@ -21,6 +21,8 @@ import { DeveloperProfile, WORK_STATUS_INFO } from '../data/portfolioData';
 import { WhatsAppLogo, TikTokLogo } from './TechLogos';
 import websiteLogo from '../assets/images/website_logo_circular.png';
 import { useLanguage } from '../context/LanguageContext';
+import { MagneticButton } from './MagneticButton';
+import { SpotlightCard } from './SpotlightCard';
 
 interface HeroSectionProps {
   profile: DeveloperProfile;
@@ -152,36 +154,39 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               : 'Crafting production-ready, high-performance cross-platform mobile apps with Flutter & Clean Architecture. Creator of "Revio", published live on Google Play.'}
           </p>
 
-          {/* Streamlined Action CTAs: 2 Main Prominent Buttons (Explore Apps + Book Meeting) + Resume link */}
+          {/* Streamlined Action CTAs: Magnetic Pull Physics (React Bits & Taste-Skill) */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3.5 pt-1.5 w-full sm:w-auto">
-            {/* Primary: Explore Apps */}
-            <button
+            {/* Primary: Explore Apps with Magnetic Physics */}
+            <MagneticButton
               onClick={onExploreProjects}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm sm:text-base transition-all shadow-lg shadow-blue-600/30 hover:scale-[1.02] cursor-pointer min-h-[48px]"
+              strength={0.3}
+              className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm sm:text-base transition-colors shadow-lg shadow-blue-600/30 cursor-pointer min-h-[48px]"
             >
               <span>{t.hero.exploreApps}</span>
               <ArrowRight size={17} className={dir === 'rtl' ? 'rotate-180' : ''} />
-            </button>
+            </MagneticButton>
 
-            {/* Secondary: Book a Meeting */}
+            {/* Secondary: Book a Meeting with Magnetic Physics */}
             {onOpenBooking && (
-              <button
+              <MagneticButton
                 onClick={onOpenBooking}
-                className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-white dark:bg-[#151828] hover:bg-slate-100 dark:hover:bg-[#1d2238] text-blue-700 dark:text-cyan-300 font-bold text-sm sm:text-base border border-blue-500/30 shadow-md transition-all cursor-pointer min-h-[48px]"
+                strength={0.25}
+                className="px-5 py-3.5 rounded-xl bg-white dark:bg-[#151828] hover:bg-slate-100 dark:hover:bg-[#1d2238] text-blue-700 dark:text-cyan-300 font-bold text-sm sm:text-base border border-blue-500/30 shadow-md transition-colors cursor-pointer min-h-[48px]"
               >
                 <Video size={17} className="text-blue-600 dark:text-cyan-400 shrink-0" />
                 <span>{t.hero.bookMeeting}</span>
-              </button>
+              </MagneticButton>
             )}
 
-            {/* Secondary Option: View Resume */}
-            <button
+            {/* Secondary Option: View Resume with Magnetic Physics */}
+            <MagneticButton
               onClick={onOpenResume}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl bg-slate-100/80 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-gray-200 font-semibold text-xs sm:text-sm border border-slate-300 dark:border-white/10 transition-all cursor-pointer"
+              strength={0.2}
+              className="px-4 py-3 rounded-xl bg-slate-100/80 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-gray-200 font-semibold text-xs sm:text-sm border border-slate-300 dark:border-white/10 transition-colors cursor-pointer"
             >
               <FileText size={15} className="text-emerald-500 shrink-0" />
               <span>{t.hero.resumeCv}</span>
-            </button>
+            </MagneticButton>
           </div>
 
           {/* Social Channels Row */}
@@ -392,12 +397,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           }
 
           return (
-            <div
+            <SpotlightCard
               key={idx}
-              className={`p-3.5 sm:p-4.5 rounded-2xl backdrop-blur-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col justify-between group ${
+              spotlightColor={isPlayStore ? 'rgba(16, 185, 129, 0.2)' : 'rgba(56, 189, 248, 0.15)'}
+              borderColor={isPlayStore ? 'rgba(16, 185, 129, 0.5)' : 'rgba(56, 189, 248, 0.35)'}
+              className={`p-3.5 sm:p-4.5 rounded-2xl flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1 ${
                 isPlayStore
                   ? 'bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-white/90 dark:to-[#111322]/90 border-2 border-emerald-500/50 shadow-emerald-500/10 shadow-lg'
-                  : 'bg-white/80 dark:bg-[#111322]/80 border border-slate-200/90 dark:border-white/10 hover:border-blue-400/50 dark:hover:border-white/20'
+                  : 'bg-white/80 dark:bg-[#111322]/80 border border-slate-200/90 dark:border-white/10'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
@@ -433,7 +440,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   {localizedLabel}
                 </div>
               </div>
-            </div>
+            </SpotlightCard>
           );
         })}
       </div>
