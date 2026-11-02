@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan to resolve WhatsApp OpenGraph preview image with absolute URLs and dynamic fallbacks, add staggered Framer Motion reveal animations to ProjectsSection cards, and guarantee clean two-row button hierarchy on project cards.",
-  "updatedAt":  "2026-11-01T20:36:40.190546580Z",
+  "summary":  "Plan to resolve the LinkedIn thumbnail preview, implement an eye-friendly ultra-smooth crossfade for Dark/Light and Arabic/English without page remounting, eliminate performance bottlenecks, and refine the custom cursor over media.",
+  "updatedAt":  "2026-11-02T12:26:48.589711845Z",
   "requestFeedback":  true,
   "userFacing":  true
 }
