@@ -20,11 +20,18 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+
+  const validateEmail = (val: string): boolean => {
+    const trimmed = val.trim();
+    const regex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+    return regex.test(trimmed);
+  };
 
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(profile.email);
@@ -41,6 +48,16 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !message.trim()) return;
+
+    if (!validateEmail(email)) {
+      setEmailError(
+        lang === 'ar'
+          ? 'يرجى إدخال عنوان بريد إلكتروني صالح (مثال: name@example.com)'
+          : 'Please enter a valid email address (e.g., name@example.com)'
+      );
+      return;
+    }
+    setEmailError(null);
 
     setIsSubmitting(true);
     setSubmitStatus('idle');
@@ -189,7 +206,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={t.contact.form.namePlaceholder}
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/10 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors"
                   />
                 </div>
 
@@ -203,10 +220,25 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
                     type="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailError) setEmailError(null);
+                    }}
                     placeholder={t.contact.form.emailPlaceholder}
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/10 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors"
+                    aria-invalid={Boolean(emailError)}
+                    aria-describedby={emailError ? 'contact-email-error' : undefined}
+                    className={`w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus-visible:ring-2 transition-colors ${
+                      emailError
+                        ? 'border-red-500 focus:border-red-500 focus-visible:ring-red-500/40'
+                        : 'border-slate-300 dark:border-white/10 focus:border-cyan-500 focus-visible:ring-blue-500'
+                    }`}
                   />
+                  {emailError && (
+                    <p id="contact-email-error" className="text-[11px] text-red-500 dark:text-red-400 mt-1 flex items-center gap-1">
+                      <AlertCircle size={12} className="shrink-0" />
+                      <span>{emailError}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -220,7 +252,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder={t.contact.form.subjectPlaceholder}
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/10 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors"
                   />
                 </div>
 
@@ -236,7 +268,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder={t.contact.form.messagePlaceholder}
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-black/10 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors resize-none"
+                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus-visible:ring-2 focus-visible:ring-blue-500 transition-colors resize-none"
                   />
                 </div>
               </div>

@@ -43,6 +43,17 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
   const [viewMode, setViewMode] = useState<'web' | 'pdf'>('web');
   const [isPdfLoading, setIsPdfLoading] = useState(true);
 
+  // Keyboard Escape listener
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const pdfPreviewUrl = (profile.cvDriveUrl || '')
@@ -72,6 +83,9 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="resume-modal-title"
     >
       <div
         className={`relative w-full ${
@@ -86,7 +100,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
               <Award size={18} />
             </span>
             <div className="truncate">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white title-contrast truncate">
+              <h3 id="resume-modal-title" className="text-sm font-bold text-slate-900 dark:text-white title-contrast truncate">
                 {t.resume.title}
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-gray-400 truncate">

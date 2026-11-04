@@ -203,12 +203,21 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Enhanced Light / Dark Theme Toggle Button with Rotating Icon Spin & Micro-Interactions */}
             <motion.button
-              onClick={onToggleTheme}
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.92 }}
-              className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 border border-slate-300/80 dark:border-white/15 transition-colors cursor-pointer shrink-0 shadow-2xs group overflow-hidden"
+              onClick={isAnyModalOpen ? undefined : onToggleTheme}
+              disabled={isAnyModalOpen}
+              whileHover={isAnyModalOpen ? undefined : { scale: 1.08 }}
+              whileTap={isAnyModalOpen ? undefined : { scale: 0.92 }}
+              className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-colors shrink-0 shadow-2xs group overflow-hidden ${
+                isAnyModalOpen
+                  ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5'
+                  : 'bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 border-slate-300/80 dark:border-white/15 cursor-pointer'
+              }`}
               aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              title={
+                isAnyModalOpen
+                  ? (lang === 'ar' ? 'التبديل معطّل أثناء فتح النافذة' : 'Theme toggle paused while dialog is open')
+                  : (isDark ? "Switch to Light Mode" : "Switch to Dark Mode")
+              }
             >
               {/* Subtle ambient hover glow */}
               <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-radial from-amber-400/20 dark:from-cyan-400/20 to-transparent" />
