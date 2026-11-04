@@ -1,6 +1,6 @@
 {
-  "summary": "خطة شاملة لتطوير بورتفوليو أحمد البيلي:\n1. بطاقات تقنية بأيقونات مصغرة وتأثير تفاعلي عند التمرير (Tech Stack Badges with Brand Icons on Hover).\n2. تقليل الحمل المعرفي لقسم المشاريع عبر عرض أهم 3 تطبيقات رئيسية مع درج قابل للتوسيع (Top-3 Hero Showcase + Expandable Drawer).\n3. إشعار حالة مدمج في نموذج التواصل مع زر واتساب مباشر وفوري (Inline Status Banner + WhatsApp Fallback).\n4. ضبط مسار التوظيف ومسار الفريلانس بوضوح في الـ Hero، والتأكد من إتاحة المودالات بالكامل وتوافق وضعي Light/Dark Mode.",
-  "updatedAt": "2026-11-04T08:42:55.802973072Z",
+  "summary": "Implementation plan to enhance recruiter clarity (Junior Flutter & Mobile App Developer in Hero, Dual CV & Booking CTAs) and freelance service clarity (compact services strip under Hero) while preserving all technical proof and visual identity.",
+  "updatedAt": "2026-11-04T10:23:12.872538963Z",
   "requestFeedback": true,
   "userFacing": true
 }

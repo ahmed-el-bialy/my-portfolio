@@ -359,8 +359,39 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
       </div>
 
+      {/* Freelance & Client Services Summary Strip (Addressing Freelance Client Needs) */}
+      <div className="max-w-[1600px] mx-auto w-full mt-10 sm:mt-12 p-4 sm:p-5 rounded-2xl bg-white/80 dark:bg-[#111322]/80 border border-slate-200 dark:border-white/10 shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-600 dark:text-cyan-400 shrink-0">
+            <Briefcase size={20} />
+          </div>
+          <div>
+            <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+              {lang === 'ar' ? 'خدمات تطوير تطبيقات الموبايل والفريلانس' : 'Mobile App Development & Freelance Services'}
+            </h3>
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-gray-400">
+              {lang === 'ar'
+                ? 'تطوير MVP، ربط APIs، Firebase، تخزين Hive، ونشر تطبيقات حية على Google Play'
+                : 'MVP Development, REST APIs, Firebase, Hive storage & Google Play publishing'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
+          <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-mono font-bold">
+            {lang === 'ar' ? '✓ تسليم سريع ومرن' : '✓ Fast & Clean Delivery'}
+          </span>
+          <a
+            href="#contact"
+            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/30 transition-all cursor-pointer"
+          >
+            {lang === 'ar' ? 'ابدأ مشروعك الآن' : 'Start Your Project'}
+          </a>
+        </div>
+      </div>
+
       {/* Stats Bar at Bottom: 1 Live App on Google Play is visually Weighted and Featured */}
-      <div className="max-w-[1600px] mx-auto w-full mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-slate-200 dark:border-white/10 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
+      <div className="max-w-[1600px] mx-auto w-full mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-slate-200 dark:border-white/10 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
         {profile.stats.map((stat, idx) => {
           const isPlayStore = stat.label.includes('Play');
           const isRepoStat = stat.label.toLowerCase().includes('repo');

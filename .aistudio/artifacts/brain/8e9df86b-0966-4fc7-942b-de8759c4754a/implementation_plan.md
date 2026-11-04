@@ -1,70 +1,28 @@
-# خطة تنفيذ التحسينات الشاملة لبورتفوليو أحمد البيلي (Ahmed El-Bialy)
+# Implementation Plan - Recruiter & Freelance Clarity Enhancement
 
-بناءً على وثيقة التحسينات (`AI Improvement Brief`) واختياراتك المحددة في الأسئلة التوضيحية، تم إعداد هذه الخطة لتنفيذ التحسينات بدقة هندسية عالية دون إحداث فوضى بصرية أو كسر الهوية القوية للموقع.
-
----
-
-## 1. القرارات التصميمية المعتمدة (User Decisions)
-1. **شارات التقنيات (Tech Stack Badges):**
-   - تصميم شارات مقتضبة وأنيقة (Minimalist pill badges) مع إظهار أيقونة البراند الرسمية (مثل Dart, Flutter, Firebase, Python, TensorFlow, Cubit, Hive) عند التمرير بالماوس (`hover:scale-105`) لسهولة وسرعة تعرّف مسؤولي التوظيف على التقنيات المستخدمة.
-2. **هيكلة قسم المشاريع وتقليل الحمل المعرفي (Projects Section Density):**
-   - اعتماد **Top 3 Hero Showcase** لعرض أفضل 3 تطبيقات رائدة (مثل: تطبيق **Revio** المنشور رسمياً على Google Play، وتطبيق الأفلام **Movura**، وتطبيق الطقس/الأذكار **Quotely**).
-   - توفير **درج قابل للتوسيع والانكماش (Expandable Drawer)** مع أنيميشن ناعم من Framer Motion يتيح استعراض باقي المستودعات والمشاريع (+10 مشاريع) لمن يرغب في التعمق، دون إجهاد الزائر بالتمرير اللانهائي.
-3. **نموذج التواصل وتأكيد الإرسال (Contact Form UX):**
-   - ربط الحقول بـ `<label htmlFor="...">` و `id` لضمان معايير الـ Accessibility.
-   - عرض **شريط حالة مدمج (Inline Status Banner)** فور إرسال النموذج مع زر فوري ومباشر للمراسلة عبر واتساب بنقرة واحدة كمسار بديل وسريع (WhatsApp Instant Fallback).
+## User Goals & Requirements
+1. **Recruiter & HR Clarity:**
+   - Emphasize "Junior Flutter & Mobile App Developer" prominently in the Hero section within the first 10 seconds.
+   - Make CV, LinkedIn, and GitHub easily accessible with dual primary CTAs (Download CV / Resume & Book a Consultation / Direct Contact).
+   - Ensure the Google Play live app is clearly visible.
+2. **Freelance Client Clarity:**
+   - Add a compact, elegant 3-card services strip under the Hero section to summarize core services (Mobile App Development, MVP Building & Firebase, API Integration & Publishing, Bug Fixing & Performance).
+   - Clarify project starting steps without changing visual identity or removing technical proof (Clean Architecture, BLoC/Cubit, Hive).
 
 ---
 
-## 2. مراحل وخطوات التنفيذ التفصيلية
+## Proposed Changes
 
-### المرحلة الأولى: شارات التقنيات الذكية مع الأيقونات (Tech Stack Icon Badges)
-- **الملفات المستهدفة:** `src/components/TechLogos.tsx`, `src/utils/techTagExtractor.ts`, `src/components/ProjectsSection.tsx`, `src/components/ProjectCardCover.tsx`.
-- **التنفيذ البرمجي:**
-  - إضافة مكون مخصص `TechIconBadge` يربط معرّف التقنية (Dart, Flutter, Firebase, Python, TensorFlow, Cubit, Hive, SQLite, REST API, Git) بأيقونتها المتجهية المناسبة.
-  - تطبيق الستايل المختار: شارة بسيطة بلون متوافق مع الثيم، وتظهر أيقونة التقنية المصغرة بتأثير ناعم وانتقال مريح للعين عند التمرير (`hover`).
-  - تطبيقها على بطاقات المشاريع المميزة وبطاقات مستودعات GitHub لتمكين الزائر من قراءة الـ Stack التقني في ثوانٍ معدودة.
+### 1. `src/data/portfolioData.ts` & `src/data/translations.ts`
+- Update developer role / subtitle strings to explicitly and proudly highlight **Junior Flutter & Mobile App Developer** and AI Student in both English and Arabic (`طالب ذكاء اصطناعي ومطور تطبيقات فلاتر (Junior Flutter & Mobile App Developer)`).
+- Add bilingual translation keys for freelance services (Mobile App Development, MVP & Firebase, Publishing & API Integration).
 
-### المرحلة الثانية: تنظيم قسم المشاريع (Top-3 Hero Showcase + Expandable Drawer)
-- **الملفات المستهدفة:** `src/components/ProjectsSection.tsx`.
-- **التنفيذ البرمجي:**
-  - تقسيم عرض المشاريع المميزة إلى عرض أولي لأهم 3 تطبيقات رائدة تمثل قمة إنجازات أحمد (تطبيق Google Play المعتمد ومعمارية Clean Architecture وتطبيقات الـ AI/API).
-  - إضافة زر تحكم تفاعلي وواضح "استعراض كافة المشاريع / View All Repositories" يفتح باقي المشاريع بسلاسة عبر `AnimatePresence` مع الحفاظ على الفلاتر والبحث النشط.
-  - ترتيب الإجراءات داخل البطاقة: الإجراءان الأساسيان (عرض المواصفات التقنية View Specs + كود GitHub) متبوعة بـ (Google Play / YouTube Demo / APK) بأيقونات واضحة لمنع التكدس.
+### 2. `src/components/HeroSection.tsx`
+- Refine the Hero subtitle and badge to immediately communicate the Junior Flutter / Mobile App Developer identity within 10 seconds.
+- Ensure prominent dual CTAs: **Download CV / Resume** and **Book a Consultation** (along with quick links to GitHub and Google Play).
+- Add a compact 3-card services preview strip right below the Hero main actions to address the freelance client perspective cleanly.
 
-### المرحلة الثالثة: صياغة الـ Hero وتحديد مساري التوظيف والفريلانس
-- **الملفات المستهدفة:** `src/components/HeroSection.tsx`, `src/data/portfolioData.ts`.
-- **التنفيذ البرمجي:**
-  - تثبيت الرسالة المهنية الصادقة: طالب ذكاء اصطناعي ومطور Flutter واعد، مطور تطبيق Revio المنشور رسمياً على Google Play.
-  - الفصل الواضح بين إجراء التوظيف (Hire Ahmed / مراجعة السيرة الذاتية وتحميل الـ CV) وإجراء الفريلانس (Start a Project / حجز جلسة عمل أو طلب بناء تطبيق).
-  - الحفاظ على الخط العريض الأصلي النظيف لاسم أحمد البيلي وتفادي التعليقات النصية المربكة.
-
-### المرحلة الرابعة: إتاحة نموذج التواصل والشريط المدمج مع واتساب (Accessible Form & Fallback)
-- **الملفات المستهدفة:** `src/components/ContactSection.tsx`.
-- **التنفيذ البرمجي:**
-  - تصحيح حقول الإدخال لتعتمد على `htmlFor` و `id` حقيقية وتحديد الحقول الإجبارية بوضوح.
-  - إضافة حالات المعالجة: `idle`, `submitting`, `success`, `error`.
-  - عند نجاح أو تعثر الإرسال، يظهر شريط تنبيه أنيق يعرض رسالة تأكيد واضحة، مع زر بديل بارز وسريع للمحادثة الفورية عبر واتساب (`https://wa.me/201022121573`).
-
-### المرحلة الخامسة: وضوح بيانات GitHub الحية والكاش (Live Sync vs Cache Clarity)
-- **الملفات المستهدفة:** `src/components/GitHubActivity.tsx`, `src/components/ProjectsSection.tsx`, `src/components/GitHubFallbackNotice.tsx`.
-- **التنفيذ البرمجي:**
-  - توضيح مؤشر المزامنة الحية وعرض تاريخ ووقت التخزين المؤقت عند الاعتماد على الـ Cache تفادياً لحدود GitHub API Rate Limit.
-  - إتاحة زر التحديث اليدوي المباشر مع مؤشر دوران ناعم دون تكرار الطلبات.
-
-### المرحلة السادسة: مراجعة إتاحة النوافذ المنبثقة وثبات وضعي Light و Dark
-- **الملفات المستهدفة:** `src/components/ProjectDetailsModal.tsx`, `src/components/ApkDownloadModal.tsx`, `src/components/BookingMeetingModal.tsx`, `src/components/CertificateModal.tsx`, `src/index.css`.
-- **التنفيذ البرمجي:**
-  - تفعيل قفل التمرير للخلفية (`overflow: hidden` على الـ body) عند فتح أي مودال.
-  - تفعيل الإغلاق بزر `Escape` والنقر على الخلفية المعتمة (`backdrop click`).
-  - التأكد من وضوح التباين للألوان والنصوص في كلا الوضعين (Dark / Light) في كافة المكونات بدون أي تداخل لوني.
-
----
-
-## 3. معايير القبول والتحقق (Acceptance Criteria)
-- [ ] ظهور شارات التقنيات المصغرة بأيقونات البراند عند التمرير على كروت المشاريع.
-- [ ] عرض أفضل 3 مشاريع أولاً لتقليل التشتت، مع إمكانية فتح وإغلاق باقي المشاريع بسلاسة.
-- [ ] وضوح مساري التوظيف والفريلانس في الهيرو مع الحفاظ على التصميم الأنيق للعنوان.
-- [ ] نموذج تواصل متوافق برمجياً مع قارئات الشاشة (Accessible labels) ويحتوي على شريط حالة وزر واتساب فوري.
-- [ ] عمل النوافذ المنبثقة بالماوس ولوحة المفاتيح وتوافق كامل مع شاشات الهواتف.
-- [ ] خلو المشروع من أخطاء الـ Lint والـ Build (`lint_applet` و `compile_applet` ناجحان).
+### 3. Verification Plan
+- Run `lint_applet` to verify TypeScript and syntax correctness.
+- Run `compile_applet` to verify successful production build.
+- Test responsive layout on mobile, tablet, and desktop views in Arabic and English.
