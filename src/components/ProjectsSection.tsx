@@ -16,6 +16,9 @@ import {
   GitCommit,
   Radio,
   ExternalLink,
+  ChevronDown,
+  ChevronUp,
+  Layers,
 } from 'lucide-react';
 import { FEATURED_PROJECTS, Project, AHMED_PROFILE } from '../data/portfolioData';
 import {
@@ -32,6 +35,7 @@ import {
 } from '../services/githubService';
 import { ProjectCardCover, synthesizeProjectBlueprint } from './ProjectCardCover';
 import { extractRepoTechTags, getRepoReadmeSpecs } from '../utils/techTagExtractor';
+import { TechIconBadge } from './TechLogos';
 import { ProjectDetailsModal } from './ProjectDetailsModal';
 import { ApkDownloadModal } from './ApkDownloadModal';
 import { ProjectSkeletonCard } from './ProjectSkeletonCard';
@@ -87,6 +91,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
   const [frameworkFilter, setFrameworkFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'pushed' | 'stars' | 'name'>('pushed');
   const [hoveredCardId, setHoveredCardId] = useState<string | number | null>(null);
+  const [visibleRepoCount, setVisibleRepoCount] = useState<number>(6);
 
   // Automatic Instant GitHub Live Data Fetch on Mount
   const {
@@ -343,7 +348,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
       <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 xs:gap-5 sm:gap-6 mb-6 xs:mb-8 sm:mb-10 w-full">
         {/* Left: Section Header */}
         <div className="flex flex-col items-start text-start max-w-2xl px-1 sm:px-0">
-          <div className="inline-flex items-center gap-1.5 xs:gap-2 px-2.5 xs:px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-700 dark:text-cyan-400 text-[10px] xs:text-[11px] sm:text-xs font-semibold uppercase tracking-wider mb-2 sm:mb-3">
+          <div className="inline-flex items-center gap-1.5 xs:gap-2 px-2.5 xs:px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-700 dark:text-cyan-400 text-[10px] xs:text-[11px] sm:text-xs font-semibold uppercase tracking-wider mb-2">
             <FolderGit2 size={13} className="shrink-0" />
             <span>{t.projects.badge}</span>
           </div>
@@ -493,9 +498,6 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
         {githubStats?.languages && githubStats.languages.length > 0 && (
           <TechDistributionChart languages={githubStats.languages} />
         )}
-
-        {/* 30-Day Activity Heatmap Grid */}
-        <GitHubActivity username={githubUser} />
       </div>
 
       {/* Universal Search & Architecture Filter Toolbar (Applies seamlessly across both tabs) */}
@@ -623,13 +625,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               </button>
             </div>
           ) : (
-            <motion.div
-              variants={cardsContainerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-50px' }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 w-full"
-            >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 w-full">
               {filteredFeaturedProjects.map((project) => {
             const liveMedia =
               liveMediaMap?.[project.repoName] ||
@@ -684,7 +680,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
             return (
               <motion.div
                 key={project.id}
-                variants={cardVariants}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
                 onClick={() => setSelectedProject(dynamicProject)}
                 onMouseEnter={() => setHoveredCardId(project.id)}
                 onMouseLeave={() => setHoveredCardId(null)}
@@ -782,16 +779,15 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                     {/* Automatically Extracted Programming Languages & Frameworks Pill-Shaped Tag System */}
                     <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 pt-0.5 sm:pt-1">
                       {techTags.slice(0, 5).map((tag, tagIdx) => (
-                        <span
+                        <TechIconBadge
                           key={`${project.id}-${tag.id}-${tagIdx}`}
-                          title={`${tag.label} (${tag.category})`}
-                          className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-500/10 dark:bg-cyan-500/10 border border-blue-500/25 dark:border-cyan-500/30 text-[10px] sm:text-[11px] font-mono font-bold text-blue-700 dark:text-cyan-300 transition-colors shadow-2xs hover:border-blue-400"
-                        >
-                          <span>{tag.label}</span>
-                        </span>
+                          label={tag.label}
+                          id={tag.id}
+                          category={tag.category}
+                        />
                       ))}
                       {techTags.length > 5 && (
-                        <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/10 text-[10px] text-slate-600 dark:text-gray-300 font-mono font-bold border border-slate-200 dark:border-white/10">
+                        <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-[10px] text-slate-600 dark:text-gray-300 font-mono font-bold border border-slate-200 dark:border-white/10">
                           +{techTags.length - 5}
                         </span>
                       )}
@@ -799,7 +795,6 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                   </div>
                 </div>
 
-                {/* Card Action Footer */}
                 {/* Card Action Footer */}
                 <div className="p-3.5 xs:p-4 sm:p-6 pt-2.5 sm:pt-3 mt-auto border-t border-slate-100 dark:border-white/5 space-y-2 sm:space-y-2.5">
                   {/* Primary Fixed Row (Always Uniform 2 Columns: View Specs + Source Code) */}
@@ -887,7 +882,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               </motion.div>
             );
           })}
-        </motion.div>
+        </div>
       )}
     </>
   )}
@@ -895,6 +890,11 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
       {/* TAB 2: LIVE GITHUB REPOSITORIES */}
       {activeTab === 'github' && (
         <div className="space-y-6">
+          {/* GitHub Activity Heatmap - Ergonomically integrated in GitHub Tab */}
+          <div className="mb-2">
+            <GitHubActivity username={githubUser} weeksToShow={14} />
+          </div>
+
           {/* Repos Grid */}
           {isPending && filteredRepos.length === 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 w-full">
@@ -921,14 +921,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
               </button>
             </div>
           ) : (
-            <motion.div
-              variants={cardsContainerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '-50px' }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 w-full"
-            >
-              {filteredRepos.map((repo) => {
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 w-full">
+              {filteredRepos.slice(0, visibleRepoCount).map((repo) => {
                 const projectObj = getProjectFromRepo(repo);
                 const repoRelease = repoReleases?.[repo.name] || repoReleases?.[repo.name.toLowerCase()];
                 const hasReleaseOrApk = Boolean(
@@ -970,7 +964,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                 return (
                   <motion.div
                     key={repo.id}
-                    variants={cardVariants}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
                     onClick={() => setSelectedProject(dynamicRepoProject)}
                     onMouseEnter={() => setHoveredCardId(repo.id)}
                     onMouseLeave={() => setHoveredCardId(null)}
@@ -1050,16 +1045,15 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                         {/* Automatically Extracted Programming Languages & Frameworks Pill-Shaped Tag System */}
                         <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 pt-0.5 sm:pt-1">
                           {repoTechTags.slice(0, 5).map((tag, tagIdx) => (
-                            <span
+                            <TechIconBadge
                               key={`${repo.id}-${tag.id}-${tagIdx}`}
-                              title={`${tag.label} (${tag.category})`}
-                              className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-500/10 dark:bg-cyan-500/10 border border-blue-500/25 dark:border-cyan-500/30 text-[10px] sm:text-[11px] font-mono font-bold text-blue-700 dark:text-cyan-300 transition-colors shadow-2xs hover:border-blue-400"
-                            >
-                              <span>{tag.label}</span>
-                            </span>
+                              label={tag.label}
+                              id={tag.id}
+                              category={tag.category}
+                            />
                           ))}
                           {repoTechTags.length > 5 && (
-                            <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/10 text-[10px] text-slate-600 dark:text-gray-300 font-mono font-bold border border-slate-200 dark:border-white/10">
+                            <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-[10px] text-slate-600 dark:text-gray-300 font-mono font-bold border border-slate-200 dark:border-white/10">
                               +{repoTechTags.length - 5}
                             </span>
                           )}
@@ -1157,7 +1151,24 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ currentGithubU
                   </motion.div>
                 );
               })}
-            </motion.div>
+            </div>
+          )}
+
+          {/* Load More Button for Repositories */}
+          {filteredRepos.length > visibleRepoCount && (
+            <div className="flex justify-center pt-4 sm:pt-6">
+              <button
+                onClick={() => setVisibleRepoCount((prev) => prev + 6)}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-blue-500/25 transition-all duration-200 cursor-pointer active:scale-95"
+              >
+                <ChevronDown size={16} />
+                <span>
+                  {lang === 'ar'
+                    ? `عرض المزيد من المستودعات (${filteredRepos.length - visibleRepoCount} متبقية)`
+                    : `Show More Repositories (${filteredRepos.length - visibleRepoCount} remaining)`}
+                </span>
+              </button>
+            </div>
           )}
         </div>
       )}

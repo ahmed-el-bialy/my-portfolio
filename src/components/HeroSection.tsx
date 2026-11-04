@@ -124,9 +124,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </span>
           </div>
 
-          {/* Script Accent */}
-          <div className="font-marker text-lg sm:text-2xl text-cyan-600 dark:text-cyan-400/90 -rotate-2 tracking-wider select-none">
-            {t.hero.thisIs}
+          {/* Authentic Handwritten Marker Accent (Human Touch) */}
+          <div className="flex items-center select-none pt-1">
+            <span className="font-marker text-2xl sm:text-3xl text-cyan-500 dark:text-cyan-400 -rotate-3 tracking-widest drop-shadow-[0_2px_10px_rgba(6,182,212,0.3)]">
+              {t.hero.thisIs}
+            </span>
           </div>
 
           {/* Big Name Heading */}

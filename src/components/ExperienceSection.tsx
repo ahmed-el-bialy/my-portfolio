@@ -7,8 +7,10 @@ import {
   FileCheck2,
   ArrowUpRight
 } from 'lucide-react';
-import { EDUCATION_DATA, EXPERIENCES, CERTIFICATES } from '../data/portfolioData';
+import { EDUCATION_DATA, EXPERIENCES, CERTIFICATES, CertificateItem } from '../data/portfolioData';
 import { useLanguage } from '../context/LanguageContext';
+import { SpotlightCard } from './SpotlightCard';
+import { CertificateModal } from './CertificateModal';
 
 interface ExperienceSectionProps {
   onOpenResume: () => void;
@@ -17,12 +19,13 @@ interface ExperienceSectionProps {
 export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResume }) => {
   const { lang, dir, t } = useLanguage();
   const [activeSubTab, setActiveSubTab] = useState<'all' | 'certs' | 'experience'>('all');
+  const [selectedCert, setSelectedCert] = useState<CertificateItem | null>(null);
 
   return (
     <section id="experience" className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-10 sm:py-16 md:py-20 border-t border-black/10 dark:border-white/5 transition-colors overflow-x-clip w-full">
       {/* Section Header */}
       <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-6 xs:mb-8 sm:mb-10 w-full px-1 sm:px-0">
-        <div className="inline-flex items-center gap-1.5 xs:gap-2 px-2.5 xs:px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-[10px] xs:text-[11px] sm:text-xs font-semibold uppercase tracking-wider mb-2 sm:mb-3">
+        <div className="inline-flex items-center gap-1.5 xs:gap-2 px-2.5 xs:px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-[10px] xs:text-[11px] sm:text-xs font-semibold uppercase tracking-wider mb-2">
           <Award size={13} className="shrink-0" />
           <span>{t.experience.badge}</span>
         </div>
@@ -89,9 +92,12 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 xs:gap-3.5 sm:gap-5">
             {CERTIFICATES.map((cert) => (
-              <div
+              <SpotlightCard
                 key={cert.id}
-                className="card-techno rounded-2xl p-3.5 xs:p-4 sm:p-6 bg-white dark:bg-[#131522] border border-black/10 dark:border-white/10 flex flex-col justify-between group hover:border-blue-500/40 transition-all shadow-sm"
+                spotlightColor="rgba(56, 189, 248, 0.16)"
+                borderColor="rgba(56, 189, 248, 0.4)"
+                onClick={() => setSelectedCert(cert)}
+                className="p-3.5 xs:p-4 sm:p-6 flex flex-col justify-between group transition-all shadow-sm cursor-pointer hover:border-blue-500/40"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-1.5 sm:mb-2">
@@ -130,19 +136,18 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
                   <span className="text-[10px] xs:text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
                     <CheckCircle2 size={13} className="shrink-0" /> {lang === 'ar' ? 'برنامج معتمد' : 'Verified Course'}
                   </span>
-                  {cert.credentialUrl && (
-                    <a
-                      href={cert.credentialUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[10px] xs:text-[11px] sm:text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      <span>{t.experience.credentialButton}</span>
-                      <ArrowUpRight size={13} className={dir === 'rtl' ? 'rotate-180' : ''} />
-                    </a>
-                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCert(cert);
+                    }}
+                    className="inline-flex items-center gap-1 text-[10px] xs:text-[11px] sm:text-xs font-semibold text-blue-600 dark:text-cyan-400 hover:text-blue-700 dark:hover:text-cyan-300 hover:underline cursor-pointer"
+                  >
+                    <span>{lang === 'ar' ? 'معاينة الشهادة' : 'Inspect Credential'}</span>
+                    <ArrowUpRight size={13} className={dir === 'rtl' ? 'rotate-180' : ''} />
+                  </button>
                 </div>
-              </div>
+              </SpotlightCard>
             ))}
           </div>
         </div>
@@ -213,7 +218,11 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
               <span className="text-[11px] sm:text-xs font-mono text-emerald-600 dark:text-emerald-400 font-semibold">{lang === 'ar' ? 'طالب جامعي' : 'Undergraduate'}</span>
             </div>
 
-            <div className="card-techno rounded-2xl p-3.5 xs:p-4 sm:p-6 bg-white dark:bg-[#131522] border border-black/10 dark:border-white/10 space-y-3 sm:space-y-4 shadow-sm">
+            <SpotlightCard
+              spotlightColor="rgba(56, 189, 248, 0.16)"
+              borderColor="rgba(56, 189, 248, 0.4)"
+              className="p-3.5 xs:p-4 sm:p-6 space-y-3 sm:space-y-4 shadow-sm"
+            >
               <div>
                 <span className="text-[9px] xs:text-[10px] font-mono text-cyan-700 dark:text-cyan-300 px-2 xs:px-2.5 py-0.5 rounded-md bg-cyan-500/10 uppercase tracking-wider font-semibold">
                   {lang === 'ar' ? 'درجة جامعية' : 'Undergraduate Degree'}
@@ -264,11 +273,18 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
                   <Award size={14} />
                 </button>
               </div>
-            </div>
+            </SpotlightCard>
           </div>
 
         </div>
       )}
+
+      {/* Interactive In-App Certificate Inspection Modal */}
+      <CertificateModal
+        isOpen={!!selectedCert}
+        onClose={() => setSelectedCert(null)}
+        certificate={selectedCert}
+      />
     </section>
   );
 };

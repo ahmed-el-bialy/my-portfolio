@@ -274,6 +274,30 @@ const KNOWN_TECH_MAP: Record<string, TechTag> = {
     textDark: 'text-emerald-300',
     borderDark: 'border-emerald-500/20'
   },
+  tensorflow: {
+    id: 'tensorflow',
+    label: 'TensorFlow',
+    category: 'framework',
+    color: '#FF6F00',
+    bgLight: 'bg-amber-50',
+    textLight: 'text-amber-800',
+    borderLight: 'border-amber-200',
+    bgDark: 'bg-amber-500/10',
+    textDark: 'text-amber-300',
+    borderDark: 'border-amber-500/20'
+  },
+  pytorch: {
+    id: 'pytorch',
+    label: 'PyTorch',
+    category: 'framework',
+    color: '#EE4C2C',
+    bgLight: 'bg-red-50',
+    textLight: 'text-red-800',
+    borderLight: 'border-red-200',
+    bgDark: 'bg-red-500/10',
+    textDark: 'text-red-300',
+    borderDark: 'border-red-500/20'
+  },
   tmdb: {
     id: 'tmdb',
     label: 'TMDB API',

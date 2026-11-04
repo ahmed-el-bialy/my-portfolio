@@ -277,3 +277,121 @@ export const TikTokLogo: React.FC<TechLogoProps> = ({ className = '', size = 18 
     <path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-5.201 1.743 2.896 2.896 0 0 1 2.305-4.637c.312 0 .615.05.9.143V9.412a6.34 6.34 0 0 0-.9-.065 6.342 6.342 0 0 0-6.34 6.34 6.342 6.342 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V9.083a8.17 8.17 0 0 0 4.771 1.523v-3.47a4.767 4.767 0 0 1-1-.45z" />
   </svg>
 );
+
+// Official TensorFlow Logo (Verified Online Devicon + Inline Vector)
+export const TensorFlowLogo: React.FC<TechLogoProps> = ({ className = '', size = 28 }) => (
+  <VectorIcon
+    src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tensorflow/tensorflow-original.svg"
+    alt="TensorFlow Official Logo"
+    size={size}
+    className={className}
+    fallback={
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+        <path d="M12 2L3 7.5v9L6 14.5v-5L12 6.5l6 3v5l3 2v-9L12 2z" fill="#FF6F00" />
+        <path d="M12 9.5L7.5 12v5l4.5 2.5 4.5-2.5v-5L12 9.5z" fill="#FFA000" />
+      </svg>
+    }
+  />
+);
+
+// REST API Vector Logo
+export const RestApiLogo: React.FC<TechLogoProps> = ({ className = '', size = 28 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <rect x="2" y="5" width="20" height="14" rx="3" stroke="#0284C7" strokeWidth="1.8" fill="rgba(2,132,199,0.12)" />
+    <path d="M6 12h2M10 12h4M16 12h2" stroke="#38BDF8" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="7" cy="12" r="1.5" fill="#0284C7" />
+    <circle cx="12" cy="12" r="1.5" fill="#38BDF8" />
+    <circle cx="17" cy="12" r="1.5" fill="#0284C7" />
+  </svg>
+);
+
+// Map of canonical tech identifiers to their official logos and brand colors
+export const TECH_ICON_REGISTRY: Record<
+  string,
+  {
+    component: React.FC<TechLogoProps>;
+    color: string;
+    glowRgb: string;
+    label: string;
+  }
+> = {
+  flutter: { component: FlutterLogo, color: '#02569B', glowRgb: '2, 86, 155', label: 'Flutter' },
+  dart: { component: DartLogo, color: '#00B4AB', glowRgb: '0, 180, 171', label: 'Dart' },
+  firebase: { component: FirebaseLogo, color: '#FFCA28', glowRgb: '255, 202, 40', label: 'Firebase' },
+  python: { component: PythonLogo, color: '#3776AB', glowRgb: '55, 118, 171', label: 'Python' },
+  tensorflow: { component: TensorFlowLogo, color: '#FF6F00', glowRgb: '255, 111, 0', label: 'TensorFlow' },
+  bloc: { component: BlocLogo, color: '#00D9FF', glowRgb: '0, 217, 255', label: 'BLoC' },
+  cubit: { component: CubitLogo, color: '#22D3EE', glowRgb: '34, 211, 238', label: 'Cubit' },
+  hive: { component: HiveLogo, color: '#FFCC00', glowRgb: '255, 204, 0', label: 'Hive CE' },
+  dio: { component: DioLogo, color: '#0175C2', glowRgb: '1, 117, 194', label: 'Dio' },
+  retrofit: { component: RetrofitLogo, color: '#E53935', glowRgb: '229, 57, 53', label: 'Retrofit' },
+  sqlite: { component: SQLiteLogo, color: '#003B57', glowRgb: '0, 59, 87', label: 'SQLite' },
+  git: { component: GitLogo, color: '#F05138', glowRgb: '240, 81, 56', label: 'Git' },
+  cleanarch: { component: CleanArchLogo, color: '#6C63FF', glowRgb: '108, 99, 255', label: 'Clean Architecture' },
+  cleanarchitecture: { component: CleanArchLogo, color: '#6C63FF', glowRgb: '108, 99, 255', label: 'Clean Architecture' },
+  api: { component: RestApiLogo, color: '#0284C7', glowRgb: '2, 132, 199', label: 'REST API' },
+  restapi: { component: RestApiLogo, color: '#0284C7', glowRgb: '2, 132, 199', label: 'REST API' },
+  ai: { component: AiLogo, color: '#F43F5E', glowRgb: '244, 63, 94', label: 'AI / ML' },
+};
+
+export const getTechIconInfo = (tagText: string) => {
+  const normalized = tagText.toLowerCase().replace(/[\s\-_.]/g, '');
+  if (TECH_ICON_REGISTRY[normalized]) {
+    return TECH_ICON_REGISTRY[normalized];
+  }
+  for (const [key, value] of Object.entries(TECH_ICON_REGISTRY)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
+      return value;
+    }
+  }
+  return null;
+};
+
+// Minimalist pill badge with brand icon hover reveal/scale micro-interaction
+export interface TechIconBadgeProps {
+  label: string;
+  id?: string;
+  category?: string;
+  className?: string;
+  compact?: boolean;
+}
+
+export const TechIconBadge: React.FC<TechIconBadgeProps> = ({
+  label,
+  id,
+  category,
+  className = '',
+  compact = false,
+}) => {
+  const iconInfo = getTechIconInfo(id || label);
+  const IconComponent = iconInfo ? iconInfo.component : null;
+  const brandColor = iconInfo?.color || '#38BDF8';
+  const glowRgb = iconInfo?.glowRgb || '56, 189, 248';
+
+  return (
+    <span
+      className={`group relative inline-flex items-center gap-1.5 rounded-full transition-all duration-200 cursor-default select-none border font-mono font-medium shadow-2xs ${
+        compact ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-[11px]'
+      } bg-slate-100/90 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 hover:bg-white dark:hover:bg-white/[0.08] hover:text-slate-900 dark:hover:text-white hover:shadow-xs ${className}`}
+      style={{
+        ['--brand-accent' as string]: brandColor,
+      }}
+      title={`${label}${category ? ` (${category})` : ''}`}
+    >
+      {/* Brand Icon or Minimal Dot */}
+      {IconComponent ? (
+        <span className="relative flex items-center justify-center shrink-0 w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-125">
+          <IconComponent size={14} className="transition-opacity" />
+        </span>
+      ) : (
+        <span
+          className="w-1.5 h-1.5 rounded-full shrink-0 transition-transform duration-200 group-hover:scale-150"
+          style={{ backgroundColor: brandColor }}
+        />
+      )}
+
+      {/* Label Text */}
+      <span className="truncate tracking-tight transition-colors">{label}</span>
+    </span>
+  );
+};

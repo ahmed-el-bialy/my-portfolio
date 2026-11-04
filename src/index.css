@@ -58,25 +58,19 @@ body {
   background-attachment: fixed;
 }
 
-/* Luxurious Eye-Friendly Theme Cross-Fade (High Performance 60FPS) */
-html.theme-transitioning,
-html.theme-transitioning body,
-html.theme-transitioning header,
-html.theme-transitioning nav,
-html.theme-transitioning main,
-html.theme-transitioning section,
-html.theme-transitioning footer,
-html.theme-transitioning button,
-html.theme-transitioning a,
-html.theme-transitioning input,
-html.theme-transitioning [class*="bg-"],
-html.theme-transitioning [class*="border-"],
-html.theme-transitioning [class*="text-"] {
-  transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              color 0.3s ease,
-              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  transition-delay: 0s !important;
+/* Smooth, Eye-Friendly Theme Transitions */
+body {
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+header,
+nav,
+section,
+footer,
+main,
+.card-techno,
+.spotlight-card {
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
 }
 
 /* Authentic Arabic Typography (Cairo) & RTL polish */
@@ -102,13 +96,20 @@ html[dir="rtl"] .fluid-card-title {
 }
 
 html[dir="rtl"] p,
-html[dir="rtl"] span,
-html[dir="rtl"] button,
+html[dir="rtl"] span:not(.font-marker),
+html[dir="rtl"] button:not(.font-marker),
 html[dir="rtl"] input,
 html[dir="rtl"] textarea,
 html[dir="rtl"] select {
   font-family: 'Cairo', system-ui, sans-serif;
   letter-spacing: normal !important;
+}
+
+/* Authentic Human Marker Style (Taste-Skill) */
+.font-marker,
+html[dir="rtl"] .font-marker,
+html.rtl-mode .font-marker {
+  font-family: 'Permanent Marker', cursive, system-ui !important;
 }
 
 /* Precise font-mono preservation for code & tech metrics in Arabic */

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home,
   Layers,
@@ -201,19 +201,40 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>{t.nav.contact}</span>
             </button>
 
-            {/* Light / Dark Theme Toggle Button */}
-            <button
+            {/* Enhanced Light / Dark Theme Toggle Button with Rotating Icon Spin & Micro-Interactions */}
+            <motion.button
               onClick={onToggleTheme}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 border border-slate-300/80 dark:border-white/15 transition-all cursor-pointer shrink-0 shadow-2xs active:scale-95"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.92 }}
+              className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 border border-slate-300/80 dark:border-white/15 transition-colors cursor-pointer shrink-0 shadow-2xs group overflow-hidden"
               aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
-              {isDark ? (
-                <Sun size={16} className="text-amber-400 hover:rotate-45 transition-transform duration-300 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]" />
-              ) : (
-                <Moon size={16} className="text-indigo-600 hover:-rotate-12 transition-transform duration-300" />
-              )}
-            </button>
+              {/* Subtle ambient hover glow */}
+              <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-radial from-amber-400/20 dark:from-cyan-400/20 to-transparent" />
+
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={isDark ? 'dark-icon' : 'light-icon'}
+                  initial={{ rotate: -90, scale: 0.5, opacity: 0 }}
+                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                  exit={{ rotate: 90, scale: 0.5, opacity: 0 }}
+                  whileHover={{ rotate: isDark ? 45 : -25, scale: 1.15 }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 380,
+                    damping: 22,
+                  }}
+                  className="relative z-10 flex items-center justify-center"
+                >
+                  {isDark ? (
+                    <Sun size={17} className="text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                  ) : (
+                    <Moon size={16} className="text-indigo-600 drop-shadow-[0_0_6px_rgba(79,70,229,0.4)]" />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </motion.button>
 
             {/* Mobile Slide-Over Drawer Toggle (Hamburger on screens < 768px) */}
             <button

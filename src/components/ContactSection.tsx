@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, Check, Github, Linkedin, Youtube, Calendar, Copy, FileText, ExternalLink } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, Check, Github, Linkedin, Youtube, Calendar, Copy, FileText, ExternalLink, CheckCircle2, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { DeveloperProfile, openEmailClient } from '../data/portfolioData';
 import { WhatsAppLogo, TikTokLogo } from './TechLogos';
 import { useLanguage } from '../context/LanguageContext';
+import { SpotlightCard } from './SpotlightCard';
+import { MagneticButton } from './MagneticButton';
 
 interface ContactSectionProps {
   profile: DeveloperProfile;
@@ -17,6 +19,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
   const [copiedPhone, setCopiedPhone] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -40,6 +43,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
     if (!name.trim() || !email.trim() || !message.trim()) return;
 
     setIsSubmitting(true);
+    setSubmitStatus('idle');
 
     try {
       const response = await fetch('https://formsubmit.co/ajax/ah.elbialy.dev@gmail.com', {
@@ -63,6 +67,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
 
       setIsSubmitting(false);
       setSubmitted(true);
+      setSubmitStatus('success');
       confetti({
         particleCount: 70,
         spread: 60,
@@ -74,10 +79,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
         setEmail('');
         setSubject('');
         setMessage('');
-      }, 4000);
+      }, 5000);
     } catch {
       setIsSubmitting(false);
-      setSubmitted(true);
+      setSubmitStatus('error');
     }
   };
 
@@ -85,7 +90,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
     <section id="contact" className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-16 sm:py-20 border-t border-black/10 dark:border-white/5 w-full">
       {/* Header */}
       <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-10 sm:mb-14">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-3">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-2">
           <Mail size={13} />
           <span>{t.contact.badge}</span>
         </div>
@@ -100,7 +105,11 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
       <div className="w-full max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 items-stretch">
         
         {/* Card 1: Contact Form */}
-        <div className="flex flex-col justify-between card-techno rounded-3xl p-5 sm:p-7 bg-white dark:bg-[#131522] border border-black/10 dark:border-white/10">
+        <SpotlightCard
+          spotlightColor="rgba(59, 130, 246, 0.18)"
+          borderColor="rgba(59, 130, 246, 0.45)"
+          className="p-5 sm:p-7 flex flex-col justify-between"
+        >
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-2">
               <Mail size={13} />
@@ -114,10 +123,67 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-3.5">
+              {/* Inline Status Banner with WhatsApp Fallback */}
+              {submitStatus === 'success' && (
+                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-800 dark:text-emerald-300 text-xs space-y-2 animate-in fade-in duration-300">
+                  <div className="flex items-center gap-2 font-bold">
+                    <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                    <span>{lang === 'ar' ? 'تم استلام رسالتك بنجاح!' : 'Message received successfully!'}</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-slate-600 dark:text-emerald-200/90">
+                    {lang === 'ar'
+                      ? 'شكراً لتواصلك، سأقوم بالرد عليك خلال أقل من 24 ساعة. للمتابعة العاجلة فوراً:'
+                      : 'Thank you! I will review and reply within 24 hours. For instant direct follow-up:'}
+                  </p>
+                  <a
+                    href={`https://wa.me/201022121573?text=${encodeURIComponent(
+                      lang === 'ar'
+                        ? `مرحباً أحمد، أرسلت لك رسالة عبر بورتفوليو بخصوص: ${subject || name}`
+                        : `Hi Ahmed, I just sent a portfolio inquiry regarding: ${subject || name}`
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors shadow-xs"
+                  >
+                    <WhatsAppLogo size={14} />
+                    <span>{lang === 'ar' ? 'تواصل فوري عبر واتساب' : 'Chat on WhatsApp Now'}</span>
+                  </a>
+                </div>
+              )}
+
+              {submitStatus === 'error' && (
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-300 text-xs space-y-2 animate-in fade-in duration-300">
+                  <div className="flex items-center gap-2 font-bold">
+                    <AlertCircle size={16} className="text-amber-500 shrink-0" />
+                    <span>{lang === 'ar' ? 'تعذر الإرسال التلقائي' : 'Delivery delayed'}</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-slate-600 dark:text-amber-200/90">
+                    {lang === 'ar'
+                      ? 'يمكنك إرسال رسالتك مباشرة إلى أحمد بنقرة واحدة عبر واتساب:'
+                      : 'You can reach Ahmed directly and securely on WhatsApp in one click:'}
+                  </p>
+                  <a
+                    href={`https://wa.me/201022121573?text=${encodeURIComponent(
+                      `Name: ${name || 'Inquirer'}\nEmail: ${email}\nSubject: ${subject}\nMessage: ${message}`
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors shadow-xs"
+                  >
+                    <WhatsAppLogo size={14} />
+                    <span>{lang === 'ar' ? 'إرسال الرسالة عبر واتساب' : 'Send via WhatsApp'}</span>
+                  </a>
+                </div>
+              )}
+
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-gray-300 mb-1">{t.contact.form.nameLabel} *</label>
+                  <label htmlFor="contact-name" className="block text-xs font-medium text-slate-700 dark:text-gray-300 mb-1">
+                    {t.contact.form.nameLabel} <span className="text-red-500">*</span>
+                  </label>
                   <input
+                    id="contact-name"
+                    name="name"
                     type="text"
                     required
                     value={name}
@@ -128,8 +194,12 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-gray-300 mb-1">{t.contact.form.emailLabel} *</label>
+                  <label htmlFor="contact-email" className="block text-xs font-medium text-slate-700 dark:text-gray-300 mb-1">
+                    {t.contact.form.emailLabel} <span className="text-red-500">*</span>
+                  </label>
                   <input
+                    id="contact-email"
+                    name="email"
                     type="email"
                     required
                     value={email}
@@ -140,8 +210,12 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-gray-300 mb-1">{t.contact.form.subjectLabel}</label>
+                  <label htmlFor="contact-subject" className="block text-xs font-medium text-slate-700 dark:text-gray-300 mb-1">
+                    {t.contact.form.subjectLabel} <span className="text-slate-400 text-[10px]">({lang === 'ar' ? 'اختياري' : 'optional'})</span>
+                  </label>
                   <input
+                    id="contact-subject"
+                    name="subject"
                     type="text"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
@@ -151,8 +225,12 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-gray-300 mb-1">{t.contact.form.messageLabel} *</label>
+                  <label htmlFor="contact-message" className="block text-xs font-medium text-slate-700 dark:text-gray-300 mb-1">
+                    {t.contact.form.messageLabel} <span className="text-red-500">*</span>
+                  </label>
                   <textarea
+                    id="contact-message"
+                    name="message"
                     required
                     rows={3}
                     value={message}
@@ -164,9 +242,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2">
-                <button
+                <MagneticButton
                   type="submit"
                   disabled={isSubmitting || submitted}
+                  strength={0.2}
                   className="w-full sm:flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 cursor-pointer disabled:opacity-50 min-h-[42px]"
                 >
                   {submitted ? (
@@ -182,7 +261,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
                       <span>{t.contact.form.sendButton}</span>
                     </>
                   )}
-                </button>
+                </MagneticButton>
 
                 {onOpenBooking && (
                   <button
@@ -197,10 +276,14 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
               </div>
             </form>
           </div>
-        </div>
+        </SpotlightCard>
 
         {/* Card 2: Direct Channels */}
-        <div className="flex flex-col justify-between card-techno rounded-3xl p-5 sm:p-7 bg-white dark:bg-[#131522] border border-black/10 dark:border-white/10">
+        <SpotlightCard
+          spotlightColor="rgba(16, 185, 129, 0.18)"
+          borderColor="rgba(16, 185, 129, 0.45)"
+          className="p-5 sm:p-7 flex flex-col justify-between"
+        >
           <div className="space-y-4">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
@@ -349,10 +432,14 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
               </a>
             </div>
           </div>
-        </div>
+        </SpotlightCard>
 
         {/* Card 3: Discover & Download Resume (CV) */}
-        <div className="flex flex-col justify-between card-techno rounded-3xl p-5 sm:p-7 bg-white dark:bg-[#131522] border border-black/10 dark:border-white/10 md:col-span-2 lg:col-span-1">
+        <SpotlightCard
+          spotlightColor="rgba(6, 182, 212, 0.18)"
+          borderColor="rgba(6, 182, 212, 0.45)"
+          className="p-5 sm:p-7 flex flex-col justify-between md:col-span-2 lg:col-span-1"
+        >
           <div className="space-y-4">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-2">
@@ -437,7 +524,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({ profile, onOpenB
               <span>{lang === 'ar' ? 'تحميل وعرض ملف الـ PDF' : 'Download / View PDF File'}</span>
             </a>
           </div>
-        </div>
+        </SpotlightCard>
 
       </div>
     </section>

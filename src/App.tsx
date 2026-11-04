@@ -82,8 +82,7 @@ export default function App() {
     }
   }, [isDark]);
 
-  // Eye-friendly theme and language transition states without remounting
-  const [isThemeFading, setIsThemeFading] = useState(false);
+  // Language transition states without remounting
   const [isLangFading, setIsLangFading] = useState(false);
 
   // Soft crossfade effect when language toggles
@@ -96,13 +95,7 @@ export default function App() {
   }, [lang]);
 
   const handleToggleTheme = () => {
-    document.documentElement.classList.add('theme-transitioning');
-    setIsThemeFading(true);
     setIsDark((prev) => !prev);
-    setTimeout(() => {
-      setIsThemeFading(false);
-      document.documentElement.classList.remove('theme-transitioning');
-    }, 450);
   };
 
   // Online / Offline listener
@@ -238,17 +231,6 @@ export default function App() {
           onNavigate={handleNavigate}
         />
 
-        {/* Eye-Friendly Theme Transition Ambient Veil (Softens contrast shift) */}
-        <div
-          className={`fixed inset-0 z-50 pointer-events-none transition-opacity duration-300 ease-out ${
-            isThemeFading
-              ? isDark
-                ? 'opacity-25 bg-slate-950'
-                : 'opacity-15 bg-white'
-              : 'opacity-0'
-          }`}
-          aria-hidden="true"
-        />
 
         {/* All Sections Sequentially Rendered with Persistent DOM & Eye-Friendly Language Fade */}
         <main
