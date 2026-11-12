@@ -53,12 +53,15 @@ export interface Translations {
     location: string;
     thisIs: string;
     name: string;
+    headlineRole: string;
     specializedIn: string;
     rotatingWords: string[];
     bio: string;
     exploreApps: string;
     resumeCv: string;
+    downloadCv: string;
     bookMeeting: string;
+    bookConsultation: string;
     getInTouch: string;
     channelsLabel: string;
     googlePlayLive: string;
@@ -68,6 +71,19 @@ export interface Translations {
       repos: { label: string; suffix: string };
       cleanArch: { label: string; suffix: string };
       crossPlatform: { label: string; suffix: string };
+    };
+  };
+  services: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    ctaButton: string;
+    items: {
+      mvp: { title: string; desc: string; badge: string };
+      api: { title: string; desc: string; badge: string };
+      firebase: { title: string; desc: string; badge: string };
+      publishing: { title: string; desc: string; badge: string };
+      maintenance: { title: string; desc: string; badge: string };
     };
   };
   stack: {
@@ -271,6 +287,7 @@ export const translations: Record<Language, Translations> = {
       location: "Egypt (Open to Remote & Relocation)",
       thisIs: "This is",
       name: "Ahmed El-Bialy",
+      headlineRole: "Junior Flutter & Mobile App Developer",
       specializedIn: "Specialized in",
       specialistBadge: "Flutter & AI Specialist",
       rotatingWords: [
@@ -280,10 +297,12 @@ export const translations: Record<Language, Translations> = {
         "Production Google Play Apps",
         "REST APIs & Offline Storage (Hive CE)",
       ],
-      bio: "Mobile Application Developer specializing in Flutter & Dart. Dedicated to building robust, scalable cross-platform mobile apps for Android and iOS with strict Clean Architecture, BLoC/Cubit state management, offline-first storage (Hive CE & SQLite), and resilient RESTful API integrations. Creator of 'Revio', published live on Google Play.",
+      bio: "Junior Flutter & Mobile Application Developer dedicated to building robust, scalable cross-platform apps for Android and iOS with Clean Architecture, BLoC/Cubit, offline-first storage (Hive CE), and RESTful API integrations. Creator of 'Revio', published live on Google Play.",
       exploreApps: "Explore My Apps",
       resumeCv: "Resume / CV",
+      downloadCv: "Download CV",
       bookMeeting: "Book Meeting",
+      bookConsultation: "Book a Consultation",
       getInTouch: "Get in Touch",
       channelsLabel: "Channels:",
       googlePlayLive: "Live on Google Play",
@@ -293,6 +312,39 @@ export const translations: Record<Language, Translations> = {
         cleanArch: { label: "Clean Architecture", suffix: "Standard" },
         crossPlatform: { label: "Cross-Platform", suffix: "Production" },
       },
+    },
+    services: {
+      badge: "Freelance & Technical Capabilities",
+      title: "Mobile Development & Client Services",
+      subtitle: "Turnkey Flutter development services tailored for startups, founders, and companies.",
+      ctaButton: "Start a Project",
+      items: {
+        mvp: {
+          title: "MVP Development",
+          desc: "Rapid delivery of scalable, testable Flutter applications from wireframe to interactive MVP.",
+          badge: "Fast-Track MVP"
+        },
+        api: {
+          title: "API Integration",
+          desc: "Robust RESTful APIs, Dio/Retrofit, JSON serialization, and resilient caching architecture.",
+          badge: "REST & Sockets"
+        },
+        firebase: {
+          title: "Firebase Backend",
+          desc: "Authentication, Cloud Firestore, Cloud Messaging (FCM), push notifications & offline sync.",
+          badge: "Cloud DB & Auth"
+        },
+        publishing: {
+          title: "Google Play Publishing",
+          desc: "Complete store deployment, App Bundle (AAB) signing, privacy compliance & live release.",
+          badge: "Store Approved"
+        },
+        maintenance: {
+          title: "Bug Fixing & Maintenance",
+          desc: "Performance profiling (60 FPS), memory leak fixes, SDK upgrades, and architecture refactoring.",
+          badge: "Stability & Speed"
+        }
+      }
     },
     stack: {
       badge: "Production Stack & Tools",
@@ -520,6 +572,7 @@ export const translations: Record<Language, Translations> = {
       location: "مصر (متاح للعمل عن بُعد أو الانتقال)",
       thisIs: "أهلاً بك، أنا",
       name: "أحمد البيلي",
+      headlineRole: "مطور تطبيقات فلاتر وموبايل (Junior Flutter Developer)",
       specializedIn: "متخصص في",
       specialistBadge: "أخصائي Flutter والذكاء الاصطناعي",
       rotatingWords: [
@@ -529,10 +582,12 @@ export const translations: Record<Language, Translations> = {
         "تطبيقات حقيقية منشورة على متجر Google Play",
         "تكامل الـ REST APIs والتخزين المحلي Hive CE",
       ],
-      bio: "مطور تطبيقات هواتف متخصص في تقنيات Flutter & Dart وطالب بكلية الذكاء الاصطناعي بجامعة كفر الشيخ. أركز على بناء وتطوير تطبيقات جوال متقدمة وعالية الكفاءة لنظامي Android و iOS باتباع معمارية Clean Architecture، وإدارة الحالة BLoC/Cubit، والتخزين الداخلي السريع (Hive CE و SQLite)، والربط الآمن بالواجهات البرمجية RESTful APIs. مبرمج ومطور تطبيق 'Revio' المنشور رسمياً على متجر Google Play.",
+      bio: "مطور تطبيقات هواتف جونيور متخصص في Flutter & Dart وطالب ذكاء اصطناعي. أركز على بناء وتطوير تطبيقات جوال متقدمة وعالية الكفاءة لنظامي Android و iOS باتباع معمارية Clean Architecture، وإدارة الحالة BLoC/Cubit، والتخزين الداخلي السريع، والربط بالواجهات البرمجية REST APIs. مبرمج ومطور تطبيق 'Revio' المنشور على متجر Google Play.",
       exploreApps: "استكشف تطبيقاتي",
       resumeCv: "السيرة الذاتية / CV",
+      downloadCv: "تحميل السيرة الذاتية (CV)",
       bookMeeting: "حجز موعد واستشارة",
+      bookConsultation: "حجز استشارة / موعد",
       getInTouch: "تواصل معي مباشرة",
       channelsLabel: "القنوات الرسمية:",
       googlePlayLive: "منشور على Google Play",
@@ -542,6 +597,39 @@ export const translations: Record<Language, Translations> = {
         cleanArch: { label: "معمارية برمجية نظيفة", suffix: "معيار قياسي" },
         crossPlatform: { label: "تطبيقات متعددة المنصات", suffix: "إنتاج حقيقي" },
       },
+    },
+    services: {
+      badge: "خدمات التطوير والعمل الحر (Freelance)",
+      title: "خدمات وحلول تطوير تطبيقات الموبايل",
+      subtitle: "خدمات برمجية شاملة ومتكاملة بـ Flutter تخدم أصحاب المشاريع والشركات والشركات الناشئة.",
+      ctaButton: "ابدأ مشروعك الآن",
+      items: {
+        mvp: {
+          title: "تطوير نماذج MVP",
+          desc: "تحويل الأفكار إلى تطبيقات موبايل حية وعملية قابلة للتوسع بسرعة وبأعلى معايير الجودة.",
+          badge: "إطلاق سريع"
+        },
+        api: {
+          title: "ربط واجهات برمجة APIs",
+          desc: "تكامل احترافي مع RESTful APIs والخدمات الخارجية باستخدام Dio وتخزين سحابي ذكي.",
+          badge: "تكامل قوي"
+        },
+        firebase: {
+          title: "بنية Firebase السحابية",
+          desc: "إعداد تسجيل الدخول، قاعدة بيانات Firestore، الإشعارات السحابية FCM، والمزامنة الحية.",
+          badge: "سحابي وآمن"
+        },
+        publishing: {
+          title: "النشر على Google Play",
+          desc: "تجهيز حزم الإصدار AAB وتوقيع التطبيق وتلبية متطلبات المتجر حتى الموافقة الرسمية.",
+          badge: "متجر معتمد"
+        },
+        maintenance: {
+          title: "إصلاح الأخطاء والصيانة",
+          desc: "تحسين سلاسة التطبيق 60 FPS، معالجة الـ Bugs، وتحديث الحزم ومعمارية الأكواد.",
+          badge: "أداء واستقرار"
+        }
+      }
     },
     stack: {
       badge: "المهارات المتقدمة وأدوات الإنتاج",

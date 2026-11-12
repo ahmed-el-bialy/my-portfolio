@@ -205,12 +205,16 @@ export const GitHubActivity: React.FC<GitHubActivityProps> = ({
             <span>@{username}</span>
             <ExternalLink size={10} className="text-slate-400" />
           </a>
+
+          <span className="sm:hidden text-[10px] text-slate-400 font-mono flex items-center gap-1 ms-auto">
+            ⇄ {lang === 'ar' ? 'اسحب لمعاينة النشاط' : 'Swipe for all weeks'}
+          </span>
         </div>
       </div>
 
       {/* Compact Heatmap Calendar Grid with Horizontal Scroll Protection */}
-      <div className="overflow-x-auto pb-1">
-        <div className="min-w-[540px]">
+      <div className="overflow-x-auto pb-2 touch-pan-x no-scrollbar">
+        <div className="min-w-[520px]">
           {/* Month Labels Bar */}
           <div className="flex text-[10px] font-mono text-slate-500 dark:text-gray-400 mb-1.5 ps-7">
             <div className="flex-1 flex justify-between pe-1">

@@ -15,7 +15,14 @@ import {
   Award,
   Briefcase,
   ExternalLink,
-  Star
+  Star,
+  Download,
+  Rocket,
+  Cpu,
+  Database,
+  CheckCircle2,
+  Wrench,
+  Sparkles,
 } from 'lucide-react';
 import { DeveloperProfile, WORK_STATUS_INFO } from '../data/portfolioData';
 import { WhatsAppLogo, TikTokLogo } from './TechLogos';
@@ -132,7 +139,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
 
           {/* Big Name Heading */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.1] title-contrast">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] title-contrast">
             <span className="text-slate-900 dark:text-white title-contrast">
               {firstName}{' '}
             </span>
@@ -141,10 +148,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </span>
           </h1>
 
-          {/* Specialization Rotating Title */}
-          <div className="flex flex-wrap items-center gap-2 text-base sm:text-xl font-bold text-slate-800 dark:text-gray-200 min-h-[28px]">
-            <span className="text-slate-500 dark:text-gray-400 font-normal">{t.hero.specializedIn}</span>
-            <span className="text-blue-700 dark:text-cyan-300 font-extrabold tracking-tight">
+          {/* Primary Headline: Role Emphasized for Recruiters & Hiring Managers */}
+          <div className="pt-0.5 w-full">
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-blue-500/10 dark:bg-cyan-500/10 border border-blue-500/25 dark:border-cyan-500/25 text-blue-700 dark:text-cyan-300 font-extrabold text-sm sm:text-lg lg:text-xl shadow-xs flex-wrap">
+              <Smartphone size={19} className="text-blue-600 dark:text-cyan-400 shrink-0" />
+              <span>{t.hero.headlineRole}</span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-[10px] sm:text-xs font-mono font-bold">
+                ✓ Google Play Released
+              </span>
+            </div>
+          </div>
+
+          {/* Specialization Rotating Sub-Title */}
+          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm md:text-base font-bold text-slate-700 dark:text-gray-300 min-h-[26px]">
+            <span className="text-slate-500 dark:text-gray-400 font-normal">{t.hero.specializedIn}:</span>
+            <span className="text-blue-600 dark:text-cyan-300 font-extrabold tracking-tight">
               {rotatingWords[rotatingWordIndex % rotatingWords.length]}
             </span>
           </div>
@@ -156,39 +174,38 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               : 'Crafting production-ready, high-performance cross-platform mobile apps with Flutter & Clean Architecture. Creator of "Revio", published live on Google Play.'}
           </p>
 
-          {/* Streamlined Action CTAs: Magnetic Pull Physics (React Bits & Taste-Skill) */}
+          {/* Dual Prominent Primary CTAs for Recruiters & Clients */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3.5 pt-1.5 w-full sm:w-auto">
-            {/* Primary: Explore Apps with Magnetic Physics */}
+            {/* Primary Action 1: Download CV (Recruiters & Hiring Managers) */}
             <MagneticButton
-              onClick={onExploreProjects}
-              strength={0.3}
-              className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm sm:text-base transition-colors shadow-lg shadow-blue-600/30 cursor-pointer min-h-[48px]"
+              onClick={onOpenResume}
+              strength={0.28}
+              className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-sm sm:text-base transition-all shadow-lg shadow-blue-600/35 hover:shadow-blue-600/50 cursor-pointer min-h-[48px] flex items-center justify-center gap-2.5 active:scale-95"
             >
-              <span>{t.hero.exploreApps}</span>
-              <ArrowRight size={17} className={dir === 'rtl' ? 'rotate-180' : ''} />
+              <Download size={18} className="shrink-0" />
+              <span>{t.hero.downloadCv}</span>
             </MagneticButton>
 
-            {/* Secondary: Book a Meeting with Magnetic Physics */}
+            {/* Primary Action 2: Book a Consultation (Clients & Hiring Managers) */}
             {onOpenBooking && (
               <MagneticButton
                 onClick={onOpenBooking}
                 strength={0.25}
-                className="px-5 py-3.5 rounded-xl bg-white dark:bg-[#151828] hover:bg-slate-100 dark:hover:bg-[#1d2238] text-blue-700 dark:text-cyan-300 font-bold text-sm sm:text-base border border-blue-500/30 shadow-md transition-colors cursor-pointer min-h-[48px]"
+                className="px-5 sm:px-6 py-3.5 rounded-xl bg-white dark:bg-[#151828] hover:bg-slate-100 dark:hover:bg-[#1d2238] text-blue-700 dark:text-cyan-300 font-bold text-sm sm:text-base border-2 border-blue-500/35 hover:border-blue-500 shadow-md transition-all cursor-pointer min-h-[48px] flex items-center justify-center gap-2.5 active:scale-95"
               >
-                <Video size={17} className="text-blue-600 dark:text-cyan-400 shrink-0" />
-                <span>{t.hero.bookMeeting}</span>
+                <Video size={18} className="text-blue-600 dark:text-cyan-400 shrink-0" />
+                <span>{t.hero.bookConsultation}</span>
               </MagneticButton>
             )}
 
-            {/* Secondary Option: View Resume with Magnetic Physics */}
-            <MagneticButton
-              onClick={onOpenResume}
-              strength={0.2}
-              className="px-4 py-3 rounded-xl bg-slate-100/80 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-gray-200 font-semibold text-xs sm:text-sm border border-slate-300 dark:border-white/10 transition-colors cursor-pointer"
+            {/* Secondary Action: Explore Projects */}
+            <button
+              onClick={onExploreProjects}
+              className="px-4 py-3 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-gray-200 font-semibold text-xs sm:text-sm border border-slate-300 dark:border-white/10 transition-colors cursor-pointer flex items-center justify-center gap-2 min-h-[44px]"
             >
-              <FileText size={15} className="text-emerald-500 shrink-0" />
-              <span>{t.hero.resumeCv}</span>
-            </MagneticButton>
+              <span>{t.hero.exploreApps}</span>
+              <ArrowRight size={15} className={dir === 'rtl' ? 'rotate-180' : ''} />
+            </button>
           </div>
 
           {/* Social Channels Row */}
@@ -281,7 +298,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 ? { type: 'spring', stiffness: 260, damping: 18 }
                 : { y: { repeat: Infinity, duration: 4.5, ease: 'easeInOut' } }
             }
-            className="relative group w-[260px] sm:w-[290px] md:w-[315px] lg:w-[325px] xl:w-[340px] aspect-[4/5] will-change-transform cursor-pointer select-none"
+            className="relative group w-[260px] sm:w-[290px] md:w-[315px] lg:w-[325px] xl:w-[340px] max-w-[85vw] aspect-[4/5] will-change-transform cursor-pointer select-none"
           >
             {/* Glowing 3D Aura behind the card */}
             <div
@@ -359,34 +376,140 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
       </div>
 
-      {/* Freelance & Client Services Summary Strip (Addressing Freelance Client Needs) */}
-      <div className="max-w-[1600px] mx-auto w-full mt-10 sm:mt-12 p-4 sm:p-5 rounded-2xl bg-white/80 dark:bg-[#111322]/80 border border-slate-200 dark:border-white/10 shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-600 dark:text-cyan-400 shrink-0">
-            <Briefcase size={20} />
+      {/* Compact 'Services' Strip Directly Beneath Hero (Clarifies Freelance & Contract Capabilities) */}
+      <div className="max-w-[1600px] mx-auto w-full mt-10 sm:mt-14 p-4 sm:p-6 rounded-3xl bg-white/90 dark:bg-[#101322]/90 border border-slate-200/90 dark:border-white/10 shadow-xl backdrop-blur-md">
+        {/* Header row */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3.5 mb-3.5 border-b border-slate-200/80 dark:border-white/10">
+          <div className="flex items-center gap-2.5">
+            <span className="w-8 h-8 rounded-xl bg-blue-500/10 dark:bg-cyan-500/10 border border-blue-500/20 text-blue-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
+              <Briefcase size={16} />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] sm:text-xs font-mono font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+                  {t.services.badge}
+                </span>
+                <span className="hidden sm:inline-block w-1 h-1 rounded-full bg-slate-300 dark:bg-zinc-700" />
+                <span className="hidden sm:inline-block text-[11px] font-bold text-slate-500 dark:text-gray-400">
+                  {lang === 'ar' ? 'تسليم احترافي ومعايير Clean Architecture' : 'Professional Clean Architecture Delivery'}
+                </span>
+              </div>
+              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
+                {t.services.title}
+              </h3>
+            </div>
           </div>
-          <div>
-            <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
-              {lang === 'ar' ? 'خدمات تطوير تطبيقات الموبايل والفريلانس' : 'Mobile App Development & Freelance Services'}
-            </h3>
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-gray-400">
-              {lang === 'ar'
-                ? 'تطوير MVP، ربط APIs، Firebase، تخزين Hive، ونشر تطبيقات حية على Google Play'
-                : 'MVP Development, REST APIs, Firebase, Hive storage & Google Play publishing'}
-            </p>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
-          <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-mono font-bold">
-            {lang === 'ar' ? '✓ تسليم سريع ومرن' : '✓ Fast & Clean Delivery'}
-          </span>
           <a
             href="#contact"
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-600/30 transition-all cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/30 transition-all cursor-pointer active:scale-95"
           >
-            {lang === 'ar' ? 'ابدأ مشروعك الآن' : 'Start Your Project'}
+            <span>{t.services.ctaButton}</span>
+            <ArrowRight size={13} className={dir === 'rtl' ? 'rotate-180' : ''} />
           </a>
+        </div>
+
+        {/* 5-Item Compact Services Grid */}
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+          {/* 1. MVP Development */}
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/5 hover:border-blue-500/40 hover:bg-white dark:hover:bg-white/[0.06] transition-all group flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-cyan-400 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
+                  <Rocket size={16} />
+                </div>
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-700 dark:text-cyan-300 border border-blue-500/15">
+                  {t.services.items.mvp.badge}
+                </span>
+              </div>
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-cyan-300 transition-colors">
+                {t.services.items.mvp.title}
+              </h4>
+              <p className="text-[11px] text-slate-600 dark:text-gray-300 mt-1 leading-relaxed">
+                {t.services.items.mvp.desc}
+              </p>
+            </div>
+          </div>
+
+          {/* 2. API Integration */}
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/5 hover:border-cyan-500/40 hover:bg-white dark:hover:bg-white/[0.06] transition-all group flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center border border-cyan-500/20 group-hover:scale-110 transition-transform">
+                  <Cpu size={16} />
+                </div>
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/15">
+                  {t.services.items.api.badge}
+                </span>
+              </div>
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors">
+                {t.services.items.api.title}
+              </h4>
+              <p className="text-[11px] text-slate-600 dark:text-gray-300 mt-1 leading-relaxed">
+                {t.services.items.api.desc}
+              </p>
+            </div>
+          </div>
+
+          {/* 3. Firebase Backend */}
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/5 hover:border-amber-500/40 hover:bg-white dark:hover:bg-white/[0.06] transition-all group flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 group-hover:scale-110 transition-transform">
+                  <Database size={16} />
+                </div>
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/15">
+                  {t.services.items.firebase.badge}
+                </span>
+              </div>
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors">
+                {t.services.items.firebase.title}
+              </h4>
+              <p className="text-[11px] text-slate-600 dark:text-gray-300 mt-1 leading-relaxed">
+                {t.services.items.firebase.desc}
+              </p>
+            </div>
+          </div>
+
+          {/* 4. Google Play Publishing */}
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/5 hover:border-emerald-500/40 hover:bg-white dark:hover:bg-white/[0.06] transition-all group flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform">
+                  <CheckCircle2 size={16} />
+                </div>
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/15">
+                  {t.services.items.publishing.badge}
+                </span>
+              </div>
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors">
+                {t.services.items.publishing.title}
+              </h4>
+              <p className="text-[11px] text-slate-600 dark:text-gray-300 mt-1 leading-relaxed">
+                {t.services.items.publishing.desc}
+              </p>
+            </div>
+          </div>
+
+          {/* 5. Bug Fixing & Maintenance */}
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/5 hover:border-purple-500/40 hover:bg-white dark:hover:bg-white/[0.06] transition-all group flex flex-col justify-between xs:col-span-2 md:col-span-1 lg:col-span-1">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 group-hover:scale-110 transition-transform">
+                  <Wrench size={16} />
+                </div>
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/15">
+                  {t.services.items.maintenance.badge}
+                </span>
+              </div>
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
+                {t.services.items.maintenance.title}
+              </h4>
+              <p className="text-[11px] text-slate-600 dark:text-gray-300 mt-1 leading-relaxed">
+                {t.services.items.maintenance.desc}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
