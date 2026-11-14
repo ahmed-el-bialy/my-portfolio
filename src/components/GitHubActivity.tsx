@@ -163,20 +163,20 @@ export const GitHubActivity: React.FC<GitHubActivityProps> = ({
 
   return (
     <div
-      className={`rounded-2xl bg-white dark:bg-[#10121f] border border-slate-200 dark:border-white/10 shadow-md p-3.5 sm:p-5 relative overflow-hidden transition-all duration-200 ${className}`}
+      className={`rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 shadow-md p-3.5 sm:p-5 relative overflow-hidden transition-all duration-200 ${className}`}
     >
       {/* Header Bar: Title, Live Sync, Quick Stats, and Profile Link */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 mb-3 border-b border-slate-100 dark:border-white/5 text-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 mb-3 border-b border-slate-100 dark:border-white/8 text-xs">
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
+          <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-[#f1f5f9]">
             <Activity size={15} className="text-emerald-500 shrink-0" />
             <span className="font-mono text-xs sm:text-sm">
               {lang === 'ar' ? 'سجل نشاط ومساهمات GitHub' : 'GitHub Activity Matrix'}
             </span>
           </div>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-mono font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{isFetching ? 'Syncing...' : 'Live Synced'}</span>
+          <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
+          <span className="text-emerald-700 dark:text-emerald-400 text-[11px] font-mono font-semibold">
+            {isFetching ? (lang === 'ar' ? 'جارٍ التزامن...' : 'Syncing...') : (lang === 'ar' ? 'مزامنة حية' : 'Live Synced')}
           </span>
         </div>
 

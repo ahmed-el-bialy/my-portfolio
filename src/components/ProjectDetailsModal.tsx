@@ -134,7 +134,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     hasRelease: false
   });
   const [copiedClone, setCopiedClone] = useState<boolean>(false);
-  const [liveYoutubeUrl, setLiveYoutubeUrl] = useState<string | undefined>(project?.links.youtubeDemo);
+  const [liveDemoUrl, setLiveDemoUrl] = useState<string | undefined>(project?.links.liveDemoUrl);
+  const [playlistUrl, setPlaylistUrl] = useState<string | undefined>(project?.links.playlistUrl);
   const [livePlayUrl, setLivePlayUrl] = useState<string | undefined>(project?.links.googlePlay);
   const [studyCaseContent, setStudyCaseContent] = useState<string>('');
   const [studyCaseExists, setStudyCaseExists] = useState<boolean>(false);
@@ -161,7 +162,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       setActiveScreenIndex(0);
       setLightboxOpen(false);
       setIsPlayingInline(false);
-      setLiveYoutubeUrl(project.links.youtubeDemo);
+      setLiveDemoUrl(project.links.liveDemoUrl);
+      setPlaylistUrl(project.links.playlistUrl);
       setLivePlayUrl(project.links.googlePlay);
       setStudyCaseContent('');
       setStudyCaseExists(false);
@@ -210,8 +212,11 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       // 2. Fetch fresh live README and media from GitHub
       fetchRepoLiveMetadata(project.repoName)
         .then((liveMeta) => {
-          if (liveMeta.youtubeDemoUrl) {
-            setLiveYoutubeUrl(liveMeta.youtubeDemoUrl);
+          if (liveMeta.liveDemoUrl) {
+            setLiveDemoUrl(liveMeta.liveDemoUrl);
+          }
+          if (liveMeta.playlistUrl) {
+            setPlaylistUrl(liveMeta.playlistUrl);
           }
           if (liveMeta.googlePlayUrl) {
             setLivePlayUrl(liveMeta.googlePlayUrl);
@@ -270,9 +275,13 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
   if (!isOpen || !project) return null;
 
-  const currentVideoUrl = liveYoutubeUrl || project.links.youtubeDemo;
+  const currentLiveDemoUrl = liveDemoUrl || project.links.liveDemoUrl;
+  const currentPlaylistUrl = playlistUrl || project.links.playlistUrl;
   const currentPlayUrl = livePlayUrl || project.links.googlePlay;
-  const parsedVideoId = extractYouTubeVideoId(currentVideoUrl);
+  const playerCandidateUrl = extractYouTubeVideoId(currentLiveDemoUrl)
+    ? currentLiveDemoUrl
+    : currentPlaylistUrl;
+  const parsedVideoId = extractYouTubeVideoId(playerCandidateUrl);
   const youtubeIframeSrc = parsedVideoId
     ? `https://www.youtube-nocookie.com/embed/${parsedVideoId}?autoplay=1&rel=0&modestbranding=1`
     : null;
@@ -436,7 +445,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   </span>
                 </div>
 
-                {currentVideoUrl && parsedVideoId ? (
+                {playerCandidateUrl && parsedVideoId ? (
                   <div className="space-y-2.5">
                     <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 dark:border-white/10 shadow-xl">
                       {isPlayingInline && youtubeIframeSrc ? (
@@ -497,29 +506,35 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       )}
                     </div>
 
-                    {/* Action Bar: Direct Video Link + Channel Subscribe CTA */}
-                    <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
-                      <a
-                        href={currentVideoUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 font-semibold transition-colors"
-                      >
-                        <ExternalLink size={13} />
-                        <span>{lang === 'ar' ? 'مشاهدة مباشرة على YouTube' : 'Open in YouTube'}</span>
-                      </a>
+                    {/* Dynamic Action Bar: Live Demo (Latest Update) & Full Review (Playlist) */}
+                    {(currentLiveDemoUrl || currentPlaylistUrl) && (
+                      <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
+                        {currentLiveDemoUrl && (
+                          <a
+                            href={currentLiveDemoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 border border-red-500/25 text-xs font-bold transition-all shadow-xs whitespace-nowrap"
+                          >
+                            <Play size={13} className="fill-current shrink-0" />
+                            <span>{lang === 'ar' ? `العرض الحي (${project.name})` : `Live Demo (${project.name})`}</span>
+                          </a>
+                        )}
 
-                      <a
-                        href={AHMED_PROFILE.youtubeUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs transition-colors shadow-xs"
-                      >
-                        <Youtube size={14} />
-                        <span>{lang === 'ar' ? 'زيارة قناة YouTube للاشتراك' : 'Visit YouTube Channel'}</span>
-                        <ArrowUpRight size={12} />
-                      </a>
-                    </div>
+                        {currentPlaylistUrl && (
+                          <a
+                            href={currentPlaylistUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-800 dark:text-gray-200 font-semibold text-xs transition-colors border border-slate-300 dark:border-white/10 whitespace-nowrap ms-auto"
+                          >
+                            <Youtube size={14} className="text-red-500 shrink-0" />
+                            <span>{lang === 'ar' ? `المراجعة الشاملة لـ ${project.name}` : `Watch Full Review (${project.name})`}</span>
+                            <ArrowUpRight size={12} className="shrink-0" />
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -533,32 +548,62 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       />
                     </div>
 
-                    {/* Prominent 'Visit YouTube Channel' CTA replacing missing video */}
-                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex items-center justify-between flex-wrap gap-3 shadow-xs">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-red-600/10 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 border border-red-500/20">
-                          <Youtube size={20} />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-900 dark:text-white">
-                            {lang === 'ar' ? 'عروض وتطبيقات فلاتر على YouTube' : 'Watch Flutter Mobile Demos on YouTube'}
-                          </p>
-                          <p className="text-[11px] text-slate-500 dark:text-gray-400">
-                            {lang === 'ar' ? 'تابع قناة أحمد لمشاهدة استعراضات المشاريع والاشتراك' : 'Visit Ahmed\'s channel for full mobile application walkthroughs'}
-                          </p>
-                        </div>
+                    {currentLiveDemoUrl || currentPlaylistUrl ? (
+                      <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
+                        {currentLiveDemoUrl && (
+                          <a
+                            href={currentLiveDemoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-600/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 border border-red-500/25 text-xs font-bold transition-all shadow-xs whitespace-nowrap"
+                          >
+                            <Play size={13} className="fill-current shrink-0" />
+                            <span>{lang === 'ar' ? `العرض الحي (${project.name})` : `Live Demo (${project.name})`}</span>
+                            <ExternalLink size={12} className="shrink-0" />
+                          </a>
+                        )}
+
+                        {currentPlaylistUrl && (
+                          <a
+                            href={currentPlaylistUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-800 dark:text-gray-200 font-semibold text-xs transition-colors border border-slate-300 dark:border-white/10 whitespace-nowrap ms-auto"
+                          >
+                            <Youtube size={14} className="text-red-500 shrink-0" />
+                            <span>{lang === 'ar' ? `المراجعة الشاملة لـ ${project.name}` : `Watch Full Review (${project.name})`}</span>
+                            <ArrowUpRight size={12} className="shrink-0" />
+                          </a>
+                        )}
                       </div>
-                      <a
-                        href={AHMED_PROFILE.youtubeUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs transition-all shadow-sm hover:scale-105"
-                      >
-                        <Youtube size={15} />
-                        <span>{lang === 'ar' ? 'زيارة القناة على YouTube' : 'Visit YouTube Channel'}</span>
-                        <ArrowUpRight size={13} />
-                      </a>
-                    </div>
+                    ) : (
+                      /* Prominent 'Visit YouTube Channel' CTA when project has neither video nor playlist */
+                      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex items-center justify-between flex-wrap gap-3 shadow-xs">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-red-600/10 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 border border-red-500/20">
+                            <Youtube size={20} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-slate-900 dark:text-white">
+                              {lang === 'ar' ? `استعراضات وعروض ${project.name} على YouTube` : `${project.name} Full Reviews & Walkthroughs`}
+                            </p>
+                            <p className="text-[11px] text-slate-500 dark:text-gray-400">
+                              {lang === 'ar' ? 'شاهد فيديوهات المراجعة والشرح الكامل للتطبيقات على القناة الرسمية' : 'Explore application demos and full walkthrough reviews on the channel'}
+                            </p>
+                          </div>
+                        </div>
+                        <a
+                          href={AHMED_PROFILE.youtubeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs transition-all shadow-sm hover:scale-105 whitespace-nowrap"
+                        >
+                          <Youtube size={15} className="shrink-0" />
+                          <span>{lang === 'ar' ? 'زيارة القناة على YouTube' : 'Visit YouTube Channel'}</span>
+                          <ArrowUpRight size={13} className="shrink-0" />
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1059,15 +1104,27 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               </a>
             )}
 
-            {currentVideoUrl && (
+            {currentLiveDemoUrl && (
               <a
-                href={currentVideoUrl}
+                href={currentLiveDemoUrl}
                 target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-600/15 hover:bg-red-600 text-red-600 hover:text-white dark:text-red-400 font-bold text-xs border border-red-500/25 transition-all cursor-pointer"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-600/15 hover:bg-red-600 text-red-600 hover:text-white dark:text-red-400 font-bold text-xs border border-red-500/25 transition-all cursor-pointer whitespace-nowrap"
               >
-                <Play size={13} fill="currentColor" />
-                <span>{lang === 'ar' ? 'مشاهدة الفيديو' : 'YouTube Demo'}</span>
+                <Play size={13} fill="currentColor" className="shrink-0" />
+                <span>{lang === 'ar' ? 'العرض الحي' : 'Live Demo'}</span>
+              </a>
+            )}
+
+            {currentPlaylistUrl && (
+              <a
+                href={currentPlaylistUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-800 dark:text-gray-200 font-bold text-xs border border-slate-300 dark:border-white/10 transition-all cursor-pointer whitespace-nowrap"
+              >
+                <Youtube size={13} className="text-red-500 shrink-0" />
+                <span>{lang === 'ar' ? 'المراجعة الشاملة' : 'Full Review'}</span>
               </a>
             )}
           </div>

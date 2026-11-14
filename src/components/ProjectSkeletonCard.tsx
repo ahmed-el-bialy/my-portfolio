@@ -3,7 +3,7 @@ import React from 'react';
 export const ProjectSkeletonCard: React.FC = () => {
   return (
     <div
-      className="card-techno rounded-2xl overflow-hidden bg-white dark:bg-[#131522] border border-slate-200 dark:border-white/10 flex flex-col justify-between animate-pulse"
+      className="rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between animate-pulse"
       aria-label="Loading project..."
     >
       <div>

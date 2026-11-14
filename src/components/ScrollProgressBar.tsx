@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { NavTab } from './Navbar';
 
-export const ScrollProgressBar: React.FC = () => {
+interface ScrollProgressBarProps {
+  activeTab?: NavTab;
+}
+
+export const ScrollProgressBar: React.FC<ScrollProgressBarProps> = ({ activeTab }) => {
   const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
@@ -8,9 +13,11 @@ export const ScrollProgressBar: React.FC = () => {
 
     const updateScrollProgress = () => {
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (scrollHeight > 0) {
+      if (scrollHeight > 10) {
         const progress = (window.scrollY / scrollHeight) * 100;
         setScrollProgress(Math.min(Math.max(progress, 0), 100));
+      } else {
+        setScrollProgress(0);
       }
       ticking = false;
     };
@@ -23,18 +30,22 @@ export const ScrollProgressBar: React.FC = () => {
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
     updateScrollProgress();
 
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [activeTab]);
 
   return (
     <div
-      className="fixed top-0 inset-x-0 z-[60] h-[3px] bg-transparent pointer-events-none"
+      className="fixed top-0 inset-x-0 z-[60] h-[3px] bg-slate-200/40 dark:bg-white/5 pointer-events-none"
       aria-hidden="true"
     >
       <div
-        className="h-full bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-500 transition-all duration-75 ease-out shadow-[0_0_8px_rgba(6,182,212,0.8)]"
+        className="h-full bg-gradient-to-r from-blue-600 via-cyan-400 to-blue-500 transition-[width] duration-100 ease-out"
         style={{ width: `${scrollProgress}%` }}
       />
     </div>

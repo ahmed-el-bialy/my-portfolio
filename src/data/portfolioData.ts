@@ -36,8 +36,8 @@ export interface Project {
   links: {
     github: string;
     googlePlay?: string;
-    youtubeDemo?: string;
-    liveDemo?: string;
+    liveDemoUrl?: string;
+    playlistUrl?: string;
     releaseUrl?: string;
     apkDownloadUrl?: string;
   };
@@ -142,15 +142,16 @@ export const openEmailClient = (
   email: string = AHMED_PROFILE.email,
   subject: string = 'Mobile App Project Inquiry - Flutter Developer'
 ) => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}`;
   try {
-    const newWindow = window.open(gmailUrl, '_blank', 'noopener,noreferrer');
-    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-      navigator.clipboard.writeText(email);
-    }
+    const anchor = document.createElement('a');
+    anchor.href = gmailUrl;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    anchor.click();
   } catch {
-    navigator.clipboard.writeText(email);
+    navigator.clipboard?.writeText(email);
   }
 };
 
@@ -288,7 +289,7 @@ export const FEATURED_PROJECTS: Project[] = [
     links: {
       github: "https://github.com/ahmed-el-bialy/Revio",
       googlePlay: "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US",
-      youtubeDemo: "https://youtube.com/shorts/FsG1XUAbmDY?si=lvngji7Uz-EKRROJ",
+      liveDemoUrl: "https://youtube.com/shorts/FsG1XUAbmDY?si=lvngji7Uz-EKRROJ",
       releaseUrl: "https://github.com/ahmed-el-bialy/Revio/releases/tag/v1.0.0",
       apkDownloadUrl: "https://github.com/ahmed-el-bialy/Revio/releases/download/v1.0.0/app-release.apk"
     },
@@ -387,7 +388,7 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Vibrant-store",
-      youtubeDemo: "https://youtube.com/shorts/2qito_nmDjM?si=Jut3UuDc8mMpR5G4"
+      liveDemoUrl: "https://youtube.com/shorts/2qito_nmDjM?si=Jut3UuDc8mMpR5G4"
     },
     highlight: true,
     architecture: {
@@ -434,7 +435,7 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Sky-Cast",
-      youtubeDemo: "https://youtube.com/shorts/u5JjIphdrAM"
+      liveDemoUrl: "https://youtube.com/shorts/u5JjIphdrAM"
     },
     architecture: {
       presentationLayer: "Atmospheric weather gradients that adapt dynamically to sunrise, rain, storm, or overcast conditions.",
@@ -480,7 +481,7 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/News-Cloud",
-      youtubeDemo: "https://youtube.com/shorts/Sxs8R9YPmBY"
+      liveDemoUrl: "https://youtube.com/shorts/Sxs8R9YPmBY"
     },
     architecture: {
       presentationLayer: "Bi-directional RTL/LTR news cards, categorical tab bars, and integrated WebKit/Chromium WebView.",

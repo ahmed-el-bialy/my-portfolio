@@ -1,0 +1,885 @@
+# 🚀 Ahmed El-Bialy Portfolio — Full Professional Team Rebuild Prompt
+
+> **Context**: This is a full-team engineering + design prompt to completely rebuild and re-engineer the portfolio website for **Ahmed El-Bialy** — Flutter & Mobile App Specialist — from zero. Every role, every decision, every library, and every feature is specified below. The goal is a world-class, production-grade portfolio that **WOWs** hiring managers, recruiters, and developers alike.
+
+---
+
+## 🚨 CRITICAL RULE — READ BEFORE ANYTHING ELSE
+
+> **DO NOT INVENT ANYTHING. EVER.**
+
+This is the most important rule in this entire document. You are building a **real person's portfolio**. Every single piece of content — text, numbers, project names, skills, links, descriptions — must come from **one of these verified sources only**:
+
+1. The data explicitly written in this prompt document
+2. The live GitHub API for `ahmed-el-bialy`
+3. The Google Play Store listing for `com.ahmed.revio`
+4. Ahmed's actual LinkedIn, YouTube, or TikTok profiles
+5. **Ahmed's CV** — Google Drive: `https://drive.google.com/file/d/1lQMnmyIA100YyXLu4jqFdhWluSeig4Pn/view` — Pull any factual data you need from here (education, experience, skills, dates). The CV is the ground truth for professional history.
+
+### ❌ Strictly FORBIDDEN — Zero Tolerance
+- **DO NOT** write fake testimonials or quotes
+- **DO NOT** invent years of experience (e.g., "5+ years") unless stated here
+- **DO NOT** invent project names, descriptions, or screenshots
+- **DO NOT** make up statistics ("10,000+ downloads", "50+ clients") unless pulled from a live verified source
+- **DO NOT** write a fake "About Me" paragraph — only use real facts from this document
+- **DO NOT** add skills Ahmed didn't mention (e.g., React Native, Kotlin, Swift) — his stack is Flutter/Dart
+- **DO NOT** invent social proof, awards, or certifications
+- **DO NOT** add placeholder text like "Lorem ipsum" or "[Your text here]"
+- **DO NOT** add a "blog" or "articles" section — Ahmed doesn't have one (yet)
+- **DO NOT** add a "clients" or "testimonials" section — there is no verified data for this
+
+### ✅ What To Do When Data Is Missing
+If you need content that isn't in this document or the live API:
+- Leave a **visible placeholder comment** in the code: `{/* TODO: Ahmed to fill this in */}`
+- Or ask Ahmed directly before guessing
+- Never silently fill in fake data
+
+### 🔁 Single Source of Truth for Content
+All text content must come from the translation files:
+- `/public/locales/en/translation.json`
+- `/public/locales/ar/translation.json`
+
+Ahmed will fill in the Arabic translations himself. You write the English keys and values based only on verified facts.
+
+---
+
+## ⚡ ZERO MAINTENANCE ARCHITECTURE — Auto-Sync Everything
+
+> **Core Principle**: Ahmed should NEVER have to touch the website's content after it's deployed.
+> Every piece of dynamic data must update itself automatically.
+> If a human has to manually edit a file to update content — the architecture has failed.
+
+---
+
+### 📊 What Updates Automatically — Full Data Map
+
+| Data | Source | Update Frequency | Method |
+|---|---|---|---|
+| GitHub repos list | GitHub REST API | Every 30 min | TanStack Query + Vercel Edge Cache |
+| Repo star counts | GitHub REST API | Every 30 min | Same |
+| Contribution graph | GitHub REST API `/events` | Every hour | Vercel Cron Job |
+| Pinned repos | GitHub GraphQL API | Every hour | Vercel Cron Job |
+| Latest commit dates | GitHub REST API | Every 30 min | TanStack Query |
+| GitHub follower count | GitHub REST API | Daily | Vercel Cron Job |
+| Revio Play Store rating | Scraped via Vercel serverless function | Daily | Vercel Cron Job |
+| Age / time-based stats | Calculated from fixed dates in config | Real-time | Pure JS calculation |
+| Current local time (Egypt) | Browser `Intl.DateTimeFormat` | Real-time | Client-side JS |
+
+---
+
+### 🏗️ Auto-Sync Architecture
+
+#### Layer 1 — Client-Side (Instant, No Server)
+```typescript
+// All time-based data calculated on the fly from fixed start dates
+const AHMED_START_DATE = new Date('2022-01-01') // from CV — adjust to real date
+const yearsOfExperience = calculateYears(AHMED_START_DATE) // auto-updates every year
+```
+
+#### Layer 2 — TanStack Query (Runtime Fetching with Smart Cache)
+```typescript
+// Repos auto-refresh every 30 minutes in background
+const { data: repos } = useQuery({
+  queryKey: ['github-repos'],
+  queryFn: () => fetchGitHubRepos('ahmed-el-bialy'),
+  staleTime: 30 * 60 * 1000,      // 30 minutes
+  gcTime: 60 * 60 * 1000,         // 1 hour garbage collect
+  refetchOnWindowFocus: true,      // refresh when user comes back to tab
+  refetchInterval: 30 * 60 * 1000 // background refresh every 30 min
+})
+```
+
+#### Layer 3 — Vercel Cron Jobs (Server-Side Scheduled Sync)
+Create `/api/cron/sync-github.ts` — runs on Vercel's infrastructure:
+```typescript
+// vercel.json
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-github",
+      "schedule": "0 */1 * * *"  // every hour
+    },
+    {
+      "path": "/api/cron/sync-playstore",
+      "schedule": "0 6 * * *"   // daily at 6am
+    }
+  ]
+}
+```
+The cron fetches fresh data and writes to **Vercel KV** (key-value store) or **Edge Config**.
+The client reads from KV — fast, cached, always fresh.
+
+#### Layer 4 — Vercel KV Storage (Persistent Cache)
+```typescript
+// API route reads from GitHub, writes to KV
+import { kv } from '@vercel/kv'
+
+export async function GET() {
+  const cached = await kv.get('github:repos')
+  if (cached) return Response.json(cached)
+  
+  const fresh = await fetchFromGitHub()
+  await kv.set('github:repos', fresh, { ex: 3600 }) // 1hr TTL
+  return Response.json(fresh)
+}
+```
+
+---
+
+### 📁 Single Config File — The Only File Ahmed Ever Edits
+
+Create ONE file: `src/data/config.ts`
+
+This is the **only file** Ahmed needs to touch if something changes.
+Everything else auto-syncs.
+
+```typescript
+// src/data/config.ts — SINGLE SOURCE OF TRUTH (non-API data)
+export const AHMED_CONFIG = {
+  // Personal (pulled from CV — do not change without updating CV)
+  name: { en: 'Ahmed El-Bialy', ar: 'أحمد البيلي' },
+  title: { en: 'Flutter & Mobile App Specialist', ar: 'مطور تطبيقات Flutter' },
+  bio: { en: '...', ar: '...' }, // from CV
+  email: 'ah.elbialy.dev@gmail.com',
+  phone: '+201022121573',
+  location: { en: 'Egypt', ar: 'مصر' },
+
+  // Availability (Ahmed updates this manually — the ONLY manual field)
+  availability: 'open',  // 'open' | 'busy' | 'freelance-only'
+
+  // Career start date (from CV) — used for auto-calculating experience years
+  careerStartDate: '2022-01-01', // TODO: Ahmed confirm this date from CV
+
+  // Education (from CV)
+  education: {
+    institution: 'Faculty of Artificial Intelligence, Kafrelsheikh University',
+    degree: 'Bachelor of Artificial Intelligence',
+    startYear: 2022, // from CV
+    endYear: 2026,   // from CV
+  },
+
+  // Social links
+  socials: {
+    github: 'https://github.com/ahmed-el-bialy',
+    linkedin: 'https://www.linkedin.com/in/ahmedel-bialy/',
+    youtube: 'https://youtube.com/@ahmedel-bialy',
+    tiktok: 'https://www.tiktok.com/@ahmedelbialydev',
+    playstore: 'https://play.google.com/store/apps/details?id=com.ahmed.revio',
+  },
+
+  // Featured projects (only what GitHub API can't auto-describe)
+  // Most project data (stars, forks, description) comes from GitHub API automatically
+  featuredRepos: ['revio', /* add other repo names here */],
+
+  // CV download link
+  cvUrl: 'https://drive.google.com/file/d/1lQMnmyIA100YyXLu4jqFdhWluSeig4Pn/view',
+} as const
+```
+
+---
+
+### ✅ Zero-Maintenance Checklist
+
+After building, verify every item auto-updates WITHOUT Ahmed doing anything:
+
+- [ ] New GitHub repo appears on site within 1 hour of creation
+- [ ] Star count on existing repo updates within 30 minutes
+- [ ] "X years of experience" increments automatically on anniversary
+- [ ] Contribution graph shows commits from yesterday without any action
+- [ ] If Ahmed changes his GitHub bio — it reflects on site within 1 hour
+- [ ] "Open to Work" badge: Ahmed only edits ONE field (`availability`) in `config.ts`
+- [ ] All other content is either API-driven or calculated — never hardcoded
+
+---
+
+### 📦 Additional Dependencies for Auto-Sync
+
+```json
+{
+  "@vercel/kv": "^1.0.0",
+  "@vercel/edge-config": "^1.0.0"
+}
+```
+
+Docs:
+- Vercel KV: https://vercel.com/docs/storage/vercel-kv
+- Vercel Cron Jobs: https://vercel.com/docs/cron-jobs
+- GitHub GraphQL API (for pinned repos): https://docs.github.com/en/graphql
+
+---
+
+## 🧠 PHASE 0 — THINK FIRST. CODE LAST.
+
+> **Before writing a single line of code, HTML, or CSS — you must complete this entire thinking phase.**
+> Document your reasoning as comments or a separate `DESIGN_DECISIONS.md` file.
+> Only after finishing Phase 0 do you proceed to building.
+
+---
+
+### Step 1 — Understand Who Ahmed Is (Identity Analysis)
+
+Read everything in the "Who Is Ahmed El-Bialy?" section below.
+Then answer these questions for yourself before moving on:
+
+- **What field is he in?** Mobile development with Flutter/Dart — not web, not backend, not data science.
+- **What stage of career?** Early-to-mid. AI student. Has a published app. Active on GitHub. This is important — the tone should be ambitious and hungry, not corporate and stiff.
+- **What makes him different from 1000 other Flutter developers?** He's bilingual (Arabic/English), AI-focused, based in Egypt, and has a live published app (Revio). That's his differentiation. Design around it.
+- **What is his "vibe"?** Look at his GitHub username, TikTok handle, YouTube name. He's a creator as much as he's a developer. The portfolio should feel like a **developer who takes pride in craft** — not a resume in HTML form.
+
+---
+
+### Step 2 — Understand His Audience (Who Will Visit?)
+
+Think carefully about who will actually open this URL:
+
+| Visitor Type | What They Want to See | How Fast They Decide |
+|---|---|---|
+| 🏢 Recruiter / HR | Skills, apps, contact | 10 seconds |
+| 👨‍💻 Fellow Developer | Code quality, GitHub activity, architecture choices | 2–3 minutes |
+| 🧑‍💼 Client (freelance) | Published apps, professionalism, communication | 30 seconds |
+| 🎓 University/Research | AI background, academic work | 1–2 minutes |
+
+**Design implication**: The first 10 seconds must grab the recruiter. The next 2 minutes must satisfy the developer. The design serves both simultaneously.
+
+---
+
+### Step 3 — Derive the Visual Identity from His Work (NOT from generic "developer portfolios")
+
+Do NOT copy what you've seen in other portfolios. Derive the identity from Ahmed's actual work and field:
+
+**Ask yourself:**
+- Flutter's brand color is **#027DFD** (blue). Should the accent color reference this? Why or why not?
+- Flutter targets **mobile screens** — smooth, 60fps, pixel-perfect. Should the web portfolio *feel* like a mobile app? (Answer: Yes — smooth scroll, gesture-like interactions, bottom-nav on mobile)
+- He studies **Artificial Intelligence** — does that suggest any visual metaphors? (Neural networks? Data flows? Geometric patterns?)
+- He's Egyptian and bilingual — does the design handle Arabic beautifully, or does RTL feel like an afterthought?
+- His published app is **Revio** — what does that app's aesthetic say about his taste?
+
+**After this analysis, decide:**
+1. What is the PRIMARY color? Why?
+2. What is the ACCENT color? Why?
+3. What font communicates his personality? Why?
+4. What visual metaphor or motif runs through the entire design?
+5. Dark mode or light mode as default? Why?
+
+Write your reasoning. Then set the CSS tokens based on YOUR conclusions — not based on what this document prescribes.
+
+> ⚠️ The color palette in the Tech Stack section below is a **suggestion and starting point only**.
+> If your reasoning in this step leads you to different, better-justified choices — use those instead.
+> But you MUST document why.
+
+---
+
+### Step 4 — Define the Purpose of Each Section
+
+For every section, ask: **"What decision does this section help the visitor make?"**
+
+If a section doesn't help a visitor make a decision or take action — it has no place on the site.
+
+Go through each proposed section and answer:
+
+| Section | Decision it enables | Key emotion to trigger |
+|---|---|---|
+| Hero | "Should I keep scrolling?" | Intrigue + confidence |
+| About | "Is this a real person I'd want to work with?" | Trust + relatability |
+| Skills | "Can he actually do what I need?" | Credibility |
+| Projects | "Has he shipped real things?" | Proof + excitement |
+| Timeline | "What's his trajectory?" | Growth potential |
+| Contact | "How do I reach him right now?" | Ease + urgency |
+
+If any section you end up building doesn't serve one of these purposes — remove it or redesign it until it does.
+
+---
+
+### Step 5 — Decide What NOT to Build
+
+Just as important as what you build is what you leave out.
+Review the full feature list in this document and ask for each feature:
+
+> "Does this feature serve the visitor's decision-making, or does it serve my desire to show off code?"
+
+Features that are complex to build but add little visitor value = **cut them**.
+Features that are simple but directly serve a visitor decision = **prioritize them**.
+
+Rank the features before starting. Build the highest-value ones first.
+
+---
+
+### Step 6 — Write Your Design Brief (Required Output of Phase 0)
+
+Before writing code, produce a short `DESIGN_DECISIONS.md` with:
+
+```markdown
+# Design Brief — Ahmed El-Bialy Portfolio
+
+## Identity
+- Primary persona: [your conclusion]
+- Tone: [your conclusion]
+- Differentiator: [your conclusion]
+
+## Audience Priority
+1. [most important visitor type]
+2. [second]
+3. [third]
+
+## Visual Decisions
+- Primary color: [hex] — Reason: [why]
+- Accent color: [hex] — Reason: [why]
+- Font choice: [font] — Reason: [why]
+- Visual motif: [what recurring visual element ties it together]
+- Default theme: [dark/light] — Reason: [why]
+
+## Sections — Final List (ordered by priority)
+1. [section] — Purpose: [what decision it enables]
+2. ...
+
+## Features — Priority Ranking
+1. [feature] — Value: HIGH / Effort: LOW → Build first
+2. ...
+
+## What We're NOT Building (and why)
+- [feature] — Reason: [why it was cut]
+```
+
+Only after this document is written do you open your code editor.
+
+---
+
+## 👤 Who Is Ahmed El-Bialy?
+
+- **Full Name**: Ahmed El-Bialy (أحمد البيلي)
+- **Role**: Flutter & Mobile Application Developer | AI Student
+- **Specialty**: Flutter SDK, Dart, Clean Architecture, BLoC/Cubit, REST APIs (Dio + Retrofit), Hive CE, Firebase Firestore, Android & iOS deployment
+- **Education**: Faculty of Artificial Intelligence — Kafrelsheikh University
+- **Published App**: [Revio on Google Play](https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US)
+- **Socials**:
+  - GitHub: https://github.com/ahmed-el-bialy
+  - LinkedIn: https://www.linkedin.com/in/ahmedel-bialy/
+  - YouTube: https://youtube.com/@ahmedel-bialy
+  - TikTok: https://www.tiktok.com/@ahmedelbialydev
+  - Email: ah.elbialy.dev@gmail.com
+  - Phone: +201022121573
+- **Location**: Egypt 🇪🇬
+- **Bilingual**: Supports English (LTR) and Arabic (RTL) — Full i18n
+
+---
+
+## 🏗️ The Full Team Structure
+
+You are simulating a **complete professional product team** working on this portfolio. Here's your team:
+
+| Role | Responsibility |
+|---|---|
+| 🎨 **Brand Designer** | Visual identity, color palette, typography, logo concept |
+| 🧠 **UX Architect** | Information architecture, user flow, wireframes |
+| 💻 **Frontend Engineer** | React + Vite, component architecture, state management |
+| ✨ **Motion Designer** | Animations, micro-interactions, scroll effects |
+| 🔌 **Backend/API Engineer** | GitHub API integration, live data sync |
+| ♿ **Accessibility Engineer** | WCAG AA compliance, screen readers, keyboard nav |
+| 🔍 **SEO Specialist** | Structured data, meta tags, performance, Open Graph |
+| 📱 **Responsive Engineer** | Mobile-first design, all breakpoints |
+| 🧪 **QA Engineer** | Cross-browser testing, performance auditing |
+
+---
+
+## 🛠️ Tech Stack (Mandatory)
+
+### Framework & Build Tool
+- **React 18** + **Vite 5** — https://vitejs.dev/
+- **TypeScript** (strict mode) — https://www.typescriptlang.org/
+- **React Router v6** — https://reactrouter.com/ (for smooth SPA navigation)
+
+### Styling & Design System
+- **Vanilla CSS** with CSS custom properties (design tokens) — NO Tailwind
+- **CSS Modules** for component-scoped styles
+- **Google Fonts**:
+  - `Inter` (Latin UI) — https://fonts.google.com/specimen/Inter
+  - `Cairo` (Arabic/RTL UI) — https://fonts.google.com/specimen/Cairo
+  - `Fira Code` (code snippets, terminal aesthetic) — https://fonts.google.com/specimen/Fira+Code
+  - `Permanent Marker` (accent/signature touches) — https://fonts.google.com/specimen/Permanent+Marker
+
+### Animation & Motion
+- **GSAP (GreenSock)** — https://gsap.com/ — for high-performance timeline animations
+- **Framer Motion** — https://www.framer.com/motion/ — for declarative React animations and page transitions
+- **Lottie React** — https://github.com/LottieFiles/lottie-react — for vector animations
+- **CSS Scroll-driven Animations** — native browser API for scroll effects
+
+### 3D & Visual Wow-Factor
+- **Three.js** — https://threejs.org/ — for 3D background canvas effects (optional hero section)
+- **React Three Fiber** — https://docs.pmnd.rs/react-three-fiber — R3F wrapper for Three.js
+- **Spline** (alternative) — https://spline.design/ — drag-and-drop 3D scenes embeddable as `<canvas>`
+
+### Data & API
+- **GitHub REST API v3** — https://docs.github.com/en/rest — live repos, commits, contribution graph
+- **Axios** — https://axios-http.com/ — HTTP client for API calls
+- **React Query (TanStack Query v5)** — https://tanstack.com/query/latest — caching, background refetching, loading states
+- **Google Play API** (via web scraping or manual data) — for Revio app stats
+
+### Icons & Assets
+- **Lucide React** — https://lucide.dev/ — clean, consistent icon set
+- **React Icons** — https://react-icons.github.io/react-icons/ — tech stack logos (Flutter, Dart, Firebase, etc.)
+- **Devicons** — https://devicon.dev/ — colored SVG tech logos
+
+### Internationalization (i18n)
+- **i18next** + **react-i18next** — https://www.i18next.com/ — full EN/AR bilingual support with RTL auto-switching
+
+### Code Highlighting
+- **Shiki** — https://shiki.style/ — beautiful VS Code-style syntax highlighting for code snippets in portfolio
+
+### SEO & Analytics
+- **React Helmet Async** — https://github.com/staylor/react-helmet-async — dynamic meta tags per section
+- **Vercel Analytics** — https://vercel.com/analytics — privacy-first analytics
+
+### Performance
+- **vite-plugin-imagemin** — https://github.com/vbenjs/vite-plugin-imagemin — image optimization
+- **vite-plugin-compression** — Brotli/Gzip compression
+- **React.lazy + Suspense** — code splitting per section/page
+
+---
+
+## 🎨 Visual Identity & Brand System
+
+### Design Philosophy
+Build around the concept of **"Engineer by Logic, Artist by Passion"** — a portfolio that feels like a **premium developer tool** crossed with a **high-end creative agency** site.
+
+### Color Palette — Dark Mode (Primary)
+```css
+:root[data-theme="dark"] {
+  /* Base Surfaces */
+  --color-bg-primary:    #08090d;   /* Deep space black */
+  --color-bg-secondary:  #0f1117;   /* Elevated surface */
+  --color-bg-elevated:   #161b27;   /* Cards, modals */
+  --color-bg-glass:      rgba(15, 17, 23, 0.72); /* Glassmorphism */
+
+  /* Brand Accent — Flutter Blue to Electric Cyan */
+  --color-accent-primary:   #027DFD;  /* Flutter brand blue */
+  --color-accent-secondary: #00C7FF;  /* Electric cyan */
+  --color-accent-glow:      rgba(2, 125, 253, 0.35); /* Glow blur */
+
+  /* Neon Accents */
+  --color-neon-green:   #00FF87;   /* Success / live indicator */
+  --color-neon-purple:  #BF5AF2;   /* AI/ML accent */
+  --color-neon-amber:   #FFB340;   /* Warnings / highlights */
+
+  /* Typography */
+  --color-text-primary:   #F1F5F9;  /* Near white */
+  --color-text-secondary: #94A3B8;  /* Muted slate */
+  --color-text-accent:    #027DFD;  /* Accent text */
+
+  /* Borders & Dividers */
+  --color-border:       rgba(255,255,255,0.08);
+  --color-border-hover: rgba(2, 125, 253, 0.4);
+}
+```
+
+### Color Palette — Light Mode
+```css
+:root[data-theme="light"] {
+  --color-bg-primary:    #F8FAFC;
+  --color-bg-secondary:  #FFFFFF;
+  --color-bg-elevated:   #F1F5F9;
+  --color-accent-primary:   #027DFD;
+  --color-accent-secondary: #0056CC;
+  --color-text-primary:   #0F172A;
+  --color-text-secondary: #475569;
+  --color-border:       rgba(0,0,0,0.08);
+}
+```
+
+### Typography Scale
+```css
+--font-primary: 'Inter', 'Cairo', system-ui, sans-serif;
+--font-code:    'Fira Code', 'Cascadia Code', monospace;
+--font-accent:  'Permanent Marker', cursive;
+
+--text-xs:   0.75rem;    /* 12px */
+--text-sm:   0.875rem;   /* 14px */
+--text-base: 1rem;       /* 16px */
+--text-lg:   1.125rem;   /* 18px */
+--text-xl:   1.25rem;    /* 20px */
+--text-2xl:  1.5rem;     /* 24px */
+--text-3xl:  1.875rem;   /* 30px */
+--text-4xl:  2.25rem;    /* 36px */
+--text-5xl:  3rem;       /* 48px */
+--text-6xl:  3.75rem;    /* 60px */
+--text-7xl:  4.5rem;     /* 72px */
+```
+
+---
+
+## 📐 Site Architecture & Sections
+
+### Navigation (Sticky, Glassmorphism)
+- Logo: `<AEB />` monogram in Fira Code font with animated brackets
+- Links: Home · Projects · Skills · Experience · Contact
+- Language toggle: 🌐 EN | AR (animated slide transition)
+- Theme toggle: ☀️ / 🌙 with smooth morph animation
+- Mobile: Full-screen slide-out menu with blur backdrop
+- On scroll: Nav shrinks, adds blur, border appears (CSS scroll-driven)
+
+### Section 1: Hero
+**Goal**: Unforgettable first impression. Must stop scroll.
+
+**Layout**:
+- Split layout: Left = text content, Right = 3D/visual element
+- Animated particle canvas background (floating Flutter logos or code symbols)
+- Headline: `"Building Experiences,\nOne Flutter at a Time."` — typewriter effect (Framer Motion)
+- Sub-headline: Role cycling animation → `Flutter Developer` → `Mobile Specialist` → `AI Student` → (loops)
+- CTA buttons: `[→ View Projects]` `[↓ Download CV]` both with magnetic hover effect
+- Live status badge: `🟢 Open to Work` or `🔴 Currently Busy` (config-driven)
+- Scroll indicator: Animated bouncing arrow
+
+**Tech**: GSAP for entrance animations, Framer Motion for text cycling, CSS canvas for particles
+
+### Section 2: About Me
+**Goal**: Human connection — the story behind the developer.
+
+**Content**:
+- Personal narrative (2-3 paragraphs) with animated reveal on scroll
+- Photo frame with subtle rotation on hover, gradient border
+- Quick stats bar: `2+ Years Experience · 10+ Apps Built · X GitHub Stars`
+- Education card: Kafrelsheikh University AI Faculty with animated graduation cap
+- Languages spoken: Arabic (Native) · English (Professional)
+- **Easter egg**: Click 5x on profile photo → triggers confetti animation
+
+### Section 3: Tech Stack / Skills
+**Goal**: Visual encyclopedia of Ahmed's technical arsenal.
+
+**Layout**: Interactive card grid with hover glow effects
+
+**Categories**:
+1. **Mobile Development**: Flutter, Dart, Android SDK, iOS deployment
+2. **State Management**: BLoC, Cubit, Provider, Riverpod
+3. **Backend & APIs**: REST APIs, Firebase, Hive CE, SQLite, Dio, Retrofit
+4. **Tools & DevOps**: Git, GitHub Actions, Figma, VS Code, Android Studio
+5. **AI & Computer Science**: Python, Machine Learning fundamentals, Data Structures
+
+**Features**:
+- Each skill card has: animated Devicon logo, skill name, proficiency ring (animated SVG)
+- Hover → card flips to show: how long used, notable projects using it
+- Filter tabs by category with animated underline indicator
+
+### Section 4: Projects
+**Goal**: The crown jewel — make each project feel like a product launch.
+
+**Data Source**: Live sync from GitHub API + manual featured projects config
+
+**Featured Projects** (full showcase cards):
+- **Revio** — Published Flutter app on Google Play. Card shows: live download count (if accessible), screenshots carousel, tech stack badges, `[→ Play Store]` + `[→ GitHub]` buttons
+- Other notable repos from GitHub: auto-fetched, auto-rendered
+
+**Project Card Design**:
+- Glass card with subtle gradient border
+- Video/GIF preview on hover (auto-play muted)
+- Tech stack badge strip
+- Star count, fork count, last updated (live from GitHub API)
+- Animated expand to full project detail view (not new page)
+
+**GitHub Live Sync Features** (via GitHub REST API v3 + TanStack Query):
+- Contribution heatmap (GitHub-style calendar) — custom built, not iframe
+- Real-time star counts
+- Recent commit activity
+- Total public repos, followers, following
+
+### Section 5: Experience & Timeline
+**Goal**: Career journey in a visually compelling timeline.
+
+**Layout**: Vertical timeline with alternating left/right cards (desktop), single column (mobile)
+- Scroll-triggered reveal animations per card
+- Each card: Company/Institution logo, role title, date range, bullet highlights
+- Include: Freelance work, university projects, open-source contributions
+
+### Section 6: Contact
+**Goal**: Zero friction — make it effortless to reach Ahmed.
+
+**Components**:
+- Left side: Contact info cards (email, phone, LinkedIn, GitHub) each with copy-to-clipboard on click
+- Right side: Contact form with:
+  - Name, Email, Subject (dropdown), Message
+  - Real-time validation with animated error states
+  - Send via EmailJS (https://www.emailjs.com/) — no backend needed
+  - Success animation: paper airplane flies off screen
+- Social links row: GitHub · LinkedIn · YouTube · TikTok · Google Play
+
+### Footer
+- Minimal: `© 2024 Ahmed El-Bialy. Crafted with Flutter ❤️ and React.`
+- Back-to-top button with smooth scroll
+- Current local time in Egypt 🕐 (live clock)
+
+---
+
+## ✨ Animations & Motion System
+
+### Principles
+1. **Purposeful** — every animation communicates meaning, not decoration
+2. **Fast** — entrance: 300–500ms, exit: 150–250ms
+3. **Interruptible** — user can scroll past, no forced waiting
+4. **Reduced Motion** — full `prefers-reduced-motion` support via media query
+
+### Animation Catalogue
+| Animation | Trigger | Library | Duration |
+|---|---|---|---|
+| Hero text typewriter | Page load | Framer Motion | 1.5s |
+| Navbar scroll shrink | Scroll | CSS Scroll-driven | Instant |
+| Section reveal | Scroll into view | Framer Motion `useInView` | 400ms |
+| Skill card flip | Hover | CSS 3D transforms | 300ms |
+| Project card expand | Click | Framer Motion `AnimatePresence` | 450ms |
+| Theme switch morph | Click | GSAP | 500ms |
+| Particle canvas | Continuous | Custom Canvas API / Three.js | — |
+| Contribution heatmap fill | Load | Framer Motion stagger | 1s total |
+| Contact form success | Submit | Lottie + GSAP | 800ms |
+| Language switch | Click | CSS transition + JS | 300ms |
+
+---
+
+## 🌐 Internationalization (i18n) Requirements
+
+### Full bilingual support: English & Arabic
+- **Language switcher**: persists to `localStorage` with key `ahmed_portfolio_lang_v3`
+- **RTL auto-switch**: `dir="rtl"` on `<html>`, all CSS layouts must work in both directions
+- **Font swap**: Arabic content uses `Cairo`, English uses `Inter` (via `lang` attribute CSS)
+- **Translation files**: `/public/locales/en/translation.json` + `/public/locales/ar/translation.json`
+- **ALL text content** must have translation keys — no hardcoded strings
+
+---
+
+## ♿ Accessibility Requirements (WCAG AA Minimum)
+
+- All interactive elements: visible focus rings (custom styled, not browser default)
+- Color contrast ratio ≥ 4.5:1 for normal text, ≥ 3:1 for large text
+- All images: descriptive `alt` attributes
+- All icons: `aria-label` or `aria-hidden="true"` with adjacent text
+- Form inputs: proper `<label>` associations
+- Skip-to-main-content link (visually hidden, visible on focus)
+- Keyboard navigation: Tab order logical, no keyboard traps
+- Landmark roles: `<header>`, `<main>`, `<nav>`, `<section>`, `<footer>` all used
+
+---
+
+## 🔍 SEO & Performance Requirements
+
+### SEO
+- JSON-LD schema: `Person` type with all Ahmed's data
+- Open Graph + Twitter Cards for all pages
+- Dynamic meta description per section (React Helmet Async)
+- Canonical URLs
+- Sitemap.xml auto-generated
+
+### Performance Targets (Lighthouse)
+| Metric | Target |
+|---|---|
+| Performance | ≥ 95 |
+| Accessibility | ≥ 95 |
+| Best Practices | 100 |
+| SEO | 100 |
+| LCP | < 2.5s |
+| FID/INP | < 100ms |
+| CLS | < 0.1 |
+
+### Implementation
+- Images: WebP format, lazy loading, `srcset` for responsive
+- Fonts: `font-display: swap`, preconnect to Google Fonts
+- Code splitting: each section lazy-loaded
+- Critical CSS inlined
+- Service Worker for offline support (optional v2)
+
+---
+
+## 📁 Project File Structure
+
+```
+ahmed-portfolio/
+├── public/
+│   ├── locales/
+│   │   ├── en/translation.json
+│   │   └── ar/translation.json
+│   ├── og-image.jpg
+│   ├── favicon.ico
+│   └── ...
+├── src/
+│   ├── assets/           # Static images, videos, PDFs
+│   ├── components/
+│   │   ├── ui/           # Reusable: Button, Card, Badge, Modal
+│   │   ├── sections/     # Hero, About, Skills, Projects, Contact
+│   │   └── layout/       # Navbar, Footer, ThemeProvider
+│   ├── hooks/            # useScrollPosition, useGitHub, useTheme, useLang
+│   ├── services/         # GitHub API client, EmailJS service
+│   ├── store/            # Global state (theme, language)
+│   ├── styles/
+│   │   ├── tokens.css    # Design tokens (colors, spacing, type)
+│   │   ├── reset.css     # Modern CSS reset
+│   │   ├── globals.css   # Base styles
+│   │   └── animations.css # Keyframes library
+│   ├── types/            # TypeScript interfaces
+│   ├── utils/            # Helpers, formatters
+│   ├── data/
+│   │   ├── projects.ts   # Featured projects config
+│   │   ├── skills.ts     # Skills data
+│   │   └── experience.ts # Timeline data
+│   ├── App.tsx
+│   └── main.tsx
+├── index.html
+├── vite.config.ts
+├── tsconfig.json
+└── package.json
+```
+
+---
+
+## 🔌 GitHub API Integration Spec
+
+**Base URL**: `https://api.github.com/users/ahmed-el-bialy`
+
+**Endpoints to consume**:
+```typescript
+// User profile
+GET /users/ahmed-el-bialy
+
+// All public repos (sorted by stars)
+GET /users/ahmed-el-bialy/repos?sort=stars&per_page=100
+
+// Contribution events (recent activity)
+GET /users/ahmed-el-bialy/events/public
+
+// Specific repo details
+GET /repos/ahmed-el-bialy/{repo_name}
+```
+
+**Caching strategy** (TanStack Query):
+- `staleTime`: 5 minutes
+- `gcTime`: 30 minutes
+- Show skeleton loaders while fetching
+- Graceful fallback: show static data if API rate-limited
+
+**GitHub Token**: Store in `.env.local` as `VITE_GITHUB_TOKEN` for higher rate limits (60→5000 req/hr)
+
+---
+
+## 🎯 Unique Differentiating Features ("Wow" Factor)
+
+1. **Live GitHub Contribution Heatmap** — Custom SVG calendar, not embedded image. Animated cell-by-cell fill on load.
+
+2. **Terminal Easter Egg** — Hidden command: type `ahmed` anywhere on the page → terminal modal appears with fake CLI:
+   ```
+   > ahmed --help
+   > ahmed skills --list
+   > ahmed contact --email
+   ```
+
+3. **Revio App Showcase** — Dedicated hero-style section for the published app. Mockup on phone frame, screenshots carousel, Play Store badge.
+
+4. **"Currently Listening"** — Optional widget: Spotify Now Playing (if Ahmed uses Spotify API integration).
+
+5. **AI Student Badge** — Animated neural network SVG that pulses in the About section.
+
+6. **Cursor Custom** — Custom animated cursor: Flutter logo that follows mouse, leaves trailing particles on click.
+
+7. **Scroll-Progress Bar** — Thin gradient line at top of page showing read progress.
+
+8. **Code Snippet Showcases** — In Projects section, show key code snippets from repos with Shiki syntax highlighting (Flutter/Dart code).
+
+9. **"Copy Email" Micro-interaction** — Click email → copies to clipboard → icon morphs ✉️→✅ → tooltip "Copied!" fades in.
+
+10. **Performance Badge** — Live Lighthouse score badge in footer (or link to PageSpeed report).
+
+---
+
+## 📦 package.json Dependencies
+
+```json
+{
+  "dependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-router-dom": "^6.26.0",
+    "framer-motion": "^11.0.0",
+    "gsap": "^3.12.0",
+    "@tanstack/react-query": "^5.56.0",
+    "axios": "^1.7.0",
+    "i18next": "^23.14.0",
+    "react-i18next": "^15.0.0",
+    "i18next-browser-languagedetector": "^8.0.0",
+    "i18next-http-backend": "^2.6.0",
+    "lucide-react": "^0.441.0",
+    "react-icons": "^5.3.0",
+    "@lottiefiles/react-lottie-player": "^3.5.0",
+    "emailjs-com": "^3.2.0",
+    "shiki": "^1.18.0",
+    "three": "^0.168.0",
+    "@react-three/fiber": "^8.17.0",
+    "@react-three/drei": "^9.111.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vite": "^5.4.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "vite-plugin-compression": "^0.5.0"
+  }
+}
+```
+
+---
+
+## 🚀 Deployment & DevOps
+
+- **Platform**: Vercel (keep same domain: `ahmed-el-bialy.vercel.app`)
+- **CI/CD**: Auto-deploy on push to `main` branch
+- **Environment Variables** in Vercel dashboard:
+  - `VITE_GITHUB_TOKEN` — GitHub Personal Access Token
+  - `VITE_EMAILJS_SERVICE_ID` — EmailJS service
+  - `VITE_EMAILJS_TEMPLATE_ID` — EmailJS template
+  - `VITE_EMAILJS_PUBLIC_KEY` — EmailJS public key
+- **Preview deployments**: Every PR gets a preview URL
+- **Analytics**: Enable Vercel Analytics + Speed Insights
+
+---
+
+## 🎓 Key Resources & Documentation Links
+
+| Technology | Official Docs |
+|---|---|
+| React 18 | https://react.dev/reference/react |
+| Vite 5 | https://vitejs.dev/guide/ |
+| TypeScript | https://www.typescriptlang.org/docs/ |
+| Framer Motion | https://www.framer.com/motion/introduction/ |
+| GSAP | https://gsap.com/docs/v3/ |
+| TanStack Query | https://tanstack.com/query/latest/docs/react/overview |
+| i18next | https://www.i18next.com/overview/introduction |
+| React Router v6 | https://reactrouter.com/en/main/start/tutorial |
+| GitHub API | https://docs.github.com/en/rest/users/users |
+| EmailJS | https://www.emailjs.com/docs/ |
+| Lucide React | https://lucide.dev/guide/installation |
+| React Icons | https://react-icons.github.io/react-icons/ |
+| Devicons | https://devicon.dev/ |
+| Shiki | https://shiki.style/guide/ |
+| Three.js | https://threejs.org/docs/ |
+| React Three Fiber | https://docs.pmnd.rs/react-three-fiber/getting-started/introduction |
+| Lottie React | https://github.com/LottieFiles/lottie-react |
+| CSS Scroll-driven | https://scroll-driven-animations.style/ |
+| WCAG AA | https://www.w3.org/TR/WCAG21/ |
+| Schema.org Person | https://schema.org/Person |
+
+---
+
+## ✅ Definition of Done
+
+The rebuild is complete when ALL of the following are true:
+
+- [ ] All 6 sections + nav + footer are implemented
+- [ ] Dark/Light mode works with smooth transition
+- [ ] English/Arabic RTL switching works fully
+- [ ] GitHub API live data loads (repos, stats, contribution graph)
+- [ ] Contact form sends email via EmailJS
+- [ ] Lighthouse score ≥ 95 on all 4 metrics
+- [ ] Fully responsive: 320px → 2560px
+- [ ] Zero console errors or TypeScript errors
+- [ ] All animations respect `prefers-reduced-motion`
+- [ ] WCAG AA compliant
+- [ ] Deployed to Vercel with environment variables configured
+- [ ] Custom domain / existing domain preserved
+- [ ] JSON-LD structured data validated on schema.org
+- [ ] All social links working and correct
+- [ ] Revio Play Store card displayed prominently
+
+---
+
+*Prompt authored for Ahmed El-Bialy's portfolio full-team rebuild. Version 1.0 — November 2024.*

@@ -41,7 +41,7 @@ export const SpotlightCard: React.FC<SpotlightCardProps> = ({
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`group relative overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0c0d15] shadow-sm hover:shadow-xl dark:shadow-none transition-all duration-300 ${className}`}
+      className={`group relative overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] shadow-sm hover:shadow-xl dark:shadow-none transition-all duration-300 ${className}`}
       {...props}
     >
       {/* 1. Dynamic Luminous Border Spotlight Glow (React Bits Signature Effect) */}

@@ -6,13 +6,14 @@ import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
 import { DeveloperProfile } from '../data/portfolioData';
 
+export type MeetingType = 'quick-chat' | 'discovery-cal' | 'technical-discussion';
+
 interface BookingMeetingModalProps {
   isOpen: boolean;
   onClose: () => void;
   profile?: DeveloperProfile;
+  initialType?: MeetingType | null;
 }
-
-type MeetingType = 'quick-chat' | 'discovery-cal' | 'technical-discussion';
 
 interface MeetingOption {
   id: MeetingType;
@@ -65,11 +66,19 @@ const MEETING_OPTIONS: MeetingOption[] = [
 export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
   isOpen,
   onClose,
+  initialType = null,
 }) => {
   useScrollLock(isOpen);
   const { isArabic } = useLanguage();
-  const [selectedType, setSelectedType] = useState<MeetingType | null>(null);
+  const [selectedType, setSelectedType] = useState<MeetingType | null>(initialType);
   const [isIframeLoading, setIsIframeLoading] = useState(true);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setSelectedType(initialType || null);
+      setIsIframeLoading(true);
+    }
+  }, [isOpen, initialType]);
 
   // Keyboard Escape listener
   React.useEffect(() => {

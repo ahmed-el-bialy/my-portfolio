@@ -120,7 +120,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
             <Mail size={13} />
             <span>{t.contact.badge}</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight title-contrast">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#f1f5f9] tracking-tight">
             {t.contact.title}
           </h2>
           <p className="text-slate-600 dark:text-gray-400 text-xs sm:text-sm mt-1">

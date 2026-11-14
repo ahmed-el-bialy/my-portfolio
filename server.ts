@@ -19,6 +19,171 @@ async function startServer() {
   let lastPushRepo = '';
   let pushEventsCount = 0;
 
+  interface CachedPortfolioEntry {
+    timestamp: number;
+    data: any;
+  }
+  const GITHUB_CACHE_TTL_MS = 1000 * 60 * 10; // 10 minutes
+  const portfolioServerCache = new Map<string, CachedPortfolioEntry>();
+
+  const githubHeaders = (): Record<string, string> => {
+    const h: Record<string, string> = {
+      Accept: 'application/vnd.github+json',
+      'User-Agent': 'ahmed-el-bialy-portfolio-server',
+    };
+    const token = process.env.GITHUB_TOKEN;
+    if (token) {
+      h.Authorization = `Bearer ${token}`;
+    }
+    return h;
+  };
+
+  async function fetchRawReadmeTextServer(username: string, repoName: string, defaultBranch: string): Promise<string | null> {
+    const branches = Array.from(new Set([defaultBranch || 'main', 'main', 'master']));
+    for (const branch of branches) {
+      try {
+        const res = await fetch(`https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/${branch}/README.md`);
+        if (res.ok) {
+          const text = await res.text();
+          if (text && text.trim().length > 10) {
+            return text;
+          }
+        }
+      } catch {}
+    }
+    return null;
+  }
+
+  async function fetchSingleRepoReleaseServer(username: string, repoName: string): Promise<any> {
+    try {
+      const listRes = await fetch(
+        `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/releases?per_page=1`,
+        { headers: githubHeaders() }
+      );
+      if (!listRes.ok) return { hasRelease: false };
+      const listData = await listRes.json();
+      if (!Array.isArray(listData) || listData.length === 0) {
+        return { hasRelease: false };
+      }
+      const releaseData = listData[0];
+      if (!releaseData?.html_url) return { hasRelease: false };
+      const assets = Array.isArray(releaseData.assets) ? releaseData.assets : [];
+      const apkAsset = assets.find((a: any) => typeof a?.name === 'string' && a.name.toLowerCase().endsWith('.apk'));
+      return {
+        hasRelease: true,
+        releaseUrl: releaseData.html_url,
+        tagName: releaseData.tag_name || releaseData.name || 'v1.0.0',
+        name: releaseData.name,
+        publishedAt: releaseData.published_at || releaseData.created_at,
+        apkDownloadUrl: apkAsset ? apkAsset.browser_download_url : undefined,
+        apkFileName: apkAsset ? apkAsset.name : undefined,
+        apkSize: apkAsset ? apkAsset.size : undefined,
+        assetsCount: assets.length,
+        prerelease: Boolean(releaseData.prerelease),
+        body: releaseData.body,
+      };
+    } catch {
+      return { hasRelease: false };
+    }
+  }
+
+  // Consolidated GitHub Portfolio Proxy (reduces 60-100 client requests down to 1 cached call)
+  app.get('/api/github/portfolio', async (req, res) => {
+    const username = String(req.query.username || 'ahmed-el-bialy').trim() || 'ahmed-el-bialy';
+    const forceRefresh = req.query.refresh === '1';
+    const cacheKey = username.toLowerCase();
+    const cached = portfolioServerCache.get(cacheKey);
+
+    if (!forceRefresh && cached && Date.now() - cached.timestamp < GITHUB_CACHE_TTL_MS) {
+      return res.json({
+        success: true,
+        cached: true,
+        cachedAt: cached.timestamp,
+        ...cached.data,
+      });
+    }
+
+    try {
+      const [userRes, reposRes] = await Promise.all([
+        fetch(`https://api.github.com/users/${encodeURIComponent(username)}`, { headers: githubHeaders() }),
+        fetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100&sort=pushed`, {
+          headers: githubHeaders(),
+        }),
+      ]);
+
+      if (!userRes.ok || !reposRes.ok) {
+        if (cached) {
+          return res.json({
+            success: true,
+            cached: true,
+            stale: true,
+            cachedAt: cached.timestamp,
+            ...cached.data,
+          });
+        }
+        return res.status(502).json({
+          success: false,
+          rateLimited: userRes.status === 403 || reposRes.status === 403,
+          status: `${userRes.status}/${reposRes.status}`,
+        });
+      }
+
+      const userData = await userRes.json();
+      const rawRepos = await reposRes.json();
+      const reposList: any[] = Array.isArray(rawRepos)
+        ? rawRepos.filter((r: any) => r?.name && r.name.toLowerCase() !== username.toLowerCase())
+        : [];
+
+      // Fetch raw READMEs from raw.githubusercontent.com (0 REST API rate-limit cost) and single release check for top repos
+      const targetRepos = reposList.slice(0, 20);
+      const rawReadmes: Record<string, string> = {};
+      const releasesMap: Record<string, any> = {};
+
+      await Promise.all(
+        targetRepos.map(async (r: any) => {
+          const [readme, release] = await Promise.all([
+            fetchRawReadmeTextServer(username, r.name, r.default_branch || 'main'),
+            fetchSingleRepoReleaseServer(username, r.name),
+          ]);
+          if (readme) {
+            rawReadmes[r.name] = readme;
+          }
+          releasesMap[r.name] = release;
+        })
+      );
+
+      const payload = {
+        user: userData,
+        repos: reposList,
+        rawReadmes,
+        releasesMap,
+      };
+
+      portfolioServerCache.set(cacheKey, {
+        timestamp: Date.now(),
+        data: payload,
+      });
+
+      return res.json({
+        success: true,
+        cached: false,
+        cachedAt: Date.now(),
+        ...payload,
+      });
+    } catch (error: any) {
+      if (cached) {
+        return res.json({
+          success: true,
+          cached: true,
+          stale: true,
+          cachedAt: cached.timestamp,
+          ...cached.data,
+        });
+      }
+      return res.status(500).json({ success: false, error: error?.message || 'GitHub proxy failure' });
+    }
+  });
+
   // GitHub Webhook Receiver API Route
   app.post('/api/webhook/github', (req, res) => {
     try {
@@ -29,6 +194,7 @@ async function startServer() {
       lastPushTimestamp = new Date().toISOString();
       lastPushRepo = payload?.repository?.full_name || payload?.repository?.name || 'unknown';
 
+      portfolioServerCache.clear();
       console.log(`[GitHub Webhook] Received ${event} event for repo: ${lastPushRepo} at ${lastPushTimestamp}`);
 
       return res.json({
@@ -205,7 +371,7 @@ async function startServer() {
 
   if (!isProduction) {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false },
       appType: 'spa',
     });
     app.use(vite.middlewares);

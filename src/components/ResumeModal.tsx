@@ -100,7 +100,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
               <Award size={18} />
             </span>
             <div className="truncate">
-              <h3 id="resume-modal-title" className="text-sm font-bold text-slate-900 dark:text-white title-contrast truncate">
+              <h3 id="resume-modal-title" className="text-sm font-bold text-slate-900 dark:text-white truncate">
                 {t.resume.title}
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-gray-400 truncate">
@@ -264,13 +264,13 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
           </div>
         ) : (
           /* Scrollable CV Body */
-          <div className="flex-1 min-h-0 overflow-y-auto p-5 sm:p-8 space-y-7 text-slate-700 dark:text-gray-300 text-xs sm:text-sm print:bg-white print:text-black body-contrast">
+          <div className="flex-1 min-h-0 overflow-y-auto p-5 sm:p-8 space-y-7 text-slate-700 dark:text-gray-300 text-xs sm:text-sm print:bg-white print:text-black">
           
           {/* Header Info */}
           <div className="border-b border-black/10 dark:border-white/10 pb-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight title-contrast">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                   {profile.name}
                 </h1>
                 <p className="text-blue-700 dark:text-cyan-400 font-bold text-sm mt-0.5">
@@ -332,20 +332,20 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
               </div>
             </div>
 
-            <p className="text-slate-700 dark:text-gray-300 text-xs sm:text-sm mt-4 leading-relaxed body-contrast">
+            <p className="text-slate-700 dark:text-gray-300 text-xs sm:text-sm mt-4 leading-relaxed">
               {t.hero.bio}
             </p>
           </div>
 
           {/* Education Section */}
           <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2 title-contrast">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
               <GraduationCap size={16} className="text-blue-600 dark:text-blue-400" />
               <span>{t.resume.educationTitle}</span>
             </h2>
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-black/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-sm title-contrast">{t.experience.degreeTitle}</h3>
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm">{t.experience.degreeTitle}</h3>
                 <div className="text-xs text-blue-700 dark:text-cyan-400 font-bold mt-0.5">{t.experience.faculty} • {t.experience.university}</div>
                 <div className="text-[11px] text-slate-700 dark:text-gray-300 mt-2 font-medium">
                   {t.experience.courseworkTitle} {EDUCATION_DATA.coursework.slice(0, 5).join(' • ')}
@@ -360,7 +360,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
 
           {/* Experience Section */}
           <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2 title-contrast">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
               <Briefcase size={16} className="text-blue-600 dark:text-blue-400" />
               <span>{t.resume.experienceTitle}</span>
             </h2>
@@ -369,12 +369,12 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                 <div key={idx} className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-2">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                     <div>
-                      <h3 className="font-bold text-slate-900 dark:text-white text-sm title-contrast">{exp.role}</h3>
+                      <h3 className="font-bold text-slate-900 dark:text-white text-sm">{exp.role}</h3>
                       <div className="text-xs text-blue-700 dark:text-cyan-400 font-medium">{exp.organization} • {exp.location}</div>
                     </div>
                     <span className="text-xs font-mono text-slate-600 dark:text-gray-400">{exp.period}</span>
                   </div>
-                  <p className="text-xs text-slate-700 dark:text-gray-300 leading-relaxed body-contrast">{exp.description}</p>
+                  <p className="text-xs text-slate-700 dark:text-gray-300 leading-relaxed">{exp.description}</p>
                   <ul className="list-disc list-inside space-y-1 text-xs text-slate-600 dark:text-gray-400 pt-1">
                     {exp.achievements.map((ach, i) => (
                       <li key={i}>{ach}</li>
@@ -387,7 +387,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
 
           {/* Featured Apps */}
           <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2 title-contrast">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
               <FolderGit2 size={16} className="text-blue-600 dark:text-blue-400" />
               <span>{t.resume.projectsTitle}</span>
             </h2>
@@ -396,7 +396,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                 <div key={proj.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-black/5 dark:border-white/5 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <h3 className="font-bold text-slate-900 dark:text-white text-sm title-contrast">{proj.name}</h3>
+                      <h3 className="font-bold text-slate-900 dark:text-white text-sm">{proj.name}</h3>
                       {proj.links.googlePlay && (
                         <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
                           Google Play

@@ -150,6 +150,7 @@ export interface Translations {
     actions: {
       playStore: string;
       liveDemo: string;
+      fullReview: string;
       sourceCode: string;
       downloadApk: string;
       viewSpecs: string;
@@ -410,6 +411,7 @@ export const translations: Record<Language, Translations> = {
       actions: {
         playStore: "Google Play",
         liveDemo: "Live Demo",
+        fullReview: "Full Review",
         sourceCode: "Source Code",
         downloadApk: "Download APK",
         viewSpecs: "Tech Specs",
@@ -694,7 +696,8 @@ export const translations: Record<Language, Translations> = {
       sortAlphabetical: "أبجدياً (A-Z)",
       actions: {
         playStore: "متجر Google Play",
-        liveDemo: "عرض تجريبي",
+        liveDemo: "العرض الحي",
+        fullReview: "المراجعة الشاملة",
         sourceCode: "الكود المصدري",
         downloadApk: "تحميل APK",
         viewSpecs: "المواصفات التقنية",

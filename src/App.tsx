@@ -1,65 +1,125 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { flushSync } from 'react-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { DEFAULT_PROFILE, openEmailClient, FEATURED_PROJECTS } from './data/portfolioData';
-import { fetchGitHubUserStats, clearAllGitHubLocalCache } from './services/githubService';
+import { AnimatePresence, motion } from 'framer-motion';
+import { DEFAULT_PROFILE, openEmailClient, FEATURED_PROJECTS, Project } from './data/portfolioData';
+import { AHMED_CONFIG, getEgyptLocalTime } from './data/config';
+import {
+  fetchConsolidatedGitHubPortfolio,
+  clearAllGitHubLocalCache,
+} from './services/githubService';
 import { parseCvAndLinkedinProfile } from './services/cvParserService';
 import { Navbar, NavTab } from './components/Navbar';
-import { VerticalNavRail } from './components/VerticalNavRail';
 import { ScrollProgressBar } from './components/ScrollProgressBar';
 import { CustomCursor } from './components/CustomCursor';
-import { SectionDivider } from './components/SectionDivider';
 import { HeroSection } from './components/HeroSection';
-import { StackSection } from './components/StackSection';
-import { ProjectsSection } from './components/ProjectsSection';
-import { ExperienceSection } from './components/ExperienceSection';
-import { ContactSection } from './components/ContactSection';
+import { OverviewProjectsPreview } from './components/OverviewProjectsPreview';
+import { AboutSection } from './components/AboutSection';
+import { HowIWorkSection } from './components/HowIWorkSection';
 import { ContactModal } from './components/ContactModal';
 import { ResumeModal } from './components/ResumeModal';
-import { BookingMeetingModal } from './components/BookingMeetingModal';
-import { RevealOnScroll } from './components/RevealOnScroll';
-import { FAQSection } from './components/FAQSection';
+import { BookingMeetingModal, MeetingType } from './components/BookingMeetingModal';
+import { ProjectDetailsModal } from './components/ProjectDetailsModal';
 import { ThemeRevealOverlay } from './components/ThemeRevealOverlay';
-import { ShieldCheck, Github, Linkedin, Youtube, Mail, RefreshCw, Radio, ArrowUp } from 'lucide-react';
+import { Github, Linkedin, Youtube, Mail, RefreshCw, ArrowUp, Terminal } from 'lucide-react';
 import { WhatsAppLogo, TikTokLogo } from './components/TechLogos';
 import { useLanguage } from './context/LanguageContext';
-import { motion } from 'framer-motion';
+
+// Lazy-load secondary views & terminal modal for clean code splitting
+const ProjectsSection = lazy(() =>
+  import('./components/ProjectsSection').then((m) => ({ default: m.ProjectsSection }))
+);
+const ExperienceSection = lazy(() =>
+  import('./components/ExperienceSection').then((m) => ({ default: m.ExperienceSection }))
+);
+const StackSection = lazy(() =>
+  import('./components/StackSection').then((m) => ({ default: m.StackSection }))
+);
+const ContactSection = lazy(() =>
+  import('./components/ContactSection').then((m) => ({ default: m.ContactSection }))
+);
+const FAQSection = lazy(() =>
+  import('./components/FAQSection').then((m) => ({ default: m.FAQSection }))
+);
+const TerminalEasterEggModal = lazy(() =>
+  import('./components/TerminalEasterEggModal').then((m) => ({ default: m.TerminalEasterEggModal }))
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes stale time
-      gcTime: 1000 * 60 * 30, // 30 minutes cache retention
-      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 30,
+      gcTime: 1000 * 60 * 60,
+      refetchOnWindowFocus: true,
+      refetchInterval: 1000 * 60 * 30,
     },
   },
 });
 
+function resolveInitialTab(): NavTab {
+  if (typeof window === 'undefined') return 'overview';
+  const hash = window.location.hash.replace('#', '').toLowerCase();
+  if (hash === 'projects') return 'projects';
+  if (hash === 'experience' || hash === 'stack') return 'experience';
+  if (hash === 'contact' || hash === 'faq') return 'contact';
+  return 'overview';
+}
+
+const ViewSuspenseFallback: React.FC = () => (
+  <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16">
+    <div className="h-48 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 animate-pulse" />
+  </div>
+);
+
 export default function App() {
-  const { lang, dir, t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<NavTab>('hero');
+  const { lang, t } = useLanguage();
+  const [activeTab, setActiveTab] = useState<NavTab>(resolveInitialTab);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [bookingInitialType, setBookingInitialType] = useState<MeetingType | null>(null);
+  const [heroInspectedProject, setHeroInspectedProject] = useState<Project | null>(null);
   const [liveRepoCount, setLiveRepoCount] = useState<number>(13);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
   const [lastSyncTime, setLastSyncTime] = useState<string>('Just now');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [egyptClock, setEgyptClock] = useState<string>(() => getEgyptLocalTime(lang));
+
+  const profile = DEFAULT_PROFILE;
+
+  const openBookingModal = (type: MeetingType | null = null) => {
+    setBookingInitialType(type);
+    setIsBookingOpen(true);
+  };
+
+  const handleInspectRevio = () => {
+    const revio = FEATURED_PROJECTS.find((p) => p.repoName.toLowerCase() === 'revio');
+    if (revio) {
+      setHeroInspectedProject(revio);
+    } else {
+      handleNavigate('projects');
+    }
+  };
 
   const handleManualRefresh = async () => {
     setIsSyncing(true);
     try {
       clearAllGitHubLocalCache();
-      await queryClient.invalidateQueries();
-      await queryClient.refetchQueries();
+      const fresh = await fetchConsolidatedGitHubPortfolio(profile.githubUsername, true);
+      queryClient.setQueryData(['github-consolidated', profile.githubUsername], fresh);
+      setLiveRepoCount(fresh.repos.length || liveRepoCount);
       setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    } catch (e) {
+    } catch {
+      // ignore offline
     } finally {
-      setTimeout(() => setIsSyncing(false), 500);
+      setTimeout(() => setIsSyncing(false), 400);
     }
   };
 
-  // Theme state with localStorage persistence
+  // Theme state with localStorage persistence (Obsidian Dark default)
   const [isDark, setIsDark] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('ahmed_portfolio_theme');
@@ -68,12 +128,9 @@ export default function App() {
     return true;
   });
 
-  const profile = DEFAULT_PROFILE;
-
-  // Dark / light theme switcher with smooth transition handling
-  useEffect(() => {
-    localStorage.setItem('ahmed_portfolio_theme', isDark ? 'dark' : 'light');
-    if (isDark) {
+  const applyThemeToDom = (dark: boolean) => {
+    localStorage.setItem('ahmed_portfolio_theme', dark ? 'dark' : 'light');
+    if (dark) {
       document.documentElement.classList.add('dark');
       document.documentElement.classList.remove('light');
       document.documentElement.setAttribute('data-theme', 'dark');
@@ -82,36 +139,159 @@ export default function App() {
       document.documentElement.classList.add('light');
       document.documentElement.setAttribute('data-theme', 'light');
     }
+  };
+
+  useEffect(() => {
+    applyThemeToDom(isDark);
   }, [isDark]);
 
-  // Language transition states without remounting
-  const [isLangFading, setIsLangFading] = useState(false);
+  // Keep Egypt local time fresh
+  useEffect(() => {
+    setEgyptClock(getEgyptLocalTime(lang));
+    const interval = setInterval(() => {
+      setEgyptClock(getEgyptLocalTime(lang));
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [lang]);
 
-  // Soft crossfade effect when language toggles
+  // Global CLI Easter Egg listener: typing "ahmed" outside input/textarea
+  useEffect(() => {
+    let buffer = '';
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tagName = target?.tagName?.toLowerCase();
+      if (tagName === 'input' || tagName === 'textarea' || target?.isContentEditable) {
+        return;
+      }
+      if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
+
+      buffer = (buffer + e.key.toLowerCase()).slice(-5);
+      if (buffer === 'ahmed') {
+        buffer = '';
+        setIsTerminalOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  // Language fade without remounting
+  const [isLangFading, setIsLangFading] = useState(false);
   useEffect(() => {
     setIsLangFading(true);
-    const timer = setTimeout(() => {
-      setIsLangFading(false);
-    }, 220);
+    const timer = setTimeout(() => setIsLangFading(false), 200);
     return () => clearTimeout(timer);
   }, [lang]);
 
+  type ViewTransitionLike = {
+    ready: Promise<void>;
+    finished: Promise<void>;
+    skipTransition: () => void;
+  };
+
+  const activeTransitionRef = useRef<ViewTransitionLike | null>(null);
   const [revealOrigin, setRevealOrigin] = useState<{ x: number; y: number } | null>(null);
   const [isTransitioningTheme, setIsTransitioningTheme] = useState(false);
   const [targetIsDark, setTargetIsDark] = useState(isDark);
+  const [fallbackKey, setFallbackKey] = useState(0);
 
-  const handleToggleTheme = (e?: React.MouseEvent) => {
-    if (e) {
-      setRevealOrigin({ x: e.clientX, y: e.clientY });
-    } else {
-      setRevealOrigin({ x: window.innerWidth - 60, y: 40 });
+  const handleToggleTheme = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    // 1. Exact button center coordinates (desktop & mobile)
+    let x = typeof window !== 'undefined' ? window.innerWidth - 60 : 0;
+    let y = 32;
+    if (e?.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      x = rect.left + rect.width / 2;
+      y = rect.top + rect.height / 2;
+    } else if (e) {
+      x = e.clientX;
+      y = e.clientY;
     }
-    const nextDark = !isDark;
+
+    // 2. Target theme (safe on rapid consecutive clicks)
+    const nextDark = isTransitioningTheme ? !targetIsDark : !isDark;
+
+    // 3. Cancel any in-flight View Transition or fallback overlay immediately
+    if (activeTransitionRef.current) {
+      try {
+        activeTransitionRef.current.skipTransition();
+      } catch {}
+      activeTransitionRef.current = null;
+    }
+    if (isTransitioningTheme) {
+      setIsTransitioningTheme(false);
+    }
+
+    // 4. Accessibility prefers-reduced-motion check
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      applyThemeToDom(nextDark);
+      setIsDark(nextDark);
+      return;
+    }
+
+    // 5. Primary path: Browser View Transitions API
+    const doc = document as unknown as {
+      startViewTransition?: (updateCallback: () => void) => ViewTransitionLike;
+    };
+
+    if (typeof doc.startViewTransition === 'function') {
+      document.documentElement.classList.add('theme-switching');
+
+      const transition = doc.startViewTransition(() => {
+        flushSync(() => {
+          applyThemeToDom(nextDark);
+          setIsDark(nextDark);
+        });
+      });
+
+      activeTransitionRef.current = transition;
+
+      const maxRadius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      );
+
+      transition.ready
+        .then(() => {
+          if (activeTransitionRef.current !== transition) return;
+          document.documentElement.animate(
+            {
+              clipPath: [
+                `circle(0px at ${x}px ${y}px)`,
+                `circle(${maxRadius}px at ${x}px ${y}px)`,
+              ],
+            },
+            {
+              duration: 680,
+              easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+              fill: 'both',
+              pseudoElement: '::view-transition-new(root)',
+            }
+          );
+        })
+        .catch(() => {});
+
+      transition.finished
+        .catch(() => {})
+        .finally(() => {
+          if (activeTransitionRef.current === transition) {
+            activeTransitionRef.current = null;
+            document.documentElement.classList.remove('theme-switching');
+          }
+        });
+      return;
+    }
+
+    // 6. CSS Fallback for unsupported browsers
+    setRevealOrigin({ x, y });
     setTargetIsDark(nextDark);
+    setFallbackKey((prev) => prev + 1);
     setIsTransitioningTheme(true);
   };
 
-  // Online / Offline listener
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -123,35 +303,34 @@ export default function App() {
     };
   }, []);
 
-  // Back to Top button listener (for Laptop, Desktop, and Mobile)
   const [showBackToTop, setShowBackToTop] = useState(false);
   useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 400);
-    };
+    const handleScroll = () => setShowBackToTop(window.scrollY > 360);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const [parsedData, setParsedData] = useState<any>(null);
-
-  // Automatic Initial Mount Data & Asset Prefetching
+  // Single consolidated GitHub prefetch + CV metadata + first 3 project covers
   useEffect(() => {
-    // 1. Parse Google Drive CV PDF and LinkedIn profile data
-    parseCvAndLinkedinProfile(profile.cvDriveUrl, profile.linkedinUrl)
-      .then((data) => {
-        if (data) setParsedData(data);
+    parseCvAndLinkedinProfile(profile.cvDriveUrl, profile.linkedinUrl).catch(() => {});
+
+    queryClient
+      .prefetchQuery({
+        queryKey: ['github-consolidated', profile.githubUsername],
+        queryFn: () => fetchConsolidatedGitHubPortfolio(profile.githubUsername),
+        staleTime: 1000 * 60 * 30,
       })
-      .catch((err) => console.error('CV Parser error:', err));
+      .then(() => {
+        const cached = queryClient.getQueryData<any>([
+          'github-consolidated',
+          profile.githubUsername,
+        ]);
+        if (cached?.repos?.length) {
+          setLiveRepoCount(cached.repos.length);
+        }
+      })
+      .catch(() => {});
 
-    // 2. Prefetch GitHub User Stats & Repositories immediately
-    queryClient.prefetchQuery({
-      queryKey: ['github-data', profile.githubUsername],
-      queryFn: () => fetchGitHubUserStats(profile.githubUsername),
-      staleTime: 1000 * 60 * 5,
-    });
-
-    // 3. Preload high-priority cover images in background
     FEATURED_PROJECTS.slice(0, 3).forEach((proj) => {
       if (proj.image) {
         const img = new Image();
@@ -160,155 +339,168 @@ export default function App() {
     });
   }, [profile.githubUsername, profile.cvDriveUrl, profile.linkedinUrl]);
 
-  // Initial loading indicator
+  // Sync URL hash changes
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoading(false);
-    }, 250);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Automatic ScrollSpy
-  useEffect(() => {
-    const sections: NavTab[] = ['hero', 'projects', 'stack', 'experience', 'contact'];
-    
-    const handleScroll = () => {
-      // Bottom of page detection
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 60) {
-        setActiveTab('contact');
-        return;
-      }
-
-      const scrollThreshold = window.innerHeight * 0.4;
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const sectionId = sections[i];
-        const el = document.getElementById(sectionId);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= scrollThreshold) {
-            setActiveTab(sectionId);
-            break;
-          }
-        }
-      }
+    const onHashChange = () => {
+      setActiveTab(resolveInitialTab());
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  // Smooth scroll handler
   const handleNavigate = (tab: NavTab) => {
     setActiveTab(tab);
-    const targetEl = document.getElementById(tab);
-    if (targetEl) {
-      const navOffset = 64; // header height
-      const targetPos = targetEl.getBoundingClientRect().top + window.pageYOffset - navOffset;
-      window.scrollTo({
-        top: targetPos,
-        behavior: 'smooth'
-      });
+    if (typeof window !== 'undefined') {
+      const targetHash = `#${tab}`;
+      if (window.location.hash !== targetHash) {
+        window.history.replaceState(null, '', targetHash);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
+  const anyModalOpen =
+    isResumeOpen ||
+    isContactOpen ||
+    isBookingOpen ||
+    isTerminalOpen ||
+    Boolean(heroInspectedProject);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen relative flex flex-col justify-between selection:bg-cyan-500 selection:text-black bg-slate-50 dark:bg-[#08090d] text-slate-900 dark:text-gray-100 transition-colors duration-200">
-        
-        {/* Top Scroll Position Progress Bar */}
-        <ScrollProgressBar />
+      <div className="min-h-screen relative flex flex-col justify-between selection:bg-[#00C7FF] selection:text-[#08090d] bg-[#f8fafc] dark:bg-[#08090d] text-slate-900 dark:text-[#f1f5f9] transition-colors duration-200">
+        {/* Keyboard Accessibility Skip Link */}
+        <a href="#main-content" className="skip-to-main">
+          {lang === 'ar' ? 'انتقل إلى المحتوى الرئيسي' : 'Skip to main content'}
+        </a>
 
-        {/* Framer-Motion Powered Custom Interactive Cursor */}
+        {/* Top Reading Progress Bar */}
+        <ScrollProgressBar activeTab={activeTab} />
+
+        {/* Interactive Cursor */}
         <CustomCursor />
 
-        {/* Top Preloader Bar */}
-        {isInitialLoading && (
-          <div className="fixed top-0 inset-x-0 z-[60] h-1 bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-500 animate-pulse" />
-        )}
-
-        {/* Top Header Navbar & Mobile Dock with Auto-ScrollSpy */}
+        {/* 3-Zone Header Navigation + Mobile Bottom Dock */}
         <Navbar
           activeTab={activeTab}
           onNavigate={handleNavigate}
           onOpenResume={() => setIsResumeOpen(true)}
-          onOpenBooking={() => setIsBookingOpen(true)}
+          onOpenBooking={() => openBookingModal(null)}
           isDark={isDark}
           onToggleTheme={handleToggleTheme}
-          isAnyModalOpen={isResumeOpen || isContactOpen || isBookingOpen}
+          isAnyModalOpen={anyModalOpen}
         />
 
-        {/* Vertical Progress Navigation Rail (Desktop & Tablet) */}
-        <VerticalNavRail
-          activeTab={activeTab}
-          onNavigate={handleNavigate}
-        />
-
-
-        {/* All Sections Sequentially Rendered with Persistent DOM & Eye-Friendly Language Fade */}
+        {/* Focused Multi-View Main Stage */}
         <main
+          id="main-content"
           className={`flex-1 pb-24 md:pb-12 transition-opacity duration-200 ease-out ${
             isLangFading ? 'opacity-80' : 'opacity-100'
           }`}
         >
-          <RevealOnScroll threshold={0.05}>
-            <HeroSection
-              profile={profile}
-              onOpenContact={() => setIsContactOpen(true)}
-              onOpenResume={() => setIsResumeOpen(true)}
-              onOpenBooking={() => setIsBookingOpen(true)}
-              onExploreProjects={() => handleNavigate('projects')}
-              totalReposCount={liveRepoCount}
-            />
-          </RevealOnScroll>
+          <AnimatePresence mode="wait">
+            {activeTab === 'overview' && (
+              <motion.div
+                key="view-overview"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+              >
+                <HeroSection
+                  profile={profile}
+                  isDark={isDark}
+                  onOpenContact={() => setIsContactOpen(true)}
+                  onOpenResume={() => setIsResumeOpen(true)}
+                  onOpenBooking={() => openBookingModal(null)}
+                  onExploreProjects={() => handleNavigate('projects')}
+                  onInspectRevio={handleInspectRevio}
+                  totalReposCount={liveRepoCount}
+                />
+                <AboutSection onExploreExperience={() => handleNavigate('experience')} />
+                <OverviewProjectsPreview
+                  githubUsername={profile.githubUsername}
+                  onExploreAllProjects={() => handleNavigate('projects')}
+                />
+                <HowIWorkSection
+                  onOpenBooking={() => openBookingModal('discovery-cal')}
+                  onExploreProjects={() => handleNavigate('projects')}
+                />
+              </motion.div>
+            )}
 
-          <SectionDivider />
+            {activeTab === 'projects' && (
+              <motion.div
+                key="view-projects"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+              >
+                <Suspense fallback={<ViewSuspenseFallback />}>
+                  <ProjectsSection
+                    currentGithubUser={profile.githubUsername}
+                    onRepoCountChange={setLiveRepoCount}
+                    isDark={isDark}
+                  />
+                </Suspense>
+              </motion.div>
+            )}
 
-          <RevealOnScroll threshold={0.08}>
-            <ProjectsSection
-              currentGithubUser={profile.githubUsername}
-              onRepoCountChange={setLiveRepoCount}
-            />
-          </RevealOnScroll>
+            {activeTab === 'experience' && (
+              <motion.div
+                key="view-experience"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+              >
+                <Suspense fallback={<ViewSuspenseFallback />}>
+                  <ExperienceSection onOpenResume={() => setIsResumeOpen(true)} />
+                  <StackSection />
+                </Suspense>
+              </motion.div>
+            )}
 
-          <SectionDivider />
-
-          <RevealOnScroll threshold={0.08}>
-            <StackSection />
-          </RevealOnScroll>
-
-          <SectionDivider />
-
-          <RevealOnScroll threshold={0.08}>
-            <ExperienceSection onOpenResume={() => setIsResumeOpen(true)} />
-          </RevealOnScroll>
-
-          <SectionDivider />
-
-          <RevealOnScroll threshold={0.08}>
-            <FAQSection />
-          </RevealOnScroll>
-
-          <SectionDivider />
-
-          <RevealOnScroll threshold={0.08}>
-            <ContactSection
-              profile={profile}
-              onOpenBooking={() => setIsBookingOpen(true)}
-              onOpenResume={() => setIsResumeOpen(true)}
-            />
-          </RevealOnScroll>
+            {activeTab === 'contact' && (
+              <motion.div
+                key="view-contact"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+              >
+                <Suspense fallback={<ViewSuspenseFallback />}>
+                  <ContactSection
+                    profile={profile}
+                    onOpenBooking={openBookingModal}
+                    onOpenResume={() => setIsResumeOpen(true)}
+                  />
+                  <FAQSection />
+                </Suspense>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </main>
 
-        {/* Circular Reveal Theme Switcher Overlay */}
+        {/* Circular Reveal Theme Switcher CSS Fallback */}
         {isTransitioningTheme && (
           <ThemeRevealOverlay
+            key={fallbackKey}
             targetIsDark={targetIsDark}
             origin={revealOrigin}
-            onRevealComplete={() => {
+            onThemeApply={() => {
+              document.documentElement.classList.add('theme-switching');
+              applyThemeToDom(targetIsDark);
               setIsDark(targetIsDark);
-              setIsTransitioningTheme(false);
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  document.documentElement.classList.remove('theme-switching');
+                });
+              });
             }}
+            onFinish={() => setIsTransitioningTheme(false)}
           />
         )}
 
@@ -319,7 +511,7 @@ export default function App() {
           profile={profile}
           onOpenBooking={() => {
             setIsContactOpen(false);
-            setIsBookingOpen(true);
+            openBookingModal(null);
           }}
         />
 
@@ -333,13 +525,31 @@ export default function App() {
           isOpen={isBookingOpen}
           onClose={() => setIsBookingOpen(false)}
           profile={profile}
+          initialType={bookingInitialType}
         />
 
-        {/* Floating Back to Top Button (Desktop, Tablet, Laptop & Mobile) */}
+        <ProjectDetailsModal
+          isOpen={Boolean(heroInspectedProject)}
+          onClose={() => setHeroInspectedProject(null)}
+          project={heroInspectedProject}
+        />
+
+        {isTerminalOpen && (
+          <Suspense fallback={null}>
+            <TerminalEasterEggModal
+              isOpen={isTerminalOpen}
+              onClose={() => setIsTerminalOpen(false)}
+              onNavigateTab={handleNavigate}
+            />
+          </Suspense>
+        )}
+
+        {/* Back to Top */}
         {showBackToTop && (
           <button
+            type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-20 lg:bottom-6 end-4 sm:end-6 z-40 p-2.5 sm:p-3 rounded-full bg-blue-600/90 hover:bg-blue-600 text-white shadow-lg shadow-blue-600/35 backdrop-blur-xs transition-all duration-300 hover:scale-110 cursor-pointer focus-visible:ring-2 focus-visible:ring-white border border-white/20 active:scale-95 flex items-center justify-center"
+            className="fixed bottom-20 lg:bottom-6 end-4 sm:end-6 z-40 p-2.5 sm:p-3 rounded-full bg-[#027DFD] hover:bg-[#026ae0] text-white shadow-lg transition-transform duration-200 hover:scale-105 cursor-pointer border border-white/20 flex items-center justify-center"
             aria-label={lang === 'ar' ? 'الرجوع للأعلى' : 'Back to top'}
             title={lang === 'ar' ? 'الرجوع للأعلى' : 'Back to top'}
           >
@@ -347,102 +557,143 @@ export default function App() {
           </button>
         )}
 
-        {/* Footer */}
-        <footer className="w-full border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#090a0f] py-10 px-4 sm:px-6 lg:px-8 xl:px-10 text-xs text-slate-600 dark:text-gray-400 transition-colors shadow-inner">
-          <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-5 w-full">
-            
-            {/* Column 1: Identity & Live Sync Status Indicator */}
-            <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-3 text-center sm:text-left">
+        {/* Clean Obsidian / Light Studio Footer */}
+        <footer className="w-full border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] py-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-600 dark:text-[#94a3b8] transition-colors">
+          <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 w-full">
+            <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-start">
               <div>
                 <div className="flex items-center justify-center sm:justify-start gap-2">
-                  <span className="font-bold text-slate-900 dark:text-white text-sm">{profile.name}</span>
-                  <span className="text-blue-600 dark:text-cyan-400 font-mono text-xs font-semibold">• {lang === 'ar' ? 'مهندس تطبيقات فلاتر وذكاء اصطناعي' : 'Flutter & AI Mobile Specialist'}</span>
-                </div>
-                <div className="flex items-center justify-center sm:justify-start gap-2 mt-1 font-mono text-[11px]">
-                  <span className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>{t.footer.syncStatus}: {isOnline ? (lang === 'ar' ? 'متصل (تزامن لحظي)' : 'Online (Real-Time)') : (lang === 'ar' ? 'تخزين مؤقت محلي' : 'Offline Cache')}</span>
+                  <span
+                    dir="ltr"
+                    className="font-mono text-xs font-bold text-[#027DFD] dark:text-[#00C7FF]"
+                  >
+                    {AHMED_CONFIG.monogram}
                   </span>
-                  <span className="text-slate-500 dark:text-gray-400 font-medium">{t.footer.lastSynced}: {lastSyncTime}</span>
+                  <span className="font-bold text-slate-900 dark:text-[#f1f5f9] text-sm">
+                    {AHMED_CONFIG.name[lang]}
+                  </span>
+                  <span className="text-slate-500 dark:text-[#94a3b8] font-mono text-xs">
+                    · {AHMED_CONFIG.title[lang]}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1 font-mono text-[11px] tabular-nums">
+                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
+                    {isOnline
+                      ? lang === 'ar'
+                        ? 'متصل'
+                        : 'Online'
+                      : lang === 'ar'
+                      ? 'وضع الأوفلاين'
+                      : 'Cached Offline'}
+                  </span>
+                  <span aria-hidden="true">·</span>
+                  <span>
+                    {t.footer.lastSynced}: {lastSyncTime}
+                  </span>
+                  <span aria-hidden="true">·</span>
+                  <span>
+                    {lang === 'ar' ? `توقيت القاهرة: ${egyptClock}` : `Cairo: ${egyptClock}`}
+                  </span>
                 </div>
               </div>
 
-              {/* Manual Refresh Data Button */}
-              <button
-                onClick={handleManualRefresh}
-                disabled={isSyncing}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-900 dark:text-gray-200 border border-slate-300 dark:border-white/10 text-xs font-mono font-semibold transition-all cursor-pointer shadow-xs disabled:opacity-50"
-                title="Force refresh GitHub repository data and live activity"
-              >
-                <RefreshCw size={12} className={isSyncing ? 'animate-spin text-blue-500' : 'text-slate-600 dark:text-slate-400'} />
-                <span>{isSyncing ? (lang === 'ar' ? 'جارٍ التحديث...' : 'Syncing...') : t.footer.refreshData}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleManualRefresh}
+                  disabled={isSyncing}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-[#161b27] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-[#f1f5f9] border border-slate-200 dark:border-white/10 text-xs font-mono font-medium transition-colors cursor-pointer disabled:opacity-50"
+                  title="Refresh GitHub repository cache"
+                >
+                  <RefreshCw
+                    size={12}
+                    className={isSyncing ? 'animate-spin text-[#027DFD]' : 'text-slate-500'}
+                  />
+                  <span>
+                    {isSyncing
+                      ? lang === 'ar'
+                        ? 'جارٍ التحديث...'
+                        : 'Syncing...'
+                      : t.footer.refreshData}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsTerminalOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-[#161b27] hover:border-[#027DFD] text-slate-700 dark:text-[#94a3b8] border border-slate-200 dark:border-white/10 text-xs font-mono transition-colors cursor-pointer"
+                  title="Open Terminal Inspector (or type ahmed)"
+                  aria-label="Open CLI Inspector"
+                >
+                  <Terminal size={12} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                  <span>CLI</span>
+                </button>
+              </div>
             </div>
 
-            {/* Column 2: Social & Contact Channels */}
             <div className="flex items-center gap-2">
               <a
                 href={profile.githubUrl}
                 target="_blank"
-                rel="noreferrer"
-                className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105 shadow-2xs"
-                title="GitHub Profile"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:text-slate-900 dark:hover:text-white transition-colors"
+                title="GitHub"
               >
                 <Github size={15} />
               </a>
               <a
                 href={profile.linkedinUrl}
                 target="_blank"
-                rel="noreferrer"
-                className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-blue-600/15 text-slate-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105 shadow-2xs"
-                title="LinkedIn Profile"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:text-[#027DFD] transition-colors"
+                title="LinkedIn"
               >
                 <Linkedin size={15} />
               </a>
               <a
                 href={profile.youtubeUrl}
                 target="_blank"
-                rel="noreferrer"
-                className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-red-600/15 text-slate-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105 shadow-2xs"
-                title="YouTube Demos Channel"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:text-red-500 transition-colors"
+                title="YouTube"
               >
                 <Youtube size={15} />
               </a>
               <a
                 href={profile.tiktokUrl}
                 target="_blank"
-                rel="noreferrer"
-                className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-pink-600/15 text-slate-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105 shadow-2xs"
-                title="TikTok Profile"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:text-pink-500 transition-colors"
+                title="TikTok"
               >
                 <TikTokLogo size={14} />
               </a>
               <a
-                href="https://wa.me/201022121573"
+                href={AHMED_CONFIG.socials.whatsapp}
                 target="_blank"
-                rel="noreferrer"
-                className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-emerald-600/15 text-slate-700 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105 shadow-2xs"
-                title="WhatsApp Direct Chat"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:text-emerald-500 transition-colors"
+                title="WhatsApp"
               >
-                <WhatsAppLogo size={16} />
+                <WhatsAppLogo size={15} />
               </a>
               <button
                 type="button"
-                onClick={() => openEmailClient(profile.email, 'Mobile App Project Inquiry - Flutter Specialist')}
-                className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-cyan-600/15 text-slate-700 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400 border border-slate-300 dark:border-white/10 flex items-center justify-center transition-all hover:scale-105 shadow-2xs cursor-pointer"
-                title="Send Email via Gmail / Email app"
+                onClick={() => openEmailClient(profile.email, 'Mobile App Project Inquiry')}
+                className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:text-[#027DFD] transition-colors cursor-pointer"
+                title="Send Email"
               >
                 <Mail size={14} />
               </button>
             </div>
           </div>
 
-          <div className="max-w-[1600px] mx-auto mt-6 pt-4 border-t border-slate-200 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 dark:text-gray-400 gap-2 font-medium w-full">
+          <div className="max-w-[1440px] mx-auto mt-6 pt-4 border-t border-slate-200 dark:border-white/8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 dark:text-[#94a3b8] gap-2">
             <span>{t.footer.rights}</span>
             <span>{t.footer.builtWith}</span>
           </div>
         </footer>
-
       </div>
     </QueryClientProvider>
   );

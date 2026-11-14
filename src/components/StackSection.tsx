@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { Search, Sparkles, Layers, Globe } from 'lucide-react';
-import { SpotlightCard } from './SpotlightCard';
-import { LANGUAGES_DATA } from '../data/portfolioData';
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Layers, Info } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import {
   FlutterLogo,
@@ -27,11 +26,9 @@ interface TechItem {
   name: string;
   category: 'mobile' | 'state-storage' | 'network-backend' | 'ai-cs' | 'tools';
   categoryLabel: string;
-  proficiency: 'Advanced' | 'Proficient' | 'Exploring' | 'Advancing';
   highlightInApp: string;
-  brandColor: string;
   description: string;
-  subSkills?: string[];
+  subSkills: string[];
   LogoComponent: React.FC<{ size?: number; className?: string }>;
 }
 
@@ -41,10 +38,9 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Flutter',
     category: 'mobile',
     categoryLabel: 'Mobile Core',
-    proficiency: 'Advanced',
-    highlightInApp: 'Core framework for Revio & Movura on Google Play',
-    brandColor: '#02569B',
-    description: 'Cross-platform native mobile engineering, custom Slivers, LayoutBuilder, and 60 FPS animations.',
+    highlightInApp: 'Revio · Movura · Vibrant Store',
+    description:
+      'Cross-platform native mobile engineering, custom Slivers, LayoutBuilder, and 60 FPS animations.',
     subSkills: ['Slivers & CustomPaint', '60 FPS Animations', 'Arabic RTL', 'Multi-Screen Responsive'],
     LogoComponent: FlutterLogo,
   },
@@ -53,23 +49,32 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Dart',
     category: 'mobile',
     categoryLabel: 'Mobile Core',
-    proficiency: 'Advanced',
-    highlightInApp: 'Type-safe asynchronous programming & sound null-safety',
-    brandColor: '#00B4AB',
-    description: 'OOP, Mixins, Streams, Futures, Extension Methods, and Isolates for CPU-heavy tasks.',
+    highlightInApp: 'All Mobile Repositories',
+    description:
+      'Type-safe asynchronous programming with OOP, Mixins, Streams, Futures, and sound null-safety.',
     subSkills: ['OOP & SOLID', 'Async & Streams', 'Isolates', 'Generics & Mixins'],
     LogoComponent: DartLogo,
+  },
+  {
+    id: 'clean-arch',
+    name: 'Clean Architecture',
+    category: 'mobile',
+    categoryLabel: 'Software Architecture',
+    highlightInApp: 'Revio · Movura · News-Cloud',
+    description:
+      'Domain-Driven Design (Entities, UseCases, Repositories, DataSources) enforcing clean layer boundaries.',
+    subSkills: ['Domain / Data / Presentation', 'Repository Pattern', 'Dependency Injection', 'SOLID Principles'],
+    LogoComponent: CleanArchLogo,
   },
   {
     id: 'bloc',
     name: 'BLoC Pattern',
     category: 'state-storage',
     categoryLabel: 'State Management',
-    proficiency: 'Advanced',
-    highlightInApp: 'Enterprise event-driven state streams in Movura & FluxStore',
-    brandColor: '#00D9FF',
-    description: 'Predictable state machine separating business logic from user interface presentation.',
-    subSkills: ['Event-to-State Streams', 'Unidirectional Flow', 'BLoC Observer', 'Hydrated BLoC'],
+    highlightInApp: 'Movura · Shaats · Sky-Cast',
+    description:
+      'Predictable event-driven state machine separating business logic from presentation trees.',
+    subSkills: ['Event-to-State Streams', 'Unidirectional Flow', 'BLoC Observer'],
     LogoComponent: BlocLogo,
   },
   {
@@ -77,11 +82,10 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Cubit',
     category: 'state-storage',
     categoryLabel: 'State Management',
-    proficiency: 'Advanced',
-    highlightInApp: 'Powering Revio flashcard study modes & scoring on Google Play',
-    brandColor: '#22D3EE',
-    description: 'Lightweight, function-driven state management for clean and maintainable UI states.',
-    subSkills: ['Direct State Emit', 'Lightweight Logic', 'Revio Quiz Engine', 'BlocBuilder/Consumer'],
+    highlightInApp: 'Revio (Google Play) · Quotely',
+    description:
+      'Lightweight, function-driven state management for fast feature iteration and predictable UI rebuilds.',
+    subSkills: ['Direct State Emit', 'Lightweight Logic', 'BlocBuilder / Consumer'],
     LogoComponent: CubitLogo,
   },
   {
@@ -89,35 +93,21 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Hive CE',
     category: 'state-storage',
     categoryLabel: 'Local Storage',
-    proficiency: 'Advanced',
-    highlightInApp: 'Full offline local flashcard CRUD persistence in Revio',
-    brandColor: '#FFCC00',
-    description: 'Blazing-fast NoSQL key-value database written in pure Dart with binary serialization.',
-    subSkills: ['Key-Value NoSQL', 'Binary Adapters', 'Offline-First Caching', 'Zero-Latency Reads'],
+    highlightInApp: 'Revio Offline Flashcard CRUD',
+    description:
+      'Zero-latency NoSQL key-value database written in pure Dart with binary TypeAdapters.',
+    subSkills: ['Key-Value NoSQL', 'Binary Adapters', 'Offline-First Caching'],
     LogoComponent: HiveLogo,
-  },
-  {
-    id: 'clean-arch',
-    name: 'Clean Architecture',
-    category: 'mobile',
-    categoryLabel: 'Software Architecture',
-    proficiency: 'Advanced',
-    highlightInApp: 'Strictly applied across all public GitHub repositories',
-    brandColor: '#6C63FF',
-    description: 'Domain-Driven Design (Entities, UseCases, Repositories, DataSources) & SOLID principles.',
-    subSkills: ['Domain / Data / Presentation', 'Repository Pattern', 'Dependency Injection', 'SOLID Principles'],
-    LogoComponent: CleanArchLogo,
   },
   {
     id: 'dio',
     name: 'Dio Client',
     category: 'network-backend',
     categoryLabel: 'Networking',
-    proficiency: 'Advanced',
-    highlightInApp: 'Interceptors and error recovery pipelines in News-Cloud',
-    brandColor: '#0175C2',
-    description: 'Powerful HTTP client with global interceptors, transformers, and automated request cancellation.',
-    subSkills: ['Global Interceptors', 'Token Handling', 'Request Cancellation', 'FormData & Uploads'],
+    highlightInApp: 'News-Cloud · Movura · Sky-Cast',
+    description:
+      'Resilient HTTP client configured with global interceptors, timeouts, and structured error mapping.',
+    subSkills: ['Global Interceptors', 'Error Mapping', 'Request Cancellation'],
     LogoComponent: DioLogo,
   },
   {
@@ -125,11 +115,10 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Retrofit',
     category: 'network-backend',
     categoryLabel: 'Networking',
-    proficiency: 'Proficient',
-    highlightInApp: 'Type-safe REST API client code generator for clean network code',
-    brandColor: '#E53935',
-    description: 'Annotation-based REST client turning HTTP endpoints into clear Dart interfaces.',
-    subSkills: ['Code Generation', 'Type-Safe Contracts', 'JSON Serialization', 'Clean API Facade'],
+    highlightInApp: 'Quotely · Clean REST Clients',
+    description:
+      'Annotation-based REST client generation converting API contracts into type-safe Dart interfaces.',
+    subSkills: ['Code Generation', 'Type-Safe Contracts', 'JSON Serialization'],
     LogoComponent: RetrofitLogo,
   },
   {
@@ -137,11 +126,10 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Firebase & Firestore',
     category: 'network-backend',
     categoryLabel: 'Cloud & Auth',
-    proficiency: 'Proficient',
-    highlightInApp: 'Real-time message sync & user authentication in Shaats chat app',
-    brandColor: '#FFA000',
-    description: 'Reactive document streams, Cloud Storage, and secure Firebase Authentication.',
-    subSkills: ['Cloud Firestore', 'Authentication Session', 'Real-time Streams', 'Rules & Security'],
+    highlightInApp: 'Shaats Real-Time Chat',
+    description:
+      'Reactive document snapshot streams, Cloud Storage uploads, and Firebase Authentication workflows.',
+    subSkills: ['Cloud Firestore', 'Firebase Auth', 'Real-time Streams'],
     LogoComponent: FirebaseLogo,
   },
   {
@@ -149,11 +137,10 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Python',
     category: 'ai-cs',
     categoryLabel: 'Computer Science',
-    proficiency: 'Proficient',
-    highlightInApp: 'Data structures problem solving & Machine Learning coursework',
-    brandColor: '#3776AB',
-    description: 'Academic algorithmic foundations, scripting, and computer science problem solving.',
-    subSkills: ['Data Structures', 'Algorithm Analysis', 'ML Foundations', 'Scripting & Automation'],
+    highlightInApp: 'Algorithms & ML Coursework',
+    description:
+      'Algorithmic problem solving, structured scripting, and foundational Artificial Intelligence studies.',
+    subSkills: ['Data Structures', 'Algorithms', 'ML Foundations'],
     LogoComponent: PythonLogo,
   },
   {
@@ -161,11 +148,10 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'CS & Problem Solving',
     category: 'ai-cs',
     categoryLabel: 'Academic Degree',
-    proficiency: 'Advancing',
-    highlightInApp: 'Faculty of Artificial Intelligence, Kafrelsheikh University',
-    brandColor: '#F43F5E',
-    description: 'Search algorithms, machine learning models, database theory, and computational logic.',
-    subSkills: ['Discrete Mathematics', 'Database Systems', 'Logic & Problem Solving', 'Academic Studies'],
+    highlightInApp: 'Kafrelsheikh AI (2023–2027)',
+    description:
+      'Discrete math, search algorithms, database systems, and OOP modeling from Faculty of Artificial Intelligence.',
+    subSkills: ['Discrete Math', 'Database Systems', 'Logic & Complexity'],
     LogoComponent: AiLogo,
   },
   {
@@ -173,11 +159,10 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Git Version Control',
     category: 'tools',
     categoryLabel: 'DevOps & VCS',
-    proficiency: 'Advanced',
-    highlightInApp: '13+ public repositories with active semantic commit history',
-    brandColor: '#F05138',
-    description: 'Feature branching, pull requests, merge conflict resolution, and versioning.',
-    subSkills: ['Git Flow', 'Releases & Tags', 'Merge Strategies', 'Semantic Commits'],
+    highlightInApp: '13+ Public Repositories',
+    description:
+      'Feature branching, pull requests, release tagging, and clean semantic commit conventions.',
+    subSkills: ['Git Flow', 'Releases & Tags', 'Semantic Commits'],
     LogoComponent: GitLogo,
   },
   {
@@ -185,11 +170,10 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Android Studio',
     category: 'tools',
     categoryLabel: 'Tooling',
-    proficiency: 'Advanced',
-    highlightInApp: 'Native Android compilation, Gradle configurations, and APK signing',
-    brandColor: '#3DDC84',
-    description: 'Device profiling, layout inspector, native SDK management, and release bundling.',
-    subSkills: ['Gradle Build', 'Keystore Signing', 'Logcat & Debugger', 'Device Profiling'],
+    highlightInApp: 'Google Play AAB Signing',
+    description:
+      'Native Android compilation, Gradle configuration, layout inspector, and signed release bundles.',
+    subSkills: ['Gradle Build', 'Keystore Signing', 'Device Profiling'],
     LogoComponent: AndroidStudioLogo,
   },
   {
@@ -197,11 +181,10 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'VS Code',
     category: 'tools',
     categoryLabel: 'Tooling',
-    proficiency: 'Advanced',
-    highlightInApp: 'Primary development environment with custom Dart & Flutter toolchains',
-    brandColor: '#007ACC',
-    description: 'Hot reload workflows, linting rule enforcement, and keyboard-centric refactoring.',
-    subSkills: ['Dart Toolchain', 'Hot Reload/Restart', 'Custom Snippets', 'Static Analysis'],
+    highlightInApp: 'Daily Flutter Toolchain',
+    description:
+      'Primary IDE setup with Dart static analysis rules, debugging launch configs, and rapid refactoring.',
+    subSkills: ['Dart Toolchain', 'Hot Reload', 'Static Analysis'],
     LogoComponent: VSCodeLogo,
   },
   {
@@ -209,11 +192,10 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Postman',
     category: 'tools',
     categoryLabel: 'Tooling',
-    proficiency: 'Advanced',
-    highlightInApp: 'Testing TMDB, WeatherAPI, and DummyJSON endpoints prior to integration',
-    brandColor: '#FF6C37',
-    description: 'REST API endpoint inspection, automated collections, and mock environment setups.',
-    subSkills: ['API Mocking', 'Collection Runners', 'Environment Vars', 'Payload Validation'],
+    highlightInApp: 'TMDB · WeatherAPI · DummyJSON',
+    description:
+      'REST API contract inspection, payload verification, and test environments prior to integration.',
+    subSkills: ['API Inspection', 'Environment Vars', 'Payload Validation'],
     LogoComponent: PostmanLogo,
   },
   {
@@ -221,22 +203,24 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Figma',
     category: 'tools',
     categoryLabel: 'Design to Code',
-    proficiency: 'Proficient',
-    highlightInApp: 'Pixel-accurate UI translation to responsive Flutter widgets',
-    brandColor: '#A259FF',
-    description: 'Design system interpretation, vector asset extraction, and responsive design specs.',
-    subSkills: ['Pixel Precision', 'Design Tokens', 'Asset Export', 'Responsive Specs'],
+    highlightInApp: 'Responsive UI Translation',
+    description:
+      'Accurate design-to-Flutter widget translation with consistent spacing scales and vector exports.',
+    subSkills: ['Pixel Precision', 'Design Tokens', 'Asset Export'],
     LogoComponent: FigmaLogo,
-  }
+  },
 ];
 
-export const StackSection: React.FC = () => {
-  const { lang, dir, t } = useLanguage();
-  const [selectedFilter, setSelectedFilter] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+type StackFilter = 'all' | TechItem['category'];
 
-  const filterTabs = [
-    { id: 'all', label: t.stack.categories.all },
+export const StackSection: React.FC = () => {
+  const { lang, t } = useLanguage();
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [activeCategory, setActiveCategory] = useState<StackFilter>('all');
+  const [expandedTechId, setExpandedTechId] = useState<string | null>(null);
+
+  const filterTabs: Array<{ id: StackFilter; label: string }> = [
+    { id: 'all', label: lang === 'ar' ? 'الكل' : 'All' },
     { id: 'mobile', label: t.stack.categories.mobile },
     { id: 'state-storage', label: t.stack.categories.stateStorage },
     { id: 'network-backend', label: t.stack.categories.networkBackend },
@@ -244,204 +228,171 @@ export const StackSection: React.FC = () => {
     { id: 'tools', label: t.stack.categories.tools },
   ];
 
-  const filteredTechs = DEDICATED_TECHS.filter((item) => {
-    if (selectedFilter !== 'all' && item.category !== selectedFilter) {
-      return false;
-    }
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      item.name.toLowerCase().includes(q) ||
-      item.categoryLabel.toLowerCase().includes(q) ||
-      item.description.toLowerCase().includes(q) ||
-      item.highlightInApp.toLowerCase().includes(q)
-    );
-  });
+  const filteredTechs = useMemo(() => {
+    return DEDICATED_TECHS.filter((item) => {
+      if (activeCategory !== 'all' && item.category !== activeCategory) {
+        return false;
+      }
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        item.name.toLowerCase().includes(q) ||
+        item.categoryLabel.toLowerCase().includes(q) ||
+        item.description.toLowerCase().includes(q) ||
+        item.highlightInApp.toLowerCase().includes(q) ||
+        item.subSkills.some((s) => s.toLowerCase().includes(q))
+      );
+    });
+  }, [activeCategory, searchQuery]);
 
   return (
-    <section id="stack" className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-16 sm:py-20 border-t border-black/10 dark:border-white/5 w-full">
-      {/* Header */}
-      <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-2">
-          <Sparkles size={13} />
-          <span>{t.stack.badge}</span>
+    <section
+      id="stack"
+      className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full"
+    >
+      {/* Header & Search */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+        <div className="max-w-2xl">
+          <div className="flex items-center gap-2 text-xs font-medium text-[#027DFD] dark:text-[#00C7FF] mb-2">
+            <span>{t.stack.badge}</span>
+            <span aria-hidden="true">·</span>
+            <span className="text-slate-500 dark:text-[#94a3b8]">
+              {lang === 'ar' ? 'مهارات وأدوات هندسية موثقة' : 'Verified Production Stack'}
+            </span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#f1f5f9] tracking-tight">
+            {t.stack.title}
+          </h2>
+          <p className="text-sm text-slate-600 dark:text-[#94a3b8] mt-1.5">
+            {t.stack.subtitle}
+          </p>
         </div>
-        <h2 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight title-contrast">
-          {t.stack.title}
-        </h2>
-        <p className="text-slate-600 dark:text-gray-400 mt-2 text-sm sm:text-base body-contrast">
-          {t.stack.subtitle}
-        </p>
 
-        {/* Filter Tabs & Live Search */}
-        <div className="w-full mt-7 flex flex-col sm:flex-row items-center gap-3 justify-between">
-          <div className="flex flex-wrap items-center justify-center gap-1.5 p-1 rounded-2xl sm:rounded-full bg-slate-200/70 dark:bg-white/5 border border-black/10 dark:border-white/10">
-            {filterTabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setSelectedFilter(tab.id)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none ${
-                  selectedFilter === tab.id
-                    ? 'bg-blue-600 text-white shadow-sm font-bold scale-[1.02]'
-                    : 'text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="relative w-full sm:w-64">
-            <Search size={14} className="absolute top-1/2 -translate-y-1/2 text-slate-400 start-3.5" />
-            <input
-              type="text"
-              placeholder={t.stack.searchPlaceholder}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full py-1.5 rounded-full bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors ps-9 pe-3.5"
-            />
-          </div>
+        <div className="relative w-full md:w-72 shrink-0">
+          <Search size={14} className="absolute top-1/2 -translate-y-1/2 text-slate-400 start-3.5" />
+          <input
+            type="text"
+            placeholder={t.stack.searchPlaceholder}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full py-2.5 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#027DFD] transition-colors ps-9 pe-3.5 min-h-[40px]"
+          />
         </div>
       </div>
 
-      {/* Interactive Spotlight Tech Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {filteredTechs.map((tech) => {
-          const Logo = tech.LogoComponent;
+      {/* Category Filter Tabs */}
+      <div className="flex flex-wrap items-center gap-1.5 mb-7 p-1.5 rounded-2xl bg-slate-100 dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 w-full">
+        {filterTabs.map((tab) => {
+          const isActive = activeCategory === tab.id;
           return (
-            <SpotlightCard
-              key={tech.id}
-              spotlightColor={`${tech.brandColor}20`}
-              className="p-5 flex flex-col justify-between group border border-black/10 dark:border-white/10 bg-white dark:bg-[#131522] hover:border-blue-500/40 transition-all duration-300 rounded-2xl"
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveCategory(tab.id)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+                isActive
+                  ? 'bg-[#027DFD] text-white shadow-xs'
+                  : 'text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-[#f1f5f9]'
+              }`}
             >
-              <div>
-                {/* Card Top: Brand Logo */}
-                <div className="flex items-start justify-between gap-3 mb-4">
-                  <div className="relative w-12 h-12 rounded-xl flex items-center justify-center border border-black/5 dark:border-white/10 bg-slate-50 dark:bg-[#1a1d2e] shadow-xs group-hover:scale-105 transition-transform">
-                    <Logo size={26} />
-                  </div>
-
-                  <div className="text-right flex flex-col items-end gap-1">
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-cyan-300 font-bold">
-                      {tech.categoryLabel}
-                    </span>
-                    <div className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center justify-end gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>{tech.proficiency}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Title & Description */}
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition-colors title-contrast">
-                  {tech.name}
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-gray-400 mt-1.5 line-clamp-2 leading-relaxed body-contrast">
-                  {tech.description}
-                </p>
-
-                {/* Sub-skills Tags */}
-                {tech.subSkills && tech.subSkills.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-3 pt-2.5 border-t border-black/5 dark:border-white/5">
-                    {tech.subSkills.map((sub) => (
-                      <span
-                        key={sub}
-                        className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 border border-black/5 dark:border-white/10 text-[10px] font-mono text-slate-700 dark:text-gray-300"
-                      >
-                        {sub}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Bottom Application Note */}
-              <div className="mt-4 pt-2.5 border-t border-black/5 dark:border-white/5">
-                <div className="text-[11px] text-cyan-700 dark:text-cyan-400 font-mono flex items-start gap-1.5">
-                  <span className="text-blue-500 shrink-0 font-bold">›</span>
-                  <span className="line-clamp-2 font-medium">{tech.highlightInApp}</span>
-                </div>
-              </div>
-            </SpotlightCard>
+              {tab.label}
+            </button>
           );
         })}
       </div>
 
-      {filteredTechs.length === 0 && (
-        <div className="text-center py-12 text-slate-500 dark:text-gray-400 card-techno rounded-2xl p-6 bg-white dark:bg-[#131522]">
-          <Layers size={32} className="mx-auto mb-2 opacity-50" />
-          <p className="text-xs font-medium">No technologies matched your search filter.</p>
+      {/* Interactive Skill Cards Grid */}
+      {filteredTechs.length === 0 ? (
+        <div className="text-center py-10 text-slate-500 dark:text-[#94a3b8] rounded-2xl p-6 bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10">
+          <Layers size={28} className="mx-auto mb-2 opacity-50" />
+          <p className="text-xs font-medium">{t.stack.noTechFound}</p>
         </div>
-      )}
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredTechs.map((tech) => {
+            const Logo = tech.LogoComponent;
+            const isExpanded = expandedTechId === tech.id;
 
-      {/* ELEVATED LANGUAGES & COMMUNICATION SECTION */}
-      <div className="mt-14 card-techno rounded-3xl p-6 sm:p-8 bg-white dark:bg-[#131522] border border-black/10 dark:border-white/10">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-600/10 text-blue-600 dark:text-cyan-400 border border-blue-500/20">
-              <Globe size={20} />
-            </div>
-            <div>
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white title-contrast">
-                {t.stack.languagesTitle}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
-                {t.stack.languagesSubtitle}
-              </p>
-            </div>
-          </div>
-          <span className="text-xs font-mono px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20 self-start sm:self-auto">
-            {lang === 'ar' ? 'إتقان ثنائي اللغة' : 'Bilingual Capability'}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {LANGUAGES_DATA.map((lang) => (
-            <div
-              key={lang.name}
-              className="p-5 rounded-2xl bg-slate-50/80 dark:bg-white/[0.02] border border-black/5 dark:border-white/10 hover:border-blue-500/30 transition-all flex flex-col justify-between space-y-4"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-2xl">{lang.flag}</span>
-                    <div>
-                      <div className="font-bold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <span>{lang.name}</span>
-                        <span className="text-xs font-normal text-slate-500 dark:text-gray-400 font-mono">({lang.nativeName})</span>
+            return (
+              <div
+                key={tech.id}
+                onClick={() => setExpandedTechId(isExpanded ? null : tech.id)}
+                className="group p-5 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 hover:border-[#027DFD]/50 transition-all duration-200 flex flex-col justify-between cursor-pointer"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 shrink-0">
+                        <Logo size={21} />
                       </div>
-                      <div className="text-xs font-semibold text-cyan-700 dark:text-cyan-400">
-                        {lang.proficiency}
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-[#f1f5f9] truncate group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF] transition-colors">
+                          {tech.name}
+                        </h3>
+                        <span className="text-[11px] font-medium text-slate-500 dark:text-[#94a3b8]">
+                          {tech.categoryLabel}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                  <span className="text-xs font-mono px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-700 dark:text-cyan-300 font-bold border border-blue-500/20">
-                    {lang.level}
-                  </span>
-                </div>
 
-                {/* Clean Proficiency Bar */}
-                <div className="space-y-1 mt-3">
-                  <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-gray-400">
-                    <span>Proficiency Level</span>
-                    <span>{lang.percentage}%</span>
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-400 transition-all duration-500"
-                      style={{ width: `${lang.percentage}%` }}
+                    <Info
+                      size={14}
+                      className={`shrink-0 transition-colors ${
+                        isExpanded
+                          ? 'text-[#027DFD] dark:text-[#00C7FF]'
+                          : 'text-slate-400 group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF]'
+                      }`}
                     />
                   </div>
+
+                  <p className="text-xs text-slate-600 dark:text-[#94a3b8] leading-relaxed">
+                    {tech.description}
+                  </p>
+
+                  <AnimatePresence initial={false}>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.18 }}
+                        className="overflow-hidden"
+                      >
+                        <ul className="mt-3 pt-3 border-t border-slate-100 dark:border-white/8 space-y-1">
+                          {tech.subSkills.map((sub) => (
+                            <li
+                              key={sub}
+                              className="text-[11px] font-mono text-slate-700 dark:text-slate-300 flex items-center gap-1.5"
+                            >
+                              <span className="text-[#027DFD] dark:text-[#00C7FF]">·</span>
+                              <span>{sub}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
-                <p className="text-xs text-slate-600 dark:text-gray-400 mt-3 leading-relaxed">
-                  {lang.description}
-                </p>
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/8 flex items-center justify-between gap-2 text-[11px]">
+                  <span className="text-[#027DFD] dark:text-[#00C7FF] font-semibold truncate">
+                    {tech.highlightInApp}
+                  </span>
+                  <span className="text-slate-400 font-mono shrink-0">
+                    {isExpanded
+                      ? lang === 'ar'
+                        ? 'إخفاء'
+                        : 'Less'
+                      : lang === 'ar'
+                      ? 'التفاصيل'
+                      : 'Capabilities'}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-      </div>
+      )}
     </section>
   );
 };

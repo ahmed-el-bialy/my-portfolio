@@ -3,23 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-    <title>Ahmed El-Bialy | Flutter & Mobile App Specialist</title>
-    
-    <!-- Browser Tab Favicon & Mobile App Icons -->
+    <title>Ahmed El-Bialy | Flutter Mobile Developer & AI Student</title>
+
+    <!-- Browser Tab Favicon & App Icons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
     <link rel="apple-touch-icon" href="/favicon-192.png" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-    
-    <!-- Meta Descriptions & Search SEO -->
-    <meta name="description" content="Official portfolio of Ahmed El-Bialy, Flutter Specialist & AI Student. Features automatic GitHub repository synchronization, live contributions, and published apps on Google Play." />
-    <meta name="keywords" content="Ahmed El-Bialy, Flutter Developer, Mobile App Developer, Dart, Clean Architecture, BLoC, Cubit, Android Developer, iOS Developer, Revio Google Play, Portfolio" />
+
+    <!-- SEO & Canonical -->
+    <meta
+      name="description"
+      content="Portfolio of Ahmed El-Bialy — Flutter Mobile Developer & AI Student. Creator of Revio on Google Play, engineered with Clean Architecture, BLoC/Cubit, and live GitHub sync."
+    />
+    <meta
+      name="keywords"
+      content="Ahmed El-Bialy, Flutter Developer, Mobile App Developer, Dart, Clean Architecture, BLoC, Cubit, Hive CE, Revio Google Play, Kafrelsheikh AI"
+    />
     <meta name="author" content="Ahmed El-Bialy" />
     <meta name="theme-color" content="#08090d" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
 
-    <!-- Instant Pre-Hydration Theme & Language Script -->
+    <!-- Instant Pre-Hydration Theme & RTL Script (Prevents Flash) -->
     <script>
       (function() {
         try {
@@ -49,116 +54,102 @@
       })();
     </script>
 
-    <!-- OpenGraph Social Cards (WhatsApp, LinkedIn, Twitter, Facebook) -->
+    <!-- OpenGraph & Twitter Social Cards -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://ahmed-el-bialy.vercel.app/" />
-    <meta property="og:title" content="Ahmed El-Bialy | Flutter & Mobile App Specialist" />
-    <meta property="og:description" content="Official portfolio of Ahmed El-Bialy, Flutter Specialist & AI Student. Features automatic GitHub repository synchronization, live contributions, and published apps on Google Play." />
+    <meta property="og:title" content="Ahmed El-Bialy | Flutter Mobile Developer" />
+    <meta
+      property="og:description"
+      content="Flutter Mobile Developer & AI Student. Explore Revio on Google Play, Clean Architecture Dart codebases, and live GitHub projects."
+    />
     <meta property="og:image" content="https://ahmed-el-bialy.vercel.app/og-image.jpg" />
-    <meta property="og:image:secure_url" content="https://ahmed-el-bialy.vercel.app/og-image.jpg" />
-    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Ahmed El-Bialy - Flutter Mobile App Developer Portfolio Hero Section" />
     <meta property="og:site_name" content="Ahmed El-Bialy Portfolio" />
 
-    <!-- Legacy & Direct Image Link for WhatsApp & LinkedIn Web -->
-    <link rel="image_src" href="https://ahmed-el-bialy.vercel.app/og-image.jpg" />
-
-    <!-- Twitter / X Cards -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://ahmed-el-bialy.vercel.app/" />
-    <meta name="twitter:title" content="Ahmed El-Bialy | Flutter & Mobile App Specialist" />
-    <meta name="twitter:description" content="Official portfolio of Ahmed El-Bialy, Flutter Specialist & AI Student. Features automatic GitHub repository synchronization, live contributions, and published apps on Google Play." />
+    <meta name="twitter:title" content="Ahmed El-Bialy | Flutter Mobile Developer" />
+    <meta
+      name="twitter:description"
+      content="Flutter Mobile Developer & AI Student. Creator of Revio on Google Play."
+    />
     <meta name="twitter:image" content="https://ahmed-el-bialy.vercel.app/og-image.jpg" />
-    <meta name="twitter:image:alt" content="Ahmed El-Bialy - Flutter Mobile App Developer Portfolio Hero Section" />
 
-    <!-- Dynamic Runtime OpenGraph Domain Fallback Script -->
+    <!-- Runtime Origin Fallback for Dynamic URLs -->
     <script>
       (function() {
         try {
           if (typeof window !== 'undefined' && window.location && window.location.origin) {
             var origin = window.location.origin;
+            var link = document.createElement('link');
+            link.rel = 'canonical';
+            link.href = origin + window.location.pathname;
+            document.head.appendChild(link);
             if (!origin.includes('localhost') && !origin.includes('127.0.0.1')) {
+              var posterUrl = origin + '/og-image.jpg';
               var ogImg = document.querySelector('meta[property="og:image"]');
-              var ogSecure = document.querySelector('meta[property="og:image:secure_url"]');
               var twImg = document.querySelector('meta[name="twitter:image"]');
               var ogUrl = document.querySelector('meta[property="og:url"]');
-              var twUrl = document.querySelector('meta[name="twitter:url"]');
-              var linkImg = document.querySelector('link[rel="image_src"]');
-              var posterUrl = origin + '/og-image.jpg';
               if (ogImg) ogImg.setAttribute('content', posterUrl);
-              if (ogSecure) ogSecure.setAttribute('content', posterUrl);
               if (twImg) twImg.setAttribute('content', posterUrl);
-              if (linkImg) linkImg.setAttribute('href', posterUrl);
               if (ogUrl) ogUrl.setAttribute('content', origin + '/');
-              if (twUrl) twUrl.setAttribute('content', origin + '/');
             }
           }
         } catch (e) {}
       })();
     </script>
 
-    <!-- Google Fonts (Cairo for Arabic, Inter for Latin, Fira Code, Permanent Marker) -->
+    <!-- Google Fonts: Plus Jakarta Sans, DM Sans, Cairo (Arabic RTL), Fira Code, Permanent Marker -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800;900&family=Permanent+Marker&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Fira+Code:wght@400;500;600;700&family=Permanent+Marker&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
-    <!-- Schema.org Structured Data (JSON-LD) for Person Profile -->
+    <!-- Schema.org Person Structured Data (JSON-LD) -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Person",
-      "name": "Ahmed El-Bialy",
-      "alternateName": ["Ahmed Elbialy", "أحمد البيلي"],
-      "jobTitle": "Mobile Application Developer & Flutter Specialist",
-      "description": "Mobile Application Developer specializing in Flutter, Dart, and Clean Architecture with published apps on Google Play and open-source GitHub repositories.",
-      "url": "https://ahmed-el-bialy.vercel.app/",
-      "image": "https://ahmed-el-bialy.vercel.app/og-image.jpg",
-      "email": "mailto:ah.elbialy.dev@gmail.com",
-      "telephone": "+201022121573",
-      "nationality": {
-        "@type": "Country",
-        "name": "Egypt"
-      },
-      "alumniOf": {
-        "@type": "EducationalOrganization",
-        "name": "Faculty of Artificial Intelligence, Kafrelsheikh University",
-        "alternateName": "كلية الذكاء الاصطناعي - جامعة كفر الشيخ"
-      },
-      "sameAs": [
-        "https://github.com/ahmed-el-bialy",
-        "https://www.linkedin.com/in/ahmedel-bialy/",
-        "https://youtube.com/@ahmedel-bialy",
-        "https://www.tiktok.com/@ahmedelbialydev",
-        "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US"
-      ],
-      "knowsAbout": [
-        "Flutter",
-        "Dart",
-        "Clean Architecture",
-        "BLoC Pattern",
-        "Cubit State Management",
-        "Hive CE",
-        "SQLite",
-        "REST APIs",
-        "Dio & Retrofit",
-        "Firebase Firestore",
-        "Android App Development",
-        "iOS App Development",
-        "Mobile UI/UX",
-        "Artificial Intelligence"
-      ],
-      "hasOccupation": {
-        "@type": "Occupation",
-        "name": "Flutter Mobile Developer",
-        "occupationalCategory": "15-1252.00",
-        "skills": "Flutter SDK, Dart, Clean Architecture, BLoC, Cubit, Hive CE, RESTful APIs, Git, Google Play Deployment"
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Ahmed El-Bialy",
+        "alternateName": ["Ahmed Elbialy", "أحمد البيلي"],
+        "jobTitle": "Flutter Mobile Developer",
+        "description": "Junior Flutter Mobile Developer and Artificial Intelligence undergraduate building Clean Architecture Android and iOS applications, creator of Revio on Google Play.",
+        "url": "https://ahmed-el-bialy.vercel.app/",
+        "email": "mailto:ah.elbialy.dev@gmail.com",
+        "telephone": "+201022121573",
+        "nationality": {
+          "@type": "Country",
+          "name": "Egypt"
+        },
+        "alumniOf": {
+          "@type": "EducationalOrganization",
+          "name": "Faculty of Artificial Intelligence, Kafrelsheikh University"
+        },
+        "sameAs": [
+          "https://github.com/ahmed-el-bialy",
+          "https://www.linkedin.com/in/ahmedel-bialy/",
+          "https://www.youtube.com/@AhmedEl-Bialy",
+          "https://www.tiktok.com/@ahmedelbialydev",
+          "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US"
+        ],
+        "knowsAbout": [
+          "Flutter",
+          "Dart",
+          "Clean Architecture",
+          "BLoC",
+          "Cubit",
+          "Hive CE",
+          "Dio",
+          "Retrofit",
+          "Firebase Firestore",
+          "Artificial Intelligence"
+        ]
       }
-    }
     </script>
   </head>
-  <body class="bg-slate-50 dark:bg-[#08090d] text-slate-900 dark:text-white antialiased selection:bg-blue-600 selection:text-white transition-colors duration-300">
+  <body class="bg-[#f8fafc] dark:bg-[#08090d] text-[#0f172a] dark:text-[#f1f5f9] antialiased selection:bg-[#027DFD] selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
