@@ -17,6 +17,8 @@ import { ContactModal } from './components/ContactModal';
 import { ResumeModal } from './components/ResumeModal';
 import { BookingMeetingModal } from './components/BookingMeetingModal';
 import { RevealOnScroll } from './components/RevealOnScroll';
+import { FAQSection } from './components/FAQSection';
+import { ThemeRevealOverlay } from './components/ThemeRevealOverlay';
 import { ShieldCheck, Github, Linkedin, Youtube, Mail, RefreshCw, Radio, ArrowUp } from 'lucide-react';
 import { WhatsAppLogo, TikTokLogo } from './components/TechLogos';
 import { useLanguage } from './context/LanguageContext';
@@ -94,8 +96,19 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [lang]);
 
-  const handleToggleTheme = () => {
-    setIsDark((prev) => !prev);
+  const [revealOrigin, setRevealOrigin] = useState<{ x: number; y: number } | null>(null);
+  const [isTransitioningTheme, setIsTransitioningTheme] = useState(false);
+  const [targetIsDark, setTargetIsDark] = useState(isDark);
+
+  const handleToggleTheme = (e?: React.MouseEvent) => {
+    if (e) {
+      setRevealOrigin({ x: e.clientX, y: e.clientY });
+    } else {
+      setRevealOrigin({ x: window.innerWidth - 60, y: 40 });
+    }
+    const nextDark = !isDark;
+    setTargetIsDark(nextDark);
+    setIsTransitioningTheme(true);
   };
 
   // Online / Offline listener
@@ -273,6 +286,12 @@ export default function App() {
           <SectionDivider />
 
           <RevealOnScroll threshold={0.08}>
+            <FAQSection />
+          </RevealOnScroll>
+
+          <SectionDivider />
+
+          <RevealOnScroll threshold={0.08}>
             <ContactSection
               profile={profile}
               onOpenBooking={() => setIsBookingOpen(true)}
@@ -280,6 +299,18 @@ export default function App() {
             />
           </RevealOnScroll>
         </main>
+
+        {/* Circular Reveal Theme Switcher Overlay */}
+        {isTransitioningTheme && (
+          <ThemeRevealOverlay
+            targetIsDark={targetIsDark}
+            origin={revealOrigin}
+            onRevealComplete={() => {
+              setIsDark(targetIsDark);
+              setIsTransitioningTheme(false);
+            }}
+          />
+        )}
 
         {/* Global Modals */}
         <ContactModal

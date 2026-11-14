@@ -407,65 +407,66 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   topics,
   isCardHovered = false,
 }) => {
-  // Candidate screenshot cover url: strictly screenshots/cover.*
-  const targetCoverUrl =
-    isStrictScreenshotsCoverUrl(coverUrl)
-      ? coverUrl!
-      : `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/main/screenshots/cover.png`;
-
-  // Image availability state: only true if candidate loads successfully
-  const [hasRealCover, setHasRealCover] = useState<boolean>(false);
-  const [activeView, setActiveView] = useState<'standard' | 'screenshot'>('standard');
+  const [activeSlide, setActiveSlide] = useState<number>(0);
+  const [availableImages, setAvailableImages] = useState<string[]>([]);
   const [isSelfHovered, setIsSelfHovered] = useState<boolean>(false);
-
   const isHovered = Boolean(isCardHovered || isSelfHovered);
 
-  // Verify whether the candidate screenshots/cover exists by pre-loading it
+  // Candidate images (max 3 images: Artwork Cover + up to 2 screenshots)
+  const candidateUrls = useMemo(() => {
+    const list = [
+      coverUrl && isStrictScreenshotsCoverUrl(coverUrl) ? coverUrl : null,
+      `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/main/screenshots/cover.png`,
+      `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/main/screenshots/screen_1.png`,
+    ].filter(Boolean) as string[];
+    return Array.from(new Set(list));
+  }, [repoName, coverUrl]);
+
+  // Preload and verify available images (max 3)
   useEffect(() => {
     let isCancelled = false;
-    const testImg = new Image();
-
-    testImg.onload = () => {
+    Promise.all(
+      candidateUrls.map(
+        (url) =>
+          new Promise<string | null>((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(url);
+            img.onerror = () => resolve(null);
+            img.src = url;
+          })
+      )
+    ).then((results) => {
       if (!isCancelled) {
-        setHasRealCover(true);
+        const valid = results.filter(Boolean) as string[];
+        setAvailableImages(valid.slice(0, 2)); // up to 2 real screenshot images + 1 standard artwork = 3 max
       }
-    };
-
-    testImg.onerror = () => {
-      if (!isCancelled) {
-        setHasRealCover(false);
-        setActiveView('standard');
-      }
-    };
-
-    testImg.src = targetCoverUrl;
+    });
 
     return () => {
       isCancelled = true;
     };
-  }, [targetCoverUrl]);
+  }, [candidateUrls]);
 
-  // Snappy auto-rotation between Standard Cover and Real Screenshot ONLY when real cover exists
+  // Total slides count: 1 (Standard Artwork) + availableImages.length (up to 2 screenshots) = max 3 slides
+  const totalSlides = 1 + availableImages.length;
+
+  // Auto-play rotation with Hover Pause & Smooth Fade
   useEffect(() => {
-    if (!hasRealCover) {
-      setActiveView('standard');
-      return;
-    }
+    if (totalSlides <= 1 || isHovered) return;
 
     const timer = setInterval(() => {
-      setActiveView((prev) => (prev === 'standard' ? 'screenshot' : 'standard'));
-    }, 2800);
+      setActiveSlide((prev) => (prev + 1) % totalSlides);
+    }, 3200);
 
     return () => clearInterval(timer);
-  }, [hasRealCover]);
+  }, [totalSlides, isHovered]);
 
-  // Dynamically synthesize a custom, unique blueprint for each and every project automatically
+  // Dynamically synthesize a custom, unique blueprint for each project automatically
   const blueprint: ProjectBlueprintSpec = useMemo(() => {
     return synthesizeProjectBlueprint(repoName, language, description, topics);
   }, [repoName, language, description, topics]);
 
   const BadgeIcon = blueprint.badgeIcon;
-  const isShowingScreenshot = activeView === 'screenshot' && hasRealCover;
 
   return (
     <div
@@ -473,308 +474,157 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
       onMouseEnter={() => setIsSelfHovered(true)}
       onMouseLeave={() => setIsSelfHovered(false)}
       onClick={(e) => {
-        if (hasRealCover) {
+        if (totalSlides > 1) {
           e.stopPropagation();
-          setActiveView((prev) => (prev === 'standard' ? 'screenshot' : 'standard'));
+          setActiveSlide((prev) => (prev + 1) % totalSlides);
         }
       }}
-      title={
-        hasRealCover
-          ? 'Switches between Designed Standard Cover and Real Screenshot. Click to toggle.'
-          : `${blueprint.appTitle} Production App Artwork`
-      }
+      title={`${blueprint.appTitle} - Slide ${activeSlide + 1} of ${totalSlides} (Click to cycle)`}
     >
-      {/* ========================================================
-          LAYER 1: DYNAMIC GENERATIVE BACKGROUND & REDESIGNED STANDARD COVER
-          Framer-Motion Powered Gradient Shift, Ambient Mesh, & Specular Sheen
-          ======================================================== */}
-      <div
-        className={`absolute inset-0 flex flex-col justify-between transition-all duration-300 ease-out ${
-          !isShowingScreenshot
-            ? 'opacity-100 z-10 scale-100'
-            : 'opacity-0 z-0 scale-95 pointer-events-none'
-        }`}
-      >
-        {/* 1.1 Dynamic Generative Light Theme Background with Framer-Motion cross-fade */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-100 dark:opacity-0 transition-opacity duration-300"
-          style={{
-            background: `radial-gradient(ellipse 75% 60% at 50% 15%, rgba(${blueprint.glowRgb}, 0.08) 0%, transparent 60%), linear-gradient(130deg, rgba(${blueprint.glowRgb}, 0.05) 0%, #ffffff 45%, #f8fafc 100%)`,
-          }}
-        />
-        <motion.div
-          className="absolute inset-0 pointer-events-none opacity-100 dark:opacity-0"
-          initial={false}
-          animate={{ opacity: isHovered ? 1 : 0 }}
-          transition={{ duration: 0.5, ease: 'easeInOut' }}
-          style={{
-            background: `radial-gradient(ellipse 85% 75% at 75% 20%, rgba(${blueprint.glowRgb}, 0.18) 0%, transparent 68%), linear-gradient(145deg, rgba(${blueprint.glowRgb}, 0.12) 0%, #f8fafc 45%, #f1f5f9 100%)`,
-          }}
-        />
-
-        {/* 1.2 Dynamic Generative Dark Theme Background with Framer-Motion cross-fade */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-100 transition-opacity duration-300"
-          style={{
-            background: `radial-gradient(ellipse 80% 65% at 50% 12%, rgba(${blueprint.glowRgb}, 0.11) 0%, transparent 65%), linear-gradient(130deg, rgba(${blueprint.glowRgb}, 0.08) 0%, #090b16 40%, #04050a 100%)`,
-          }}
-        />
-        <motion.div
-          className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-100"
-          initial={false}
-          animate={{ opacity: isHovered ? 1 : 0 }}
-          transition={{ duration: 0.5, ease: 'easeInOut' }}
-          style={{
-            background: `radial-gradient(ellipse 90% 80% at 80% 20%, rgba(${blueprint.glowRgb}, 0.25) 0%, transparent 72%), linear-gradient(145deg, rgba(${blueprint.glowRgb}, 0.18) 0%, #0e1022 40%, #05060c 100%)`,
-          }}
-        />
-
-        {/* 1.3 Precision Studio Dot Matrix Overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.06] dark:opacity-[0.08] text-slate-800 dark:text-cyan-400 pointer-events-none"
-          style={{
-            backgroundImage: `radial-gradient(circle, currentColor 1px, transparent 1px)`,
-            backgroundSize: '18px 18px',
-          }}
-        />
-
-        {/* 1.4 Framer-Motion Animated Primary Glowing Orb */}
-        <motion.div
-          className="absolute -top-16 -right-16 w-64 h-64 rounded-full blur-3xl pointer-events-none"
-          animate={{
-            x: isHovered ? [0, 10, -8, 0] : 0,
-            y: isHovered ? [0, -12, 6, 0] : 0,
-            scale: isHovered ? [1, 1.22, 1.10, 1] : 1,
-            opacity: isHovered ? 0.38 : 0.18,
-          }}
-          transition={{
-            duration: 3.8,
-            repeat: isHovered ? Infinity : 0,
-            ease: 'easeInOut',
-          }}
-          style={{
-            background: `radial-gradient(circle, ${blueprint.accentColor} 0%, transparent 70%)`,
-          }}
-        />
-
-        {/* 1.5 Framer-Motion Animated Secondary Harmonic Orb */}
-        <motion.div
-          className="absolute -bottom-16 -left-16 w-60 h-60 rounded-full blur-3xl pointer-events-none"
-          animate={{
-            x: isHovered ? [0, -10, 10, 0] : 0,
-            y: isHovered ? [0, 10, -6, 0] : 0,
-            scale: isHovered ? [1, 1.18, 1.05, 1] : 1,
-            opacity: isHovered ? 0.32 : 0.14,
-          }}
-          transition={{
-            duration: 4.2,
-            repeat: isHovered ? Infinity : 0,
-            ease: 'easeInOut',
-          }}
-          style={{
-            background: `radial-gradient(circle, ${blueprint.secondaryAccent} 0%, transparent 70%)`,
-          }}
-        />
-
-        {/* 1.6 Framer-Motion Animated Specular Sheen Sweep */}
-        <motion.div
-          className="absolute inset-y-0 w-32 bg-gradient-to-r from-transparent via-white/16 dark:via-white/[0.08] to-transparent pointer-events-none -skew-x-20"
-          initial={{ left: '-40%', opacity: 0 }}
-          animate={
-            isHovered
-              ? { left: '140%', opacity: [0, 1, 0] }
-              : { left: '-40%', opacity: 0 }
-          }
-          transition={{
-            duration: 0.95,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-        />
-
-        {/* 2. Top Header Bar: Clean Category Badge & Platform Micro-Tag */}
-        <div className="relative z-10 flex items-center justify-between gap-3 px-4 sm:px-5 pt-3.5 sm:pt-4">
-          {/* Left Category Indicator */}
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="relative flex h-2 w-2 shrink-0">
-              <span
-                className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                style={{ backgroundColor: blueprint.accentColor }}
-              />
-              <span
-                className="relative inline-flex rounded-full h-2 w-2"
-                style={{ backgroundColor: blueprint.accentColor }}
-              />
-            </span>
-
-            <span
-              className="text-[11px] font-bold tracking-wide px-3 py-1 rounded-full border shadow-xs truncate backdrop-blur-md transition-transform duration-300 group-hover/cover:scale-[1.02]"
-              style={{
-                backgroundColor: `rgba(${blueprint.glowRgb}, 0.14)`,
-                borderColor: `rgba(${blueprint.glowRgb}, 0.4)`,
-                color: blueprint.accentColor,
-              }}
-            >
-              {blueprint.categoryBadge}
-            </span>
-          </div>
-
-          {/* Right Platform Micro-Tag */}
-          <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg bg-slate-200/80 dark:bg-white/[0.06] border border-slate-300/60 dark:border-white/10 backdrop-blur-md shadow-xs">
-            <span
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ backgroundColor: blueprint.accentColor }}
-            />
-            <span className="text-[10px] font-mono font-bold text-slate-800 dark:text-slate-200 tracking-wider">
-              {language || 'Flutter • Dart'}
-            </span>
-          </div>
-        </div>
-
-        {/* 3. Centerpiece: Harmonized App Brand Emblem + Identity Typography */}
-        <div className="relative z-10 px-4 sm:px-5 my-auto flex items-center gap-3.5 sm:gap-4.5">
-          {/* App Brand Icon Box with Framer-Motion interactive response */}
+      <AnimatePresence mode="wait">
+        {/* SLIDE 0: Standard Designer Artwork */}
+        {activeSlide === 0 && (
           <motion.div
-            className="relative shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-[2px] shadow-lg dark:shadow-2xl"
-            animate={{
-              scale: isHovered ? 1.08 : 1,
-              rotate: isHovered ? 2.5 : 0,
-            }}
-            transition={{
-              type: 'spring',
-              stiffness: 400,
-              damping: 22,
-            }}
-            style={{
-              background: `linear-gradient(135deg, ${blueprint.accentColor}, ${blueprint.secondaryAccent}, rgba(255,255,255,0.4))`,
-              boxShadow: `0 12px 28px -6px rgba(${blueprint.glowRgb}, ${isHovered ? '0.5' : '0.3'})`,
-            }}
+            key="slide-standard"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: 'easeInOut' }}
+            className="absolute inset-0 flex flex-col justify-between z-10"
           >
-            <div className="w-full h-full rounded-[14px] bg-white dark:bg-[#0a0c16] flex items-center justify-center relative overflow-hidden border border-slate-200/90 dark:border-white/10 shadow-inner">
-              {/* Inner ambient radial glow */}
+            {/* 1.1 Dynamic Generative Light Theme Background */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-100 dark:opacity-0 transition-opacity duration-300"
+              style={{
+                background: `radial-gradient(ellipse 75% 60% at 50% 15%, rgba(${blueprint.glowRgb}, 0.08) 0%, transparent 60%), linear-gradient(130deg, rgba(${blueprint.glowRgb}, 0.05) 0%, #ffffff 45%, #f8fafc 100%)`,
+              }}
+            />
+            <div
+              className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-100 transition-opacity duration-300"
+              style={{
+                background: `radial-gradient(ellipse 80% 65% at 50% 12%, rgba(${blueprint.glowRgb}, 0.11) 0%, transparent 65%), linear-gradient(130deg, rgba(${blueprint.glowRgb}, 0.08) 0%, #090b16 40%, #04050a 100%)`,
+              }}
+            />
+
+            {/* Precision Studio Dot Matrix Overlay */}
+            <div
+              className="absolute inset-0 opacity-[0.06] dark:opacity-[0.08] text-slate-800 dark:text-cyan-400 pointer-events-none"
+              style={{
+                backgroundImage: `radial-gradient(circle, currentColor 1px, transparent 1px)`,
+                backgroundSize: '18px 18px',
+              }}
+            />
+
+            {/* Top Header Bar: Category Badge & Platform Tag */}
+            <div className="relative z-10 flex items-center justify-between gap-3 px-4 sm:px-5 pt-3.5 sm:pt-4">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span
+                    className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                    style={{ backgroundColor: blueprint.accentColor }}
+                  />
+                  <span
+                    className="relative inline-flex rounded-full h-2 w-2"
+                    style={{ backgroundColor: blueprint.accentColor }}
+                  />
+                </span>
+
+                <span
+                  className="text-[11px] font-bold tracking-wide px-3 py-1 rounded-full border shadow-xs truncate backdrop-blur-md"
+                  style={{
+                    backgroundColor: `rgba(${blueprint.glowRgb}, 0.14)`,
+                    borderColor: `rgba(${blueprint.glowRgb}, 0.4)`,
+                    color: blueprint.accentColor,
+                  }}
+                >
+                  {blueprint.categoryBadge}
+                </span>
+              </div>
+
+              {/* Latest Updates / Live Badge */}
+              <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/25 text-blue-700 dark:text-cyan-300 backdrop-blur-md shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="text-[10px] font-mono font-bold tracking-wider">
+                  Latest Update
+                </span>
+              </div>
+            </div>
+
+            {/* Centerpiece: App Brand Emblem + Typography */}
+            <div className="relative z-10 px-4 sm:px-5 my-auto flex items-center gap-3.5 sm:gap-4.5">
               <div
-                className="absolute inset-0 opacity-30 pointer-events-none"
+                className="relative shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl p-[2px] shadow-lg dark:shadow-2xl"
                 style={{
-                  background: `radial-gradient(circle at 50% 30%, ${blueprint.accentColor}, transparent 70%)`,
+                  background: `linear-gradient(135deg, ${blueprint.accentColor}, ${blueprint.secondaryAccent}, rgba(255,255,255,0.4))`,
                 }}
-              />
-              <BadgeIcon
-                size={28}
-                className="relative z-10 transition-transform duration-300 group-hover/cover:scale-110 drop-shadow-lg"
-                style={{ color: blueprint.accentColor }}
-              />
+              >
+                <div className="w-full h-full rounded-[14px] bg-white dark:bg-[#0a0c16] flex items-center justify-center relative overflow-hidden border border-slate-200/90 dark:border-white/10 shadow-inner">
+                  <BadgeIcon size={28} className="relative z-10 drop-shadow-lg" style={{ color: blueprint.accentColor }} />
+                </div>
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight truncate">
+                  {blueprint.appTitle}
+                </h3>
+                <p className="text-xs font-bold truncate mt-0.5 tracking-tight" style={{ color: blueprint.accentColor }}>
+                  {blueprint.genre}
+                </p>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300/95 line-clamp-1 mt-0.5 font-medium">
+                  {blueprint.tagline}
+                </p>
+              </div>
+            </div>
+
+            {/* Bottom Shelf */}
+            <div className="relative z-10 px-4 sm:px-5 py-3 bg-slate-100/90 dark:bg-[#04050a]/90 backdrop-blur-md border-t border-slate-200/90 dark:border-white/10 flex items-center justify-between text-[11px]">
+              <span className="font-mono text-[10px] sm:text-[11px] font-semibold text-slate-700 dark:text-slate-300 truncate">
+                {blueprint.architecturePattern}
+              </span>
+              <span className="font-bold text-[11px]" style={{ color: blueprint.accentColor }}>
+                {blueprint.performanceBadge}
+              </span>
             </div>
           </motion.div>
+        )}
 
-          {/* App Title & Identity Description */}
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight truncate group-hover/cover:text-blue-600 dark:group-hover/cover:text-cyan-300 transition-colors">
-                {blueprint.appTitle}
-              </h3>
+        {/* SLIDE 1 & 2: Real Screenshots Carousel */}
+        {activeSlide >= 1 && availableImages[activeSlide - 1] && (
+          <motion.div
+            key={`slide-screenshot-${activeSlide}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: 'easeInOut' }}
+            className="absolute inset-0 bg-slate-900 z-20"
+          >
+            <img
+              src={availableImages[activeSlide - 1]}
+              alt={`${repoName} screenshot ${activeSlide}`}
+              className="w-full h-full object-cover object-center"
+              loading="eager"
+            />
+            <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
+            <div className="absolute top-3 start-3 z-30 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/20 text-white font-mono text-[10px] font-bold">
+              Screenshot #{activeSlide}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            <p
-              className="text-xs font-bold truncate mt-0.5 tracking-tight"
-              style={{ color: blueprint.accentColor }}
-            >
-              {blueprint.genre}
-            </p>
-
-            <p className="text-[11px] text-slate-600 dark:text-slate-300/95 line-clamp-1 mt-0.5 leading-tight font-medium">
-              {blueprint.tagline}
-            </p>
-
-            {/* Micro Feature Tags */}
-            <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
-              {blueprint.coreHighlights.slice(0, 3).map((feat, idx) => (
-                <span
-                  key={idx}
-                  className="px-2.5 py-0.5 rounded-md bg-slate-200/80 dark:bg-white/[0.08] border border-slate-300/70 dark:border-white/10 text-[10px] text-slate-800 dark:text-slate-200 font-semibold font-mono tracking-tight shadow-2xs"
-                >
-                  {feat}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* 4. Bottom Shelf: Architectural Bar & Highlight Metric */}
-        <div className="relative z-10 px-4 sm:px-5 py-3 bg-slate-100/90 dark:bg-[#04050a]/90 backdrop-blur-md border-t border-slate-200/90 dark:border-white/10 flex items-center justify-between text-[11px] gap-2">
-          <div className="flex items-center gap-1.5 min-w-0 text-slate-700 dark:text-slate-300">
-            <Layers size={13} className="shrink-0 text-slate-500 dark:text-cyan-400" />
-            <span className="font-mono text-[10px] sm:text-[11px] truncate font-semibold text-slate-700 dark:text-slate-300">
-              {blueprint.architecturePattern}
-            </span>
-          </div>
-
-          <div
-            className="flex items-center gap-1 shrink-0 font-bold text-[11px]"
-            style={{ color: blueprint.accentColor }}
-          >
-            <Zap size={12} className="shrink-0" />
-            <span className="truncate">{blueprint.performanceBadge}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ========================================================
-          LAYER 2: REAL SCREENSHOT COVER (If available in screenshots/cover.*)
-          ======================================================== */}
-      {hasRealCover && (
-        <div
-          className={`absolute inset-0 bg-slate-100 dark:bg-[#080911] transition-all duration-200 ease-out ${
-            isShowingScreenshot
-              ? 'opacity-100 z-20 scale-100 pointer-events-auto'
-              : 'opacity-0 z-0 scale-105 pointer-events-none'
-          }`}
-        >
-          <img
-            src={targetCoverUrl}
-            alt={`${repoName} Screenshots Cover`}
-            loading="eager"
-            decoding="async"
-            className="w-full h-full object-cover object-center group-hover/cover:scale-[1.02] transition-transform duration-500 ease-out"
-          />
-
-          {/* Subtle bottom gradient overlay to cleanly ground the image */}
-          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 dark:from-black/80 to-transparent pointer-events-none" />
-        </div>
-      )}
-
-      {/* ========================================================
-          COVER SWITCHER PILL (Shown ONLY when both covers exist)
-          ======================================================== */}
-      {hasRealCover && (
-        <div
-          className="absolute bottom-3 right-3 z-30 flex items-center gap-1.5 p-1 rounded-full bg-white/95 dark:bg-black/85 backdrop-blur-md border border-slate-200 dark:border-white/15 shadow-md dark:shadow-xl transition-all duration-200"
-          onClick={(e) => {
-            e.stopPropagation();
-            setActiveView((prev) => (prev === 'standard' ? 'screenshot' : 'standard'));
-          }}
-          title="Click to toggle between Standard Design and Real Screenshot Cover"
-        >
-          <button
-            type="button"
-            className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold transition-all cursor-pointer ${
-              activeView === 'standard'
-                ? 'bg-blue-600 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-            }`}
-          >
-            <Palette size={10} />
-            <span>Design</span>
-          </button>
-          <button
-            type="button"
-            className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold transition-all cursor-pointer ${
-              activeView === 'screenshot'
-                ? 'bg-blue-600 dark:bg-cyan-500 text-white dark:text-slate-950 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-            }`}
-          >
-            <ImageIcon size={10} />
-            <span>Cover</span>
-          </button>
+      {/* Pagination Indicators (Dots) */}
+      {totalSlides > 1 && (
+        <div className="absolute bottom-2.5 inset-x-0 z-30 flex items-center justify-center gap-1.5 pointer-events-none">
+          {Array.from({ length: totalSlides }).map((_, idx) => (
+            <span
+              key={idx}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                activeSlide === idx
+                  ? 'w-4 bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.9)]'
+                  : 'w-1.5 bg-white/50 dark:bg-white/25'
+              }`}
+            />
+          ))}
         </div>
       )}
     </div>

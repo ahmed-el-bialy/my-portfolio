@@ -35,7 +35,7 @@ interface NavbarProps {
   onOpenResume: () => void;
   onOpenBooking?: () => void;
   isDark: boolean;
-  onToggleTheme: () => void;
+  onToggleTheme: (e: React.MouseEvent) => void;
   isAnyModalOpen?: boolean;
 }
 
@@ -203,7 +203,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Enhanced Light / Dark Theme Toggle Button with Rotating Icon Spin & Micro-Interactions */}
             <motion.button
-              onClick={isAnyModalOpen ? undefined : onToggleTheme}
+              onClick={isAnyModalOpen ? undefined : (e) => onToggleTheme(e)}
               disabled={isAnyModalOpen}
               whileHover={isAnyModalOpen ? undefined : { scale: 1.08 }}
               whileTap={isAnyModalOpen ? undefined : { scale: 0.92 }}
