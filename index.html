@@ -6,10 +6,11 @@
     <title>Ahmed El-Bialy | Flutter Mobile Developer & AI Student</title>
 
     <!-- Browser Tab Favicon & App Icons -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
-    <link rel="apple-touch-icon" href="/favicon-192.png" />
+    <link rel="shortcut icon" href="/favicon.ico?v=2" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=2" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=2" />
+    <link rel="apple-touch-icon" href="/favicon-192.png?v=2" />
 
     <!-- SEO & Canonical -->
     <meta
@@ -60,11 +61,13 @@
     <meta property="og:title" content="Ahmed El-Bialy | Flutter Mobile Developer" />
     <meta
       property="og:description"
-      content="Flutter Mobile Developer & AI Student. Explore Revio on Google Play, Clean Architecture Dart codebases, and live GitHub projects."
+      content="Flutter Mobile Developer & AI Student. Clean Architecture, BLoC/Cubit, Hive CE, and creator of Revio live on Google Play. Open to Work."
     />
-    <meta property="og:image" content="https://ahmed-el-bialy.vercel.app/og-image.jpg" />
+    <meta property="og:image" content="https://ahmed-el-bialy.vercel.app/og-image.jpg?v=2" />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Ahmed El-Bialy — Flutter Mobile Developer & Creator of Revio" />
     <meta property="og:site_name" content="Ahmed El-Bialy Portfolio" />
 
     <meta name="twitter:card" content="summary_large_image" />
@@ -73,7 +76,8 @@
       name="twitter:description"
       content="Flutter Mobile Developer & AI Student. Creator of Revio on Google Play."
     />
-    <meta name="twitter:image" content="https://ahmed-el-bialy.vercel.app/og-image.jpg" />
+    <meta name="twitter:image" content="https://ahmed-el-bialy.vercel.app/og-image.jpg?v=2" />
+    <meta name="twitter:image:alt" content="Ahmed El-Bialy — Flutter Mobile Developer" />
 
     <!-- Runtime Origin Fallback for Dynamic URLs -->
     <script>
@@ -86,7 +90,7 @@
             link.href = origin + window.location.pathname;
             document.head.appendChild(link);
             if (!origin.includes('localhost') && !origin.includes('127.0.0.1')) {
-              var posterUrl = origin + '/og-image.jpg';
+              var posterUrl = origin + '/og-image.jpg?v=2';
               var ogImg = document.querySelector('meta[property="og:image"]');
               var twImg = document.querySelector('meta[name="twitter:image"]');
               var ogUrl = document.querySelector('meta[property="og:url"]');

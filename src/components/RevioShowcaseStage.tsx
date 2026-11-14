@@ -12,6 +12,7 @@ import {
 import { AHMED_CONFIG } from '../data/config';
 import { VERIFIED_REPO_SCREENSHOTS } from '../services/githubService';
 import { DartCodeShowcase } from './DartCodeShowcase';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { useLanguage } from '../context/LanguageContext';
 
 interface RevioShowcaseStageProps {
@@ -132,17 +133,21 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
                 <div className="absolute top-3.5 left-1/2 -translate-x-1/2 z-20 w-14 h-3 rounded-full bg-slate-900 border border-slate-800" />
                 <div className="relative aspect-[9/18.5] rounded-[24px] overflow-hidden bg-slate-950">
                   <AnimatePresence mode="wait">
-                    <motion.img
+                    <motion.div
                       key={activeScreen.id}
-                      src={activeScreen.src}
-                      alt={`Revio ${activeScreen.labelEn}`}
-                      referrerPolicy="no-referrer"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      transition={{ duration: 0.25 }}
-                      className="w-full h-full object-cover object-top"
-                    />
+                      transition={{ duration: 0.22 }}
+                      className="w-full h-full"
+                    >
+                      <ImageWithSkeleton
+                        src={activeScreen.src}
+                        alt={`Revio ${activeScreen.labelEn}`}
+                        loading="eager"
+                        className="w-full h-full object-cover object-top"
+                      />
+                    </motion.div>
                   </AnimatePresence>
                 </div>
               </div>

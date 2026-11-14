@@ -18,6 +18,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { WhatsAppLogo, TikTokLogo } from './TechLogos';
+import { BrandLogoMark } from './BrandLogoMark';
 import { AHMED_CONFIG } from '../data/config';
 import { DEFAULT_PROFILE } from '../data/portfolioData';
 import { useLanguage } from '../context/LanguageContext';
@@ -27,6 +28,7 @@ export type NavTab = 'overview' | 'projects' | 'experience' | 'contact';
 interface NavbarProps {
   activeTab: NavTab;
   onNavigate: (tab: NavTab) => void;
+  onPrefetchTab?: (tab: NavTab) => void;
   onOpenResume: () => void;
   onOpenBooking?: () => void;
   isDark: boolean;
@@ -37,6 +39,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   onNavigate,
+  onPrefetchTab,
   onOpenResume,
   onOpenBooking,
   isDark,
@@ -77,18 +80,16 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* 1. Strict 3-Zone Top Bar */}
       <header className="fixed top-0 inset-x-0 z-50 border-b border-slate-200/80 dark:border-white/10 bg-[#f8fafc]/90 dark:bg-[#08090d]/90 backdrop-blur-xl transition-colors duration-200">
         <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4 lg:gap-8">
-          {/* Zone 1: Single-line Brand Monogram + Wordmark */}
+          {/* Zone 1: Centered Logo Mark + Single-line Brand Wordmark */}
           <button
             type="button"
             onClick={() => handleTabClick('overview')}
             className="flex items-center gap-2.5 cursor-pointer group shrink-0 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#027DFD] rounded-lg px-1"
           >
-            <span
-              dir="ltr"
-              className="font-mono text-xs sm:text-sm font-bold px-2 py-1 rounded-lg bg-[#027DFD]/10 dark:bg-[#00C7FF]/10 text-[#027DFD] dark:text-[#00C7FF] border border-[#027DFD]/25 dark:border-[#00C7FF]/25 whitespace-nowrap shrink-0"
-            >
-              {AHMED_CONFIG.monogram}
-            </span>
+            <BrandLogoMark
+              sizeClassName="w-8 h-8"
+              className="group-hover:scale-105 transition-transform"
+            />
             <span className="font-bold text-sm sm:text-base tracking-tight text-slate-900 dark:text-[#f1f5f9] group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF] transition-colors whitespace-nowrap shrink-0">
               {AHMED_CONFIG.name[lang]}
             </span>
@@ -106,6 +107,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   key={item.id}
                   type="button"
                   onClick={() => handleTabClick(item.id)}
+                  onMouseEnter={() => onPrefetchTab?.(item.id)}
+                  onFocus={() => onPrefetchTab?.(item.id)}
                   className={`relative py-2 text-xs lg:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#027DFD] rounded ${
                     isActive
                       ? 'text-[#027DFD] dark:text-[#00C7FF]'
@@ -218,10 +221,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleTabClick(item.id)}
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleTabClick(item.id)}
+                  onTouchStart={() => onPrefetchTab?.(item.id)}
                 className={`relative flex flex-col items-center justify-center min-h-[44px] py-1 px-1 rounded-xl transition-colors cursor-pointer select-none ${
                   isActive
                     ? 'text-[#027DFD] dark:text-[#00C7FF] bg-[#027DFD]/10 dark:bg-[#00C7FF]/10 font-bold'
@@ -254,12 +258,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div>
               <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-white/10">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <span
-                    dir="ltr"
-                    className="font-mono text-xs font-bold px-2 py-1 rounded-lg bg-[#027DFD]/10 text-[#027DFD] dark:text-[#00C7FF] border border-[#027DFD]/25 shrink-0"
-                  >
-                    {AHMED_CONFIG.monogram}
-                  </span>
+                  <BrandLogoMark sizeClassName="w-8 h-8" />
                   <div className="min-w-0">
                     <div className="font-bold text-sm text-slate-900 dark:text-[#f1f5f9] truncate">
                       {AHMED_CONFIG.name[lang]}

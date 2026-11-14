@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   Github,
   Linkedin,
@@ -26,6 +27,8 @@ interface HeroSectionProps {
   totalReposCount?: number;
 }
 
+const EASE_EDITORIAL: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
 export const HeroSection: React.FC<HeroSectionProps> = ({
   profile,
   isDark = true,
@@ -36,6 +39,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   totalReposCount,
 }) => {
   const { lang, dir, t } = useLanguage();
+  const prefersReducedMotion = useReducedMotion();
   const [rotatingWordIndex, setRotatingWordIndex] = useState(0);
 
   const rotatingWords = t.hero.rotatingWords;
@@ -97,6 +101,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       ? 'مشغول حالياً'
       : 'Booked';
 
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.04,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.44, ease: EASE_EDITORIAL },
+    },
+  };
+
+  const currentRotatingWord = rotatingWords[rotatingWordIndex % rotatingWords.length];
+
   return (
     <section
       id="overview"
@@ -106,10 +131,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
       {/* Editorial Split Hero (Equal-stretch alignment) */}
       <div className="max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch relative z-10">
-        {/* Left Column: Crisp Typography, Value Proposition & Clear CTAs */}
-        <div className="lg:col-span-6 flex flex-col justify-center items-start gap-4 sm:gap-5">
-          {/* Clean Unboxed Kicker Strip (Zero pulsing dots or pill capsules) */}
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-slate-600 dark:text-[#94a3b8]">
+        {/* Left Column: Staggered Editorial Typography, Specialty Strip & Clear CTAs */}
+        <motion.div
+          variants={containerVariants}
+          initial={prefersReducedMotion ? false : 'hidden'}
+          animate="visible"
+          className="lg:col-span-6 flex flex-col justify-center items-start gap-4 sm:gap-5"
+        >
+          {/* Clean Unboxed Kicker Strip */}
+          <motion.div
+            variants={itemVariants}
+            className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-slate-600 dark:text-[#94a3b8]"
+          >
             <span className="font-semibold text-emerald-700 dark:text-emerald-400">
               {availabilityText}
             </span>
@@ -123,10 +156,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <span className="font-mono text-[#027DFD] dark:text-[#00C7FF]">
               Flutter &amp; AI
             </span>
-          </div>
+          </motion.div>
 
           {/* Balanced Display Title */}
-          <div className="space-y-2.5">
+          <motion.div variants={itemVariants} className="space-y-2.5">
             <p className="text-sm sm:text-base font-semibold text-[#027DFD] dark:text-[#00C7FF] tracking-tight">
               {displayName} — {AHMED_CONFIG.title[lang]}
             </p>
@@ -135,25 +168,47 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 ? 'هندسة تطبيقات Flutter بمعايير Clean Architecture.'
                 : 'Production Flutter apps engineered with Clean Architecture.'}
             </h1>
-          </div>
+          </motion.div>
 
-          {/* Focus Specialty Line */}
-          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-medium text-slate-600 dark:text-[#94a3b8]">
-            <span>{t.hero.specializedIn}:</span>
-            <span className="font-bold text-slate-900 dark:text-[#f1f5f9]">
-              {rotatingWords[rotatingWordIndex % rotatingWords.length]}
+          {/* High-Contrast Animated Specialty Line */}
+          <motion.div
+            variants={itemVariants}
+            className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm sm:text-base font-medium text-slate-700 dark:text-slate-200"
+          >
+            <span className="font-semibold text-slate-900 dark:text-[#f1f5f9]">
+              {t.hero.specializedIn}:
             </span>
-          </div>
+            <span className="relative inline-flex items-center overflow-hidden min-h-[26px]">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={`${lang}-${currentRotatingWord}`}
+                  initial={prefersReducedMotion ? false : { y: 12, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={prefersReducedMotion ? undefined : { y: -12, opacity: 0 }}
+                  transition={{ duration: 0.26, ease: EASE_EDITORIAL }}
+                  className="font-bold text-[#027DFD] dark:text-[#00C7FF]"
+                >
+                  {currentRotatingWord}
+                </motion.span>
+              </AnimatePresence>
+            </span>
+          </motion.div>
 
           {/* Concise Verified Bio */}
-          <p className="text-sm sm:text-base text-slate-600 dark:text-[#94a3b8] max-w-xl leading-relaxed">
+          <motion.p
+            variants={itemVariants}
+            className="text-sm sm:text-base text-slate-600 dark:text-[#94a3b8] max-w-xl leading-relaxed"
+          >
             {lang === 'ar'
               ? 'أُطوّر تطبيقات Android و iOS بأداء 60 FPS باستخدام Flutter، وإدارة الحالة BLoC / Cubit، والتخزين المحلي بدون إنترنت Hive CE. مطوّر تطبيق Revio المنشور رسمياً على Google Play وطالب بكلية الذكاء الاصطناعي — جامعة كفر الشيخ.'
               : 'Building responsive Android & iOS applications with Flutter, BLoC / Cubit state streams, REST APIs, and offline-first Hive CE storage. Creator of Revio on Google Play and B.Sc. Artificial Intelligence student at Kafrelsheikh University.'}
-          </p>
+          </motion.p>
 
           {/* Primary Action Row */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1 w-full sm:w-auto">
+          <motion.div
+            variants={itemVariants}
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1 w-full sm:w-auto"
+          >
             <MagneticButton
               onClick={onExploreProjects}
               strength={0.22}
@@ -182,10 +237,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <Download size={15} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>{t.hero.downloadCv}</span>
             </button>
-          </div>
+          </motion.div>
 
           {/* Inline Channels Strip */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 text-xs text-slate-600 dark:text-[#94a3b8]">
+          <motion.div
+            variants={itemVariants}
+            className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 text-xs text-slate-600 dark:text-[#94a3b8]"
+          >
             <a
               href={AHMED_CONFIG.socials.whatsapp}
               target="_blank"
@@ -253,20 +311,32 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <Mail size={13} />
               <span>Email</span>
             </a>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Right Column: Interactive Revio Device Mockup + Shiki Dart Code Stage */}
-        <div className="lg:col-span-6 flex">
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.48, delay: 0.14, ease: EASE_EDITORIAL }}
+          className="lg:col-span-6 flex"
+        >
           <RevioShowcaseStage isDark={isDark} onInspectRevio={onInspectRevio} />
-        </div>
+        </motion.div>
       </div>
 
       {/* Full-Width 4-KPI Tabular Strip Below Hero Split */}
       <div className="max-w-[1440px] mx-auto w-full mt-10 sm:mt-14 pt-8 border-t border-slate-200/80 dark:border-white/10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 relative z-10">
         {kpis.map((kpi, idx) => (
-          <div
+          <motion.div
             key={idx}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.38,
+              delay: prefersReducedMotion ? 0 : 0.24 + idx * 0.06,
+              ease: EASE_EDITORIAL,
+            }}
             className={`p-4 sm:p-5 rounded-2xl border transition-colors ${
               kpi.highlight
                 ? 'bg-emerald-500/[0.06] dark:bg-emerald-500/[0.08] border-emerald-500/30'
@@ -296,9 +366,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <p className="text-xs text-slate-600 dark:text-[#94a3b8] mt-1.5 leading-snug">
               {kpi.label}
             </p>
-          </div>
+          </motion.div>
         ))}
       </div>
     </section>
   );
 };
+

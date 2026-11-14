@@ -74,10 +74,10 @@ const ScreenshotCard: React.FC<{
     >
       {/* Loading Shimmer Skeleton (Matches exact 9:16 aspect ratio to guarantee 0 CLS) */}
       {!isLoaded && !hasError && (
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-800 via-slate-700/50 to-slate-800 animate-pulse flex flex-col items-center justify-center p-3 text-slate-400">
+        <div className="absolute inset-0 skeleton-shimmer flex flex-col items-center justify-center p-3 text-slate-400">
           <Loader2 size={22} className="animate-spin mb-2 text-cyan-400" />
           <span className="text-[11px] font-mono text-slate-300 font-semibold">Screen #{index + 1}</span>
-          <span className="text-[9px] font-mono text-slate-500 mt-0.5">Loading preview...</span>
+          <span className="text-[9px] font-mono text-slate-400 mt-0.5">Loading preview...</span>
         </div>
       )}
 

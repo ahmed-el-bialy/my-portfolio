@@ -1,6 +1,6 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { ArrowRight, Compass, Layers, Cpu, Rocket } from 'lucide-react';
+import { RevealOnScroll } from './RevealOnScroll';
 import { useLanguage } from '../context/LanguageContext';
 
 interface HowIWorkSectionProps {
@@ -78,7 +78,7 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
 
   return (
     <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 sm:mb-10">
+      <RevealOnScroll className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 sm:mb-10">
         <div className="max-w-2xl">
           <div className="flex items-center gap-2 text-xs font-medium text-blue-600 dark:text-cyan-400 mb-2">
             <span>{lang === 'ar' ? 'منهجية العمل الهندسي' : 'Engineering Process'}</span>
@@ -113,18 +113,15 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
             </button>
           )}
         </div>
-      </div>
+      </RevealOnScroll>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {steps.map((step, idx) => {
           const StepIcon = step.icon;
           return (
-            <motion.div
+            <RevealOnScroll
               key={step.num}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.25, delay: idx * 0.05 }}
+              delay={idx * 0.06}
               className="p-5 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between transition-transform duration-200 hover:-translate-y-1 hover:border-[#027DFD]/40"
             >
               <div>
@@ -146,7 +143,7 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/8 text-[11px] font-medium text-slate-500 dark:text-slate-400">
                 {step.outcome}
               </div>
-            </motion.div>
+            </RevealOnScroll>
           );
         })}
       </div>

@@ -266,3 +266,34 @@ html.light .ambient-glow-top {
     line-height: 1.4 !important;
   }
 }
+
+/* =========================================================
+   PROGRESSIVE SHIMMER SKELETON TOKENS
+   ========================================================= */
+@keyframes shimmerSweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface-elevated) 20%,
+    color-mix(in srgb, var(--accent-primary) 10%, var(--surface-elevated)) 50%,
+    var(--surface-elevated) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmerSweep 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    animation: none;
+    background: var(--surface-elevated);
+  }
+}
+

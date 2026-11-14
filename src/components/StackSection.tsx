@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Layers, Info } from 'lucide-react';
+import { RevealOnScroll } from './RevealOnScroll';
 import { useLanguage } from '../context/LanguageContext';
 import {
   FlutterLogo,
@@ -251,7 +252,7 @@ export const StackSection: React.FC = () => {
       className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full"
     >
       {/* Header & Search */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+      <RevealOnScroll className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div className="max-w-2xl">
           <div className="flex items-center gap-2 text-xs font-medium text-[#027DFD] dark:text-[#00C7FF] mb-2">
             <span>{t.stack.badge}</span>
@@ -278,7 +279,7 @@ export const StackSection: React.FC = () => {
             className="w-full py-2.5 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#027DFD] transition-colors ps-9 pe-3.5 min-h-[40px]"
           />
         </div>
-      </div>
+      </RevealOnScroll>
 
       {/* Category Filter Tabs */}
       <div className="flex flex-wrap items-center gap-1.5 mb-7 p-1.5 rounded-2xl bg-slate-100 dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 w-full">
@@ -309,16 +310,20 @@ export const StackSection: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredTechs.map((tech) => {
+          {filteredTechs.map((tech, idx) => {
             const Logo = tech.LogoComponent;
             const isExpanded = expandedTechId === tech.id;
 
             return (
-              <div
+              <RevealOnScroll
                 key={tech.id}
-                onClick={() => setExpandedTechId(isExpanded ? null : tech.id)}
-                className="group p-5 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 hover:border-[#027DFD]/50 transition-all duration-200 flex flex-col justify-between cursor-pointer"
+                delay={Math.min(idx * 0.03, 0.24)}
+                className="flex"
               >
+                <div
+                  onClick={() => setExpandedTechId(isExpanded ? null : tech.id)}
+                  className="w-full group p-5 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 hover:border-[#027DFD]/50 transition-all duration-200 flex flex-col justify-between cursor-pointer"
+                >
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div className="flex items-center gap-3 min-w-0">
@@ -388,7 +393,8 @@ export const StackSection: React.FC = () => {
                       : 'Capabilities'}
                   </span>
                 </div>
-              </div>
+                </div>
+              </RevealOnScroll>
             );
           })}
         </div>

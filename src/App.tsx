@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { DEFAULT_PROFILE, openEmailClient, FEATURED_PROJECTS, Project } from './data/portfolioData';
 import { AHMED_CONFIG, getEgyptLocalTime } from './data/config';
 import {
@@ -21,29 +21,33 @@ import { ResumeModal } from './components/ResumeModal';
 import { BookingMeetingModal, MeetingType } from './components/BookingMeetingModal';
 import { ProjectDetailsModal } from './components/ProjectDetailsModal';
 import { ThemeRevealOverlay } from './components/ThemeRevealOverlay';
+import { BrandLogoMark } from './components/BrandLogoMark';
+import { PageSkeletonLoader } from './components/PageSkeletonLoader';
 import { Github, Linkedin, Youtube, Mail, RefreshCw, ArrowUp, Terminal } from 'lucide-react';
 import { WhatsAppLogo, TikTokLogo } from './components/TechLogos';
 import { useLanguage } from './context/LanguageContext';
 
+// Shared module loaders so both React.lazy and idle/hover prefetch reuse exact promises
+const loadProjectsSection = () =>
+  import('./components/ProjectsSection').then((m) => ({ default: m.ProjectsSection }));
+const loadExperienceSection = () =>
+  import('./components/ExperienceSection').then((m) => ({ default: m.ExperienceSection }));
+const loadStackSection = () =>
+  import('./components/StackSection').then((m) => ({ default: m.StackSection }));
+const loadContactSection = () =>
+  import('./components/ContactSection').then((m) => ({ default: m.ContactSection }));
+const loadFAQSection = () =>
+  import('./components/FAQSection').then((m) => ({ default: m.FAQSection }));
+const loadTerminalModal = () =>
+  import('./components/TerminalEasterEggModal').then((m) => ({ default: m.TerminalEasterEggModal }));
+
 // Lazy-load secondary views & terminal modal for clean code splitting
-const ProjectsSection = lazy(() =>
-  import('./components/ProjectsSection').then((m) => ({ default: m.ProjectsSection }))
-);
-const ExperienceSection = lazy(() =>
-  import('./components/ExperienceSection').then((m) => ({ default: m.ExperienceSection }))
-);
-const StackSection = lazy(() =>
-  import('./components/StackSection').then((m) => ({ default: m.StackSection }))
-);
-const ContactSection = lazy(() =>
-  import('./components/ContactSection').then((m) => ({ default: m.ContactSection }))
-);
-const FAQSection = lazy(() =>
-  import('./components/FAQSection').then((m) => ({ default: m.FAQSection }))
-);
-const TerminalEasterEggModal = lazy(() =>
-  import('./components/TerminalEasterEggModal').then((m) => ({ default: m.TerminalEasterEggModal }))
-);
+const ProjectsSection = lazy(loadProjectsSection);
+const ExperienceSection = lazy(loadExperienceSection);
+const StackSection = lazy(loadStackSection);
+const ContactSection = lazy(loadContactSection);
+const FAQSection = lazy(loadFAQSection);
+const TerminalEasterEggModal = lazy(loadTerminalModal);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,14 +69,9 @@ function resolveInitialTab(): NavTab {
   return 'overview';
 }
 
-const ViewSuspenseFallback: React.FC = () => (
-  <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16">
-    <div className="h-48 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 animate-pulse" />
-  </div>
-);
-
 export default function App() {
-  const { lang, t } = useLanguage();
+  const { lang, dir, t } = useLanguage();
+  const prefersReducedMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState<NavTab>(resolveInitialTab);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
@@ -175,13 +174,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  // Language fade without remounting
-  const [isLangFading, setIsLangFading] = useState(false);
-  useEffect(() => {
-    setIsLangFading(true);
-    const timer = setTimeout(() => setIsLangFading(false), 200);
-    return () => clearTimeout(timer);
-  }, [lang]);
 
   type ViewTransitionLike = {
     ready: Promise<void>;
@@ -349,7 +341,32 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
+  const prefetchTab = useCallback((tab: NavTab) => {
+    if (tab === 'projects') {
+      loadProjectsSection().catch(() => {});
+    } else if (tab === 'experience') {
+      loadExperienceSection().catch(() => {});
+      loadStackSection().catch(() => {});
+    } else if (tab === 'contact') {
+      loadContactSection().catch(() => {});
+      loadFAQSection().catch(() => {});
+    }
+  }, []);
+
+  // Preload secondary route bundles silently during idle time so navigating to Experience/Projects/Contact is instant
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadExperienceSection().catch(() => {});
+      loadStackSection().catch(() => {});
+      loadProjectsSection().catch(() => {});
+      loadContactSection().catch(() => {});
+      loadFAQSection().catch(() => {});
+    }, 450);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleNavigate = (tab: NavTab) => {
+    prefetchTab(tab);
     setActiveTab(tab);
     if (typeof window !== 'undefined') {
       const targetHash = `#${tab}`;
@@ -385,6 +402,7 @@ export default function App() {
         <Navbar
           activeTab={activeTab}
           onNavigate={handleNavigate}
+          onPrefetchTab={prefetchTab}
           onOpenResume={() => setIsResumeOpen(true)}
           onOpenBooking={() => openBookingModal(null)}
           isDark={isDark}
@@ -392,95 +410,96 @@ export default function App() {
           isAnyModalOpen={anyModalOpen}
         />
 
-        {/* Focused Multi-View Main Stage */}
-        <main
-          id="main-content"
-          className={`flex-1 pb-24 md:pb-12 transition-opacity duration-200 ease-out ${
-            isLangFading ? 'opacity-80' : 'opacity-100'
-          }`}
-        >
+        {/* Focused Multi-View Main Stage with Smooth Bilingual Crossfade */}
+        <main id="main-content" className="flex-1 pb-24 md:pb-12">
           <AnimatePresence mode="wait">
-            {activeTab === 'overview' && (
-              <motion.div
-                key="view-overview"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.22, ease: 'easeOut' }}
-              >
-                <HeroSection
-                  profile={profile}
-                  isDark={isDark}
-                  onOpenContact={() => setIsContactOpen(true)}
-                  onOpenResume={() => setIsResumeOpen(true)}
-                  onOpenBooking={() => openBookingModal(null)}
-                  onExploreProjects={() => handleNavigate('projects')}
-                  onInspectRevio={handleInspectRevio}
-                  totalReposCount={liveRepoCount}
-                />
-                <AboutSection onExploreExperience={() => handleNavigate('experience')} />
-                <OverviewProjectsPreview
-                  githubUsername={profile.githubUsername}
-                  onExploreAllProjects={() => handleNavigate('projects')}
-                />
-                <HowIWorkSection
-                  onOpenBooking={() => openBookingModal('discovery-cal')}
-                  onExploreProjects={() => handleNavigate('projects')}
-                />
-              </motion.div>
-            )}
-
-            {activeTab === 'projects' && (
-              <motion.div
-                key="view-projects"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.22, ease: 'easeOut' }}
-              >
-                <Suspense fallback={<ViewSuspenseFallback />}>
-                  <ProjectsSection
-                    currentGithubUser={profile.githubUsername}
-                    onRepoCountChange={setLiveRepoCount}
-                    isDark={isDark}
-                  />
-                </Suspense>
-              </motion.div>
-            )}
-
-            {activeTab === 'experience' && (
-              <motion.div
-                key="view-experience"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.22, ease: 'easeOut' }}
-              >
-                <Suspense fallback={<ViewSuspenseFallback />}>
-                  <ExperienceSection onOpenResume={() => setIsResumeOpen(true)} />
-                  <StackSection />
-                </Suspense>
-              </motion.div>
-            )}
-
-            {activeTab === 'contact' && (
-              <motion.div
-                key="view-contact"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.22, ease: 'easeOut' }}
-              >
-                <Suspense fallback={<ViewSuspenseFallback />}>
-                  <ContactSection
+            <motion.div
+              key={lang}
+              dir={dir}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, y: -4 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full"
+            >
+              {activeTab === 'overview' && (
+                <motion.div
+                  key="view-overview"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.18, ease: 'easeOut' }}
+                >
+                  <HeroSection
                     profile={profile}
-                    onOpenBooking={openBookingModal}
+                    isDark={isDark}
+                    onOpenContact={() => setIsContactOpen(true)}
                     onOpenResume={() => setIsResumeOpen(true)}
+                    onOpenBooking={() => openBookingModal(null)}
+                    onExploreProjects={() => handleNavigate('projects')}
+                    onInspectRevio={handleInspectRevio}
+                    totalReposCount={liveRepoCount}
                   />
-                  <FAQSection />
-                </Suspense>
-              </motion.div>
-            )}
+                  <AboutSection onExploreExperience={() => handleNavigate('experience')} />
+                  <OverviewProjectsPreview
+                    githubUsername={profile.githubUsername}
+                    onExploreAllProjects={() => handleNavigate('projects')}
+                  />
+                  <HowIWorkSection
+                    onOpenBooking={() => openBookingModal('discovery-cal')}
+                    onExploreProjects={() => handleNavigate('projects')}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === 'projects' && (
+                <motion.div
+                  key="view-projects"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.18, ease: 'easeOut' }}
+                >
+                  <Suspense fallback={<PageSkeletonLoader view="projects" />}>
+                    <ProjectsSection
+                      currentGithubUser={profile.githubUsername}
+                      onRepoCountChange={setLiveRepoCount}
+                      isDark={isDark}
+                    />
+                  </Suspense>
+                </motion.div>
+              )}
+
+              {activeTab === 'experience' && (
+                <motion.div
+                  key="view-experience"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.18, ease: 'easeOut' }}
+                >
+                  <Suspense fallback={<PageSkeletonLoader view="experience" />}>
+                    <ExperienceSection onOpenResume={() => setIsResumeOpen(true)} />
+                    <StackSection />
+                  </Suspense>
+                </motion.div>
+              )}
+
+              {activeTab === 'contact' && (
+                <motion.div
+                  key="view-contact"
+                  initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.18, ease: 'easeOut' }}
+                >
+                  <Suspense fallback={<PageSkeletonLoader view="contact" />}>
+                    <ContactSection
+                      profile={profile}
+                      onOpenBooking={openBookingModal}
+                      onOpenResume={() => setIsResumeOpen(true)}
+                    />
+                    <FAQSection />
+                  </Suspense>
+                </motion.div>
+              )}
+            </motion.div>
           </AnimatePresence>
         </main>
 
@@ -563,12 +582,7 @@ export default function App() {
             <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-start">
               <div>
                 <div className="flex items-center justify-center sm:justify-start gap-2">
-                  <span
-                    dir="ltr"
-                    className="font-mono text-xs font-bold text-[#027DFD] dark:text-[#00C7FF]"
-                  >
-                    {AHMED_CONFIG.monogram}
-                  </span>
+                  <BrandLogoMark sizeClassName="w-7 h-7" />
                   <span className="font-bold text-slate-900 dark:text-[#f1f5f9] text-sm">
                     {AHMED_CONFIG.name[lang]}
                   </span>

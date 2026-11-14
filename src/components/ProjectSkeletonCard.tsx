@@ -8,9 +8,7 @@ export const ProjectSkeletonCard: React.FC = () => {
     >
       <div>
         {/* Cover Skeleton */}
-        <div className="relative aspect-[16/9] w-full bg-slate-200 dark:bg-white/[0.04] overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 dark:via-white/[0.04] to-transparent animate-[shimmer_2s_infinite]" />
-        </div>
+        <div className="relative aspect-[16/9] w-full overflow-hidden skeleton-shimmer" />
 
         {/* Content Skeleton */}
         <div className="p-5 space-y-3">

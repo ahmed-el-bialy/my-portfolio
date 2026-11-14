@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RevealOnScroll } from './RevealOnScroll';
 
 export const FAQSection: React.FC = () => {
   const { lang } = useLanguage();
@@ -65,23 +66,21 @@ export const FAQSection: React.FC = () => {
       id="faq"
       className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full"
     >
-      <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+      <RevealOnScroll className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
         <div className="text-xs font-medium text-blue-600 dark:text-cyan-400 mb-2">
           {lang === 'ar' ? 'الأسئلة الشائعة' : 'Frequently Asked Questions'}
         </div>
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           {lang === 'ar' ? 'إجابات سريعة قبل التواصل' : 'Clear Answers Before We Connect'}
         </h2>
-      </div>
+      </RevealOnScroll>
 
       <div className="space-y-3">
         {faqs.map((faq, idx) => {
           const isOpen = openIndex === idx;
           return (
-            <div
-              key={idx}
-              className="rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 overflow-hidden transition-colors hover:border-[#027DFD]/40"
-            >
+            <RevealOnScroll key={idx} delay={idx * 0.04}>
+              <div className="rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 overflow-hidden transition-colors hover:border-[#027DFD]/40">
               <button
                 type="button"
                 onClick={() => setOpenIndex(isOpen ? null : idx)}
@@ -116,7 +115,8 @@ export const FAQSection: React.FC = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+              </div>
+            </RevealOnScroll>
           );
         })}
       </div>

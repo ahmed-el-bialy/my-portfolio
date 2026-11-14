@@ -17,6 +17,7 @@ import {
   Terminal,
 } from 'lucide-react';
 import { getVerifiedProjectScreenshots } from '../services/githubService';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 
 export interface ProjectCardCoverProps {
   repoName: string;
@@ -422,9 +423,10 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
           >
             {coverImageUrl ? (
               <div className="relative w-full h-full bg-slate-900">
-                <img
+                <ImageWithSkeleton
                   src={coverImageUrl}
                   alt={`${blueprint.appTitle} Store Cover`}
+                  loading="eager"
                   className="w-full h-full object-cover object-center transition-transform duration-700 group-hover/cover:scale-[1.03]"
                 />
                 <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none" />
@@ -526,7 +528,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                     collageScreens.length >= 2 && sIdx === 1 ? '-translate-y-1 scale-[1.04] z-10' : 'opacity-95'
                   }`}
                 >
-                  <img
+                  <ImageWithSkeleton
                     src={screenUrl}
                     alt={`${blueprint.appTitle} screen ${sIdx + 1}`}
                     className="w-full h-full object-cover object-top"
@@ -576,7 +578,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
 
             <div className="col-span-5 h-full flex items-center justify-center">
               <div className="h-[90%] aspect-[9/17.5] rounded-xl overflow-hidden bg-slate-950 border-2 border-slate-300 dark:border-white/20 shadow-xl rotate-[3deg] group-hover/cover:rotate-0 transition-transform duration-500">
-                <img
+                <ImageWithSkeleton
                   src={spotlightScreen}
                   alt={`${blueprint.appTitle} feature mockup`}
                   className="w-full h-full object-cover object-top"

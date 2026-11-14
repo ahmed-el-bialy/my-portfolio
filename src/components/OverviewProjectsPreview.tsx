@@ -8,6 +8,7 @@ import {
 } from '../services/githubService';
 import { ProjectCardCover } from './ProjectCardCover';
 import { ProjectDetailsModal } from './ProjectDetailsModal';
+import { RevealOnScroll } from './RevealOnScroll';
 import { useLanguage } from '../context/LanguageContext';
 
 interface OverviewProjectsPreviewProps {
@@ -34,7 +35,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
 
   return (
     <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 sm:mb-10">
+      <RevealOnScroll className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 sm:mb-10">
         <div className="max-w-2xl">
           <div className="flex items-center gap-2 text-xs font-medium text-blue-600 dark:text-cyan-400 mb-2">
             <span>{lang === 'ar' ? 'أبرز التطبيقات المختارة' : 'Selected Mobile Builds'}</span>
@@ -56,10 +57,10 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
           <span>{lang === 'ar' ? 'استعراض كافة المشاريع والمستودعات' : 'View All Projects & Repos'}</span>
           <ArrowRight size={14} className={dir === 'rtl' ? 'rotate-180' : ''} />
         </button>
-      </div>
+      </RevealOnScroll>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {topFlagshipProjects.map((project) => {
+        {topFlagshipProjects.map((project, idx) => {
           const liveMedia =
             liveMediaMap[project.repoName] ||
             liveMediaMap[project.name] ||
@@ -85,13 +86,13 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
           const hasPlaylist = Boolean(dynamicPlaylistUrl);
 
           return (
-            <article
-              key={project.id}
-              onClick={() => setSelectedProject(dynamicProject)}
-              onMouseEnter={() => setHoveredCardId(project.id)}
-              onMouseLeave={() => setHoveredCardId(null)}
-              className="group rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:border-[#027DFD]/50 shadow-sm hover:shadow-lg"
-            >
+            <RevealOnScroll key={project.id} delay={idx * 0.07} className="flex">
+              <article
+                onClick={() => setSelectedProject(dynamicProject)}
+                onMouseEnter={() => setHoveredCardId(project.id)}
+                onMouseLeave={() => setHoveredCardId(null)}
+                className="w-full group rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:border-[#027DFD]/50 shadow-sm hover:shadow-lg"
+              >
               <div>
                 <ProjectCardCover
                   repoName={project.repoName}
@@ -175,6 +176,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                 </div>
               </div>
             </article>
+            </RevealOnScroll>
           );
         })}
       </div>

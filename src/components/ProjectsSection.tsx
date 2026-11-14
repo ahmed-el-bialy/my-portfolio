@@ -38,6 +38,7 @@ import { ProjectSkeletonCard } from './ProjectSkeletonCard';
 import { GitHubActivity } from './GitHubActivity';
 import { TechDistributionChart } from './TechDistributionChart';
 import { GitHubFallbackNotice } from './GitHubFallbackNotice';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { useLanguage } from '../context/LanguageContext';
 
 interface ProjectsSectionProps {
@@ -452,11 +453,14 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
       <div className="mb-8 p-4 sm:p-6 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200/90 dark:border-white/10 shadow-sm">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5 w-full lg:w-auto">
-            <img
-              src={githubStats.avatar_url || 'https://avatars.githubusercontent.com/u/245139141?v=4'}
-              alt="Ahmed El-Bialy"
-              className="w-11 h-11 rounded-xl object-cover border border-slate-200 dark:border-white/15 shrink-0"
-            />
+            <div className="w-11 h-11 rounded-xl overflow-hidden border border-slate-200 dark:border-white/15 shrink-0">
+              <ImageWithSkeleton
+                src={githubStats.avatar_url || 'https://avatars.githubusercontent.com/u/245139141?v=4'}
+                alt="Ahmed El-Bialy"
+                loading="eager"
+                className="w-full h-full object-cover"
+              />
+            </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <a
@@ -715,10 +719,9 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                   className="aspect-[9/16] rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 bg-[#08090d] group cursor-pointer"
                   aria-label={`Inspect Revio screen ${idx + 1}`}
                 >
-                  <img
+                  <ImageWithSkeleton
                     src={shot}
                     alt={`Revio screenshot ${idx + 1}`}
-                    referrerPolicy="no-referrer"
                     loading="lazy"
                     className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                   />

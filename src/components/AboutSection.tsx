@@ -3,6 +3,9 @@ import confetti from 'canvas-confetti';
 import { GraduationCap, Globe, Sparkles, ArrowRight } from 'lucide-react';
 import { AHMED_CONFIG } from '../data/config';
 import { LANGUAGES_DATA, EDUCATION_DATA, AHMED_PROFILE } from '../data/portfolioData';
+import { BrandLogoMark } from './BrandLogoMark';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
+import { RevealOnScroll } from './RevealOnScroll';
 import { useLanguage } from '../context/LanguageContext';
 
 interface AboutSectionProps {
@@ -37,30 +40,39 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
         {/* Left: Portrait + Subtle Interactive 5x Tap Easter Egg */}
-        <div className="lg:col-span-4 flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-6">
+        <RevealOnScroll
+          delay={0}
+          className="lg:col-span-4 flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-6"
+        >
           <div className="flex flex-col items-center text-center">
             <button
               type="button"
               onClick={handleAvatarEasterEgg}
-              className="group relative w-36 h-36 sm:w-44 sm:h-44 rounded-3xl overflow-hidden border-2 border-[#027DFD]/40 p-1 bg-gradient-to-br from-[#027DFD]/30 to-[#00C7FF]/20 transition-transform duration-300 hover:rotate-2 hover:scale-[1.02] cursor-pointer focus-visible:outline-none"
+              className="group relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden p-[2.5px] bg-gradient-to-br from-[#027DFD] via-[#00C7FF] to-emerald-400 shadow-lg shadow-[#027DFD]/20 transition-transform duration-300 hover:rotate-2 hover:scale-[1.03] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C7FF]"
               aria-label={
                 lang === 'ar'
                   ? 'صورة أحمد البيلي (انقر 5 مرات للمفاجأة)'
                   : 'Ahmed El-Bialy portrait (tap 5 times for a surprise)'
               }
             >
-              <img
-                src={AHMED_PROFILE.avatarUrl}
-                alt={AHMED_CONFIG.name[lang]}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover rounded-[20px]"
-              />
+              <span className="block w-full h-full rounded-[14px] overflow-hidden bg-slate-900">
+                <ImageWithSkeleton
+                  src={AHMED_PROFILE.avatarUrl}
+                  alt={AHMED_CONFIG.name[lang]}
+                  loading="eager"
+                  className="w-full h-full object-cover"
+                />
+              </span>
             </button>
 
-            <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mt-4">
-              {AHMED_CONFIG.name[lang]}
+            <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mt-4 inline-flex items-center justify-center gap-2">
+              <BrandLogoMark
+                sizeClassName="w-7 h-7"
+                alt="Ahmed El-Bialy Logo Emblem"
+              />
+              <span>{AHMED_CONFIG.name[lang]}</span>
             </h3>
-            <p className="text-xs font-mono text-[#027DFD] dark:text-[#00C7FF] mt-0.5">
+            <p className="text-xs font-mono text-[#027DFD] dark:text-[#00C7FF] mt-1">
               {AHMED_CONFIG.location[lang]}
             </p>
 
@@ -100,10 +112,13 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
               ))}
             </div>
           </div>
-        </div>
+        </RevealOnScroll>
 
         {/* Right: Authentic Narrative & Kafrelsheikh AI Education Card */}
-        <div className="lg:col-span-8 flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-6 sm:p-8">
+        <RevealOnScroll
+          delay={0.08}
+          className="lg:col-span-8 flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-6 sm:p-8"
+        >
           <div>
             <div className="flex items-center gap-2 text-xs font-medium text-[#027DFD] dark:text-[#00C7FF] mb-2">
               <span>{lang === 'ar' ? 'نبذة عني' : 'About Ahmed'}</span>
@@ -163,7 +178,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
               </button>
             )}
           </div>
-        </div>
+        </RevealOnScroll>
       </div>
     </section>
   );

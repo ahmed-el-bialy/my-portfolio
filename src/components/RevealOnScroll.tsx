@@ -1,31 +1,45 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef } from 'react';
+import { motion, useInView, useReducedMotion } from 'framer-motion';
 
-interface RevealOnScrollProps {
+export interface RevealOnScrollProps {
   children: React.ReactNode;
   className?: string;
   delay?: number;
-  threshold?: number;
-  yOffset?: number;
+  duration?: number;
+  direction?: 'up' | 'left' | 'right' | 'none';
+  distance?: number;
 }
 
 export const RevealOnScroll: React.FC<RevealOnScrollProps> = ({
   children,
   className = '',
   delay = 0,
-  yOffset = 32,
+  duration = 0.44,
+  direction = 'up',
+  distance = 20,
 }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const isInView = useInView(ref, { once: true, margin: '-60px' });
+  const prefersReducedMotion = useReducedMotion();
+
+  if (prefersReducedMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
+  const initialX = direction === 'left' ? -distance : direction === 'right' ? distance : 0;
+  const initialY = direction === 'up' ? distance : 0;
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: yOffset }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
+      ref={ref}
+      initial={{ opacity: 0, x: initialX, y: initialY }}
+      animate={isInView ? { opacity: 1, x: 0, y: 0 } : { opacity: 0, x: initialX, y: initialY }}
       transition={{
-        duration: 0.65,
-        delay: delay / 1000,
-        ease: [0.22, 1, 0.36, 1], // Smooth cubic bezier easing
+        duration,
+        delay,
+        ease: [0.16, 1, 0.3, 1],
       }}
-      className={`will-change-transform ${className}`}
+      className={className}
     >
       {children}
     </motion.div>

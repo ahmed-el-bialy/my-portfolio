@@ -16,6 +16,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { SpotlightCard } from './SpotlightCard';
 import { CertificateModal } from './CertificateModal';
+import { RevealOnScroll } from './RevealOnScroll';
 
 interface ExperienceSectionProps {
   onOpenResume: () => void;
@@ -104,14 +105,14 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {CERTIFICATES.map((cert) => (
-              <SpotlightCard
-                key={cert.id}
-                spotlightColor="rgba(2, 125, 253, 0.14)"
-                borderColor="rgba(0, 199, 255, 0.4)"
-                onClick={() => setSelectedCert(cert)}
-                className="p-5 flex flex-col justify-between group transition-all shadow-sm cursor-pointer hover:border-[#027DFD]/50"
-              >
+            {CERTIFICATES.map((cert, idx) => (
+              <RevealOnScroll key={cert.id} delay={idx * 0.05} className="flex">
+                <SpotlightCard
+                  spotlightColor="rgba(2, 125, 253, 0.14)"
+                  borderColor="rgba(0, 199, 255, 0.4)"
+                  onClick={() => setSelectedCert(cert)}
+                  className="w-full p-5 flex flex-col justify-between group transition-all shadow-sm cursor-pointer hover:border-[#027DFD]/50"
+                >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-2 text-[11px] font-mono">
                     <span className="text-[#027DFD] dark:text-[#00C7FF] font-semibold">
@@ -155,7 +156,8 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
                     <ArrowUpRight size={13} className={dir === 'rtl' ? 'rotate-180' : ''} />
                   </button>
                 </div>
-              </SpotlightCard>
+                </SpotlightCard>
+              </RevealOnScroll>
             ))}
           </div>
         </div>
@@ -178,7 +180,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
 
             <div className="relative border-slate-200 dark:border-white/10 space-y-5 border-s-2 ms-2 ps-5">
               {EXPERIENCES.map((exp, idx) => (
-                <div key={idx} className="relative group">
+                <RevealOnScroll key={idx} delay={idx * 0.06} className="relative group">
                   <div className="absolute top-3 w-3 h-3 rounded-full bg-white dark:bg-[#08090d] border-2 border-[#027DFD] dark:border-[#00C7FF] -start-[27px]" />
 
                   <div className="rounded-2xl p-5 bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 shadow-sm">
@@ -215,7 +217,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
                       ))}
                     </ul>
                   </div>
-                </div>
+                </RevealOnScroll>
               ))}
             </div>
           </div>
