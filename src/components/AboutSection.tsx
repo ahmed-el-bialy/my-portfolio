@@ -123,6 +123,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
               <BrandLogoMark
                 sizeClassName="w-10 h-10 sm:w-11 sm:h-11"
                 alt="Ahmed El-Bialy Logo Emblem"
+                floatEffect
               />
               <span>{AHMED_CONFIG.name[lang]}</span>
             </h3>

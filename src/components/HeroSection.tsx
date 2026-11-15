@@ -204,6 +204,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <BrandLogoMark
                 sizeClassName="w-11 h-11 sm:w-12 sm:h-12"
                 alt="Ahmed El-Bialy Brand Emblem"
+                floatEffect
               />
               <h1 className="text-[clamp(2.2rem,4.2vw,3.75rem)] font-extrabold tracking-tight leading-[1.06] text-slate-900 dark:text-[#f1f5f9] [text-wrap:balance]">
                 {displayName}

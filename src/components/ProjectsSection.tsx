@@ -34,6 +34,7 @@ import { TechIconBadge } from './TechLogos';
 import { ProjectDetailsModal } from './ProjectDetailsModal';
 import { ApkDownloadModal } from './ApkDownloadModal';
 import { ProjectSkeletonCard } from './ProjectSkeletonCard';
+import { LeafAnimation } from './LeafAnimation';
 import { GitHubActivity } from './GitHubActivity';
 import { TechDistributionChart } from './TechDistributionChart';
 import { GitHubFallbackNotice } from './GitHubFallbackNotice';
@@ -672,12 +673,24 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
         </div>
       </div>
 
-      {/* Explicit Loading Skeleton Grid while fetching fresh GitHub data on first load without cache */}
+      {/* Penless Self-Drawing Leaf Loader over blurred skeleton while fetching GitHub data without cache */}
       {isPending && !portfolioData && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-7 mb-8">
-          {[1, 2].map((sk) => (
-            <ProjectSkeletonCard key={sk} />
-          ))}
+        <div className="relative rounded-3xl overflow-hidden mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-7 blur-[4px] opacity-40 pointer-events-none">
+            {[1, 2].map((sk) => (
+              <ProjectSkeletonCard key={sk} />
+            ))}
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center bg-[#f8fafc]/50 dark:bg-[#08090d]/55 backdrop-blur-sm">
+            <LeafAnimation
+              compact
+              label={
+                lang === 'ar'
+                  ? 'جاري مزامنة التطبيقات ومستودعات GitHub...'
+                  : 'Syncing Production Apps & GitHub Data...'
+              }
+            />
+          </div>
         </div>
       )}
 

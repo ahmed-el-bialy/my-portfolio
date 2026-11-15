@@ -86,6 +86,8 @@ export default function App() {
   const [lastSyncTime, setLastSyncTime] = useState<string>('Just now');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [egyptClock, setEgyptClock] = useState<string>(() => getEgyptLocalTime(lang));
+  const [transitionSection, setTransitionSection] = useState<'projects' | 'experience' | 'contact' | null>(null);
+  const transitionTimerRef = useRef<number | null>(null);
 
   const profile = DEFAULT_PROFILE;
 
@@ -365,8 +367,32 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (transitionTimerRef.current) {
+        window.clearTimeout(transitionTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleNavigate = (tab: NavTab) => {
     prefetchTab(tab);
+
+    if (transitionTimerRef.current) {
+      window.clearTimeout(transitionTimerRef.current);
+      transitionTimerRef.current = null;
+    }
+
+    if (tab !== 'overview' && tab !== activeTab && !prefersReducedMotion) {
+      setTransitionSection(tab);
+      transitionTimerRef.current = window.setTimeout(() => {
+        setTransitionSection(null);
+        transitionTimerRef.current = null;
+      }, 1050);
+    } else {
+      setTransitionSection(null);
+    }
+
     setActiveTab(tab);
     if (typeof window !== 'undefined') {
       const targetHash = `#${tab}`;
@@ -458,13 +484,17 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.18, ease: 'easeOut' }}
                 >
-                  <Suspense fallback={<PageSkeletonLoader view="projects" />}>
-                    <ProjectsSection
-                      currentGithubUser={profile.githubUsername}
-                      onRepoCountChange={setLiveRepoCount}
-                      isDark={isDark}
-                    />
-                  </Suspense>
+                  {transitionSection === 'projects' ? (
+                    <PageSkeletonLoader view="projects" />
+                  ) : (
+                    <Suspense fallback={<PageSkeletonLoader view="projects" />}>
+                      <ProjectsSection
+                        currentGithubUser={profile.githubUsername}
+                        onRepoCountChange={setLiveRepoCount}
+                        isDark={isDark}
+                      />
+                    </Suspense>
+                  )}
                 </motion.div>
               )}
 
@@ -475,10 +505,14 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.18, ease: 'easeOut' }}
                 >
-                  <Suspense fallback={<PageSkeletonLoader view="experience" />}>
-                    <ExperienceSection onOpenResume={() => setIsResumeOpen(true)} />
-                    <StackSection />
-                  </Suspense>
+                  {transitionSection === 'experience' ? (
+                    <PageSkeletonLoader view="experience" />
+                  ) : (
+                    <Suspense fallback={<PageSkeletonLoader view="experience" />}>
+                      <ExperienceSection onOpenResume={() => setIsResumeOpen(true)} />
+                      <StackSection />
+                    </Suspense>
+                  )}
                 </motion.div>
               )}
 
@@ -489,14 +523,18 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.18, ease: 'easeOut' }}
                 >
-                  <Suspense fallback={<PageSkeletonLoader view="contact" />}>
-                    <ContactSection
-                      profile={profile}
-                      onOpenBooking={openBookingModal}
-                      onOpenResume={() => setIsResumeOpen(true)}
-                    />
-                    <FAQSection />
-                  </Suspense>
+                  {transitionSection === 'contact' ? (
+                    <PageSkeletonLoader view="contact" />
+                  ) : (
+                    <Suspense fallback={<PageSkeletonLoader view="contact" />}>
+                      <ContactSection
+                        profile={profile}
+                        onOpenBooking={openBookingModal}
+                        onOpenResume={() => setIsResumeOpen(true)}
+                      />
+                      <FAQSection />
+                    </Suspense>
+                  )}
                 </motion.div>
               )}
             </motion.div>
