@@ -112,7 +112,7 @@ export const DART_ARCHITECTURE_SNIPPETS: DartSnippetSpec[] = [
     id: 'hive',
     fileName: 'flashcard_local_source.dart',
     projectLabel: 'Revio · Offline Storage',
-    layerTag: 'Data · Hive CE',
+    layerTag: 'Data · Hive',
     code: `abstract interface class FlashcardLocalSource {
   Future<List<FlashcardModel>> getDeckCards(String topicId);
   Future<void> upsertCard(FlashcardModel card);

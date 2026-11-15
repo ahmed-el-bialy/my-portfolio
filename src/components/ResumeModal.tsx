@@ -20,12 +20,27 @@ import {
   Maximize2,
   Minimize2,
   Loader2,
-  Sparkles,
+  Printer,
+  Globe,
+  Cpu,
+  CheckCircle2,
+  Star,
 } from 'lucide-react';
-import { DeveloperProfile, EDUCATION_DATA, EXPERIENCES, FEATURED_PROJECTS } from '../data/portfolioData';
+import {
+  DeveloperProfile,
+  EDUCATION_DATA,
+  EXPERIENCES,
+  FEATURED_PROJECTS,
+  CERTIFICATES,
+  LANGUAGES_DATA,
+  getGmailComposeUrl,
+} from '../data/portfolioData';
+import { AHMED_CONFIG } from '../data/config';
 import { WhatsAppLogo } from './TechLogos';
+import { BrandLogoMark } from './BrandLogoMark';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
+import { usePlayStoreAppStats } from '../services/playStoreService';
 
 interface ResumeModalProps {
   isOpen: boolean;
@@ -36,14 +51,13 @@ interface ResumeModalProps {
 export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profile }) => {
   useScrollLock(isOpen);
   const { lang, dir, t } = useLanguage();
+  const { data: playStats } = usePlayStoreAppStats('com.ahmed.revio');
 
   const [copiedLink, setCopiedLink] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
-  // View mode: 'web' for interactive layout, 'pdf' for native PDF viewer
   const [viewMode, setViewMode] = useState<'web' | 'pdf'>('web');
   const [isPdfLoading, setIsPdfLoading] = useState(true);
 
-  // Keyboard Escape listener
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -77,9 +91,37 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  const handlePrintResume = () => {
+    if (viewMode === 'pdf') {
+      setViewMode('web');
+    }
+    document.body.classList.add('printing-resume');
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        document.body.classList.remove('printing-resume');
+      }, 400);
+    }, 80);
+  };
+
+  const stackGroups = [
+    {
+      label: lang === 'ar' ? 'نواة تطوير الموبايل' : 'Mobile Core',
+      items: ['Flutter', 'Dart', 'Clean Architecture', 'SOLID Principles', 'Responsive UI'],
+    },
+    {
+      label: lang === 'ar' ? 'إدارة الحالة والتخزين' : 'State & Persistence',
+      items: ['BLoC / Cubit', 'Hive', 'SQLite (sqflite)', 'SharedPreferences'],
+    },
+    {
+      label: lang === 'ar' ? 'الشبكات والسحابة' : 'Networking & Cloud',
+      items: ['Dio', 'Retrofit', 'RESTful APIs', 'Firebase Auth & Firestore'],
+    },
+  ];
+
   const modalContent = (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/80 backdrop-blur-xs overflow-hidden"
+      className="resume-printable-overlay fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-black/80 backdrop-blur-xs overflow-hidden"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -88,53 +130,61 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
       aria-labelledby="resume-modal-title"
     >
       <div
-        className={`relative w-full ${
-          isMaximized ? 'max-w-[98vw] h-[97vh]' : 'max-w-5xl lg:max-w-6xl h-[90vh] sm:h-[93vh]'
-        } bg-white dark:bg-[#12131b] border border-slate-200 dark:border-white/15 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-200`}
+        className={`resume-printable-sheet relative w-full ${
+          isMaximized
+            ? 'max-w-[98vw] h-[96dvh]'
+            : 'max-w-5xl lg:max-w-6xl h-[93dvh] sm:h-[92vh]'
+        } bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/15 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-200`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Action Bar */}
-        <div className="p-3 sm:p-4 md:p-5 bg-slate-50 dark:bg-[#171823] border-b border-slate-200 dark:border-white/10 flex items-center justify-between shrink-0 no-print gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="p-2 rounded-xl bg-blue-600/10 text-blue-600 dark:text-cyan-400 shrink-0">
-              <Award size={18} />
-            </span>
-            <div className="truncate">
-              <h3 id="resume-modal-title" className="text-sm font-bold text-slate-900 dark:text-white truncate">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-50 dark:bg-[#141722] border-b border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between shrink-0 no-print gap-2.5">
+          <div className="flex items-center gap-3 min-w-0">
+            <BrandLogoMark sizeClassName="w-9 h-9" />
+            <div className="min-w-0">
+              <h3
+                id="resume-modal-title"
+                className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate"
+              >
                 {t.resume.title}
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-gray-400 truncate">
-                {lang === 'ar' ? 'أحمد البيلي' : 'Ahmed El-Bialy'} • {lang === 'ar' ? 'مطور تطبيقات فلاتر' : 'Flutter Mobile Developer'}
+                {AHMED_CONFIG.name[lang]} · {AHMED_CONFIG.title[lang]}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* View as Native PDF Button */}
+          <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 shrink-0">
             <button
+              type="button"
               onClick={handleToggleViewMode}
-              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+              className={`btn-kinetic flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border min-h-[36px] ${
                 viewMode === 'pdf'
-                  ? 'bg-blue-600 hover:bg-blue-500 text-white border-blue-500 shadow-sm'
-                  : 'bg-blue-50 dark:bg-blue-600/15 hover:bg-blue-100 dark:hover:bg-blue-600/25 text-blue-700 dark:text-cyan-300 border-blue-200 dark:border-blue-500/30'
+                  ? 'bg-[#027DFD] text-white border-[#027DFD] shadow-sm'
+                  : 'bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-[#027DFD] dark:text-[#00C7FF] border-slate-200 dark:border-white/10'
               }`}
-              title={
-                viewMode === 'pdf'
-                  ? (lang === 'ar' ? 'الرجوع لعرض الويب التفاعلي' : 'Back to Web View')
-                  : (lang === 'ar' ? 'عرض السيرة الذاتية كملف PDF كبير' : 'View CV as large PDF')
-              }
             >
               {viewMode === 'pdf' ? (
                 <>
                   <Layout size={13} />
-                  <span>{lang === 'ar' ? 'عرض الويب' : 'Web View'}</span>
+                  <span>{lang === 'ar' ? 'عرض السيرة التفاعلية' : 'Executive Web View'}</span>
                 </>
               ) : (
                 <>
                   <FileText size={13} />
-                  <span>{lang === 'ar' ? 'عرض كـ PDF' : 'View PDF'}</span>
+                  <span>{lang === 'ar' ? 'عرض PDF' : 'View PDF'}</span>
                 </>
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={handlePrintResume}
+              className="btn-kinetic hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-xs text-slate-700 dark:text-gray-200 border border-slate-200 dark:border-white/10 font-semibold transition-colors cursor-pointer min-h-[36px]"
+              title={t.resume.print}
+            >
+              <Printer size={13} className="text-[#027DFD] dark:text-[#00C7FF]" />
+              <span>{lang === 'ar' ? 'طباعة' : 'Print'}</span>
             </button>
 
             {profile.cvDriveUrl && (
@@ -142,112 +192,102 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                 href={profile.cvDriveUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs text-white font-medium shadow-sm transition-colors cursor-pointer"
+                className="btn-kinetic flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs text-white font-bold shadow-sm transition-colors cursor-pointer min-h-[36px]"
                 title={t.resume.downloadPdf}
               >
                 <Download size={13} />
                 <span className="hidden xs:inline">{lang === 'ar' ? 'تحميل' : 'Download'}</span>
                 <span>PDF</span>
-                <ArrowUpRight size={12} className={dir === 'rtl' ? 'rotate-180' : ''} />
               </a>
             )}
 
             <button
+              type="button"
               onClick={handleCopyLink}
-              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-xs text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 transition-colors cursor-pointer"
+              className="w-9 h-9 sm:w-auto sm:px-3 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-xs text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-white/10 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               title={t.resume.copyLink}
             >
               {copiedLink ? <Check size={13} className="text-emerald-500" /> : <Share2 size={13} />}
-              <span className="hidden md:inline">{copiedLink ? (lang === 'ar' ? 'تم النسخ' : 'Copied') : (lang === 'ar' ? 'مشاركة' : 'Share')}</span>
+              <span className="hidden md:inline">
+                {copiedLink
+                  ? lang === 'ar'
+                    ? 'تم النسخ'
+                    : 'Copied'
+                  : lang === 'ar'
+                  ? 'مشاركة'
+                  : 'Share'}
+              </span>
             </button>
 
-            {/* Maximize Toggle */}
             <button
+              type="button"
               onClick={() => setIsMaximized((prev) => !prev)}
-              className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-slate-300 dark:border-white/10 flex items-center justify-center transition-colors cursor-pointer hidden sm:flex"
-              title={isMaximized ? (lang === 'ar' ? 'تصغير الحجم' : 'Restore size') : (lang === 'ar' ? 'تكبير ملء الشاشة' : 'Maximize window')}
+              className="w-9 h-9 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-white/10 items-center justify-center transition-colors cursor-pointer hidden md:flex"
+              title={isMaximized ? 'Restore size' : 'Maximize window'}
               aria-label="Toggle Fullscreen"
             >
               {isMaximized ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
             </button>
 
             <button
+              type="button"
               onClick={onClose}
-              className="w-9 h-9 rounded-xl bg-red-500/15 hover:bg-red-500 text-red-600 hover:text-white border border-red-500/30 flex items-center justify-center transition-all cursor-pointer shadow-xs ms-1"
+              className="w-9 h-9 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-600 hover:text-white border border-red-500/25 flex items-center justify-center transition-all cursor-pointer"
               aria-label="Close CV Dialog"
             >
-              <X size={18} strokeWidth={2.5} />
+              <X size={17} strokeWidth={2.5} />
             </button>
           </div>
         </div>
 
         {viewMode === 'pdf' ? (
-          /* Native Embedded PDF Document Viewer with Real-Time Loading & Download UX */
           <div className="flex-1 min-h-0 flex flex-col w-full h-full bg-slate-100 dark:bg-[#0c0d14] relative">
-            {/* Sub-toolbar for PDF */}
             <div className="px-4 py-2.5 bg-slate-200/70 dark:bg-white/[0.04] border-b border-slate-300 dark:border-white/10 flex items-center justify-between text-xs text-slate-700 dark:text-gray-300 shrink-0">
               <div className="flex items-center gap-2">
-                <FileText size={15} className="text-blue-600 dark:text-cyan-400" />
+                <FileText size={15} className="text-[#027DFD] dark:text-[#00C7FF]" />
                 <span className="font-semibold text-xs sm:text-sm">
-                  {lang === 'ar' ? 'مستند السيرة الذاتية (ملف PDF المعتمد)' : 'Official PDF Document'}
-                </span>
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold hidden sm:inline">
-                  Google Drive Hosted
+                  {lang === 'ar' ? 'مستند السيرة الذاتية (PDF المعتمد)' : 'Official PDF Resume Document'}
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
-                {profile.cvDriveUrl && (
-                  <a
-                    href={profile.cvDriveUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-all hover:scale-105 cursor-pointer"
-                    title={t.resume.downloadPdf}
-                  >
-                    <Download size={13} />
-                    <span>{lang === 'ar' ? 'تحميل الـ PDF' : 'Download PDF'}</span>
-                  </a>
-                )}
-                {profile.cvDriveUrl && (
-                  <a
-                    href={profile.cvDriveUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 dark:bg-white/5 hover:bg-blue-100 dark:hover:bg-white/10 text-blue-600 dark:text-cyan-400 font-medium text-xs transition-colors"
-                  >
-                    <span>{lang === 'ar' ? 'نافذة خارجية' : 'Open external'}</span>
-                    <ExternalLink size={12} />
-                  </a>
-                )}
-              </div>
+              {profile.cvDriveUrl && (
+                <a
+                  href={profile.cvDriveUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-white/10 text-[#027DFD] dark:text-[#00C7FF] font-semibold text-xs border border-slate-200 dark:border-white/10"
+                >
+                  <span>{lang === 'ar' ? 'فتح في نافذة جديدة' : 'Open External'}</span>
+                  <ExternalLink size={12} />
+                </a>
+              )}
             </div>
 
-            {/* Embedded Iframe Container with Loading Indicator */}
             <div className="flex-1 min-h-0 w-full h-full relative overflow-hidden">
               {isPdfLoading && (
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-slate-100/95 dark:bg-[#0c0d14]/95 backdrop-blur-sm transition-all duration-300">
-                  <div className="w-14 h-14 rounded-2xl bg-blue-500/10 dark:bg-cyan-500/10 border border-blue-500/20 dark:border-cyan-500/30 flex items-center justify-center mb-4 text-blue-600 dark:text-cyan-400 shadow-xl shadow-cyan-500/10">
-                    <Loader2 size={28} className="animate-spin text-cyan-500" />
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-slate-100/95 dark:bg-[#0c0d14]/95 backdrop-blur-sm">
+                  <div className="w-12 h-12 rounded-2xl bg-[#027DFD]/10 border border-[#027DFD]/25 flex items-center justify-center mb-4 text-[#027DFD] dark:text-[#00C7FF]">
+                    <Loader2 size={24} className="animate-spin" />
                   </div>
                   <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-1.5 text-center">
-                    {lang === 'ar' ? 'جاري تحميل وعرض ملف السيرة الذاتية (PDF)...' : 'Loading Official PDF Resume Document...'}
+                    {lang === 'ar'
+                      ? 'جاري تحميل ملف السيرة الذاتية (PDF)...'
+                      : 'Loading Official PDF Resume...'}
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-gray-400 max-w-sm text-center mb-5">
                     {lang === 'ar'
-                      ? 'يتم جلب المستند المعتمد مباشرة عبر خدمة Google Drive، كما يمكنك البدء في تحميل الملف فوراً عبر الزر أدناه.'
-                      : 'Fetching verified document directly from Google Drive. You can also download the file directly via the button below.'}
+                      ? 'يمكنك أيضاً تحميل النسخة الرسمية مباشرة أو الرجوع للعرض التفاعلي.'
+                      : 'You can also download the PDF directly or return to the interactive executive view.'}
                   </p>
                   {profile.cvDriveUrl && (
                     <a
                       href={profile.cvDriveUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/25 transition-all hover:scale-105"
+                      className="btn-kinetic inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md"
                     >
                       <Download size={14} />
-                      <span>{lang === 'ar' ? 'تحميل مباشر لملف الـ PDF' : 'Direct Download PDF File'}</span>
-                      <ExternalLink size={12} />
+                      <span>{lang === 'ar' ? 'تحميل مباشر للـ PDF' : 'Direct Download PDF'}</span>
                     </a>
                   )}
                 </div>
@@ -256,185 +296,345 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
               <iframe
                 src={pdfPreviewUrl}
                 onLoad={() => setIsPdfLoading(false)}
-                className="w-full h-full border-0 rounded-b-2xl sm:rounded-b-3xl"
+                className="w-full h-full border-0"
                 title={`${profile.name} CV PDF Document`}
                 allow="autoplay"
               />
             </div>
           </div>
         ) : (
-          /* Scrollable CV Body */
-          <div className="flex-1 min-h-0 overflow-y-auto p-5 sm:p-8 space-y-7 text-slate-700 dark:text-gray-300 text-xs sm:text-sm print:bg-white print:text-black">
-          
-          {/* Header Info */}
-          <div className="border-b border-black/10 dark:border-white/10 pb-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  {profile.name}
-                </h1>
-                <p className="text-blue-700 dark:text-cyan-400 font-bold text-sm mt-0.5">
-                  {profile.title}
-                </p>
-                <p className="text-xs text-slate-600 dark:text-gray-400 mt-0.5">
-                  Faculty of Artificial Intelligence, Kafrelsheikh University
-                </p>
-              </div>
-
-              <div className="space-y-1.5 text-xs text-slate-600 dark:text-gray-400">
-                <div className="flex items-center gap-2">
-                  <Mail size={13} className="text-cyan-600 dark:text-cyan-400 shrink-0" />
-                  <span className="font-semibold text-slate-900 dark:text-white">{profile.email}</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <WhatsAppLogo size={13} className="shrink-0" />
-                  <a
-                    href="https://wa.me/201022121573"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-emerald-700 dark:text-emerald-400 font-semibold hover:underline"
-                  >
-                    WhatsApp: {profile.phone}
-                  </a>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Github size={13} className="text-slate-800 dark:text-gray-300 shrink-0" />
-                  <a
-                    href={profile.githubUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-700 dark:text-cyan-300 font-semibold hover:underline flex items-center gap-1"
-                  >
-                    <span>github.com/{profile.githubUsername}</span>
-                    <ArrowUpRight size={11} />
-                  </a>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Linkedin size={13} className="text-blue-600 dark:text-blue-400 shrink-0" />
-                  <a
-                    href={profile.linkedinUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-700 dark:text-cyan-300 font-semibold hover:underline flex items-center gap-1"
-                  >
-                    <span>LinkedIn Profile</span>
-                    <ArrowUpRight size={11} />
-                  </a>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <MapPin size={13} className="text-purple-600 dark:text-purple-400 shrink-0" />
-                  <span className="text-slate-900 dark:text-white font-medium">{profile.location}</span>
-                </div>
-              </div>
-            </div>
-
-            <p className="text-slate-700 dark:text-gray-300 text-xs sm:text-sm mt-4 leading-relaxed">
-              {t.hero.bio}
-            </p>
-          </div>
-
-          {/* Education Section */}
-          <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-              <GraduationCap size={16} className="text-blue-600 dark:text-blue-400" />
-              <span>{t.resume.educationTitle}</span>
-            </h2>
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-black/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-sm">{t.experience.degreeTitle}</h3>
-                <div className="text-xs text-blue-700 dark:text-cyan-400 font-bold mt-0.5">{t.experience.faculty} • {t.experience.university}</div>
-                <div className="text-[11px] text-slate-700 dark:text-gray-300 mt-2 font-medium">
-                  {t.experience.courseworkTitle} {EDUCATION_DATA.coursework.slice(0, 5).join(' • ')}
-                </div>
-              </div>
-              <div className="text-left sm:text-right shrink-0">
-                <div className="text-xs font-mono text-slate-600 dark:text-gray-400">{t.experience.period}</div>
-                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{t.experience.gpa}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Experience Section */}
-          <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-              <Briefcase size={16} className="text-blue-600 dark:text-blue-400" />
-              <span>{t.resume.experienceTitle}</span>
-            </h2>
-            <div className="space-y-3.5">
-              {EXPERIENCES.map((exp, idx) => (
-                <div key={idx} className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-black/5 dark:border-white/5 space-y-2">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <div>
-                      <h3 className="font-bold text-slate-900 dark:text-white text-sm">{exp.role}</h3>
-                      <div className="text-xs text-blue-700 dark:text-cyan-400 font-medium">{exp.organization} • {exp.location}</div>
-                    </div>
-                    <span className="text-xs font-mono text-slate-600 dark:text-gray-400">{exp.period}</span>
+          /* Executive 2-Column Interactive Sheet */
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-7 lg:p-8 print:p-0 text-slate-700 dark:text-gray-300">
+            <div className="max-w-5xl mx-auto space-y-6">
+              {/* Executive Masthead Card */}
+              <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-blue-50/40 dark:from-[#141926] dark:via-[#111520] dark:to-[#0c1018] border border-slate-200/90 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-start sm:items-center gap-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl p-[2px] bg-gradient-to-br from-[#027DFD] via-[#00C7FF] to-emerald-400 shrink-0 shadow-md">
+                    <img
+                      src={profile.avatarUrl}
+                      alt={profile.name}
+                      className="w-full h-full rounded-[14px] object-cover bg-slate-950"
+                    />
                   </div>
-                  <p className="text-xs text-slate-700 dark:text-gray-300 leading-relaxed">{exp.description}</p>
-                  <ul className="list-disc list-inside space-y-1 text-xs text-slate-600 dark:text-gray-400 pt-1">
-                    {exp.achievements.map((ach, i) => (
-                      <li key={i}>{ach}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Featured Apps */}
-          <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-              <FolderGit2 size={16} className="text-blue-600 dark:text-blue-400" />
-              <span>{t.resume.projectsTitle}</span>
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {FEATURED_PROJECTS.map((proj) => (
-                <div key={proj.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-black/5 dark:border-white/5 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <h3 className="font-bold text-slate-900 dark:text-white text-sm">{proj.name}</h3>
-                      {proj.links.googlePlay && (
-                        <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
-                          Google Play
-                        </span>
-                      )}
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                        {AHMED_CONFIG.name[lang]}
+                      </h1>
+                      <span className="text-[11px] font-mono font-semibold text-emerald-700 dark:text-emerald-400">
+                        · {lang === 'ar' ? 'متاح للعمل والمشاريع' : 'Available for Hire'}
+                      </span>
                     </div>
-                    <p className="text-xs text-slate-600 dark:text-gray-400 line-clamp-2">{proj.description}</p>
-                  </div>
-                  <div className="flex items-center gap-3 mt-3 pt-2 border-t border-black/5 dark:border-white/5 text-xs">
-                    {proj.links.googlePlay && (
-                      <a
-                        href={proj.links.googlePlay}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-emerald-700 dark:text-emerald-400 font-bold hover:underline flex items-center gap-1"
-                      >
-                        <span>Play Store</span>
-                        <ArrowUpRight size={11} />
-                      </a>
-                    )}
-                    {proj.links.github && (
-                      <a
-                        href={proj.links.github}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-700 dark:text-blue-400 font-bold hover:underline flex items-center gap-1"
-                      >
-                        <span>GitHub Code</span>
-                        <ArrowUpRight size={11} />
-                      </a>
-                    )}
+                    <p className="text-sm sm:text-base font-bold text-[#027DFD] dark:text-[#00C7FF] mt-0.5">
+                      {AHMED_CONFIG.title[lang]}
+                    </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                      {AHMED_CONFIG.education.faculty[lang]} — {AHMED_CONFIG.education.university[lang]}
+                    </p>
                   </div>
                 </div>
-              ))}
+
+                {/* Snapshot Key Credentials */}
+                <div className="flex flex-wrap sm:grid sm:grid-cols-2 gap-2.5 shrink-0">
+                  <div className="px-3.5 py-2 rounded-xl bg-white dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 text-center">
+                    <div className="text-sm font-extrabold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
+                      {playStats?.downloads || '10+'} {playStats?.rating ? `· ★${playStats.rating}` : ''}
+                    </div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                      Revio on Google Play
+                    </div>
+                  </div>
+                  <div className="px-3.5 py-2 rounded-xl bg-white dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 text-center">
+                    <div className="text-sm font-extrabold font-mono tabular-nums text-[#027DFD] dark:text-[#00C7FF]">
+                      6+ Apps
+                    </div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                      Clean Architecture
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main 2-Column Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Left Sidebar (4 cols): Contact, Core Stack, Languages, Certs */}
+                <aside className="lg:col-span-4 space-y-5">
+                  {/* Direct Contact */}
+                  <div className="p-5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.025] border border-slate-200/85 dark:border-white/10 space-y-3">
+                    <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                      <Mail size={14} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                      <span>{lang === 'ar' ? 'قنوات التواصل' : 'Contact & Profiles'}</span>
+                    </h2>
+
+                    <div className="space-y-2.5 text-xs">
+                      <a
+                        href={getGmailComposeUrl(profile.email)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#027DFD] dark:hover:text-[#00C7FF] font-medium break-all"
+                      >
+                        <Mail size={14} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
+                        <span>{profile.email}</span>
+                      </a>
+
+                      <a
+                        href={AHMED_CONFIG.socials.whatsapp}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2.5 text-emerald-700 dark:text-emerald-400 font-semibold hover:underline"
+                      >
+                        <WhatsAppLogo size={14} className="shrink-0" />
+                        <span dir="ltr">{profile.phone}</span>
+                      </a>
+
+                      <a
+                        href={profile.githubUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#027DFD] dark:hover:text-[#00C7FF] font-medium"
+                      >
+                        <Github size={14} className="shrink-0" />
+                        <span>github.com/{profile.githubUsername}</span>
+                      </a>
+
+                      <a
+                        href={profile.linkedinUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#027DFD] dark:hover:text-[#00C7FF] font-medium"
+                      >
+                        <Linkedin size={14} className="text-blue-600 dark:text-blue-400 shrink-0" />
+                        <span>LinkedIn · ahmedel-bialy</span>
+                      </a>
+
+                      <div className="flex items-center gap-2.5 text-slate-600 dark:text-slate-400 pt-1">
+                        <MapPin size={14} className="text-violet-500 shrink-0" />
+                        <span>{AHMED_CONFIG.location[lang]}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Categorized Technical Stack */}
+                  <div className="p-5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.025] border border-slate-200/85 dark:border-white/10 space-y-4">
+                    <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                      <Cpu size={14} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                      <span>{t.resume.skillsTitle}</span>
+                    </h2>
+
+                    <div className="space-y-3.5">
+                      {stackGroups.map((group) => (
+                        <div key={group.label}>
+                          <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">
+                            {group.label}
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {group.items.map((item) => (
+                              <span
+                                key={item}
+                                className="px-2.5 py-1 rounded-lg bg-white dark:bg-[#161b27] border border-slate-200/90 dark:border-white/10 text-[11px] font-mono font-semibold text-slate-800 dark:text-slate-200"
+                              >
+                                {item}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Languages */}
+                  <div className="p-5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.025] border border-slate-200/85 dark:border-white/10 space-y-3">
+                    <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                      <Globe size={14} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                      <span>{lang === 'ar' ? 'اللغات' : 'Languages'}</span>
+                    </h2>
+                    <div className="space-y-2 text-xs">
+                      {LANGUAGES_DATA.map((l) => (
+                        <div key={l.name} className="flex items-center justify-between gap-2">
+                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                            {l.flag} {l.nativeName}
+                          </span>
+                          <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                            {l.proficiency}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Certifications Compact List */}
+                  <div className="p-5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.025] border border-slate-200/85 dark:border-white/10 space-y-3">
+                    <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                      <Award size={14} className="text-emerald-500" />
+                      <span>{lang === 'ar' ? 'الشهادات المعتمدة' : 'Certifications'}</span>
+                    </h2>
+                    <div className="space-y-2.5">
+                      {CERTIFICATES.map((c) => (
+                        <div key={c.id} className="text-xs">
+                          <div className="font-bold text-slate-900 dark:text-white leading-snug">
+                            {c.title}
+                          </div>
+                          <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
+                            {c.issuer} · {c.date}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </aside>
+
+                {/* Right Main Content (8 cols): Summary, Experience, Projects, Education */}
+                <main className="lg:col-span-8 space-y-6">
+                  {/* Professional Summary */}
+                  <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200/85 dark:border-white/10 space-y-2">
+                    <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
+                      {t.resume.summaryTitle}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                      {t.hero.bio}
+                    </p>
+                  </div>
+
+                  {/* Experience Timeline */}
+                  <div className="space-y-3">
+                    <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                      <Briefcase size={15} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                      <span>{t.resume.experienceTitle}</span>
+                    </h2>
+
+                    <div className="space-y-3.5">
+                      {EXPERIENCES.map((exp, idx) => (
+                        <div
+                          key={idx}
+                          className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200/85 dark:border-white/10 space-y-2.5"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                            <div>
+                              <h3 className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">
+                                {exp.role}
+                              </h3>
+                              <div className="text-xs font-semibold text-[#027DFD] dark:text-[#00C7FF]">
+                                {exp.organization} · {exp.location}
+                              </div>
+                            </div>
+                            <span className="self-start sm:self-center text-[11px] font-mono text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-white/10">
+                              {exp.period}
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                            {exp.description}
+                          </p>
+                          <ul className="space-y-1.5 pt-1">
+                            {exp.achievements.map((ach, i) => (
+                              <li
+                                key={i}
+                                className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300 leading-snug"
+                              >
+                                <CheckCircle2 size={13} className="text-emerald-500 shrink-0 mt-0.5" />
+                                <span>{ach}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Production Projects */}
+                  <div className="space-y-3">
+                    <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                      <FolderGit2 size={15} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                      <span>{t.resume.projectsTitle}</span>
+                    </h2>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {FEATURED_PROJECTS.map((proj) => (
+                        <div
+                          key={proj.id}
+                          className="p-4 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200/85 dark:border-white/10 flex flex-col justify-between gap-3"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">
+                                {proj.name}
+                              </h3>
+                              {proj.links.googlePlay && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                                  <Star size={10} fill="currentColor" />
+                                  Google Play
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                              {proj.subtitle}
+                            </p>
+                            <div className="text-[10.5px] font-mono text-slate-500 dark:text-slate-400 mt-2">
+                              {proj.technologies.slice(0, 4).join(' · ')}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-white/8 text-xs">
+                            {proj.links.googlePlay && (
+                              <a
+                                href={proj.links.googlePlay}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-emerald-700 dark:text-emerald-400 font-bold hover:underline inline-flex items-center gap-1"
+                              >
+                                <span>Play Store</span>
+                                <ArrowUpRight size={11} />
+                              </a>
+                            )}
+                            {proj.links.github && (
+                              <a
+                                href={proj.links.github}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[#027DFD] dark:text-[#00C7FF] font-bold hover:underline inline-flex items-center gap-1"
+                              >
+                                <span>Source</span>
+                                <ArrowUpRight size={11} />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Academic Degree */}
+                  <div className="space-y-3">
+                    <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                      <GraduationCap size={15} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                      <span>{t.resume.educationTitle}</span>
+                    </h2>
+
+                    <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200/85 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <h3 className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">
+                          {t.experience.degreeTitle}
+                        </h3>
+                        <div className="text-xs text-[#027DFD] dark:text-[#00C7FF] font-bold mt-0.5">
+                          {t.experience.faculty} · {t.experience.university}
+                        </div>
+                        <div className="text-[11px] font-mono text-slate-600 dark:text-slate-400 mt-2">
+                          {EDUCATION_DATA.coursework.slice(0, 6).join(' · ')}
+                        </div>
+                      </div>
+                      <div className="sm:text-end shrink-0">
+                        <div className="text-xs font-mono text-slate-700 dark:text-slate-300 font-semibold">
+                          {EDUCATION_DATA.period}
+                        </div>
+                        <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                          {t.experience.gpa}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </main>
+              </div>
             </div>
           </div>
-
-        </div>
         )}
       </div>
     </div>

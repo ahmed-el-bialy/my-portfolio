@@ -84,10 +84,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             type="button"
             onClick={() => handleTabClick('overview')}
-            className="flex items-center gap-2.5 cursor-pointer group shrink-0 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#027DFD] rounded-lg px-1"
+            className="flex items-center gap-3 cursor-pointer group shrink-0 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#027DFD] rounded-lg px-1"
           >
             <BrandLogoMark
-              sizeClassName="w-8 h-8"
+              sizeClassName="w-9 h-9"
               className="group-hover:scale-105 transition-transform"
             />
             <span className="font-bold text-sm sm:text-base tracking-tight text-slate-900 dark:text-[#f1f5f9] group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF] transition-colors whitespace-nowrap shrink-0">
@@ -257,8 +257,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <div>
               <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-white/10">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <BrandLogoMark sizeClassName="w-8 h-8" />
+                <div className="flex items-center gap-3 min-w-0">
+                  <BrandLogoMark sizeClassName="w-9 h-9" />
                   <div className="min-w-0">
                     <div className="font-bold text-sm text-slate-900 dark:text-[#f1f5f9] truncate">
                       {AHMED_CONFIG.name[lang]}

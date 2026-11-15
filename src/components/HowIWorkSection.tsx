@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight, Compass, Layers, Cpu, Rocket } from 'lucide-react';
 import { RevealOnScroll } from './RevealOnScroll';
+import { TiltCard } from './MotionPrimitives';
 import { useLanguage } from '../context/LanguageContext';
 
 interface HowIWorkSectionProps {
@@ -34,8 +35,8 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
           num: '03',
           icon: Cpu,
           title: 'إدارة الحالة والربط والتخزين',
-          desc: 'تنفيذ BLoC / Cubit مع ربط الـ REST APIs عبر Dio أو Firebase والتخزين المحلي بدون إنترنت عبر Hive CE.',
-          outcome: 'أداء سريع ومستقر 60 FPS',
+          desc: 'تنفيذ BLoC / Cubit مع ربط الـ REST APIs عبر Dio أو Firebase والتخزين المحلي بدون إنترنت عبر Hive.',
+          outcome: 'أداء سريع وتدفق بيانات مستقر',
         },
         {
           num: '04',
@@ -64,8 +65,8 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
           num: '03',
           icon: Cpu,
           title: 'State, APIs & Offline Sync',
-          desc: 'Implementing predictable BLoC/Cubit state streams, resilient Dio networking, and fast Hive CE local persistence.',
-          outcome: '60 FPS responsive UX',
+          desc: 'Implementing predictable BLoC/Cubit state streams, resilient Dio networking, and fast Hive local persistence.',
+          outcome: 'Smooth, responsive offline-first UX',
         },
         {
           num: '04',
@@ -97,7 +98,7 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
             <button
               type="button"
               onClick={onExploreProjects}
-              className="px-4 py-2 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.08] text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
+              className="px-4 py-2 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.08] text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap btn-kinetic"
             >
               {lang === 'ar' ? 'استكشاف كل التطبيقات' : 'View All Projects'}
             </button>
@@ -106,7 +107,7 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
             <button
               type="button"
               onClick={onOpenBooking}
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-sm"
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-sm btn-kinetic"
             >
               <span>{lang === 'ar' ? 'احجز مكالمة استكشافية' : 'Book a Discovery Call'}</span>
               <ArrowRight size={13} className={dir === 'rtl' ? 'rotate-180' : ''} />
@@ -119,30 +120,31 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
         {steps.map((step, idx) => {
           const StepIcon = step.icon;
           return (
-            <RevealOnScroll
-              key={step.num}
-              delay={idx * 0.06}
-              className="p-5 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between transition-transform duration-200 hover:-translate-y-1 hover:border-[#027DFD]/40"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono tabular-nums text-xs font-bold text-blue-600 dark:text-cyan-400">
-                    {step.num}.
-                  </span>
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-cyan-300 flex items-center justify-center">
-                    <StepIcon size={16} />
+            <RevealOnScroll key={step.num} delay={idx * 0.06} className="h-full">
+              <TiltCard
+                maxTilt={6}
+                className="h-full p-5 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between transition-colors duration-200 hover:border-[#027DFD]/40"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="font-mono tabular-nums text-xs font-bold text-blue-600 dark:text-cyan-400">
+                      {step.num}.
+                    </span>
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-cyan-300 flex items-center justify-center">
+                      <StepIcon size={16} />
+                    </div>
                   </div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
+                    {step.title}
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
+                    {step.desc}
+                  </p>
                 </div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
-                  {step.title}
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
-                  {step.desc}
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/8 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                {step.outcome}
-              </div>
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/8 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  {step.outcome}
+                </div>
+              </TiltCard>
             </RevealOnScroll>
           );
         })}

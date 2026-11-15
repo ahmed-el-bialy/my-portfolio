@@ -69,7 +69,7 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
       case 'ahmed skills --list':
         nextLines.push({
           type: 'output',
-          text: 'Flutter SDK · Dart · Clean Architecture · BLoC / Cubit · Hive CE · Dio & Retrofit · Firebase Firestore · Python',
+          text: 'Flutter SDK · Dart · Clean Architecture · BLoC / Cubit · Hive · Dio & Retrofit · Firebase Firestore · Python',
         });
         break;
       case 'revio':

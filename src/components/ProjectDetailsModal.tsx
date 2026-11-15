@@ -34,6 +34,8 @@ import {
   FileCode
 } from 'lucide-react';
 import { Project, AHMED_PROFILE } from '../data/portfolioData';
+import { resolveSmartProjectLinks } from '../utils/projectLinks';
+import { SmartDemoButtons } from './SmartDemoButtons';
 import { ProjectCardCover } from './ProjectCardCover';
 import {
   fetchRepoScreenshots,
@@ -278,9 +280,19 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const currentLiveDemoUrl = liveDemoUrl || project.links.liveDemoUrl;
   const currentPlaylistUrl = playlistUrl || project.links.playlistUrl;
   const currentPlayUrl = livePlayUrl || project.links.googlePlay;
-  const playerCandidateUrl = extractYouTubeVideoId(currentLiveDemoUrl)
-    ? currentLiveDemoUrl
-    : currentPlaylistUrl;
+  const resolvedModalLinks = resolveSmartProjectLinks(
+    {
+      ...project.links,
+      liveDemoUrl: currentLiveDemoUrl,
+      playlistUrl: currentPlaylistUrl,
+      googlePlay: currentPlayUrl,
+    },
+    null
+  );
+  const playerCandidateUrl =
+    resolvedModalLinks.demoVideoUrl ||
+    resolvedModalLinks.playlistUrl ||
+    currentLiveDemoUrl;
   const parsedVideoId = extractYouTubeVideoId(playerCandidateUrl);
   const youtubeIframeSrc = parsedVideoId
     ? `https://www.youtube-nocookie.com/embed/${parsedVideoId}?autoplay=1&rel=0&modestbranding=1`
@@ -506,33 +518,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       )}
                     </div>
 
-                    {/* Dynamic Action Bar: Live Demo (Latest Update) & Full Review (Playlist) */}
-                    {(currentLiveDemoUrl || currentPlaylistUrl) && (
-                      <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
-                        {currentLiveDemoUrl && (
-                          <a
-                            href={currentLiveDemoUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 border border-red-500/25 text-xs font-bold transition-all shadow-xs whitespace-nowrap"
-                          >
-                            <Play size={13} className="fill-current shrink-0" />
-                            <span>{lang === 'ar' ? `العرض الحي (${project.name})` : `Live Demo (${project.name})`}</span>
-                          </a>
-                        )}
-
-                        {currentPlaylistUrl && (
-                          <a
-                            href={currentPlaylistUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-800 dark:text-gray-200 font-semibold text-xs transition-colors border border-slate-300 dark:border-white/10 whitespace-nowrap ms-auto"
-                          >
-                            <Youtube size={14} className="text-red-500 shrink-0" />
-                            <span>{lang === 'ar' ? `المراجعة الشاملة لـ ${project.name}` : `Watch Full Review (${project.name})`}</span>
-                            <ArrowUpRight size={12} className="shrink-0" />
-                          </a>
-                        )}
+                    {/* Smart Conditional Action Bar (Cases A–E) */}
+                    {resolvedModalLinks.mode !== 'none' && (
+                      <div className="flex items-center flex-wrap gap-2 pt-1">
+                        <SmartDemoButtons resolved={resolvedModalLinks} stopPropagation={false} />
                       </div>
                     )}
                   </div>
@@ -545,36 +534,13 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         coverUrl={project.image}
                         description={project.description}
                         topics={project.technologies}
+                        aspectClassName="w-full h-full"
                       />
                     </div>
 
-                    {currentLiveDemoUrl || currentPlaylistUrl ? (
-                      <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
-                        {currentLiveDemoUrl && (
-                          <a
-                            href={currentLiveDemoUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-600/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 border border-red-500/25 text-xs font-bold transition-all shadow-xs whitespace-nowrap"
-                          >
-                            <Play size={13} className="fill-current shrink-0" />
-                            <span>{lang === 'ar' ? `العرض الحي (${project.name})` : `Live Demo (${project.name})`}</span>
-                            <ExternalLink size={12} className="shrink-0" />
-                          </a>
-                        )}
-
-                        {currentPlaylistUrl && (
-                          <a
-                            href={currentPlaylistUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-800 dark:text-gray-200 font-semibold text-xs transition-colors border border-slate-300 dark:border-white/10 whitespace-nowrap ms-auto"
-                          >
-                            <Youtube size={14} className="text-red-500 shrink-0" />
-                            <span>{lang === 'ar' ? `المراجعة الشاملة لـ ${project.name}` : `Watch Full Review (${project.name})`}</span>
-                            <ArrowUpRight size={12} className="shrink-0" />
-                          </a>
-                        )}
+                    {resolvedModalLinks.mode !== 'none' ? (
+                      <div className="flex items-center flex-wrap gap-2 pt-1">
+                        <SmartDemoButtons resolved={resolvedModalLinks} stopPropagation={false} />
                       </div>
                     ) : (
                       /* Prominent 'Visit YouTube Channel' CTA when project has neither video nor playlist */
@@ -742,8 +708,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       <p className="text-slate-600 dark:text-gray-300 text-[11px] leading-relaxed">
                         {project.architecture?.presentationLayer ||
                           (lang === 'ar'
-                            ? 'واجهات فلاتر (Widgets)، الشاشات (Views)، ومستمعي الحالات (BlocConsumer/BlocBuilder)، وتنسيق الحركات 60 FPS.'
-                            : 'Flutter UI widgets, responsive views, Cubit/Bloc state listeners, and 60 FPS animations.')}
+                            ? 'واجهات فلاتر (Widgets)، الشاشات (Views)، ومستمعي الحالات (BlocConsumer/BlocBuilder)، وتنسيق الحركات بسلاسة.'
+                            : 'Flutter UI widgets, responsive views, Cubit/Bloc state listeners, and fluid transitions.')}
                       </p>
                     </div>
                     <div className="mt-3 pt-2 border-t border-slate-100 dark:border-white/5 font-mono text-[10px] text-slate-400">
@@ -780,8 +746,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       <p className="text-slate-600 dark:text-gray-300 text-[11px] leading-relaxed">
                         {project.architecture?.dataLayer ||
                           (lang === 'ar'
-                            ? 'نماذج البيانات (Models & Mappers)، التخزين المحلي السريع (Hive CE Box)، وتكاملات الشبكة (REST API / Retrofit).'
-                            : 'Data models, JSON serializers, Hive CE local caching boxes, and remote REST/Firebase datasources.')}
+                            ? 'نماذج البيانات (Models & Mappers)، التخزين المحلي السريع (Hive Box)، وتكاملات الشبكة (REST API / Retrofit).'
+                            : 'Data models, JSON serializers, Hive local caching boxes, and remote REST/Firebase datasources.')}
                       </p>
                     </div>
                     <div className="mt-3 pt-2 border-t border-slate-100 dark:border-white/5 font-mono text-[10px] text-purple-400">
@@ -1104,29 +1070,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               </a>
             )}
 
-            {currentLiveDemoUrl && (
-              <a
-                href={currentLiveDemoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-600/15 hover:bg-red-600 text-red-600 hover:text-white dark:text-red-400 font-bold text-xs border border-red-500/25 transition-all cursor-pointer whitespace-nowrap"
-              >
-                <Play size={13} fill="currentColor" className="shrink-0" />
-                <span>{lang === 'ar' ? 'العرض الحي' : 'Live Demo'}</span>
-              </a>
-            )}
-
-            {currentPlaylistUrl && (
-              <a
-                href={currentPlaylistUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-800 dark:text-gray-200 font-bold text-xs border border-slate-300 dark:border-white/10 transition-all cursor-pointer whitespace-nowrap"
-              >
-                <Youtube size={13} className="text-red-500 shrink-0" />
-                <span>{lang === 'ar' ? 'المراجعة الشاملة' : 'Full Review'}</span>
-              </a>
-            )}
+            <SmartDemoButtons resolved={resolvedModalLinks} stopPropagation={false} />
           </div>
 
           <div className="flex items-center gap-2 ms-auto flex-wrap">

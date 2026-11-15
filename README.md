@@ -1,19 +1,19 @@
-# Ahmed El-Bialy — Mobile App Developer & Flutter Specialist Portfolio
+# Ahmed El-Bialy — Flutter Mobile Developer Portfolio
 
 <div align="center">
 
-<img src="./public/website-poster.png" alt="Ahmed El-Bialy Portfolio Showcase Banner" width="100%" style="border-radius: 12px; margin-bottom: 20px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);" />
+<img src="./public/website-poster.png" alt="Ahmed El-Bialy Portfolio — Latest Hero & Live Google Play KPIs" width="100%" style="border-radius: 14px; margin-bottom: 18px;" />
 
-[![Live Portfolio](https://img.shields.io/badge/Live_Portfolio-Online-00D9FF?style=for-the-badge&logo=google-chrome&logoColor=white)](https://github.com/ahmed-el-bialy)
-[![Google Play](https://img.shields.io/badge/Google_Play-Revio_Live-34A853?style=for-the-badge&logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US)
-[![GitHub Profile](https://img.shields.io/badge/GitHub-ahmed--el--bialy-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ahmed-el-bialy)
+[![Portfolio](https://img.shields.io/badge/Live_Portfolio-Online-027DFD?style=for-the-badge&logo=google-chrome&logoColor=white)](https://ahmed-el-bialy.vercel.app/)
+[![Google Play](https://img.shields.io/badge/Google_Play-Revio_Live-10B981?style=for-the-badge&logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US)
+[![GitHub](https://img.shields.io/badge/GitHub-ahmed--el--bialy-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ahmed-el-bialy)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Ahmed_El--Bialy-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ahmedel-bialy/)
-[![YouTube](https://img.shields.io/badge/YouTube-@ahmedel--bialy-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/@ahmedel-bialy)
-[![Gmail](https://img.shields.io/badge/Gmail-elbailyahmed47@gmail.com-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:elbailyahmed47@gmail.com)
+[![YouTube](https://img.shields.io/badge/YouTube-@AhmedEl--Bialy-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@AhmedEl-Bialy)
+[![Gmail](https://img.shields.io/badge/Gmail-ah.elbialy.dev@gmail.com-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:ah.elbialy.dev@gmail.com)
 [![WhatsApp](https://img.shields.io/badge/WhatsApp-Chat_Now-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/201022121573)
 
 <p align="center">
-  <strong>Production Mobile Engineering • Cross-Platform Flutter & Dart • Clean Architecture • Real-Time GitHub Synchronization</strong>
+  <strong>Cross-Platform Flutter &amp; Dart Engineering • Clean Architecture • Live Google Play &amp; GitHub Sync • Bilingual EN/AR</strong>
 </p>
 
 </div>
@@ -22,88 +22,83 @@
 
 ## 📱 Overview
 
-This repository hosts the official, production-grade developer portfolio of **Ahmed El-Bialy**, a Mobile Application Developer specializing in **Flutter & Dart** and undergraduate student at the **Faculty of Artificial Intelligence, Kafrelsheikh University**.
+Official full-stack portfolio of **Ahmed El-Bialy** — Flutter Mobile Developer and undergraduate at the **Faculty of Artificial Intelligence, Kafrelsheikh University**.
 
-The application serves as an interactive showcase of published mobile applications on **Google Play**, open-source software architectures, live GitHub repository analytics, interactive contribution heatmaps, automated meeting booking pipelines, and a dual-mode interactive CV viewer.
+Built as a high-craft product showcase combining an Express + Vite backend proxy with a kinetic React 19 UI: live **Google Play** stats sync for *Revio*, real-time **GitHub** repository telemetry, interactive app screenshot galleries, a **2-column Executive Digital CV** with isolated print export, and a guided **Cal.com** consultation pipeline.
 
 ---
 
-## 📸 Visual Showcase & Mobile Projects
+## 📸 Featured Mobile Applications
 
 <div align="center">
 
-| Project | Platform & Highlights | Architecture & Stack | Links |
+| Application | Highlights & Engineering Scope | Stack & Patterns | Links |
 | :--- | :--- | :--- | :--- |
-| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/cover.png" width="220" alt="Revio"/><br/>**Revio** | 🌟 **Published on Google Play**<br/>Active-recall flashcard app with 3D flip-card mechanics & Hive CE | Clean Architecture, Flutter, Dart, Cubit, Hive CE, Google Play | [Play Store](https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US) • [GitHub](https://github.com/ahmed-el-bialy/Revio) • [Demo](https://youtube.com/shorts/-9VfbxIcZkU) |
-| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/cover.png" width="220" alt="Movura"/><br/>**Movura** | 🎬 **Media Discovery**<br/>Real-time TMDB API integration, YouTube trailers, Sliver parallax layouts | Clean Architecture, Flutter, BLoC/Cubit, TMDB API, Shimmer UI | [GitHub](https://github.com/ahmed-el-bialy/Movura) • [YouTube Demo](https://youtube.com/@ahmedel-bialy) |
-| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/cover.png" width="220" alt="Vibrant Store"/><br/>**Vibrant-Store** | 🛒 **E-Commerce Mobile**<br/>Product catalogs, chip filtering, service layer pattern, cart & wishlist | Flutter, Dart, REST API, Service Layer Pattern, State Management | [GitHub](https://github.com/ahmed-el-bialy/Vibrant-store) • [Demo](https://youtube.com/shorts/PIg1rYA0CkQ) |
-| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cover.png" width="220" alt="Sky-Cast"/><br/>**Sky-Cast** | ⛅ **Weather Adaptive**<br/>Real-time weather data, dynamic theme engine, search delegate | Flutter, Dart, WeatherAPI, Dynamic Theming, State Management | [GitHub](https://github.com/ahmed-el-bialy/Sky-Cast) • [Demo](https://youtube.com/shorts/u5JjIphdrAM) |
-| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/cover.png" width="220" alt="News-Cloud"/><br/>**News-Cloud** | 📰 **News Aggregator**<br/>Retrofit HTTP client, repository pattern, full Arabic RTL support | Flutter, Dart, Retrofit, Repository Pattern, In-App WebView | [GitHub](https://github.com/ahmed-el-bialy/News-Cloud) • [Demo](https://youtube.com/shorts/AKbiBjCRIis) |
+| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/cover.png" width="210" alt="Revio"/><br/>**Revio** | 🌟 **Published on Google Play**<br/>Offline-first flashcard & active-recall learning app with 3D flip mechanics and interactive quiz mode | Clean Architecture, Flutter, Dart, Cubit, Hive, Google Play | [Google Play](https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US) • [GitHub](https://github.com/ahmed-el-bialy/Revio) • [Watch Demo](https://youtube.com/shorts/FsG1XUAbmDY) |
+| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/cover.png" width="210" alt="Movura"/><br/>**Movura** | 🎬 **Movie & Series Discovery**<br/>TMDB API client featuring Sliver parallax headers, shimmer loading, debounced search & YouTube trailers | Clean Architecture, Flutter, BLoC & Cubit, Dio, TMDB API | [GitHub](https://github.com/ahmed-el-bialy/Movura) |
+| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/cover.png" width="210" alt="Vibrant-Store"/><br/>**Vibrant-Store** | 🛒 **E-Commerce Marketplace**<br/>Real-time catalog browsing from DummyJSON API with category chip filtering, wishlist & persistent cart | Flutter, Dart, Service Layer Pattern, REST API, State Management | [GitHub](https://github.com/ahmed-el-bialy/Vibrant-store) • [Watch Demo](https://youtube.com/shorts/2qito_nmDjM) |
+| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cover.png" width="210" alt="Sky-Cast"/><br/>**Sky-Cast** | ⛅ **Climate-Adaptive Weather**<br/>Dynamic atmospheric palettes synced to forecasts with custom `SearchDelegate` city autocomplete | Clean Architecture, Flutter, WeatherAPI, SearchDelegate | [GitHub](https://github.com/ahmed-el-bialy/Sky-Cast) • [Watch Demo](https://youtube.com/shorts/u5JjIphdrAM) |
+| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/cover.png" width="210" alt="News-Cloud"/><br/>**News-Cloud** | 📰 **Bilingual News Wire**<br/>Categorized global headlines with full Arabic RTL/LTR layout fidelity and distraction-free in-app WebView | Repository Pattern, Flutter, Retrofit, Dio, Arabic RTL | [GitHub](https://github.com/ahmed-el-bialy/News-Cloud) • [Watch Demo](https://youtube.com/shorts/Sxs8R9YPmBY) |
+| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/cover.png" width="210" alt="Shaats"/><br/>**Shaats** | 💬 **Real-Time Messenger**<br/>Instant cloud chat powered by Cloud Firestore reactive snapshot streams and Firebase Auth sessions | Flutter, Dart, Firebase Auth, Cloud Firestore, Streams | [GitHub](https://github.com/ahmed-el-bialy/Shaats) |
 
+</div>
+
+> **Additional Open-Source Builds:** [Nihon-Seed](https://github.com/ahmed-el-bialy/Nihon-Seed) (gamified Kana & audio learning) and [NBN-Basketball](https://github.com/ahmed-el-bialy/NBN-Basketball) (courtside scoreboard & match clock).
+
+---
+
+## 🔗 Link Share Preview (`og:image`)
+
+Optimized `1200×630` social share card configured for **LinkedIn**, **WhatsApp**, and **X/Twitter** link previews:
+
+<div align="center">
+  <img src="./public/og-image.jpg" alt="Ahmed El-Bialy OpenGraph Social Preview Card" width="76%" style="border-radius: 12px;" />
 </div>
 
 ---
 
-## 🚀 Key Features & Architectural Capabilities
+## 🚀 Key Engineering Features
 
-### 1. 📄 Dual-Mode CV & Native PDF Viewer Modal
-- **Web View & Native PDF View Toggling:** Instant switching between an interactive web-rendered CV layout and an embedded high-resolution Google Drive PDF document viewer.
-- **Consistent Zero-Jump Dimensions:** Sizing is strictly harmonized across both Web View and PDF modes (`max-w-5xl lg:max-w-6xl` and `h-[90vh] sm:h-[93vh]`) to eliminate modal resizing jumps when toggling.
-- **Full-Screen Maximize Mode (`Maximize2` / `Minimize2`):** Dedicated expansion control enlarging the PDF document to `98vw` and `97vh` for unconstrained full-screen reading.
-- **Viewport Scroll Containment:** Modal overlay prevents background body scrolling; scrolling is isolated exclusively to the PDF document or web view container.
-- **Direct Drive Actions:** Immediate download access, one-click open in Google Drive tab, and clipboard link sharing.
+### 1. 📊 Hero Showcase Stage & Live Google Play Proxy (`/api/playstore/app`)
+- **Name-First Editorial Hierarchy:** Leads directly with Ahmed's luminous Leaf brand emblem, **Ahmed El-Bialy**, and **Flutter Mobile Developer** title paired with clean Clean Architecture positioning.
+- **Interactive `RevioShowcaseStage`:** Dual-panel device preview combining a live interactive *Revio* flashcard screen with Shiki syntax-highlighted Dart Clean Architecture code (`quiz_cubit.dart`, `flashcard_local_source.dart`, `tmdb_repository_impl.dart`).
+- **Live Google Play Synchronization:** Server-side Express endpoint scrapes & caches live **Revio Rating**, **Downloads (`10+`)**, and release freshness cleanly on a 1-hour TTL with zero exposed API keys.
+- **4-Card Color-Coded KPI Bento:** Dedicated **Revio ★ Rating**, **Play Downloads**, **GitHub Repositories (`13+`)**, and **Shipped Apps (`8+`)** cards powered by 3D cursor tilt (`TiltCard`).
 
-### 2. 📅 Cal.com Multi-Tier Live Booking Suite (`BookingMeetingModal`)
-- **3-Tier Purpose-Driven Consultation Flows:**
-  1. **Quick Chat (15 Mins):** Intro & fit alignment via `https://cal.com/ahmed-elbaily/quick-chat`.
-  2. **Discovery Call (30 Mins):** In-depth review of product scope, business goals & mobile architecture via `https://cal.com/ahmed-elbaily/discovery-cal`.
-  3. **Technical Discussion (45 Mins):** Advanced Flutter, Clean Architecture, BLoC/Cubit state management & backend review via `https://cal.com/ahmed-elbaily/technical-discussion`.
-- **Integrated Live Scheduling Embeds:** Embeds Cal.com calendar widgets directly in-modal with dedicated loading skeletons and spinners to eliminate empty screens during initial load.
-- **Direct New-Tab Navigation:** One-tap external launch option for attendees preferring full-screen booking.
+### 2. 📱 Hero-First Screenshot Covers & Smart Demo Resolution
+- **Crisp App UI Previews (`ProjectCardCover`):** Displays high-contrast mobile screens immediately in a 2-column Hero-first frame with clickable numbered thumbnails (`01..04`) and quick cover toggle—no need to open modals just to inspect the UI.
+- **Smart Action Resolution (`SmartDemoButtons`):** Merges verified `portfolioData.ts` metadata with live GitHub `README.md` extraction, automatically labeling single demo videos as **Watch Demo**, full video series as **Full Demo**, plus direct **Google Play** and verified `.apk` release links.
 
-### 3. 📑 Smart GitHub Case Study Engine (`ProjectDetailsModal`)
-- **Automated Repository Inspection:** Dynamically probes the repository root on `main` and `master` branches for `CASE_STUDY.md` / `case-study.md` (English) and `CASE_STUDY_AR.md` / `case-study-ar.md` (Arabic).
-- **Adaptive Tab Visibility:** Automatically displays or hides the Case Study tab based on verified markdown file existence.
-- **Instant Bilingual Toggle:** Renders a clean EN / AR language switch control when both documentation versions are detected, displaying localized engineering insights seamlessly.
+### 3. 🧑‍💻 Structured Experience, Credentials & Developer Sync HUD
+- **5-Tier Credential Cards (`ExperienceSection`):** Clean visual hierarchy separating **Issuer & Track → Title → Core Engineering Advantage → Skill Chips → Credential Verification Link**, eliminating cramped card density.
+- **Consolidated GitHub Proxy (`/api/github/portfolio`):** Reduces client requests to a single 10-minute cached backend aggregation endpoint fetching repos, raw READMEs, release `.apk` assets, stack breakdown, and a **30-day commit activity heatmap** with offline snapshot fallback.
+- **Filterable Stack Matrix (`StackSection`):** Interactive search and category tabs highlighting verified technologies with expandable sub-capabilities.
 
-### 3. 📱 Responsive Multi-Device UI (Mobile, Tablet, Laptop, Desktop)
-- **Fluid Active Tab Indicator:** Framer Motion spring layout animations dynamically recalculating active navigation coordinates on any device width.
-- **De-Cluttered Mobile Viewport:** Removed distracting glowing dot indicators on compact mobile navigation bars, optimizing touch target clearance (>44px).
-- **Comprehensive Tablet & Laptop Calibration:** Tailored navigation padding, optical centering, and font scale balancing across iPads, Galaxy Tabs, MacBooks, and high-DPI displays.
-- **Bilingual RTL & LTR Architecture:** Dynamic HTML `dir` attribute management, accompanied by **Cairo** font for Arabic and **Inter** for English.
+### 4. 📄 Executive 2-Column Digital CV & Isolated Print Export (`ResumeModal`)
+- **Seamless Mode Switching:** Toggle cleanly between an executive **2-Column Digital CV** (Work Timeline + Technical Skills sidebar + Verified Certifications + Education) and the **Native Google Drive PDF Viewer** with fullscreen expand (`Maximize2`).
+- **Print-Ready `@media print`:** Isolated print stylesheet cleanly outputs only the formatted CV page when exporting via `window.print()`.
 
-### 4. 🎨 Unified Project Card Design System
-- **Dynamic Geometric Blueprint Covers:** Consistent, professional CSS gradient placeholders and technical architectural blueprints for projects without static screenshots.
-- **Refined Hover & Border Mechanics:** Subtle micro-interactions, responsive card elevation, and smooth border highlights.
-- **Focused Action Hub:** Direct access to Google Play, GitHub repos, YouTube video demos, and verified APK download flows with Android security sideloading guidance.
+### 5. 📅 Guided Cal.com Consultation Flow (`BookingMeetingModal`)
+- **2-Step Booking Experience:**
+  1. Select consultation tier (**Quick Chat — 15m**, **Discovery Call — 30m**, or **Technical Discussion — 45m**).
+  2. Book directly inside the embedded Cal.com live widget with loading skeleton feedback and instant **WhatsApp / Gmail** direct fallbacks.
 
-### 5. 🔄 Real-Time GitHub Synchronization & Analytics
-- **Live Repository Metrics:** Real-time ingestion of stars, forks, commit timestamps, and primary languages.
-- **Rate-Limit Resilience & Offline Fallbacks:** Automatic detection of HTTP 403/429 limits with fallback to verified local repository snapshots.
-- **30-Day Contribution Heatmap:** Interactive contribution matrix detailing commit frequency and streaks.
-- **Recharts Technology Distribution:** Composable horizontal bar charts breaking down ecosystem percentages (Dart, Flutter, etc.).
+### 6. ✨ Kinetic Motion Primitives & Bilingual RTL/LTR UX
+- **Unified Leaf Emblem (`BrandLogoMark`):** Crisp high-contrast SVG brand mark synchronized across the Navbar, Hero lockup, About portrait badge, Footer, and browser tab favicons (`/favicon.svg`).
+- **Tactile Motion:** `TiltCard`, floating 3D portrait (`FloatingPortrait`), magnetic CTA buttons (`MagneticButton`), View Transitions circular theme reveal, and hidden CLI Easter Egg (`ahmed` key sequence or Footer `CLI` trigger).
+- **Full Localization:** Instant **English (`LTR` / `Plus Jakarta Sans`)** and **Arabic (`RTL` / `Cairo`)** switching persisted cleanly across reloads without theme or layout flash.
 
 ---
 
-## 🛠️ Tech Stack & Dependencies
+## 🛠️ Tech Stack
 
-### Frontend & Core
-- **[React 19](https://react.dev/)** — Modern component architecture with hooks and concurrent rendering
-- **[TypeScript 5](https://www.typescriptlang.org/)** — Comprehensive type safety across models, services, and components
-- **[Vite](https://vitejs.dev/)** — Fast ES-module development and production bundling
-- **[Tailwind CSS v4](https://tailwindcss.com/)** — Modern CSS utility engine with dark-mode tokens and fluid typography
-
-### State, Animation & Data Visualization
-- **[@tanstack/react-query v5](https://tanstack.com/query)** — Cache invalidation, background synchronization, and network resilience
-- **[Framer Motion](https://www.framer.com/motion/)** — Smooth spring animations, layout morphing, and gesture interactions
-- **[Recharts](https://recharts.org/)** — Interactive responsive charts for stack analytics
-- **[Lucide React](https://lucide.dev/)** — Vector iconography
-
-### Mobile Engineering Core (Highlighted in Projects)
-- **Flutter & Dart SDK** — Cross-platform compilation for Android and iOS
-- **Clean Architecture** — Strict layer separation (Domain, Data, Presentation)
-- **State Management** — Cubit, BLoC, Provider
-- **Storage & Networking** — Hive CE, SQLite, Dio, Retrofit, REST APIs
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | React 19, TypeScript 5, Vite, Tailwind CSS v4 |
+| **Motion & UI** | Framer Motion (`motion`), Lucide React, Canvas Confetti, Shiki |
+| **Data & State** | TanStack React Query v5, React Context (Bilingual RTL/LTR & Theme) |
+| **Backend Proxy** | Express (`server.ts`), TSX, Google GenAI SDK (`@google/genai`), GitHub & Play Store APIs |
+| **Mobile Showcase** | Flutter SDK, Dart, Clean Architecture, BLoC / Cubit, Hive, Dio, Retrofit, Firebase |
 
 ---
 
@@ -111,111 +106,109 @@ The application serves as an interactive showcase of published mobile applicatio
 
 ```text
 ├── public/
-│   ├── favicon.svg                 # Application favicon
-│   └── showcase-banner.jpg         # High-resolution developer showcase banner
+│   ├── brand-logo-mark.png          # High-res luminous Leaf brand mark
+│   ├── favicon.svg / .ico / .png    # Unified browser tab & app icons
+│   ├── og-image.jpg / .png          # 1200x630 LinkedIn & WhatsApp share preview
+│   └── website-poster.png           # Latest hero showcase banner
 ├── src/
 │   ├── components/
-│   │   ├── ApkDownloadModal.tsx       # Conditional APK download modal with sideloading guide
-│   │   ├── BookingMeetingModal.tsx     # Re-engineered bilingual consultation booking dialog
-│   │   ├── ContactModal.tsx            # Fast contact channels and quick message dialog
-│   │   ├── ContactSection.tsx          # Direct inquiry form & booking call-to-actions
-│   │   ├── CoverGuidelinesModal.tsx    # Technical cover and blueprint guidelines modal
-│   │   ├── CustomCursor.tsx            # Desktop-only smooth magnetic cursor
-│   │   ├── ExperienceSection.tsx       # Work experiences, university education & certifications
-│   │   ├── GitHubActivity.tsx          # 30-day contribution activity heatmap
-│   │   ├── GitHubFallbackNotice.tsx    # API rate-limit and offline resilience banner
-│   │   ├── HeroSection.tsx             # Hero intro, quick stats & direct CTAs
-│   │   ├── Navbar.tsx                  # Fully responsive bilingual top navigation & theme toggle
-│   │   ├── ProjectCardCover.tsx        # Dynamic smart covers with gradient blueprint fallback
-│   │   ├── ProjectDetailsModal.tsx     # Comprehensive project specifications & demo player
-│   │   ├── ProjectSkeletonCard.tsx     # Loading shimmer skeleton for repository cards
-│   │   ├── ProjectsSection.tsx         # Mobile applications, GitHub repos & live sync HUD
-│   │   ├── ResumeModal.tsx             # Dual-mode CV viewer (Interactive Web + Native PDF)
-│   │   ├── RevealOnScroll.tsx          # IntersectionObserver viewport reveal wrappers
-│   │   ├── ScrollProgressBar.tsx       # Reading progress bar at top of viewport
-│   │   ├── SectionDivider.tsx          # Aesthetic geometric section transitions
-│   │   ├── SpotlightCard.tsx           # Mouse-following radial glow container
-│   │   ├── StackSection.tsx            # Categorized skills matrix with official brand vectors
-│   │   ├── TechDistributionChart.tsx   # Recharts stack distribution visualization
-│   │   ├── TechLogos.tsx               # Verified brand vectors (Flutter, Dart, Firebase, etc.)
-│   │   ├── VerticalNavRail.tsx         # Desktop floating scrollspy navigation rail
-│   │   └── VideoDemoModal.tsx          # YouTube video demo player with channel fallback
+│   │   ├── AboutSection.tsx         # Floating portrait, origin story & mindset pillars
+│   │   ├── ApkDownloadModal.tsx     # APK release download & sideload guide
+│   │   ├── BookingMeetingModal.tsx  # 2-step guided Cal.com booking modal
+│   │   ├── BrandLogoMark.tsx        # Razor-sharp dual-ring SVG Leaf emblem
+│   │   ├── CertificateModal.tsx     # Interactive verified certificate preview
+│   │   ├── ContactModal.tsx         # Quick inquiry & direct channels dialog
+│   │   ├── ContactSection.tsx       # Direct contact form & consultation cards
+│   │   ├── CoverGuidelinesModal.tsx # GitHub screenshots/cover specification modal
+│   │   ├── CustomCursor.tsx         # Desktop magnetic cursor ring
+│   │   ├── DartCodeShowcase.tsx     # Shiki Dart architecture code viewer
+│   │   ├── ExperienceSection.tsx    # 5-tier experience, education & cert cards
+│   │   ├── FAQSection.tsx           # Expandable engineering & hiring FAQ
+│   │   ├── GitHubActivity.tsx       # 30-day commit activity heatmap
+│   │   ├── GitHubFallbackNotice.tsx # Offline / rate-limit fallback indicator
+│   │   ├── HeroSection.tsx          # Name-first hero, showcase stage & 4 KPI cards
+│   │   ├── HowIWorkSection.tsx      # Mobile engineering delivery workflow
+│   │   ├── ImageWithSkeleton.tsx    # Shimmer-backed crisp screenshot loader
+│   │   ├── MagneticButton.tsx       # Spring magnetic cursor CTA button
+│   │   ├── MotionPrimitives.tsx     # TiltCard & FloatingPortrait components
+│   │   ├── Navbar.tsx               # 3-zone header nav & mobile bottom dock
+│   │   ├── OverviewProjectsPreview.tsx # 2-column Hero-first featured apps grid
+│   │   ├── PageSkeletonLoader.tsx   # Lazy-route loading skeletons
+│   │   ├── ProjectCardCover.tsx     # Interactive multi-screen preview covers
+│   │   ├── ProjectDetailsModal.tsx  # Full specs, architecture & CASE_STUDY.md viewer
+│   │   ├── ProjectSkeletonCard.tsx  # Repository loading card placeholder
+│   │   ├── ProjectsSection.tsx      # Live GitHub sync HUD & all project cards
+│   │   ├── ResumeModal.tsx          # Executive 2-column Digital CV + Drive PDF viewer
+│   │   ├── RevealOnScroll.tsx       # Viewport intersection reveal wrapper
+│   │   ├── RevioShowcaseStage.tsx   # Interactive Revio phone + Dart code stage
+│   │   ├── ScrollProgressBar.tsx    # Top reading progress indicator
+│   │   ├── SmartDemoButtons.tsx     # Watch Demo / Full Demo / Play / APK action row
+│   │   ├── SmartphoneFrame.tsx      # Hardware-framed mobile screenshot bezel
+│   │   ├── StackSection.tsx         # Filterable stack & verified tech matrix
+│   │   ├── TechDistributionChart.tsx# Horizontal language & stack distribution bars
+│   │   ├── TechLogos.tsx            # Verified SVG logos (Flutter, Dart, Hive, etc.)
+│   │   ├── TerminalEasterEggModal.tsx # Interactive CLI inspector (type "ahmed")
+│   │   ├── ThemeRevealOverlay.tsx   # Circular View Transition fallback overlay
+│   │   └── VideoDemoModal.tsx       # Responsive YouTube demo & Shorts player
 │   ├── context/
-│   │   └── LanguageContext.tsx         # Bilingual context (Arabic / English) & RTL state
+│   │   └── LanguageContext.tsx      # EN/AR translations & dynamic RTL switching
 │   ├── data/
-│   │   ├── portfolioData.ts            # Profile information, projects, experiences & certificates
-│   │   └── translations.ts             # Comprehensive English & Arabic localization dictionaries
-│   ├── hooks/
-│   │   └── useScrollLock.ts            # Modal scroll-locking utility
+│   │   ├── config.ts                # Single source of truth config & Dart snippets
+│   │   ├── portfolioData.ts         # Projects, experiences, certs & education
+│   │   └── translations.ts          # Full English & Arabic UI copy
 │   ├── services/
-│   │   ├── BookingValidationService.ts # Anti double-booking validation logic
-│   │   ├── bookingManager.ts           # Persistent booking storage and slot allocation
-│   │   ├── githubService.ts            # GitHub REST API client & cache management
-│   │   └── googleCalendarService.ts    # Google Calendar event generation & .ics export
+│   │   ├── githubService.ts         # Consolidated GitHub API client & cache
+│   │   ├── playStoreService.ts      # React Query hook for /api/playstore/app
+│   │   └── cvParserService.ts       # Gemini-assisted CV metadata helper
 │   ├── utils/
-│   │   └── techTagExtractor.ts         # Repository technology tagging utilities
-│   ├── App.tsx                         # Core application shell & provider setup
-│   ├── index.css                       # Global Tailwind CSS and dynamic font rules
-│   └── main.tsx                        # React application entry point
-├── index.html                          # HTML5 shell with Schema.org JSON-LD Person profile
-├── metadata.json                       # Applet configuration and permissions
-├── package.json                        # Dependencies, scripts and build commands
-├── tsconfig.json                       # TypeScript strict configuration
-└── vite.config.ts                      # Vite build configuration
+│   │   ├── projectLinks.ts          # Smart Watch Demo / Full Demo link resolver
+│   │   └── techTagExtractor.ts      # Repository stack tag parser
+│   ├── App.tsx                      # Root application & lazy section routing
+│   ├── index.css                    # Tailwind v4 design tokens & @media print rules
+│   └── main.tsx                     # React entrypoint
+├── server.ts                        # Express + Vite server with Play Store & GitHub proxies
+├── index.html                       # Unified SVG/ICO favicons, OG/Twitter cards & JSON-LD
+├── metadata.json                    # Applet configuration
+└── package.json                     # Build, dev, lint & start scripts
 ```
 
 ---
 
-## ⚡ Getting Started & Local Development
+## ⚡ Getting Started
 
 ### Prerequisites
-- **Node.js**: `v18.0.0` or higher
-- **npm**: `v9.0.0` or higher (or `pnpm` / `yarn`)
+- **Node.js** `v18+` & **npm** `v9+`
 
-### Setup Instructions
+### Run Locally
+```bash
+git clone https://github.com/ahmed-el-bialy/my-portfolio.git
+cd my-portfolio
+npm install
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000).
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/ahmed-el-bialy/portfolio.git
-   cd portfolio
-   ```
-
-2. **Install project dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Start local development server:**
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-4. **Verify type safety and linting:**
-   ```bash
-   npm run lint
-   ```
-
-5. **Build for production:**
-   ```bash
-   npm run build
-   ```
+### Verify TypeScript & Production Build
+```bash
+npm run lint    # tsc --noEmit
+npm run build   # Vite production bundle
+npm start       # Run Express production server on port 3000
+```
 
 ---
 
-## 📬 Connect & Direct Inquiries
+## 📬 Direct Channels
 
-- **Engineer:** Ahmed El-Bialy
 - **Email:** [ah.elbialy.dev@gmail.com](mailto:ah.elbialy.dev@gmail.com)
-- **Phone / WhatsApp:** [+20 102 212 1573](https://wa.me/201022121573)
+- **WhatsApp / Phone:** [+20 102 212 1573](https://wa.me/201022121573)
 - **Google Play:** [Revio on Play Store](https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US)
-- **GitHub:** [@ahmed-el-bialy](https://github.com/ahmed-el-bialy)
 - **LinkedIn:** [linkedin.com/in/ahmedel-bialy](https://www.linkedin.com/in/ahmedel-bialy/)
-- **YouTube:** [@ahmedel-bialy](https://youtube.com/@ahmedel-bialy)
+- **GitHub:** [@ahmed-el-bialy](https://github.com/ahmed-el-bialy)
+- **YouTube:** [@AhmedEl-Bialy](https://www.youtube.com/@AhmedEl-Bialy)
 - **TikTok:** [@ahmedelbialydev](https://www.tiktok.com/@ahmedelbialydev)
 
 ---
 
 <div align="center">
-  <sub>Engineered with precision by Ahmed El-Bialy • © 2026 All Rights Reserved</sub>
+  <sub>Engineered by Ahmed El-Bialy • © 2026 All Rights Reserved</sub>
 </div>

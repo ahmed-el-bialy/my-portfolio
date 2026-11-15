@@ -114,7 +114,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     id: 1,
     name: "Revio",
     full_name: "ahmed-el-bialy/Revio",
-    description: "A dark-themed Flutter flashcard app for efficient learning, featuring flip-card animations, an interactive quiz mode with hints, and full offline CRUD storage via Hive CE. Built with Clean Architecture and Cubit state management. Live on Google Play.",
+    description: "A dark-themed Flutter flashcard app for efficient learning, featuring flip-card animations, an interactive quiz mode with hints, and full offline CRUD storage via Hive. Built with Clean Architecture and Cubit state management. Live on Google Play.",
     html_url: "https://github.com/ahmed-el-bialy/Revio",
     homepage: "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US",
     stargazers_count: 3,

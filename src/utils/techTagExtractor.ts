@@ -154,7 +154,7 @@ const KNOWN_TECH_MAP: Record<string, TechTag> = {
   // Storage & Databases
   'hive-ce': {
     id: 'hive-ce',
-    label: 'Hive CE',
+    label: 'Hive',
     category: 'storage',
     color: '#F59E0B',
     bgLight: 'bg-amber-50',
@@ -365,7 +365,7 @@ export const REPO_README_METADATA: Record<string, RepoReadmeSpecs> = {
     hasCubit: true,
     hasBloc: true,
     architecture: ['Clean Architecture'],
-    storage: ['Hive CE'],
+    storage: ['Hive'],
     apis: [],
     isGooglePlay: true
   },

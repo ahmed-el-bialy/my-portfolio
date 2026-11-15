@@ -6,13 +6,13 @@ interface TechLogoProps {
 }
 
 // Official Online Vector Image Renderer with High-Precision SVG Fallback
-const VectorIcon: React.FC<{ src: string; alt: string; size: number; fallback: React.ReactNode; className?: string }> = ({
-  src,
-  alt,
-  size,
-  fallback,
-  className = '',
-}) => {
+const VectorIcon: React.FC<{
+  src: string;
+  alt: string;
+  size: number;
+  fallback: React.ReactNode;
+  className?: string;
+}> = ({ src, alt, size, fallback, className = '' }) => {
   const [hasError, setHasError] = React.useState(false);
 
   if (hasError) {
@@ -76,8 +76,8 @@ export const AndroidStudioLogo: React.FC<TechLogoProps> = ({ className = '', siz
     className={className}
     fallback={
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#3DDC84" />
-        <path d="M7 11h10v2H7z" fill="#3DDC84" />
+        <circle cx="12" cy="12" r="9.5" stroke="#3DDC84" strokeWidth="1.8" fill="rgba(61,220,132,0.12)" />
+        <path d="M12 6l4 11M12 6L8 17M8.8 14h6.4" stroke="#3DDC84" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
     }
   />
@@ -157,7 +157,7 @@ export const GitLogo: React.FC<TechLogoProps> = ({ className = '', size = 28 }) 
     className={className}
     fallback={
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-        <path d="M21.7 10.8L13.2 2.3a1.7 1.7 0 00-2.4 0l-1.9 1.9 2.4 2.4a2 2 0 012.6 2.6l2.3 2.3a2 2 0 11-1.2 1.2l-2.1-2.1v4.7a2 2 0 11-1.7 0V9.8a2 2 0 01-1.1-2.6L7.7 4.8 2.3 10.2a1.7 1.7 0 000 2.4l8.5 8.5a1.7 1.7 0 002.4 0l8.5-8.5a1.7 1.7 0 000-2.4l-.0-.0z" fill="#F05138" />
+        <path d="M21.7 10.8L13.2 2.3a1.7 1.7 0 00-2.4 0l-1.9 1.9 2.4 2.4a2 2 0 012.6 2.6l2.3 2.3a2 2 0 11-1.2 1.2l-2.1-2.1v4.7a2 2 0 11-1.7 0V9.8a2 2 0 01-1.1-2.6L7.7 4.8 2.3 10.2a1.7 1.7 0 000 2.4l8.5 8.5a1.7 1.7 0 002.4 0l8.5-8.5a1.7 1.7 0 000-2.4z" fill="#F05138" />
       </svg>
     }
   />
@@ -196,71 +196,74 @@ export const SQLiteLogo: React.FC<TechLogoProps> = ({ className = '', size = 28 
   />
 );
 
-// Official BLoC Architecture Pattern Logo
+// Official felangel/bloc Multi-Faceted Isometric Cube Brand Logo
 export const BlocLogo: React.FC<TechLogoProps> = ({ className = '', size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <path d="M12 2L3 7v10l9 5 9-5V7l-9-5z" stroke="#00D9FF" strokeWidth="1.8" strokeLinejoin="round" fill="rgba(0,217,255,0.15)" />
-    <path d="M12 22V12" stroke="#00D9FF" strokeWidth="1.8" strokeLinecap="round" />
-    <path d="M21 7l-9 5-9-5" stroke="#00D9FF" strokeWidth="1.8" strokeLinecap="round" />
-    <circle cx="12" cy="12" r="2.5" fill="#00D9FF" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="BLoC Official Emblem">
+    <path d="M12 2L3.5 6.8v10.4L12 22l8.5-4.8V6.8L12 2z" fill="#00D9FF" fillOpacity="0.16" />
+    <path d="M12 2L3.5 6.8L12 11.6l8.5-4.8L12 2z" fill="#38BDF8" />
+    <path d="M3.5 6.8v10.4L12 22V11.6L3.5 6.8z" fill="#0284C7" />
+    <path d="M20.5 6.8v10.4L12 22V11.6l8.5-4.8z" fill="#00C7FF" />
+    <path d="M12 2L3.5 6.8v10.4L12 22l8.5-4.8V6.8L12 2z" stroke="#7DD3FC" strokeWidth="0.9" strokeLinejoin="round" />
   </svg>
 );
 
-// Official Cubit Logo
+// Official Cubit Emblem (felangel/bloc lightweight state cube with core node)
 export const CubitLogo: React.FC<TechLogoProps> = ({ className = '', size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <path d="M21 16.5V7.5L12 2.5 3 7.5v9l9 5 9-5z" stroke="#22D3EE" strokeWidth="1.8" strokeLinejoin="round" fill="rgba(34,211,238,0.15)" />
-    <path d="M3 7.5l9 5 9-5M12 12.5v9" stroke="#22D3EE" strokeWidth="1.8" strokeLinecap="round" />
-    <path d="M7.5 10l4.5 2.5 4.5-2.5" stroke="#38BDF8" strokeWidth="1.5" strokeLinecap="round" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="Cubit Official Emblem">
+    <path d="M12 2.5L4 7v10l8 4.5 8-4.5V7l-8-4.5z" fill="rgba(34, 211, 238, 0.14)" stroke="#22D3EE" strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="M12 2.5v9m0 0L4 7m8 4.5L20 7" stroke="#38BDF8" strokeWidth="1.4" strokeLinecap="round" />
+    <circle cx="12" cy="12" r="3" fill="#06B6D4" stroke="#E0F2FE" strokeWidth="1.2" />
   </svg>
 );
 
-// Official Hive CE NoSQL Engine
+// Authentic Hive Honeycomb Brand Emblem (Golden Amber Hex Lattice)
 export const HiveLogo: React.FC<TechLogoProps> = ({ className = '', size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <path d="M12 2L3.5 7v10L12 22l8.5-5V7L12 2z" fill="#FFCC00" fillOpacity="0.25" stroke="#FFCC00" strokeWidth="1.8" strokeLinejoin="round" />
-    <path d="M12 6.5l5 3v5l-5 3-5-3v-5l5-3z" fill="#FFCC00" stroke="#FFA000" strokeWidth="1.2" />
-    <circle cx="12" cy="12" r="2" fill="#1A1B22" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="Hive Logo">
+    {/* Top Honeycomb Cell */}
+    <path d="M12 2.2L15.6 4.3v4.2L12 10.6 8.4 8.5V4.3L12 2.2z" fill="#FDB813" />
+    {/* Bottom-Left Honeycomb Cell */}
+    <path d="M8.1 9.1L11.7 11.2v4.2L8.1 17.5 4.5 15.4v-4.2L8.1 9.1z" fill="#FFCA28" />
+    {/* Bottom-Right Honeycomb Cell */}
+    <path d="M15.9 9.1L19.5 11.2v4.2l-3.6 2.1-3.6-2.1v-4.2L15.9 9.1z" fill="#FFA000" />
+    {/* Lower Center Honeycomb Cell */}
+    <path d="M12 15.6L15.4 17.6v3.6L12 23.2l-3.4-2V17.6L12 15.6z" fill="#F59E0B" />
   </svg>
 );
 
-// Official Dio HTTP Client Logo
+// Authentic Dio Dart HTTP Client Emblem (Speed Wave & Packet Bolt)
 export const DioLogo: React.FC<TechLogoProps> = ({ className = '', size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <rect x="2.5" y="4.5" width="19" height="15" rx="3.5" stroke="#0175C2" strokeWidth="1.8" fill="rgba(1,117,194,0.15)" />
-    <path d="M7 12h10M13 8l4 4-4 4" stroke="#29B6F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <circle cx="7" cy="12" r="2" fill="#0175C2" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="Dio Logo">
+    <rect x="2.5" y="3.5" width="19" height="17" rx="4.5" fill="rgba(1, 117, 194, 0.16)" stroke="#0284C7" strokeWidth="1.6" />
+    <path d="M6.5 9.5h8.5l-2.3-2.3M17.5 14.5H9l2.3 2.3" stroke="#38BDF8" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="16.5" cy="9.5" r="1.4" fill="#00C7FF" />
+    <circle cx="7.5" cy="14.5" r="1.4" fill="#027DFD" />
   </svg>
 );
 
-// Official Retrofit Logo
+// Authentic Retrofit API Contract Emblem (@ Annotation & Type-Safe Bridge)
 export const RetrofitLogo: React.FC<TechLogoProps> = ({ className = '', size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <circle cx="12" cy="12" r="9" stroke="#E53935" strokeWidth="1.8" fill="rgba(229,57,53,0.15)" />
-    <path d="M12 7v5l3.5 3.5" stroke="#FF5252" strokeWidth="2" strokeLinecap="round" />
-    <path d="M7 12a5 5 0 018.5-3.5" stroke="#E53935" strokeWidth="1.5" strokeLinecap="round" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="Retrofit Logo">
+    <rect x="3" y="3" width="18" height="18" rx="4" fill="rgba(16, 185, 129, 0.14)" stroke="#10B981" strokeWidth="1.6" />
+    <path d="M8.5 8.5L5.5 12l3 3.5M15.5 8.5l3 3.5-3 3.5" stroke="#34D399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M13 7.5l-2 9" stroke="#10B981" strokeWidth="1.8" strokeLinecap="round" />
   </svg>
 );
 
-// Clean Architecture Onion
+// Clean Architecture Concentric Onion Layers
 export const CleanArchLogo: React.FC<TechLogoProps> = ({ className = '', size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <circle cx="12" cy="12" r="9.5" stroke="#6C63FF" strokeWidth="1.5" fill="rgba(108,99,255,0.08)" />
-    <circle cx="12" cy="12" r="6.5" stroke="#8A82FF" strokeWidth="1.5" fill="rgba(108,99,255,0.15)" strokeDasharray="2 2" />
-    <circle cx="12" cy="12" r="3.5" fill="#6C63FF" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="Clean Architecture">
+    <circle cx="12" cy="12" r="9.5" stroke="#6366F1" strokeWidth="1.5" fill="rgba(99,102,241,0.1)" />
+    <circle cx="12" cy="12" r="6.5" stroke="#38BDF8" strokeWidth="1.5" fill="rgba(56,189,248,0.14)" />
+    <circle cx="12" cy="12" r="3.4" fill="#10B981" />
   </svg>
 );
 
-// Artificial Intelligence / Neural Synapses
+// Artificial Intelligence / Neural Node Mesh
 export const AiLogo: React.FC<TechLogoProps> = ({ className = '', size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <rect x="5" y="5" width="14" height="14" rx="3" stroke="#F43F5E" strokeWidth="1.8" fill="rgba(244,63,94,0.15)" />
-    <path d="M9 12h6M12 9v6" stroke="#FB7185" strokeWidth="2" strokeLinecap="round" />
-    <circle cx="5" cy="5" r="1.5" fill="#F43F5E" />
-    <circle cx="19" cy="5" r="1.5" fill="#F43F5E" />
-    <circle cx="5" cy="19" r="1.5" fill="#F43F5E" />
-    <circle cx="19" cy="19" r="1.5" fill="#F43F5E" />
-    <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#F43F5E" strokeWidth="1.5" strokeLinecap="round" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="AI and CS">
+    <rect x="5.5" y="5.5" width="13" height="13" rx="3" stroke="#F43F5E" strokeWidth="1.6" fill="rgba(244,63,94,0.14)" />
+    <circle cx="12" cy="12" r="2.2" fill="#FB7185" />
+    <path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3" stroke="#F43F5E" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 );
 
@@ -296,12 +299,12 @@ export const TensorFlowLogo: React.FC<TechLogoProps> = ({ className = '', size =
 
 // REST API Vector Logo
 export const RestApiLogo: React.FC<TechLogoProps> = ({ className = '', size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-    <rect x="2" y="5" width="20" height="14" rx="3" stroke="#0284C7" strokeWidth="1.8" fill="rgba(2,132,199,0.12)" />
-    <path d="M6 12h2M10 12h4M16 12h2" stroke="#38BDF8" strokeWidth="2" strokeLinecap="round" />
-    <circle cx="7" cy="12" r="1.5" fill="#0284C7" />
-    <circle cx="12" cy="12" r="1.5" fill="#38BDF8" />
-    <circle cx="17" cy="12" r="1.5" fill="#0284C7" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="REST API">
+    <rect x="2" y="5" width="20" height="14" rx="3.5" stroke="#0284C7" strokeWidth="1.6" fill="rgba(2,132,199,0.12)" />
+    <path d="M6.5 12h11" stroke="#38BDF8" strokeWidth="1.8" strokeLinecap="round" />
+    <circle cx="7" cy="12" r="1.8" fill="#0284C7" />
+    <circle cx="12" cy="12" r="1.8" fill="#38BDF8" />
+    <circle cx="17" cy="12" r="1.8" fill="#0284C7" />
   </svg>
 );
 
@@ -322,13 +325,18 @@ export const TECH_ICON_REGISTRY: Record<
   tensorflow: { component: TensorFlowLogo, color: '#FF6F00', glowRgb: '255, 111, 0', label: 'TensorFlow' },
   bloc: { component: BlocLogo, color: '#00D9FF', glowRgb: '0, 217, 255', label: 'BLoC' },
   cubit: { component: CubitLogo, color: '#22D3EE', glowRgb: '34, 211, 238', label: 'Cubit' },
-  hive: { component: HiveLogo, color: '#FFCC00', glowRgb: '255, 204, 0', label: 'Hive CE' },
+  hive: { component: HiveLogo, color: '#FDB813', glowRgb: '253, 184, 19', label: 'Hive' },
+  hivece: { component: HiveLogo, color: '#FDB813', glowRgb: '253, 184, 19', label: 'Hive' },
   dio: { component: DioLogo, color: '#0175C2', glowRgb: '1, 117, 194', label: 'Dio' },
-  retrofit: { component: RetrofitLogo, color: '#E53935', glowRgb: '229, 57, 53', label: 'Retrofit' },
+  retrofit: { component: RetrofitLogo, color: '#10B981', glowRgb: '16, 185, 129', label: 'Retrofit' },
   sqlite: { component: SQLiteLogo, color: '#003B57', glowRgb: '0, 59, 87', label: 'SQLite' },
   git: { component: GitLogo, color: '#F05138', glowRgb: '240, 81, 56', label: 'Git' },
-  cleanarch: { component: CleanArchLogo, color: '#6C63FF', glowRgb: '108, 99, 255', label: 'Clean Architecture' },
-  cleanarchitecture: { component: CleanArchLogo, color: '#6C63FF', glowRgb: '108, 99, 255', label: 'Clean Architecture' },
+  androidstudio: { component: AndroidStudioLogo, color: '#3DDC84', glowRgb: '61, 220, 132', label: 'Android Studio' },
+  vscode: { component: VSCodeLogo, color: '#007ACC', glowRgb: '0, 122, 204', label: 'VS Code' },
+  postman: { component: PostmanLogo, color: '#FF6C37', glowRgb: '255, 108, 55', label: 'Postman' },
+  figma: { component: FigmaLogo, color: '#A259FF', glowRgb: '162, 89, 255', label: 'Figma' },
+  cleanarch: { component: CleanArchLogo, color: '#6366F1', glowRgb: '99, 102, 241', label: 'Clean Architecture' },
+  cleanarchitecture: { component: CleanArchLogo, color: '#6366F1', glowRgb: '99, 102, 241', label: 'Clean Architecture' },
   api: { component: RestApiLogo, color: '#0284C7', glowRgb: '2, 132, 199', label: 'REST API' },
   restapi: { component: RestApiLogo, color: '#0284C7', glowRgb: '2, 132, 199', label: 'REST API' },
   ai: { component: AiLogo, color: '#F43F5E', glowRgb: '244, 63, 94', label: 'AI / ML' },
@@ -366,7 +374,6 @@ export const TechIconBadge: React.FC<TechIconBadgeProps> = ({
   const iconInfo = getTechIconInfo(id || label);
   const IconComponent = iconInfo ? iconInfo.component : null;
   const brandColor = iconInfo?.color || '#38BDF8';
-  const glowRgb = iconInfo?.glowRgb || '56, 189, 248';
 
   return (
     <span

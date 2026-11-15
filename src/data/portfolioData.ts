@@ -36,6 +36,7 @@ export interface Project {
   links: {
     github: string;
     googlePlay?: string;
+    demoVideoUrl?: string;
     liveDemoUrl?: string;
     playlistUrl?: string;
     releaseUrl?: string;
@@ -218,7 +219,7 @@ export const CERTIFICATES: CertificateItem[] = [
     credentialUrl: "https://drive.google.com/file/d/1lQMnmyIA100YyXLu4jqFdhWluSeig4Pn/view?usp=drive_link",
     badge: "Technical Training",
     description: "Completed hands-on Flutter development training, independently building two full mobile applications (Revio & Quotely) applying Clean Architecture and Cubit state management.",
-    skills: ["Clean Architecture", "Cubit", "Hive CE", "Retrofit", "REST APIs"]
+    skills: ["Clean Architecture", "Cubit", "Hive", "Retrofit", "REST APIs"]
   }
 ];
 
@@ -273,13 +274,13 @@ export const FEATURED_PROJECTS: Project[] = [
     id: 1,
     name: "Revio",
     repoName: "Revio",
-    subtitle: "Published Flutter flashcard app for rapid learning with Hive CE & Cubit",
-    description: "A dark-themed Flutter flashcard and active-recall learning application published live on Google Play. Features 3D flip-card animations, an interactive quiz mode with smart hints, and full offline CRUD storage using Hive CE. Engineered with Clean Architecture and Cubit state management for predictable, scalable state.",
-    technologies: ["Flutter", "Dart", "Cubit", "Hive CE", "Clean Architecture", "Google Play"],
+    subtitle: "Published Flutter flashcard app for rapid learning with Hive & Cubit",
+    description: "A dark-themed Flutter flashcard and active-recall learning application published live on Google Play. Features 3D flip-card animations, an interactive quiz mode with smart hints, and full offline CRUD storage using Hive. Engineered with Clean Architecture and Cubit state management for predictable, scalable state.",
+    technologies: ["Flutter", "Dart", "Cubit", "Hive", "Clean Architecture", "Google Play"],
     features: [
       "Smooth 3D flip-card animation mechanics for active recall studying",
       "Interactive multi-deck quiz mode with contextual hints and scoring",
-      "Full offline local CRUD storage architecture powered by Hive CE",
+      "Full offline local CRUD storage architecture powered by Hive",
       "Strict Clean Architecture separating Domain, Data, and Presentation layers",
       "Optimized battery and memory consumption for prolonged study sessions",
       "Published and actively maintained on Google Play"
@@ -297,9 +298,9 @@ export const FEATURED_PROJECTS: Project[] = [
     architecture: {
       presentationLayer: "Feature-based screens, BlocBuilder/BlocConsumer reactive widgets, custom 3D card rotation matrix transforms.",
       domainLayer: "Pure Dart entities (Flashcard, Deck, QuizResult), use cases (SaveDeck, CalculateRetentionRate, FilterActiveCards).",
-      dataLayer: "Hive CE local box data sources, TypeAdapters for zero-serialization overhead, Repository Pattern implementation.",
+      dataLayer: "Hive local box data sources, TypeAdapters for zero-serialization overhead, Repository Pattern implementation.",
       stateManagementPattern: "Cubit with immutable Freezed-style state unions (Initial, Loading, Loaded, QuizInProgress, QuizCompleted).",
-      storageStrategy: "Offline-first Hive CE (Community Edition) encrypted binary storage with <15ms key-value queries.",
+      storageStrategy: "Offline-first Hive (hive_ce) encrypted binary storage with <15ms key-value queries.",
       networkingStrategy: "Local-only with zero remote latency, ready for optional Firebase cloud backup sync."
     },
     metrics: {

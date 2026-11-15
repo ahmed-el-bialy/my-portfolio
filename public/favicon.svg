@@ -1,74 +1,62 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Solid Deep Black Background matching website_logo -->
-  <rect width="512" height="512" rx="256" fill="#000000" />
+  <defs>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#027DFD" />
+      <stop offset="52%" stop-color="#00C7FF" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+    <linearGradient id="coreBg" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#0b1324" />
+      <stop offset="100%" stop-color="#050811" />
+    </linearGradient>
+    <radialGradient id="topSheen" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#00C7FF" stop-opacity="0.24" />
+      <stop offset="100%" stop-color="#00C7FF" stop-opacity="0" />
+    </radialGradient>
+  </defs>
 
-  <!-- Pure White Konoha Spiral Symbol -->
-  <g transform="translate(10, 0)">
-    <!-- Main Outer Leaf Loop & Stem Tip -->
+  <!-- Outer Luminous Dual Ring -->
+  <circle cx="256" cy="256" r="248" fill="url(#ringGrad)" />
+  <!-- Deep Obsidian Navy Core -->
+  <circle cx="256" cy="256" r="224" fill="url(#coreBg)" stroke="rgba(255,255,255,0.2)" stroke-width="4" />
+  <circle cx="256" cy="256" r="222" fill="url(#topSheen)" />
+
+  <!-- Razor-Sharp Vector Leaf Spiral Emblem (Matching BrandLogoMark) -->
+  <g transform="translate(56, 56) scale(4)">
+    <!-- Left pointed triangular stem -->
     <path
-      d="M 125 350
-         L 90 325
-         L 135 275
-         C 155 200, 220 155, 305 160
-         C 385 165, 430 220, 430 295
-         C 430 375, 370 425, 290 425
-         C 200 425, 135 365, 125 350 Z"
+      d="M27.5 47.5 L15.5 76.5 L41 76.5"
       fill="none"
-      stroke="#ffffff"
-      stroke-width="26"
+      stroke="#FFFFFF"
+      stroke-width="7.8"
       stroke-linecap="round"
       stroke-linejoin="round"
     />
-
-    <!-- Diagonal Stem / Leaf Tip Projection -->
+    <!-- Continuous Leaf spiral flowing outward -->
     <path
-      d="M 370 205
-         L 440 160"
+      d="M52 54
+         C55 54 57.5 51.5 57.5 48
+         C57.5 42.5 52 38.5 46 39
+         C38.5 39.5 34 46.5 34.5 54.5
+         C35.2 65.5 44.5 73.5 56 73
+         C69.5 72.5 79.5 61.5 79 47.5
+         C78.5 32.5 66 22 50.5 22.5
+         C36 23 27 33 24 44.5
+         L15.5 76.5"
       fill="none"
-      stroke="#ffffff"
-      stroke-width="28"
-      stroke-linecap="round"
-    />
-
-    <!-- Inner Concentric Spiral Swirl 1 -->
-    <path
-      d="M 395 300
-         C 395 360, 350 400, 290 400
-         C 220 400, 168 348, 168 285
-         C 168 220, 218 178, 285 178
-         C 345 178, 385 220, 385 275
-         C 385 330, 345 368, 295 368
-         C 245 368, 210 335, 210 288
-         C 210 250, 240 225, 275 225
-         C 308 225, 330 250, 330 280
-         C 330 305, 310 325, 288 325
-         C 268 325, 255 310, 255 292
-         C 255 278, 268 268, 282 268"
-      fill="none"
-      stroke="#ffffff"
-      stroke-width="22"
+      stroke="#FFFFFF"
+      stroke-width="7.4"
       stroke-linecap="round"
       stroke-linejoin="round"
     />
-
-    <!-- Secondary Brush Swirl Accents for Authentic Texture -->
+    <!-- Signature upper-right leaf tip flick -->
     <path
-      d="M 185 315
-         C 195 365, 240 395, 295 392"
+      d="M65.5 26.5 C73 28 79 27.5 85.5 21"
       fill="none"
-      stroke="#ffffff"
-      stroke-width="8"
+      stroke="#FFFFFF"
+      stroke-width="7.4"
       stroke-linecap="round"
-      opacity="0.85"
-    />
-    <path
-      d="M 370 260
-         C 375 315, 345 358, 295 362"
-      fill="none"
-      stroke="#ffffff"
-      stroke-width="7"
-      stroke-linecap="round"
-      opacity="0.75"
+      stroke-linejoin="round"
     />
   </g>
 </svg>

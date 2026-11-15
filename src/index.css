@@ -262,8 +262,32 @@ html.light .ambient-glow-top {
   body {
     background: #ffffff !important;
     color: #000000 !important;
-    font-size: 11pt !important;
-    line-height: 1.4 !important;
+    font-size: 10.5pt !important;
+    line-height: 1.45 !important;
+  }
+
+  body.printing-resume #root {
+    display: none !important;
+  }
+
+  .resume-printable-overlay {
+    position: static !important;
+    inset: auto !important;
+    padding: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  .resume-printable-sheet {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
   }
 }
 
@@ -296,4 +320,64 @@ html.light .ambient-glow-top {
     background: var(--surface-elevated);
   }
 }
+
+/* =========================================================
+   KINETIC BUTTONS & HIGH-FIDELITY SCREENSHOT SHARPNESS
+   ========================================================= */
+.btn-kinetic {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+.btn-kinetic::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -130%;
+  width: 65%;
+  height: 100%;
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.24) 50%,
+    transparent 100%
+  );
+  transform: skewX(-18deg);
+  transition: left 620ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.btn-kinetic:hover {
+  transform: translateY(-2px);
+}
+
+.btn-kinetic:hover::after {
+  left: 150%;
+}
+
+.btn-kinetic:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.crisp-screenshot {
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-kinetic::after {
+    display: none;
+  }
+  .btn-kinetic:hover,
+  .btn-kinetic:active {
+    transform: none;
+  }
+}
+
 

@@ -577,12 +577,12 @@ export default function App() {
         )}
 
         {/* Clean Obsidian / Light Studio Footer */}
-        <footer className="w-full border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] py-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-600 dark:text-[#94a3b8] transition-colors">
+        <footer className="w-full border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] pt-8 pb-24 md:pb-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-600 dark:text-[#94a3b8] transition-colors">
           <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 w-full">
             <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-start">
               <div>
-                <div className="flex items-center justify-center sm:justify-start gap-2">
-                  <BrandLogoMark sizeClassName="w-7 h-7" />
+                <div className="flex items-center justify-center sm:justify-start gap-2.5 flex-wrap">
+                  <BrandLogoMark sizeClassName="w-8 h-8" />
                   <span className="font-bold text-slate-900 dark:text-[#f1f5f9] text-sm">
                     {AHMED_CONFIG.name[lang]}
                   </span>
@@ -591,7 +591,7 @@ export default function App() {
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1 font-mono text-[11px] tabular-nums">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1.5 font-mono text-[11px] tabular-nums">
                   <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
                     {isOnline
                       ? lang === 'ar'
@@ -617,7 +617,7 @@ export default function App() {
                   type="button"
                   onClick={handleManualRefresh}
                   disabled={isSyncing}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-[#161b27] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-[#f1f5f9] border border-slate-200 dark:border-white/10 text-xs font-mono font-medium transition-colors cursor-pointer disabled:opacity-50"
+                  className="btn-kinetic flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-[#161b27] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-[#f1f5f9] border border-slate-200 dark:border-white/10 text-xs font-mono font-medium transition-colors cursor-pointer disabled:opacity-50"
                   title="Refresh GitHub repository cache"
                 >
                   <RefreshCw
@@ -636,7 +636,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsTerminalOpen(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-[#161b27] hover:border-[#027DFD] text-slate-700 dark:text-[#94a3b8] border border-slate-200 dark:border-white/10 text-xs font-mono transition-colors cursor-pointer"
+                  className="btn-kinetic flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-[#161b27] hover:border-[#027DFD] text-slate-700 dark:text-[#94a3b8] border border-slate-200 dark:border-white/10 text-xs font-mono transition-colors cursor-pointer"
                   title="Open Terminal Inspector (or type ahmed)"
                   aria-label="Open CLI Inspector"
                 >

@@ -366,6 +366,129 @@ async function startServer() {
     }
   });
 
+  // Cached Google Play Store Metadata Proxy (zero API keys required, 1h TTL + honest fallback)
+  const PLAYSTORE_CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
+  const playStoreCache = new Map<string, { timestamp: number; data: any }>();
+
+  app.get('/api/playstore/app', async (req, res) => {
+    const appId = String(req.query.id || 'com.ahmed.revio').trim() || 'com.ahmed.revio';
+    if (!/^[a-zA-Z0-9._-]+$/.test(appId)) {
+      return res.status(400).json({ success: false, error: 'Invalid Google Play package id' });
+    }
+
+    const forceRefresh = req.query.refresh === '1';
+    const cached = playStoreCache.get(appId);
+
+    if (!forceRefresh && cached && Date.now() - cached.timestamp < PLAYSTORE_CACHE_TTL_MS) {
+      return res.json({
+        success: true,
+        cached: true,
+        ...cached.data,
+      });
+    }
+
+    const storeUrl = `https://play.google.com/store/apps/details?id=${encodeURIComponent(appId)}&hl=en&gl=US`;
+
+    try {
+      const response = await fetch(storeUrl, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept-Language': 'en-US,en;q=0.9',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+      });
+
+      if (!response.ok) {
+        if (cached) {
+          return res.json({ success: true, cached: true, stale: true, ...cached.data });
+        }
+        return res.json({
+          success: true,
+          appId,
+          storeUrl,
+          isLive: true,
+          downloads: null,
+          rating: null,
+          reviewsCount: null,
+          version: null,
+          fallback: true,
+          fetchedAt: new Date().toISOString(),
+        });
+      }
+
+      const html = await response.text();
+
+      // Extract structured fields safely from Google Play public HTML
+      const titleMatch = html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i);
+      const title = titleMatch?.[1]?.replace(/\s*-\s*Apps on Google Play$/i, '').trim() || 'Revio';
+
+      // Star rating from aria-label or aggregateRating JSON
+      const ratingAriaMatch = html.match(/aria-label="Rated\s+([0-9]+(?:\.[0-9]+)?)\s+stars\s+out\s+of\s+five/i);
+      const ratingJsonMatch = html.match(/"ratingValue"\s*:\s*"?([0-9]+(?:\.[0-9]+)?)"?/i);
+      const rating = ratingAriaMatch?.[1] || ratingJsonMatch?.[1] || null;
+
+      // Review count from aria-label or ratingCount JSON
+      const reviewsJsonMatch = html.match(/"ratingCount"\s*:\s*"?([0-9,]+)"?/i);
+      const reviewsTextMatch = html.match(/([0-9,.]+[KMB]?)\s+reviews/i);
+      const reviewsCount = reviewsJsonMatch?.[1] || reviewsTextMatch?.[1] || null;
+
+      // Downloads count (e.g., 50+, 100+, 500+, 1K+, 10K+)
+      const downloadsDomMatch = html.match(/>([0-9,.]+[KMB]?\+)<\/div>\s*<div[^>]*>\s*Downloads/i);
+      const downloadsAltMatch = html.match(/Downloads<\/div>\s*<\/div>|>([0-9,.]+[KMB]?\+)\s*<\/div>\s*<div[^>]*>Downloads/i);
+      const downloadsDataMatch = html.match(/\[\["([0-9,.]+[KMB]?\+)",[0-9]+,[0-9]+,"[0-9,.]+[KMB]?\+"\]/);
+      const downloads =
+        downloadsDomMatch?.[1] ||
+        downloadsAltMatch?.[1] ||
+        downloadsDataMatch?.[1] ||
+        null;
+
+      // Current version or Updated on date
+      const updatedMatch = html.match(/Updated on<\/div>\s*<div[^>]*>([^<]+)<\/div>/i);
+      const updatedAt = updatedMatch?.[1]?.trim() || null;
+
+      const payload = {
+        appId,
+        title,
+        storeUrl,
+        isLive: true,
+        downloads,
+        rating,
+        reviewsCount,
+        updatedAt,
+        fallback: false,
+        fetchedAt: new Date().toISOString(),
+      };
+
+      playStoreCache.set(appId, {
+        timestamp: Date.now(),
+        data: payload,
+      });
+
+      return res.json({
+        success: true,
+        cached: false,
+        ...payload,
+      });
+    } catch {
+      if (cached) {
+        return res.json({ success: true, cached: true, stale: true, ...cached.data });
+      }
+      return res.json({
+        success: true,
+        appId,
+        storeUrl,
+        isLive: true,
+        downloads: null,
+        rating: null,
+        reviewsCount: null,
+        updatedAt: null,
+        fallback: true,
+        fetchedAt: new Date().toISOString(),
+      });
+    }
+  });
+
   // Setup Vite middleware in development or static serving in production
   const isProduction = process.env.NODE_ENV === 'production';
 

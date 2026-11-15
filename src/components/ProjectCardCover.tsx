@@ -15,9 +15,12 @@ import {
   FileText,
   Quote,
   Terminal,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { getVerifiedProjectScreenshots } from '../services/githubService';
 import { ImageWithSkeleton } from './ImageWithSkeleton';
+import { useLanguage } from '../context/LanguageContext';
 
 export interface ProjectCardCoverProps {
   repoName: string;
@@ -27,6 +30,8 @@ export interface ProjectCardCoverProps {
   description?: string | null;
   topics?: string[];
   isCardHovered?: boolean;
+  aspectClassName?: string;
+  compactMode?: boolean;
 }
 
 export interface ProjectBlueprintSpec {
@@ -47,11 +52,11 @@ const KNOWN_BLUEPRINTS: Record<string, ProjectBlueprintSpec> = {
   revio: {
     appTitle: 'Revio',
     genre: 'Flashcards & Active Recall',
-    categoryBadge: 'Published on Google Play',
+    categoryBadge: 'Google Play App',
     badgeIcon: Sparkles,
     tagline: 'Interactive 3D Flashcards & Smart Recall Engine',
     architecturePattern: 'Clean Architecture · Domain / Data / UI',
-    coreHighlights: ['Hive CE Offline NoSQL', 'Cubit State Machine', '3D Card Flip Engine'],
+    coreHighlights: ['Hive Offline NoSQL', 'Cubit State Machine', '3D Card Flip Engine'],
     performanceBadge: 'Offline-First CRUD',
     accentColor: '#10B981',
     secondaryAccent: '#059669',
@@ -60,7 +65,7 @@ const KNOWN_BLUEPRINTS: Record<string, ProjectBlueprintSpec> = {
   movura: {
     appTitle: 'Movura',
     genre: 'Cinema & Series Tracker',
-    categoryBadge: 'TMDB API Integration',
+    categoryBadge: 'TMDB API Client',
     badgeIcon: Film,
     tagline: 'Dynamic Entertainment Discovery & YouTube Trailers',
     architecturePattern: 'BLoC Pattern · Reactive Streams',
@@ -143,7 +148,7 @@ const KNOWN_BLUEPRINTS: Record<string, ProjectBlueprintSpec> = {
     tagline: 'Dual-Team Match Tracker & Period Countdown Timer',
     architecturePattern: 'Clean State Machine · Dual Layout',
     coreHighlights: ['Dual-Team Score Modifiers', 'Period Timer', 'Fouls & Timeouts'],
-    performanceBadge: '60 FPS Score Clock',
+    performanceBadge: 'Precision Score Clock',
     accentColor: '#F97316',
     secondaryAccent: '#EA580C',
     glowRgb: '249, 115, 22',
@@ -232,9 +237,9 @@ export function synthesizeProjectBlueprint(
   let genre = `${language || 'Flutter'} Mobile Architecture`;
   let categoryBadge = `${language || 'Dart'} Application`;
   let badgeIcon: React.FC<{ size?: number; className?: string; style?: React.CSSProperties }> = Smartphone;
-  let architecturePattern = 'Clean Architecture · SOLID';
-  let coreHighlights = ['State Management', 'Modular Components', 'Responsive UI'];
-  let performanceBadge = 'Production Standard';
+  const architecturePattern = 'Clean Architecture · SOLID';
+  const coreHighlights = ['State Management', 'Modular Components', 'Responsive UI'];
+  const performanceBadge = 'Production Standard';
 
   if (allText.includes('movie') || allText.includes('film') || allText.includes('cinema')) {
     genre = 'Media & Streaming';
@@ -310,10 +315,15 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   description,
   topics,
   isCardHovered = false,
+  aspectClassName,
+  compactMode = false,
 }) => {
-  const [activeSlide, setActiveSlide] = useState<number>(0);
+  const { dir, lang } = useLanguage();
+  const [selectedScreenIdx, setSelectedScreenIdx] = useState<number>(0);
+  const [showingCoverArt, setShowingCoverArt] = useState<boolean>(false);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [isSelfHovered, setIsSelfHovered] = useState<boolean>(false);
+  const [manualPausedUntil, setManualPausedUntil] = useState<number>(0);
   const isHovered = Boolean(isCardHovered || isSelfHovered);
 
   const blueprint: ProjectBlueprintSpec = useMemo(
@@ -321,17 +331,15 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     [repoName, language, description, topics]
   );
 
-  // Curated verified mobile screenshots for Slide 2 (organized showcase) & Slide 3 (alternate mockup angle)
   const verifiedScreenshots = useMemo(() => {
     const curated = getVerifiedProjectScreenshots(repoName);
-    if (curated.length > 0) return curated;
+    if (curated.length > 0) return curated.slice(0, 5);
     if (coverUrl && !isStrictScreenshotsCoverUrl(coverUrl)) {
       return [coverUrl];
     }
     return [];
   }, [repoName, coverUrl]);
 
-  // Verify real cover.png availability for Slide 0
   useEffect(() => {
     let isCancelled = false;
     const candidates = [
@@ -366,252 +374,345 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     };
   }, [repoName, coverUrl]);
 
-  // Strictly max 3 slides:
-  // Slide 0: Store Cover / Architectural Cover Mockup
-  // Slide 1: Organized Screenshots Collage (if >= 1 verified screenshot)
-  // Slide 2: Secondary Mockup Angle (if >= 2 verified screenshots)
-  const totalSlides = useMemo(() => {
-    if (verifiedScreenshots.length >= 2) return 3;
-    if (verifiedScreenshots.length === 1) return 2;
-    return 1;
-  }, [verifiedScreenshots.length]);
-
   useEffect(() => {
-    if (activeSlide >= totalSlides) {
-      setActiveSlide(0);
-    }
-  }, [totalSlides, activeSlide]);
+    setSelectedScreenIdx(0);
+    setShowingCoverArt(false);
+  }, [repoName]);
 
-  // Auto-play with Hover Pause
+  const totalScreens = verifiedScreenshots.length;
+
+  // Gentle auto-cycle across screens ONLY when not hovered and not manually clicked recently
   useEffect(() => {
-    if (totalSlides <= 1 || isHovered) return;
+    if (totalScreens <= 1 || isHovered || showingCoverArt) return;
+    if (Date.now() < manualPausedUntil) return;
 
     const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % totalSlides);
-    }, 3600);
+      if (Date.now() < manualPausedUntil) return;
+      setSelectedScreenIdx((prev) => (prev + 1) % totalScreens);
+    }, 4600);
 
     return () => clearInterval(timer);
-  }, [totalSlides, isHovered]);
+  }, [totalScreens, isHovered, showingCoverArt, manualPausedUntil]);
+
+  const selectScreen = (idx: number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setShowingCoverArt(false);
+    setSelectedScreenIdx(idx);
+    setManualPausedUntil(Date.now() + 9000);
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (totalScreens <= 1) return;
+    setShowingCoverArt(false);
+    setSelectedScreenIdx((prev) => (prev + 1) % totalScreens);
+    setManualPausedUntil(Date.now() + 9000);
+  };
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (totalScreens <= 1) return;
+    setShowingCoverArt(false);
+    setSelectedScreenIdx((prev) => (prev - 1 + totalScreens) % totalScreens);
+    setManualPausedUntil(Date.now() + 9000);
+  };
 
   const BadgeIcon = blueprint.badgeIcon;
-  const collageScreens = verifiedScreenshots.slice(0, 3);
-  const spotlightScreen = verifiedScreenshots[1] || verifiedScreenshots[0];
+  const activeScreenUrl = verifiedScreenshots[selectedScreenIdx] || verifiedScreenshots[0];
+  const containerHeightClass =
+    aspectClassName ||
+    (compactMode
+      ? 'h-[260px] sm:h-[280px]'
+      : 'h-[320px] sm:h-[365px] lg:h-[385px]');
 
   return (
     <div
-      className="relative w-full aspect-[16/9.5] sm:aspect-[16/9] bg-slate-100 dark:bg-[#080b14] overflow-hidden select-none border-b border-slate-200/90 dark:border-white/10 group/cover transition-colors duration-300"
+      className={`relative w-full ${containerHeightClass} bg-slate-100 dark:bg-[#070a12] overflow-hidden select-none border-b border-slate-200/90 dark:border-white/10 group/cover transition-colors duration-300`}
       onMouseEnter={() => setIsSelfHovered(true)}
       onMouseLeave={() => setIsSelfHovered(false)}
-      onClick={(e) => {
-        if (totalSlides > 1) {
-          e.stopPropagation();
-          setActiveSlide((prev) => (prev + 1) % totalSlides);
-        }
-      }}
-      title={`${blueprint.appTitle} (${activeSlide + 1}/${totalSlides})`}
+      title={`${blueprint.appTitle} — ${blueprint.categoryBadge}`}
     >
-      <AnimatePresence mode="wait">
-        {/* SLIDE 0: Store Cover Artwork or Clean Mockup */}
-        {activeSlide === 0 && (
-          <motion.div
-            key="slide-cover"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.45, ease: 'easeInOut' }}
-            className="absolute inset-0 flex flex-col justify-between"
-          >
-            {coverImageUrl ? (
-              <div className="relative w-full h-full bg-slate-900">
-                <ImageWithSkeleton
-                  src={coverImageUrl}
-                  alt={`${blueprint.appTitle} Store Cover`}
-                  loading="eager"
-                  className="w-full h-full object-cover object-center transition-transform duration-700 group-hover/cover:scale-[1.03]"
-                />
-                <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none" />
-                <div className="absolute bottom-3 start-4 end-4 flex items-center justify-between text-[11px] font-medium text-white/90 pointer-events-none">
-                  <span>{blueprint.categoryBadge}</span>
-                  <span className="font-mono text-[10px] opacity-80">{blueprint.performanceBadge}</span>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div
-                  className="absolute inset-0 pointer-events-none opacity-100 dark:opacity-0 transition-opacity duration-300"
-                  style={{
-                    background: `radial-gradient(ellipse 75% 60% at 50% 15%, rgba(${blueprint.glowRgb}, 0.08) 0%, transparent 65%), linear-gradient(135deg, rgba(${blueprint.glowRgb}, 0.05) 0%, #ffffff 48%, #f8fafc 100%)`,
-                  }}
-                />
-                <div
-                  className="absolute inset-0 pointer-events-none opacity-0 dark:opacity-100 transition-opacity duration-300"
-                  style={{
-                    background: `radial-gradient(ellipse 80% 65% at 50% 12%, rgba(${blueprint.glowRgb}, 0.14) 0%, transparent 65%), linear-gradient(135deg, rgba(${blueprint.glowRgb}, 0.08) 0%, #090d1a 45%, #05070e 100%)`,
-                  }}
-                />
+      {/* Ambient Radial Illumination */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 transition-opacity duration-500"
+        style={{
+          backgroundImage: `radial-gradient(ellipse 80% 70% at 38% 18%, rgba(${blueprint.glowRgb}, 0.2), transparent 72%)`,
+        }}
+      />
 
-                {/* Top Metadata Strip (Clean unboxed hairline text, zero pulsing dots) */}
-                <div className="relative z-10 flex items-center justify-between gap-2 px-4 sm:px-5 pt-3.5 sm:pt-4 text-[11px] font-medium">
-                  <span className="truncate font-semibold" style={{ color: blueprint.accentColor }}>
-                    {blueprint.categoryBadge}
-                  </span>
-                  <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 shrink-0">
-                    {blueprint.performanceBadge}
-                  </span>
-                </div>
-
-                {/* Brand Emblem + Title */}
-                <div className="relative z-10 px-4 sm:px-5 my-auto flex items-center gap-3.5 sm:gap-4">
-                  <div
-                    className="shrink-0 w-13 h-13 sm:w-15 sm:h-15 rounded-2xl p-[1.5px] shadow-md"
-                    style={{
-                      background: `linear-gradient(135deg, ${blueprint.accentColor}, ${blueprint.secondaryAccent})`,
-                    }}
-                  >
-                    <div className="w-full h-full rounded-[14px] bg-white dark:bg-[#0a0d18] flex items-center justify-center">
-                      <BadgeIcon size={25} style={{ color: blueprint.accentColor }} />
-                    </div>
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
-                      {blueprint.appTitle}
-                    </h3>
-                    <p className="text-xs font-semibold truncate mt-0.5" style={{ color: blueprint.accentColor }}>
-                      {blueprint.genre}
-                    </p>
-                    <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-1 mt-0.5">
-                      {blueprint.tagline}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Bottom Architecture Shelf */}
-                <div className="relative z-10 px-4 sm:px-5 py-2.5 bg-slate-100/90 dark:bg-[#05070d]/90 border-t border-slate-200/80 dark:border-white/8 flex items-center justify-between text-[11px]">
-                  <span className="font-mono text-[10px] text-slate-600 dark:text-slate-300 truncate">
-                    {blueprint.architecturePattern}
-                  </span>
-                  <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
-                    01 / 0{totalSlides}
-                  </span>
-                </div>
-              </>
+      {/* MODE 1: REPOSITORY BANNER COVER IMAGE (Optional toggle when available) */}
+      {showingCoverArt && coverImageUrl ? (
+        <div className="relative w-full h-full bg-slate-950">
+          <ImageWithSkeleton
+            src={coverImageUrl}
+            alt={`${blueprint.appTitle} Cover`}
+            loading="eager"
+            className="w-full h-full object-cover object-center transition-transform duration-700 group-hover/cover:scale-[1.03]"
+          />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/80 via-black/35 to-transparent pointer-events-none" />
+          <div className="absolute bottom-3 start-4 end-4 flex items-center justify-between gap-2 z-20">
+            <span className="text-xs font-semibold text-white/95 truncate">
+              {blueprint.appTitle} · {blueprint.categoryBadge}
+            </span>
+            {totalScreens > 0 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowingCoverArt(false);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white text-[11px] font-semibold backdrop-blur-xs cursor-pointer"
+              >
+                {lang === 'ar' ? 'عرض الشاشات' : 'Show App Screens'}
+              </button>
             )}
-          </motion.div>
-        )}
-
-        {/* SLIDE 1: Organized Screenshots Collage */}
-        {activeSlide === 1 && collageScreens.length > 0 && (
-          <motion.div
-            key="slide-collage"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.45, ease: 'easeInOut' }}
-            className="absolute inset-0 flex flex-col justify-between p-3 sm:p-4 bg-slate-100 dark:bg-[#070a13]"
-            style={{
-              backgroundImage: `radial-gradient(ellipse 75% 65% at 50% 0%, rgba(${blueprint.glowRgb}, 0.12), transparent 70%)`,
-            }}
-          >
-            <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400 px-1">
-              <span className="font-semibold text-slate-700 dark:text-slate-200">
-                {blueprint.appTitle} · App Screens
-              </span>
-              <span>02 / 0{totalSlides}</span>
-            </div>
-
-            <div className="flex-1 flex items-center justify-center gap-2 sm:gap-3 pt-1 pb-3 overflow-hidden">
-              {collageScreens.map((screenUrl, sIdx) => (
-                <div
-                  key={screenUrl}
-                  className={`relative h-[88%] aspect-[9/17.5] rounded-xl overflow-hidden bg-slate-950 border border-slate-300/80 dark:border-white/15 shadow-lg transition-transform duration-300 ${
-                    collageScreens.length >= 2 && sIdx === 1 ? '-translate-y-1 scale-[1.04] z-10' : 'opacity-95'
-                  }`}
-                >
-                  <ImageWithSkeleton
-                    src={screenUrl}
-                    alt={`${blueprint.appTitle} screen ${sIdx + 1}`}
-                    className="w-full h-full object-cover object-top"
-                    loading="eager"
-                  />
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* SLIDE 2: Secondary Mockup Angle */}
-        {activeSlide === 2 && spotlightScreen && (
-          <motion.div
-            key="slide-mockup-angle"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.45, ease: 'easeInOut' }}
-            className="absolute inset-0 grid grid-cols-12 items-center gap-3 px-4 sm:px-5 py-3 bg-slate-100 dark:bg-[#070a13]"
-            style={{
-              backgroundImage: `linear-gradient(135deg, rgba(${blueprint.glowRgb}, 0.14) 0%, transparent 65%)`,
-            }}
-          >
-            <div className="col-span-7 flex flex-col justify-center space-y-1.5 min-w-0">
+          </div>
+        </div>
+      ) : activeScreenUrl ? (
+        /* MODE 2: HERO-FIRST LARGE PHONE SCREEN + INTERACTIVE THUMBNAILS */
+        <div className="relative z-10 w-full h-full flex flex-col p-3 sm:p-4">
+          {/* Clean Micro Header */}
+          <div className="flex items-center justify-between gap-2 pb-2 shrink-0">
+            <div className="flex items-center gap-1.5 min-w-0">
               <span
-                className="text-[10px] font-mono font-bold uppercase tracking-wider"
+                className="inline-flex items-center justify-center w-5 h-5 rounded-md border border-slate-300/80 dark:border-white/15 bg-white dark:bg-[#0e1320] shrink-0"
+              >
+                <BadgeIcon size={12} style={{ color: blueprint.accentColor }} />
+              </span>
+              <span
+                className="text-[11px] font-mono font-bold truncate"
                 style={{ color: blueprint.accentColor }}
               >
-                UI Highlight · 03 / 03
+                {blueprint.categoryBadge}
               </span>
-              <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">
-                {blueprint.appTitle}
-              </h4>
-              <ul className="space-y-1 text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-300">
-                {blueprint.coreHighlights.slice(0, 3).map((item) => (
-                  <li key={item} className="flex items-center gap-1.5 truncate">
-                    <span
-                      className="w-1 h-1 rounded-full shrink-0"
-                      style={{ backgroundColor: blueprint.accentColor }}
-                    />
-                    <span className="truncate">{item}</span>
-                  </li>
-                ))}
-              </ul>
             </div>
 
-            <div className="col-span-5 h-full flex items-center justify-center">
-              <div className="h-[90%] aspect-[9/17.5] rounded-xl overflow-hidden bg-slate-950 border-2 border-slate-300 dark:border-white/20 shadow-xl rotate-[3deg] group-hover/cover:rotate-0 transition-transform duration-500">
-                <ImageWithSkeleton
-                  src={spotlightScreen}
-                  alt={`${blueprint.appTitle} feature mockup`}
-                  className="w-full h-full object-cover object-top"
-                  loading="eager"
-                />
+            <div className="flex items-center gap-2 shrink-0">
+              {coverImageUrl && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowingCoverArt(true);
+                  }}
+                  className="text-[10px] font-mono font-semibold text-slate-500 dark:text-slate-400 hover:text-[#027DFD] dark:hover:text-[#00C7FF] cursor-pointer px-1.5 py-0.5 rounded bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10"
+                >
+                  {lang === 'ar' ? 'الغلاف' : 'Cover'}
+                </button>
+              )}
+              {totalScreens > 1 && (
+                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 tabular-nums">
+                  0{selectedScreenIdx + 1} / 0{totalScreens}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Main Split: Large Hero Screen (~62-68%) + Interactive Screen Selector Rail */}
+          <div className="flex-1 min-h-0 grid grid-cols-12 gap-3 sm:gap-4 items-center">
+            {/* Large Primary Hero Phone Showcase */}
+            <div
+              className={`${
+                totalScreens > 1 || !compactMode ? 'col-span-7 sm:col-span-7' : 'col-span-6'
+              } h-full flex items-center justify-center min-h-0 relative`}
+            >
+              <div
+                className="relative h-full max-h-full aspect-[9/18.2] rounded-[22px] sm:rounded-[26px] p-1.5 bg-[#0b0f19] border-2 border-slate-300/90 dark:border-white/20 shadow-[0_20px_45px_rgba(0,0,0,0.45)] transition-transform duration-300 group-hover/cover:scale-[1.02]"
+              >
+                {/* Minimal Speaker Notch */}
+                <div className="absolute top-2.5 left-1/2 -translate-x-1/2 z-20 w-10 h-1.5 rounded-full bg-slate-800/90" />
+
+                <div className="relative w-full h-full rounded-[16px] sm:rounded-[20px] overflow-hidden bg-slate-950">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeScreenUrl}
+                      initial={{ opacity: 0, y: 6, scale: 0.985 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.985 }}
+                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                      className="w-full h-full"
+                    >
+                      <ImageWithSkeleton
+                        src={activeScreenUrl}
+                        alt={`${blueprint.appTitle} hero screen ${selectedScreenIdx + 1}`}
+                        loading="eager"
+                        className="w-full h-full object-cover object-top crisp-screenshot"
+                      />
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              {/* Prev / Next Quick Arrows for Multi-Screen Cards */}
+              {totalScreens > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handlePrev}
+                    aria-label="Previous app screen"
+                    className="opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute start-0 sm:start-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/75 hover:bg-[#027DFD] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
+                  >
+                    {dir === 'rtl' ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    aria-label="Next app screen"
+                    className="opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute end-0 sm:end-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/75 hover:bg-[#027DFD] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
+                  >
+                    {dir === 'rtl' ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Right Interactive Rail: Architecture Snapshot + Selectable Sharp Thumbnails */}
+            <div
+              className={`${
+                totalScreens > 1 || !compactMode ? 'col-span-5 sm:col-span-5' : 'col-span-6'
+              } h-full flex flex-col justify-center gap-2.5 min-w-0`}
+            >
+              <div className="space-y-1 min-w-0">
+                <h4 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-tight truncate">
+                  {blueprint.appTitle}
+                </h4>
+                <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300 line-clamp-2 leading-snug">
+                  {blueprint.tagline}
+                </p>
+              </div>
+
+              {/* Quick Feature Bullet (keeps visual context sharp) */}
+              {!compactMode && (
+                <ul className="hidden sm:block space-y-1 text-[10.5px] text-slate-600 dark:text-slate-400">
+                  {blueprint.coreHighlights.slice(0, 2).map((feat) => (
+                    <li key={feat} className="flex items-center gap-1.5 truncate">
+                      <span
+                        className="w-1.5 h-1.5 rounded-full shrink-0"
+                        style={{ backgroundColor: blueprint.accentColor }}
+                      />
+                      <span className="truncate">{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* Clickable Sharp Screen Thumbnails Grid */}
+              {totalScreens > 1 ? (
+                <div className="space-y-1.5 pt-0.5">
+                  <div className="text-[10px] font-mono font-semibold text-slate-500 dark:text-slate-400">
+                    {lang === 'ar' ? 'تبديل الشاشات:' : 'Tap screen to preview:'}
+                  </div>
+                  <div
+                    className="grid grid-cols-2 sm:grid-cols-2 gap-1.5"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {verifiedScreenshots.slice(0, 4).map((thumbUrl, tIdx) => {
+                      const isActive = selectedScreenIdx === tIdx;
+                      return (
+                        <button
+                          key={thumbUrl}
+                          type="button"
+                          onClick={(e) => selectScreen(tIdx, e)}
+                          aria-label={`Select screen ${tIdx + 1}`}
+                          className={`group/thumb relative h-16 sm:h-20 rounded-xl overflow-hidden bg-slate-950 border-2 transition-all duration-200 cursor-pointer ${
+                            isActive
+                              ? 'border-[#027DFD] dark:border-[#00C7FF] shadow-md scale-[1.03]'
+                              : 'border-slate-300/80 dark:border-white/15 opacity-70 hover:opacity-100 hover:border-slate-400 dark:hover:border-white/35'
+                          }`}
+                        >
+                          <ImageWithSkeleton
+                            src={thumbUrl}
+                            alt={`${blueprint.appTitle} thumbnail ${tIdx + 1}`}
+                            loading="eager"
+                            className="w-full h-full object-cover object-top crisp-screenshot"
+                          />
+                          <span
+                            className={`absolute bottom-1 end-1 px-1 py-0.2 rounded text-[9px] font-mono font-bold ${
+                              isActive
+                                ? 'bg-[#027DFD] text-white'
+                                : 'bg-black/70 text-slate-200'
+                            }`}
+                          >
+                            0{tIdx + 1}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="pt-1">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/80 dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 text-[10px] font-mono font-semibold text-slate-700 dark:text-slate-300">
+                    <Sparkles size={11} style={{ color: blueprint.accentColor }} />
+                    <span>{blueprint.performanceBadge}</span>
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : coverImageUrl ? (
+        <div className="relative w-full h-full bg-slate-900">
+          <ImageWithSkeleton
+            src={coverImageUrl}
+            alt={`${blueprint.appTitle} Store Cover`}
+            loading="eager"
+            className="w-full h-full object-cover object-center transition-transform duration-700 group-hover/cover:scale-[1.03]"
+          />
+          <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+          <div className="absolute bottom-3 start-4 end-4 flex items-center justify-between text-[11px] font-medium text-white/90 pointer-events-none">
+            <span>{blueprint.categoryBadge}</span>
+            <span className="font-mono text-[10px] opacity-80">{blueprint.performanceBadge}</span>
+          </div>
+        </div>
+      ) : (
+        /* MODE 3: ARCHITECTURAL FALLBACK CARD (When no screenshots or cover exist) */
+        <div className="relative w-full h-full flex flex-col justify-between">
+          <div
+            className="relative z-10 flex items-center justify-between gap-2 px-4 sm:px-5 pt-4 text-[11px] font-medium"
+          >
+            <span className="truncate font-semibold" style={{ color: blueprint.accentColor }}>
+              {blueprint.categoryBadge}
+            </span>
+            <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 shrink-0">
+              {blueprint.performanceBadge}
+            </span>
+          </div>
+
+          <div className="relative z-10 px-4 sm:px-5 my-auto flex items-center gap-4">
+            <div
+              className="shrink-0 w-16 h-16 rounded-2xl p-[1.5px] shadow-md"
+              style={{
+                background: `linear-gradient(135deg, ${blueprint.accentColor}, ${blueprint.secondaryAccent})`,
+              }}
+            >
+              <div className="w-full h-full rounded-[14px] bg-white dark:bg-[#0a0d18] flex items-center justify-center">
+                <BadgeIcon size={28} style={{ color: blueprint.accentColor }} />
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* Bottom Interactive Slide Indicators (Clickable Dots) */}
-      {totalSlides > 1 && (
-        <div
-          className="absolute bottom-2 inset-x-0 z-30 flex items-center justify-center gap-1.5"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {Array.from({ length: totalSlides }).map((_, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setActiveSlide(idx);
-              }}
-              aria-label={`View slide ${idx + 1}`}
-              className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                activeSlide === idx
-                  ? 'w-5 bg-blue-500 dark:bg-cyan-400 shadow-xs'
-                  : 'w-1.5 bg-slate-400/70 dark:bg-white/30 hover:bg-slate-600 dark:hover:bg-white/60'
-              }`}
-            />
-          ))}
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
+                {blueprint.appTitle}
+              </h3>
+              <p className="text-xs font-semibold truncate mt-0.5" style={{ color: blueprint.accentColor }}>
+                {blueprint.genre}
+              </p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 mt-1">
+                {blueprint.tagline}
+              </p>
+            </div>
+          </div>
+
+          <div className="relative z-10 px-4 sm:px-5 py-2.5 bg-slate-100/90 dark:bg-[#05070d]/90 border-t border-slate-200/80 dark:border-white/8 flex items-center justify-between text-[11px]">
+            <span className="font-mono text-[10px] text-slate-600 dark:text-slate-300 truncate">
+              {blueprint.architecturePattern}
+            </span>
+            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
+              Clean Arch
+            </span>
+          </div>
         </div>
       )}
     </div>

@@ -150,6 +150,9 @@ export interface Translations {
     actions: {
       playStore: string;
       liveDemo: string;
+      fullDemo: string;
+      watchDemo: string;
+      viewPlaylist: string;
       fullReview: string;
       sourceCode: string;
       downloadApk: string;
@@ -296,9 +299,9 @@ export const translations: Record<Language, Translations> = {
         "Clean Architecture Standards",
         "BLoC & Cubit State Management",
         "Production Google Play Apps",
-        "REST APIs & Offline Storage (Hive CE)",
+        "REST APIs & Offline Storage (Hive)",
       ],
-      bio: "Junior Flutter & Mobile Application Developer dedicated to building robust, scalable cross-platform apps for Android and iOS with Clean Architecture, BLoC/Cubit, offline-first storage (Hive CE), and RESTful API integrations. Creator of 'Revio', published live on Google Play.",
+      bio: "Junior Flutter & Mobile Application Developer dedicated to building robust, scalable cross-platform apps for Android and iOS with Clean Architecture, BLoC/Cubit, offline-first storage (Hive), and RESTful API integrations. Creator of 'Revio', published live on Google Play.",
       exploreApps: "Explore My Apps",
       resumeCv: "Resume / CV",
       downloadCv: "Download CV",
@@ -342,7 +345,7 @@ export const translations: Record<Language, Translations> = {
         },
         maintenance: {
           title: "Bug Fixing & Maintenance",
-          desc: "Performance profiling (60 FPS), memory leak fixes, SDK upgrades, and architecture refactoring.",
+          desc: "DevTools frame profiling, memory leak fixes, SDK upgrades, and architecture refactoring.",
           badge: "Stability & Speed"
         }
       }
@@ -411,6 +414,9 @@ export const translations: Record<Language, Translations> = {
       actions: {
         playStore: "Google Play",
         liveDemo: "Live Demo",
+        fullDemo: "Full Demo",
+        watchDemo: "Watch Demo",
+        viewPlaylist: "View Playlist",
         fullReview: "Full Review",
         sourceCode: "Source Code",
         downloadApk: "Download APK",
@@ -582,7 +588,7 @@ export const translations: Record<Language, Translations> = {
         "معايير الـ Clean Architecture الصارمة",
         "إدارة الحالة المتقدمة بـ BLoC & Cubit",
         "تطبيقات حقيقية منشورة على متجر Google Play",
-        "تكامل الـ REST APIs والتخزين المحلي Hive CE",
+        "تكامل الـ REST APIs والتخزين المحلي عبر Hive",
       ],
       bio: "مطور تطبيقات هواتف جونيور متخصص في Flutter & Dart وطالب ذكاء اصطناعي. أركز على بناء وتطوير تطبيقات جوال متقدمة وعالية الكفاءة لنظامي Android و iOS باتباع معمارية Clean Architecture، وإدارة الحالة BLoC/Cubit، والتخزين الداخلي السريع، والربط بالواجهات البرمجية REST APIs. مبرمج ومطور تطبيق 'Revio' المنشور على متجر Google Play.",
       exploreApps: "استكشف تطبيقاتي",
@@ -628,7 +634,7 @@ export const translations: Record<Language, Translations> = {
         },
         maintenance: {
           title: "إصلاح الأخطاء والصيانة",
-          desc: "تحسين سلاسة التطبيق 60 FPS، معالجة الـ Bugs، وتحديث الحزم ومعمارية الأكواد.",
+          desc: "تحسين سلاسة الأداء والذاكرة، معالجة الـ Bugs، وتحديث الحزم ومعمارية الأكواد.",
           badge: "أداء واستقرار"
         }
       }
@@ -696,7 +702,10 @@ export const translations: Record<Language, Translations> = {
       sortAlphabetical: "أبجدياً (A-Z)",
       actions: {
         playStore: "متجر Google Play",
-        liveDemo: "العرض الحي",
+        liveDemo: "النسخة المباشرة",
+        fullDemo: "الديمو الكامل",
+        watchDemo: "شاهد الديمو",
+        viewPlaylist: "جميع الفيديوهات",
         fullReview: "المراجعة الشاملة",
         sourceCode: "الكود المصدري",
         downloadApk: "تحميل APK",

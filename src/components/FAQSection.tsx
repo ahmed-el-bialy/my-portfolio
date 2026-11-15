@@ -3,61 +3,72 @@ import { useLanguage } from '../context/LanguageContext';
 import { ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RevealOnScroll } from './RevealOnScroll';
+import { usePlayStoreAppStats } from '../services/playStoreService';
 
 export const FAQSection: React.FC = () => {
   const { lang } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const { data: playStats } = usePlayStoreAppStats('com.ahmed.revio');
+
+  const liveRevioSummaryEn = playStats?.downloads
+    ? `Yes. Revio is officially published on Google Play (${playStats.downloads} downloads${
+        playStats.rating ? `, rated ★ ${playStats.rating}` : ''
+      }) and works 100% offline with Hive persistence and 3D active-recall flashcards.`
+    : 'Yes. Revio (com.ahmed.revio) is officially live on the Google Play Store, built offline-first with Hive persistence, Cubit state management, and 3D active-recall flashcards.';
+
+  const liveRevioSummaryAr = playStats?.downloads
+    ? `نعم، تطبيق Revio منشور رسمياً على متجر Google Play (${playStats.downloads} تحميل${
+        playStats.rating ? ` بتقييم ★ ${playStats.rating}` : ''
+      })، ويعمل بالكامل بدون إنترنت اعتماداً على قاعدة بيانات Hive وبطاقات تذكر ثلاثية الأبعاد.`
+    : 'نعم، تطبيق Revio منشور رسمياً على متجر Google Play (com.ahmed.revio)، ومصمم ليعمل بالكامل بدون إنترنت باستخدام قاعدة بيانات Hive وإدارة الحالة بـ Cubit.';
 
   const faqs = [
     {
       q:
         lang === 'ar'
-          ? 'ما هي التخصصات التقنية الأساسية لأحمد البيلي؟'
-          : 'What are Ahmed El-Bialy’s core technical specializations?',
+          ? 'كيف يبني أحمد البيلي تطبيقات Flutter القابلة للتوسع؟'
+          : 'How does Ahmed architect scalable Flutter applications?',
       a:
         lang === 'ar'
-          ? 'متخصص في تطوير تطبيقات الموبايل باستخدام Flutter و Dart، مع خبرة عملية في Clean Architecture، وإدارة الحالة عبر Cubit و BLoC، والتخزين المحلي بدون إنترنت (Hive CE)، إلى جانب الدراسة الأكاديمية في الذكاء الاصطناعي.'
-          : 'Specializing in Flutter & Dart mobile engineering with Clean Architecture, BLoC & Cubit state management, offline-first NoSQL persistence (Hive CE), and Artificial Intelligence studies.',
+          ? 'أعتمد على فصل الطبقات وفق Clean Architecture (Presentation · Domain · Data) ومبادئ SOLID، مع إدارة الحالة عبر BLoC و Cubit، والربط بالـ REST APIs عبر Dio و Retrofit، والتخزين المحلي بدون إنترنت باستخدام Hive و SQLite.'
+          : 'Every production build enforces strict Clean Architecture boundaries (Presentation, Domain, Data) with SOLID principles—combining BLoC/Cubit reactive streams, Dio/Retrofit REST contracts, and local persistence via Hive and SQLite.',
     },
     {
       q:
         lang === 'ar'
-          ? 'هل التطبيقات منشورة رسمياً على متجر Google Play؟'
-          : 'Are any applications officially published on Google Play?',
-      a:
-        lang === 'ar'
-          ? 'نعم، تطبيق Revio منشور رسمياً على متجر Google Play بتقييم 5.0 نجوم ويعمل بالكامل بدون إنترنت بأداء 60 FPS.'
-          : 'Yes. Revio is live on the Google Play Store with a 5.0 rating, engineered for smooth 60 FPS interactions and complete offline-first functionality.',
+          ? 'ما هي المشاريع المنشورة فعلياً على Google Play؟'
+          : 'Do you have production apps live on Google Play?',
+      a: lang === 'ar' ? liveRevioSummaryAr : liveRevioSummaryEn,
     },
     {
       q:
         lang === 'ar'
-          ? 'ما هي الخدمات المتاحة للشركات وأصحاب المشاريع؟'
-          : 'What mobile development services do you offer?',
+          ? 'كيف تضيف دراستك للذكاء الاصطناعي قيمة لتطوير تطبيقات الموبايل؟'
+          : 'How does your Artificial Intelligence degree complement mobile engineering?',
       a:
         lang === 'ar'
-          ? 'بناء تطبيقات MVP من الصفر، ربط الـ REST APIs عبر Dio/Retrofit، تكامل Firebase (Auth & Firestore)، تجهيز والنشر الكامل على Google Play، وتحسين الأداء وصيانة الأكواد.'
-          : 'End-to-end Flutter MVP builds, REST API integrations via Dio/Retrofit, Firebase backend integration, Google Play AAB release publishing, and codebase refactoring.',
+          ? 'دراستي في كلية الذكاء الاصطناعي بجامعة كفر الشيخ تعزز تفكيري في هياكل البيانات والخوارزميات وهندسة الأنظمة، وتمنحني جاهزية عملية لدمج ميزات ذكية وتحليلات في تطبيقات الموبايل مستقبلاً.'
+          : 'Studying Artificial Intelligence at Kafrelsheikh University strengthens my command of algorithms, data modeling, and problem decomposition—making state machines cleaner and preparing apps smoothly for AI-assisted workflows.',
     },
     {
       q:
         lang === 'ar'
-          ? 'كيف يتم ضمان جودة الكود وقابليته للتوسع؟'
-          : 'How do you structure apps for maintainability and scale?',
+          ? 'هل أنت متاح لوظائف بدوام كامل أو عن بُعد أو لمشاريع مستقلة؟'
+          : 'Are you open to full-time Flutter roles, remote teams, or freelance MVPs?',
       a:
         lang === 'ar'
-          ? 'تطبيق صارم لفصل الطبقات (Presentation, Domain, Data) وفق Clean Architecture ومبادئ SOLID مع فصل منطق الأعمال عن الواجهات.'
-          : 'Every production codebase separates Presentation, Domain, and Data layers under Clean Architecture and SOLID principles so features scale cleanly without regressions.',
+          ? 'نعم، متاح لفرص العمل كـ Junior Flutter Developer (دوام كامل أو هجين أو عن بُعد مع قابلية للانتقال داخل مصر أو خارجها)، بالإضافة إلى تطوير تطبيقات MVP كاملة للشركات الناشئة حتى النشر على Google Play.'
+          : 'Yes—I am actively open to Junior Flutter Developer roles (full-time, remote, or relocation) as well as end-to-end freelance MVP development, Firebase/API integration, and Google Play release publishing.',
     },
     {
       q:
         lang === 'ar'
-          ? 'كيف يمكنني البدء أو حجز مكالمة تقنية؟'
-          : 'How can we get started or schedule a call?',
+          ? 'كيف يمكنني مشاهدة عروض التطبيقات أو حجز مكالمة تقنية؟'
+          : 'How can I review demos or schedule a technical call?',
       a:
         lang === 'ar'
-          ? 'يمكنك حجز جلسة فورية لمدة 15 أو 30 أو 45 دقيقة من بطاقة المواعيد أعلاه، أو إرسال رسالة مختصرة وسأرد خلال 24 ساعة.'
-          : 'Pick a 15, 30, or 45-minute slot via the consultation card above, send a quick message in the inquiry form, or reach out directly on WhatsApp.',
+          ? 'داخل كل مشروع يمكنك الضغط على «شاهد الديمو» لمشاهدة أحدث تحديث فيديو أو «الديمو الكامل» لاستعراض قائمة التشغيل الكاملة، أو حجز جلسة 15–45 دقيقة مباشرة من قسم التواصل.'
+          : 'Each project card lets you inspect live screens right away and open "Watch Demo" for update previews or "Full Demo" for complete playlists. Ready to talk? Book a 15–45 minute call via the consultation scheduler.',
     },
   ];
 
@@ -80,41 +91,41 @@ export const FAQSection: React.FC = () => {
           const isOpen = openIndex === idx;
           return (
             <RevealOnScroll key={idx} delay={idx * 0.04}>
-              <div className="rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 overflow-hidden transition-colors hover:border-[#027DFD]/40">
-              <button
-                type="button"
-                onClick={() => setOpenIndex(isOpen ? null : idx)}
-                className="w-full flex items-center justify-between gap-3 p-4 sm:p-5 text-start font-bold text-slate-900 dark:text-white text-sm sm:text-base cursor-pointer focus-visible:outline-none"
-                aria-expanded={isOpen}
-              >
-                <span className="flex items-center gap-3 min-w-0">
-                  <span className="font-mono tabular-nums text-xs font-bold text-blue-600 dark:text-cyan-400 shrink-0">
-                    0{idx + 1}.
+              <div className="rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 overflow-hidden transition-all duration-200 hover:border-[#027DFD]/40 hover:shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setOpenIndex(isOpen ? null : idx)}
+                  className="w-full flex items-center justify-between gap-3 p-4 sm:p-5 text-start font-bold text-slate-900 dark:text-white text-sm sm:text-base cursor-pointer focus-visible:outline-none"
+                  aria-expanded={isOpen}
+                >
+                  <span className="flex items-center gap-3 min-w-0">
+                    <span className="font-mono tabular-nums text-xs font-bold text-blue-600 dark:text-cyan-400 shrink-0">
+                      0{idx + 1}.
+                    </span>
+                    <span>{faq.q}</span>
                   </span>
-                  <span>{faq.q}</span>
-                </span>
-                <ChevronDown
-                  size={17}
-                  className={`text-slate-500 dark:text-slate-400 transition-transform duration-200 shrink-0 ${
-                    isOpen ? 'rotate-180 text-blue-600 dark:text-cyan-400' : ''
-                  }`}
-                />
-              </button>
+                  <ChevronDown
+                    size={17}
+                    className={`text-slate-500 dark:text-slate-400 transition-transform duration-200 shrink-0 ${
+                      isOpen ? 'rotate-180 text-blue-600 dark:text-cyan-400' : ''
+                    }`}
+                  />
+                </button>
 
-              <AnimatePresence initial={false}>
-                {isOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.22, ease: 'easeInOut' }}
-                  >
-                    <div className="px-4 pb-5 sm:px-5 sm:pb-5 pt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-white/8">
-                      {faq.a}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.22, ease: 'easeInOut' }}
+                    >
+                      <div className="px-4 pb-5 sm:px-5 sm:pb-5 pt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-white/8">
+                        {faq.a}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </RevealOnScroll>
           );

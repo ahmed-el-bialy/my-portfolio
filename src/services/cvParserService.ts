@@ -34,7 +34,7 @@ export interface ParsedProfileData {
 const DEFAULT_PARSED_DATA: ParsedProfileData = {
   name: "Ahmed El-Bialy",
   title: "Junior Flutter & Cross-Platform Mobile Developer",
-  email: "elbailyahmed47@gmail.com",
+  email: "ah.elbialy.dev@gmail.com",
   phone: "+20 102 212 1573",
   location: "El Mansoura, Egypt",
   githubUsername: "ahmed-el-bialy",

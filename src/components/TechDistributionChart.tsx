@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { Code2, Sparkles, FolderGit2 } from 'lucide-react';
+import { Code2 } from 'lucide-react';
 
 interface LanguageStat {
   name: string;
@@ -15,87 +15,74 @@ interface TechDistributionChartProps {
 
 export const TechDistributionChart: React.FC<TechDistributionChartProps> = ({ languages }) => {
   const [hoveredLang, setHoveredLang] = useState<LanguageStat | null>(null);
-  const { lang, dir } = useLanguage();
+  const { lang } = useLanguage();
 
   if (!languages || languages.length === 0) return null;
 
   const totalRepos = languages.reduce((acc, curr) => acc + curr.count, 0);
 
   return (
-    <div className="mt-3.5 pt-3.5 border-t border-slate-100 dark:border-white/5 transition-colors">
-      <div className="flex items-center justify-between gap-2 mb-2.5">
-        <div className="flex items-center gap-1.5 xs:gap-2">
-          <Code2 size={14} className="text-cyan-500 shrink-0" />
-          <span className="text-[11px] xs:text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
-            {lang === 'ar' ? 'توزيع التقنيات البرمجية للمستودعات' : 'Repository Stack Distribution'}
+    <div className="mt-5 pt-4 border-t border-slate-200/75 dark:border-white/8 transition-colors">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+        <div className="flex items-center gap-2">
+          <Code2 size={14} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
+          <span className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
+            {lang === 'ar' ? 'توزيع اللغات البرمجية عبر المستودعات' : 'Repository Language Breakdown'}
           </span>
         </div>
-        <span className="text-[10px] xs:text-[11px] font-mono text-slate-500 dark:text-gray-400">
-          {lang === 'ar' ? 'تركيز رئيسي على بيئة Dart & Flutter' : 'Dart Ecosystem Focused'}
+        <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+          {hoveredLang
+            ? `${hoveredLang.name}: ${hoveredLang.percentage}% (${hoveredLang.count} / ${totalRepos})`
+            : lang === 'ar'
+            ? 'تركيز أساسي على Dart & Flutter'
+            : 'Dart & Flutter ecosystem primary'}
         </span>
       </div>
 
-      {/* GitHub-style Segmented Progress Bar */}
-      <div className="relative w-full h-3.5 rounded-full overflow-hidden bg-slate-100 dark:bg-white/10 flex p-0.5 border border-slate-200/80 dark:border-white/10 shadow-inner">
-        {languages.map((l, idx) => (
+      {/* Segmented Clean Bar */}
+      <div className="relative w-full h-2.5 rounded-full overflow-hidden bg-slate-100 dark:bg-white/10 flex gap-[2px] p-[1px] border border-slate-200/80 dark:border-white/10">
+        {languages.map((l) => (
           <div
             key={l.name}
             onMouseEnter={() => setHoveredLang(l)}
             onMouseLeave={() => setHoveredLang(null)}
-            className={`h-full transition-all duration-300 relative cursor-pointer ${
-              idx === 0 ? 'rounded-l-full' : ''
-            } ${idx === languages.length - 1 ? 'rounded-r-full' : ''}`}
+            className="h-full rounded-full transition-all duration-200 cursor-pointer"
             style={{
-              width: `${Math.max(l.percentage, 2)}%`,
+              width: `${Math.max(l.percentage, 3)}%`,
               backgroundColor: l.color || '#00B4AB',
-              opacity: hoveredLang && hoveredLang.name !== l.name ? 0.45 : 1,
-              transform: hoveredLang?.name === l.name ? 'scaleY(1.15)' : 'none',
+              opacity: hoveredLang && hoveredLang.name !== l.name ? 0.35 : 1,
             }}
             title={`${l.name}: ${l.percentage}% (${l.count} repos)`}
           />
         ))}
       </div>
 
-      {/* Interactive Details / Hover Card / Legend Chips */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mt-2.5">
-        <div className="flex flex-wrap items-center gap-2 xs:gap-3">
-          {languages.map((l) => {
-            const isHovered = hoveredLang?.name === l.name;
-            return (
-              <button
-                key={l.name}
-                type="button"
-                onMouseEnter={() => setHoveredLang(l)}
-                onMouseLeave={() => setHoveredLang(null)}
-                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] xs:text-[11px] font-mono transition-all cursor-pointer ${
-                  isHovered
-                    ? 'bg-slate-200/80 dark:bg-white/15 scale-105'
-                    : 'bg-slate-50 dark:bg-white/[0.04] hover:bg-slate-100 dark:hover:bg-white/10'
-                } border border-slate-200 dark:border-white/5`}
-              >
-                <span
-                  className="w-2 h-2 rounded-full shrink-0 shadow-xs"
-                  style={{ backgroundColor: l.color || '#00B4AB' }}
-                />
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {l.name}
-                </span>
-                <span className="text-slate-600 dark:text-gray-400 font-semibold">
-                  {l.percentage}%
-                </span>
-                <span className="text-[9px] text-slate-500 dark:text-gray-400 font-mono">
-                  ({l.count} {lang === 'ar' ? 'مشروع' : (l.count === 1 ? 'repo' : 'repos')})
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {hoveredLang && (
-          <div className="text-[10px] xs:text-[11px] font-mono font-bold text-cyan-600 dark:text-cyan-400 animate-in fade-in duration-150">
-            {hoveredLang.name}: {hoveredLang.percentage}% ({hoveredLang.count} of {totalRepos} repos)
-          </div>
-        )}
+      {/* Clean Unboxed Typographic Legend */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
+        {languages.map((l) => {
+          const isHovered = hoveredLang?.name === l.name;
+          return (
+            <button
+              key={l.name}
+              type="button"
+              onMouseEnter={() => setHoveredLang(l)}
+              onMouseLeave={() => setHoveredLang(null)}
+              className={`inline-flex items-center gap-1.5 text-xs font-mono transition-opacity cursor-pointer ${
+                hoveredLang && !isHovered ? 'opacity-55' : 'opacity-100'
+              }`}
+            >
+              <span
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: l.color || '#00B4AB' }}
+              />
+              <span className="font-bold text-slate-900 dark:text-white">{l.name}</span>
+              <span className="text-slate-600 dark:text-slate-300 tabular-nums">{l.percentage}%</span>
+              <span className="text-[10.5px] text-slate-400 dark:text-slate-500">
+                ({l.count})
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
