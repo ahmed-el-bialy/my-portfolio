@@ -21,7 +21,7 @@ const DEFAULT_FALLBACK_STATS = (appId: string): PlayStoreAppStats => ({
   title: 'Revio',
   storeUrl: AHMED_CONFIG.socials.playstore,
   isLive: true,
-  downloads: null,
+  downloads: '10+',
   rating: null,
   reviewsCount: null,
   updatedAt: null,

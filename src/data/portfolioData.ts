@@ -342,6 +342,8 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Movura",
+      liveDemoUrl: "https://youtube.com/shorts/9LCJqMSuZno?si=b-7WUOXY8B0IUahe",
+      playlistUrl: "https://youtube.com/playlist?list=PLGHDB4nGr8K0&si=Bro9Uai9p9glcGuQ",
     },
     highlight: true,
     architecture: {
@@ -389,7 +391,7 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Vibrant-store",
-      liveDemoUrl: "https://youtube.com/shorts/2qito_nmDjM?si=Jut3UuDc8mMpR5G4"
+      liveDemoUrl: "https://youtube.com/shorts/PIg1rYA0CkQ"
     },
     highlight: true,
     architecture: {
@@ -436,7 +438,7 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/Sky-Cast",
-      liveDemoUrl: "https://youtube.com/shorts/u5JjIphdrAM"
+      liveDemoUrl: "https://youtube.com/shorts/u5JjIphdrAM?si=h44HWlZMZki8L_GM"
     },
     architecture: {
       presentationLayer: "Atmospheric weather gradients that adapt dynamically to sunrise, rain, storm, or overcast conditions.",
@@ -482,7 +484,7 @@ export const FEATURED_PROJECTS: Project[] = [
     hasApk: false,
     links: {
       github: "https://github.com/ahmed-el-bialy/News-Cloud",
-      liveDemoUrl: "https://youtube.com/shorts/Sxs8R9YPmBY"
+      liveDemoUrl: "https://youtube.com/shorts/AKbiBjCRIis"
     },
     architecture: {
       presentationLayer: "Bi-directional RTL/LTR news cards, categorical tab bars, and integrated WebKit/Chromium WebView.",

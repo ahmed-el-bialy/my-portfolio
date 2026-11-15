@@ -86,15 +86,18 @@ const KNOWN_REPO_MEDIA: Record<string, { liveDemoUrl?: string; playlistUrl?: str
     liveDemoUrl: "https://youtube.com/shorts/FsG1XUAbmDY?si=lvngji7Uz-EKRROJ",
     playStore: "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US"
   },
-  Movura: {},
+  Movura: {
+    liveDemoUrl: "https://youtube.com/shorts/9LCJqMSuZno?si=b-7WUOXY8B0IUahe",
+    playlistUrl: "https://youtube.com/playlist?list=PLGHDB4nGr8K0&si=Bro9Uai9p9glcGuQ"
+  },
   "Vibrant-store": {
-    liveDemoUrl: "https://youtube.com/shorts/2qito_nmDjM?si=Jut3UuDc8mMpR5G4"
+    liveDemoUrl: "https://youtube.com/shorts/PIg1rYA0CkQ"
   },
   "Sky-Cast": {
-    liveDemoUrl: "https://youtube.com/shorts/u5JjIphdrAM"
+    liveDemoUrl: "https://youtube.com/shorts/u5JjIphdrAM?si=h44HWlZMZki8L_GM"
   },
   "News-Cloud": {
-    liveDemoUrl: "https://youtube.com/shorts/Sxs8R9YPmBY"
+    liveDemoUrl: "https://youtube.com/shorts/AKbiBjCRIis"
   },
   Shaats: {},
   "Nihon-Seed": {
@@ -105,6 +108,9 @@ const KNOWN_REPO_MEDIA: Record<string, { liveDemoUrl?: string; playlistUrl?: str
   },
   "piano-tunes": {
     liveDemoUrl: "https://youtube.com/shorts/9PWzO0_ozQ0"
+  },
+  Quotely: {
+    liveDemoUrl: "https://youtube.com/shorts/Ujw3TKIyTPU?si=YQkRMt36eOruCWhS"
   },
 };
 
@@ -151,6 +157,8 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     size: 8200,
     default_branch: "main",
     coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/cover.png",
+    liveDemoUrl: "https://youtube.com/shorts/9LCJqMSuZno?si=b-7WUOXY8B0IUahe",
+    playlistUrl: "https://youtube.com/playlist?list=PLGHDB4nGr8K0&si=Bro9Uai9p9glcGuQ",
   },
   {
     id: 3,
@@ -170,7 +178,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     size: 4300,
     default_branch: "main",
     coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/cover.png",
-    liveDemoUrl: "https://youtube.com/shorts/2qito_nmDjM?si=Jut3UuDc8mMpR5G4"
+    liveDemoUrl: "https://youtube.com/shorts/PIg1rYA0CkQ"
   },
   {
     id: 4,
@@ -190,7 +198,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     size: 3100,
     default_branch: "main",
     coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cover.png",
-    liveDemoUrl: "https://youtube.com/shorts/u5JjIphdrAM"
+    liveDemoUrl: "https://youtube.com/shorts/u5JjIphdrAM?si=h44HWlZMZki8L_GM"
   },
   {
     id: 5,
@@ -210,7 +218,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     size: 4700,
     default_branch: "main",
     coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/cover.png",
-    liveDemoUrl: "https://youtube.com/shorts/Sxs8R9YPmBY"
+    liveDemoUrl: "https://youtube.com/shorts/AKbiBjCRIis"
   },
   {
     id: 6,
@@ -328,12 +336,13 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     size: 2100,
     default_branch: "main",
     coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/cover.png",
+    liveDemoUrl: "https://youtube.com/shorts/Ujw3TKIyTPU?si=YQkRMt36eOruCWhS"
   }
 ];
 
 export async function fetchGitHubUserStats(username: string = 'ahmed-el-bialy'): Promise<{ stats: GitHubStats; repos: GitHubRepo[] }> {
   const cleanUsername = username.trim() || "ahmed-el-bialy";
-  const cacheKey = `ahmed_gh_cache_v2_${cleanUsername}`;
+  const cacheKey = `ahmed_gh_cache_v3_${cleanUsername}`;
 
   const cached = typeof window !== 'undefined' ? localStorage.getItem(cacheKey) : null;
   let parsedCache: { stats: GitHubStats; repos: GitHubRepo[] } | null = null;
@@ -380,7 +389,7 @@ export async function fetchGitHubUserStats(username: string = 'ahmed-el-bialy'):
       .map((r) => {
         const branch = r.default_branch || "main";
         const primaryCover = `https://raw.githubusercontent.com/${cleanUsername}/${r.name}/${branch}/screenshots/cover.png`;
-        const known = KNOWN_REPO_MEDIA[r.name] || {};
+        const known = KNOWN_REPO_MEDIA[r.name] || KNOWN_REPO_MEDIA[r.name.toLowerCase()] || {};
 
         return {
           id: r.id,
@@ -959,6 +968,7 @@ export function clearAllGitHubLocalCache(): void {
         key &&
         (key.startsWith('gh_') ||
          key.startsWith('ahmed_gh_cache') ||
+         key.startsWith('ahmed_consolidated_gh_') ||
          key.startsWith('releases_cache_') ||
          key.startsWith('live_media_') ||
          key.startsWith('repo-'))
@@ -1425,7 +1435,7 @@ export async function fetchConsolidatedGitHubPortfolio(
   forceRefresh: boolean = false
 ): Promise<ConsolidatedGitHubPortfolio> {
   const cleanUsername = username.trim() || 'ahmed-el-bialy';
-  const cacheKey = `ahmed_consolidated_gh_v1_${cleanUsername}`;
+  const cacheKey = `ahmed_consolidated_gh_v2_${cleanUsername}`;
 
   if (!forceRefresh && typeof window !== 'undefined') {
     try {
@@ -1510,11 +1520,11 @@ export async function fetchConsolidatedGitHubPortfolio(
       }
     }
   } catch {
-    // Fallback below
+    // Fallback below (e.g. static deployments without Express backend)
   }
 
-  // Fallback to previous client-side cache or verified defaults without spamming API calls
-  if (typeof window !== 'undefined') {
+  // Fallback to previous client-side cache if not forcing refresh
+  if (!forceRefresh && typeof window !== 'undefined') {
     try {
       const cachedRaw = localStorage.getItem(cacheKey);
       if (cachedRaw) {
@@ -1529,41 +1539,82 @@ export async function fetchConsolidatedGitHubPortfolio(
     } catch {}
   }
 
+  // Client-direct live README sync for static hosting (Vercel/Netlify/GitHub Pages without server.ts)
+  // raw.githubusercontent.com supports browser CORS and avoids GitHub REST API rate limits.
   const fallbackStatsAndRepos = await fetchGitHubUserStats(cleanUsername);
   const releasesMap: Record<string, RepoReleaseInfo> = {};
   const liveMediaMap: Record<string, RepoLiveMetadata> = {};
 
+  const targetRepos = fallbackStatsAndRepos.repos.slice(0, 15);
+  const directReadmes: Record<string, string | null> = {};
+
+  await Promise.all(
+    targetRepos.map(async (r) => {
+      const branches = Array.from(new Set([r.default_branch || 'main', 'main', 'master']));
+      for (const branch of branches) {
+        try {
+          const rawRes = await fetch(
+            `https://raw.githubusercontent.com/${encodeURIComponent(cleanUsername)}/${encodeURIComponent(r.name)}/${encodeURIComponent(branch)}/README.md`,
+            { cache: forceRefresh ? 'no-store' : 'default' }
+          );
+          if (rawRes.ok) {
+            const text = await rawRes.text();
+            if (text && text.length > 10) {
+              directReadmes[r.name] = text;
+              return;
+            }
+          }
+        } catch {}
+      }
+      directReadmes[r.name] = null;
+    })
+  );
+
   fallbackStatsAndRepos.repos.forEach((r) => {
+    const rawReadme = directReadmes[r.name] || null;
+    const parsedLinks = parseLinksFromReadme(rawReadme);
     const known = KNOWN_REPO_MEDIA[r.name] || KNOWN_REPO_MEDIA[r.name.toLowerCase()] || {};
+
     const meta: RepoLiveMetadata = {
       repoName: r.name,
-      liveDemoUrl: r.liveDemoUrl || known.liveDemoUrl,
-      playlistUrl: r.playlistUrl || known.playlistUrl,
-      googlePlayUrl: r.googlePlayUrl || known.playStore,
-      apkDownloadUrl: r.apkDownloadUrl,
+      liveDemoUrl: parsedLinks.liveDemoUrl || r.liveDemoUrl || known.liveDemoUrl,
+      playlistUrl: parsedLinks.playlistUrl || r.playlistUrl || known.playlistUrl,
+      googlePlayUrl: parsedLinks.playStoreUrl || r.googlePlayUrl || known.playStore,
+      apkDownloadUrl: parsedLinks.apkUrl || r.apkDownloadUrl,
       releaseUrl: r.releaseUrl,
-      hasRelease: Boolean(r.releaseUrl || r.apkDownloadUrl),
+      hasRelease: Boolean(r.releaseUrl || r.apkDownloadUrl || parsedLinks.apkUrl),
+      readmeText: rawReadme ? preprocessReadmeContent(rawReadme) : undefined,
       lastChecked: Date.now(),
     };
+
     liveMediaMap[r.name] = meta;
     liveMediaMap[r.name.toLowerCase()] = meta;
-    if (r.releaseUrl || r.apkDownloadUrl) {
+
+    if (r.releaseUrl || r.apkDownloadUrl || parsedLinks.apkUrl) {
       const rel: RepoReleaseInfo = {
         hasRelease: true,
         releaseUrl: r.releaseUrl,
-        apkDownloadUrl: r.apkDownloadUrl,
+        apkDownloadUrl: parsedLinks.apkUrl || r.apkDownloadUrl,
       };
       releasesMap[r.name] = rel;
       releasesMap[r.name.toLowerCase()] = rel;
     }
   });
 
-  return {
+  const staticConsolidated: ConsolidatedGitHubPortfolio = {
     stats: fallbackStatsAndRepos.stats,
     repos: fallbackStatsAndRepos.repos,
     releasesMap,
     liveMediaMap,
-    isServerCached: true,
+    isServerCached: false,
   };
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), data: staticConsolidated }));
+    } catch {}
+  }
+
+  return staticConsolidated;
 }
 

@@ -35,10 +35,10 @@ Built as a high-craft product showcase combining an Express + Vite backend proxy
 | Application | Highlights & Engineering Scope | Stack & Patterns | Links |
 | :--- | :--- | :--- | :--- |
 | <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/cover.png" width="210" alt="Revio"/><br/>**Revio** | 🌟 **Published on Google Play**<br/>Offline-first flashcard & active-recall learning app with 3D flip mechanics and interactive quiz mode | Clean Architecture, Flutter, Dart, Cubit, Hive, Google Play | [Google Play](https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US) • [GitHub](https://github.com/ahmed-el-bialy/Revio) • [Watch Demo](https://youtube.com/shorts/FsG1XUAbmDY) |
-| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/cover.png" width="210" alt="Movura"/><br/>**Movura** | 🎬 **Movie & Series Discovery**<br/>TMDB API client featuring Sliver parallax headers, shimmer loading, debounced search & YouTube trailers | Clean Architecture, Flutter, BLoC & Cubit, Dio, TMDB API | [GitHub](https://github.com/ahmed-el-bialy/Movura) |
-| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/cover.png" width="210" alt="Vibrant-Store"/><br/>**Vibrant-Store** | 🛒 **E-Commerce Marketplace**<br/>Real-time catalog browsing from DummyJSON API with category chip filtering, wishlist & persistent cart | Flutter, Dart, Service Layer Pattern, REST API, State Management | [GitHub](https://github.com/ahmed-el-bialy/Vibrant-store) • [Watch Demo](https://youtube.com/shorts/2qito_nmDjM) |
+| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/cover.png" width="210" alt="Movura"/><br/>**Movura** | 🎬 **Movie & Series Discovery**<br/>TMDB API client featuring Sliver parallax headers, shimmer loading, debounced search & YouTube trailers | Clean Architecture, Flutter, BLoC & Cubit, Dio, TMDB API | [GitHub](https://github.com/ahmed-el-bialy/Movura) • [Watch Demo](https://youtube.com/shorts/9LCJqMSuZno?si=b-7WUOXY8B0IUahe) • [Full Demo](https://youtube.com/playlist?list=PLGHDB4nGr8K0&si=Bro9Uai9p9glcGuQ) |
+| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/cover.png" width="210" alt="Vibrant-Store"/><br/>**Vibrant-Store** | 🛒 **E-Commerce Marketplace**<br/>Real-time catalog browsing from DummyJSON API with category chip filtering, wishlist & persistent cart | Flutter, Dart, Service Layer Pattern, REST API, State Management | [GitHub](https://github.com/ahmed-el-bialy/Vibrant-store) • [Watch Demo](https://youtube.com/shorts/PIg1rYA0CkQ) |
 | <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cover.png" width="210" alt="Sky-Cast"/><br/>**Sky-Cast** | ⛅ **Climate-Adaptive Weather**<br/>Dynamic atmospheric palettes synced to forecasts with custom `SearchDelegate` city autocomplete | Clean Architecture, Flutter, WeatherAPI, SearchDelegate | [GitHub](https://github.com/ahmed-el-bialy/Sky-Cast) • [Watch Demo](https://youtube.com/shorts/u5JjIphdrAM) |
-| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/cover.png" width="210" alt="News-Cloud"/><br/>**News-Cloud** | 📰 **Bilingual News Wire**<br/>Categorized global headlines with full Arabic RTL/LTR layout fidelity and distraction-free in-app WebView | Repository Pattern, Flutter, Retrofit, Dio, Arabic RTL | [GitHub](https://github.com/ahmed-el-bialy/News-Cloud) • [Watch Demo](https://youtube.com/shorts/Sxs8R9YPmBY) |
+| <img src="https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/cover.png" width="210" alt="News-Cloud"/><br/>**News-Cloud** | 📰 **Bilingual News Wire**<br/>Categorized global headlines with full Arabic RTL/LTR layout fidelity and distraction-free in-app WebView | Repository Pattern, Flutter, Retrofit, Dio, Arabic RTL | [GitHub](https://github.com/ahmed-el-bialy/News-Cloud) • [Watch Demo](https://youtube.com/shorts/AKbiBjCRIis) |
 | <img src="https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/cover.png" width="210" alt="Shaats"/><br/>**Shaats** | 💬 **Real-Time Messenger**<br/>Instant cloud chat powered by Cloud Firestore reactive snapshot streams and Firebase Auth sessions | Flutter, Dart, Firebase Auth, Cloud Firestore, Streams | [GitHub](https://github.com/ahmed-el-bialy/Shaats) |
 
 </div>
@@ -84,7 +84,7 @@ Optimized `1200×630` social share card configured for **LinkedIn**, **WhatsApp*
   2. Book directly inside the embedded Cal.com live widget with loading skeleton feedback and instant **WhatsApp / Gmail** direct fallbacks.
 
 ### 6. ✨ Kinetic Motion Primitives & Bilingual RTL/LTR UX
-- **Unified Leaf Emblem (`BrandLogoMark`):** Crisp high-contrast SVG brand mark synchronized across the Navbar, Hero lockup, About portrait badge, Footer, and browser tab favicons (`/favicon.svg`).
+- **Unified Leaf Emblem (`BrandLogoMark`):** Crisp zoomed original white brush-painted Leaf emblem synchronized across the Navbar, Hero lockup, About portrait badge, Footer, and browser tab favicons (`/favicon.svg`).
 - **Tactile Motion:** `TiltCard`, floating 3D portrait (`FloatingPortrait`), magnetic CTA buttons (`MagneticButton`), View Transitions circular theme reveal, and hidden CLI Easter Egg (`ahmed` key sequence or Footer `CLI` trigger).
 - **Full Localization:** Instant **English (`LTR` / `Plus Jakarta Sans`)** and **Arabic (`RTL` / `Cairo`)** switching persisted cleanly across reloads without theme or layout flash.
 
@@ -115,7 +115,7 @@ Optimized `1200×630` social share card configured for **LinkedIn**, **WhatsApp*
 │   │   ├── AboutSection.tsx         # Floating portrait, origin story & mindset pillars
 │   │   ├── ApkDownloadModal.tsx     # APK release download & sideload guide
 │   │   ├── BookingMeetingModal.tsx  # 2-step guided Cal.com booking modal
-│   │   ├── BrandLogoMark.tsx        # Razor-sharp dual-ring SVG Leaf emblem
+│   │   ├── BrandLogoMark.tsx        # Zoomed original white brush Leaf emblem
 │   │   ├── CertificateModal.tsx     # Interactive verified certificate preview
 │   │   ├── ContactModal.tsx         # Quick inquiry & direct channels dialog
 │   │   ├── ContactSection.tsx       # Direct contact form & consultation cards

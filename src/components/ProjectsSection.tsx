@@ -80,7 +80,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
     placeholderData: () => {
       if (typeof window !== 'undefined') {
         try {
-          const cached = localStorage.getItem(`ahmed_consolidated_gh_v1_${githubUser}`);
+          const cached = localStorage.getItem(`ahmed_consolidated_gh_v2_${githubUser}`);
           if (cached) {
             const parsed = JSON.parse(cached);
             if (parsed?.data) return parsed.data;
@@ -143,6 +143,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
           ...matched.links,
           github: repo.html_url || matched.links.github,
           googlePlay: liveMedia?.googlePlayUrl || repo.googlePlayUrl || matched.links.googlePlay,
+          demoVideoUrl: matched.links.demoVideoUrl,
           liveDemoUrl: liveMedia?.liveDemoUrl || repo.liveDemoUrl || matched.links.liveDemoUrl,
           playlistUrl: liveMedia?.playlistUrl || repo.playlistUrl || matched.links.playlistUrl,
           apkDownloadUrl: liveMedia?.apkDownloadUrl || matched.links.apkDownloadUrl,
