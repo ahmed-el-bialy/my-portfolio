@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   X,
   Github,
@@ -7,7 +8,6 @@ import {
   ArrowUpRight,
   Smartphone,
   Layers,
-  Code2,
   CheckCircle2,
   Image as ImageIcon,
   ZoomIn,
@@ -16,8 +16,6 @@ import {
   Download,
   Terminal,
   ExternalLink,
-  ShieldCheck,
-  Cpu,
   PackageCheck,
   Copy,
   Check,
@@ -26,30 +24,46 @@ import {
   Database,
   GitBranch,
   Youtube,
-  Sparkles,
-  Activity,
-  Award,
-  BarChart3,
-  CheckCircle,
-  FileCode
+  FileCode,
+  Maximize2,
+  Minimize2,
+  Star,
+  GitFork,
+  Cpu,
+  ListChecks,
+  FolderTree,
+  ChevronDown,
+  Briefcase,
+  BookOpen,
 } from 'lucide-react';
 import { Project, AHMED_PROFILE } from '../data/portfolioData';
 import { resolveSmartProjectLinks } from '../utils/projectLinks';
 import { SmartDemoButtons } from './SmartDemoButtons';
-import { ProjectCardCover } from './ProjectCardCover';
+import { ProjectCardCover, synthesizeProjectBlueprint } from './ProjectCardCover';
+import { extractRepoTechTags } from '../utils/techTagExtractor';
+import { TechIconBadge } from './TechLogos';
+import { ReadmeDocumentView } from './ReadmeDocumentView';
+import {
+  extractStructuredReadmeTemplate,
+  formatReadableScreenName,
+  groupScreenshotsByCategory,
+} from '../utils/readmeTemplateExtractor';
 import {
   fetchRepoScreenshots,
   checkRepoRelease,
   fetchRepoLiveMetadata,
+  fetchRepoCaseStudies,
   extractYouTubeVideoId,
-  getLanguageColor,
   VERIFIED_REPO_SCREENSHOTS,
   RepoReleaseInfo,
-  formatFileSize
+  RepoLiveMetadata,
+  RepoCaseStudyData,
+  ConsolidatedGitHubPortfolio,
+  formatFileSize,
 } from '../services/githubService';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
-import { SmartphoneFrame } from './SmartphoneFrame';
+import { usePlayStoreAppStats } from '../services/playStoreService';
 
 interface ProjectDetailsModalProps {
   isOpen: boolean;
@@ -57,62 +71,118 @@ interface ProjectDetailsModalProps {
   project: Project | null;
 }
 
-type ModalTab = 'overview' | 'architecture' | 'screenshots' | 'casestudy';
+type WorkspaceSectionId = 'overview' | 'specs' | 'gallery' | 'architecture' | 'casestudy';
 
-// High-performance individual screenshot card with zero layout shift and shimmer skeleton
-const ScreenshotCard: React.FC<{
+const GALLERY_PAGE_SIZE = 12;
+
+const CopyChip: React.FC<{ value: string; label?: string }> = ({ value, label }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+      }}
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors cursor-pointer text-[11px] font-mono shrink-0"
+      title={`Copy ${label || 'command'}`}
+    >
+      {copied ? (
+        <>
+          <Check size={12} className="text-emerald-400" />
+          <span className="text-emerald-400">Copied</span>
+        </>
+      ) : (
+        <>
+          <Copy size={12} />
+          <span>{label || 'Copy'}</span>
+        </>
+      )}
+    </button>
+  );
+};
+
+const GalleryCard: React.FC<{
   url: string;
+  label: string;
   index: number;
   projectName: string;
-  onClick: () => void;
-}> = ({ url, index, projectName, onClick }) => {
+  isActive: boolean;
+  onSelect: () => void;
+  onInspect: () => void;
+}> = ({ url, label, index, projectName, isActive, onSelect, onInspect }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
   return (
     <div
-      onClick={onClick}
-      className="group relative aspect-[9/16] w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-200/80 dark:border-white/10 cursor-pointer shadow-md hover:border-blue-500/80 dark:hover:border-cyan-400 hover:shadow-xl transition-all duration-300"
+      onClick={() => {
+        onSelect();
+        onInspect();
+      }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect();
+          onInspect();
+        }
+      }}
+      className={`group relative rounded-2xl overflow-hidden bg-slate-950 border transition-all duration-300 cursor-pointer flex flex-col ${
+        isActive
+          ? 'border-[#027DFD] ring-2 ring-[#027DFD]/25 shadow-lg'
+          : 'border-slate-200/80 dark:border-white/10 hover:border-[#027DFD]/60 shadow-sm hover:shadow-xl'
+      }`}
     >
-      {/* Loading Shimmer Skeleton (Matches exact 9:16 aspect ratio to guarantee 0 CLS) */}
-      {!isLoaded && !hasError && (
-        <div className="absolute inset-0 skeleton-shimmer flex flex-col items-center justify-center p-3 text-slate-400">
-          <Loader2 size={22} className="animate-spin mb-2 text-cyan-400" />
-          <span className="text-[11px] font-mono text-slate-300 font-semibold">Screen #{index + 1}</span>
-          <span className="text-[9px] font-mono text-slate-400 mt-0.5">Loading preview...</span>
-        </div>
-      )}
+      <div className="relative aspect-[9/16] w-full overflow-hidden bg-slate-900">
+        {!isLoaded && !hasError && (
+          <div className="absolute inset-0 skeleton-shimmer flex flex-col items-center justify-center p-3 text-slate-400">
+            <Loader2 size={20} className="animate-spin mb-1.5 text-[#00C7FF]" />
+            <span className="text-[10px] font-mono text-slate-300 text-center line-clamp-1">
+              {label}
+            </span>
+          </div>
+        )}
 
-      {/* Fallback Display if network fails to fetch GitHub raw asset */}
-      {hasError ? (
-        <div className="absolute inset-0 bg-slate-900 text-slate-300 p-4 flex flex-col items-center justify-center text-center">
-          <Smartphone size={28} className="text-cyan-400 mb-2 opacity-80" />
-          <p className="text-xs font-bold text-white mb-0.5">{projectName}</p>
-          <p className="text-[10px] text-slate-400 font-mono">Mobile Screen #{index + 1}</p>
-          <span className="mt-2 text-[10px] px-2 py-0.5 rounded bg-white/10 text-slate-300 font-medium">
-            Production UI
+        {hasError ? (
+          <div className="absolute inset-0 bg-slate-900 text-slate-300 p-4 flex flex-col items-center justify-center text-center">
+            <Smartphone size={24} className="text-[#00C7FF] mb-2 opacity-80" />
+            <p className="text-xs font-bold text-white mb-0.5">{projectName}</p>
+            <p className="text-[10px] text-slate-400 font-mono">{label}</p>
+          </div>
+        ) : (
+          <img
+            src={url}
+            alt={`${projectName} — ${label}`}
+            className={`w-full h-full object-cover object-top group-hover:scale-[1.04] transition-transform duration-300 crisp-screenshot ${
+              isLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            loading="lazy"
+            decoding="async"
+            onLoad={() => setIsLoaded(true)}
+            onError={() => setHasError(true)}
+          />
+        )}
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3">
+          <span className="text-[11px] font-mono font-bold text-white tabular-nums">
+            #{index + 1}
+          </span>
+          <span className="p-1.5 rounded-lg bg-[#027DFD] text-white shadow-md">
+            <ZoomIn size={14} />
           </span>
         </div>
-      ) : (
-        <img
-          src={url}
-          alt={`${projectName} screen ${index + 1}`}
-          className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-300 ${
-            isLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          loading="lazy"
-          decoding="async"
-          onLoad={() => setIsLoaded(true)}
-          onError={() => setHasError(true)}
-        />
-      )}
+      </div>
 
-      {/* Hover Zoom Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end text-white p-3">
-        <div className="p-2 rounded-full bg-blue-600/80 backdrop-blur-xs text-white mb-1 shadow-lg">
-          <ZoomIn size={18} />
-        </div>
-        <span className="text-[11px] font-mono font-bold tracking-wide">Screen #{index + 1}</span>
+      <div className="px-3 py-2 bg-white dark:bg-[#111624] border-t border-slate-100 dark:border-white/8 flex items-center justify-between gap-2">
+        <span className="text-[11px] font-mono font-semibold text-slate-700 dark:text-slate-200 truncate capitalize">
+          {label}
+        </span>
+        <span className="text-[10px] font-mono text-slate-400 shrink-0 tabular-nums">
+          {index + 1}
+        </span>
       </div>
     </div>
   );
@@ -125,147 +195,258 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 }) => {
   useScrollLock(isOpen);
   const { lang, dir } = useLanguage();
+  const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<ModalTab>('overview');
-  const [isPlayingInline, setIsPlayingInline] = useState(false);
+  const [isFullPage, setIsFullPage] = useState(false);
+  const [activeSection, setActiveSection] = useState<WorkspaceSectionId>('overview');
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const [activeScreenIndex, setActiveScreenIndex] = useState<number>(0);
+  const [galleryCategory, setGalleryCategory] = useState<string>('all');
+  const [visibleGalleryCount, setVisibleGalleryCount] = useState<number>(GALLERY_PAGE_SIZE);
   const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
+
   const [screenshots, setScreenshots] = useState<string[]>([]);
   const [loadingScreens, setLoadingScreens] = useState<boolean>(false);
-  const [releaseInfo, setReleaseInfo] = useState<RepoReleaseInfo>({
-    hasRelease: false
-  });
+  const [liveMeta, setLiveMeta] = useState<RepoLiveMetadata | null>(null);
+  const [isSyncingLive, setIsSyncingLive] = useState<boolean>(false);
+  const [releaseInfo, setReleaseInfo] = useState<RepoReleaseInfo>({ hasRelease: false });
   const [copiedClone, setCopiedClone] = useState<boolean>(false);
-  const [liveDemoUrl, setLiveDemoUrl] = useState<string | undefined>(project?.links.liveDemoUrl);
-  const [playlistUrl, setPlaylistUrl] = useState<string | undefined>(project?.links.playlistUrl);
-  const [livePlayUrl, setLivePlayUrl] = useState<string | undefined>(project?.links.googlePlay);
-  const [studyCaseContent, setStudyCaseContent] = useState<string>('');
-  const [studyCaseExists, setStudyCaseExists] = useState<boolean>(false);
-  const [studyCaseExistsEn, setStudyCaseExistsEn] = useState<boolean>(false);
-  const [studyCaseExistsAr, setStudyCaseExistsAr] = useState<boolean>(false);
-  const [studyCaseContentEn, setStudyCaseContentEn] = useState<string>('');
-  const [studyCaseContentAr, setStudyCaseContentAr] = useState<string>('');
+
+  const [caseStudyData, setCaseStudyData] = useState<RepoCaseStudyData>({ en: null, ar: null });
   const [studyCaseLoading, setStudyCaseLoading] = useState<boolean>(false);
   const [studyCaseLang, setStudyCaseLang] = useState<'en' | 'ar'>('en');
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const overviewRef = useRef<HTMLElement>(null);
+  const specsRef = useRef<HTMLElement>(null);
+  const galleryRef = useRef<HTMLElement>(null);
+  const architectureRef = useRef<HTMLElement>(null);
+  const casestudyRef = useRef<HTMLElement>(null);
 
-  const handleCopyClone = () => {
-    if (!project?.links.github) return;
-    const cloneUrl = `${project.links.github}.git`;
-    navigator.clipboard.writeText(`git clone ${cloneUrl}`);
-    setCopiedClone(true);
-    setTimeout(() => setCopiedClone(false), 2000);
-  };
+  const isRevio = project?.repoName.toLowerCase() === 'revio';
+  const { data: playStats } = usePlayStoreAppStats(isRevio ? 'com.ahmed.revio' : '');
+
+  const cachedConsolidated = queryClient.getQueryData<ConsolidatedGitHubPortfolio>([
+    'github-consolidated',
+    'ahmed-el-bialy',
+  ]);
+
+  const matchedCachedRepo = useMemo(() => {
+    if (!project || !cachedConsolidated?.repos) return undefined;
+    return cachedConsolidated.repos.find(
+      (r) =>
+        r.name.toLowerCase() === project.repoName.toLowerCase() ||
+        r.name.toLowerCase() === project.name.toLowerCase()
+    );
+  }, [project, cachedConsolidated]);
+
+  const cachedLiveMedia = useMemo(() => {
+    if (!project || !cachedConsolidated?.liveMediaMap) return undefined;
+    return (
+      cachedConsolidated.liveMediaMap[project.repoName] ||
+      cachedConsolidated.liveMediaMap[project.repoName.toLowerCase()]
+    );
+  }, [project, cachedConsolidated]);
+
+  const syncLiveProjectData = useCallback(
+    async (targetProject: Project, forceRefresh: boolean, preferredBranch?: string) => {
+      if (forceRefresh) setIsSyncingLive(true);
+      setStudyCaseLoading(true);
+
+      try {
+        const [meta, folderUrls, rel, csData] = await Promise.all([
+          fetchRepoLiveMetadata(targetProject.repoName, 'ahmed-el-bialy', forceRefresh).catch(
+            () => null
+          ),
+          fetchRepoScreenshots(targetProject.repoName, 'ahmed-el-bialy').catch((): string[] => []),
+          checkRepoRelease(targetProject.repoName, 'ahmed-el-bialy').catch(
+            (): RepoReleaseInfo => ({ hasRelease: false })
+          ),
+          fetchRepoCaseStudies(
+            targetProject.repoName,
+            preferredBranch || 'main',
+            'ahmed-el-bialy',
+            forceRefresh
+          ).catch((): RepoCaseStudyData => ({ en: null, ar: null })),
+        ]);
+
+        if (meta) {
+          setLiveMeta(meta);
+        }
+
+        setCaseStudyData(csData);
+
+        if (rel.hasRelease || meta?.hasRelease || meta?.apkDownloadUrl) {
+          setReleaseInfo({
+            ...rel,
+            hasRelease: Boolean(rel.hasRelease || meta?.hasRelease),
+            apkDownloadUrl: rel.apkDownloadUrl || meta?.apkDownloadUrl,
+            releaseUrl: rel.releaseUrl || meta?.releaseUrl,
+          });
+        } else {
+          setReleaseInfo({ hasRelease: false });
+        }
+
+        const verified =
+          VERIFIED_REPO_SCREENSHOTS[targetProject.repoName] ||
+          VERIFIED_REPO_SCREENSHOTS[targetProject.name] ||
+          VERIFIED_REPO_SCREENSHOTS[targetProject.repoName.toLowerCase()] ||
+          [];
+
+        const mergedScreens = Array.from(
+          new Set([
+            ...folderUrls,
+            ...(meta?.discoveredScreenshots || []),
+            ...(folderUrls.length === 0 ? verified : []),
+          ])
+        ).filter(Boolean);
+
+        if (mergedScreens.length > 0) {
+          setScreenshots(mergedScreens);
+        } else if (targetProject.image) {
+          setScreenshots([targetProject.image]);
+        }
+      } finally {
+        setLoadingScreens(false);
+        setStudyCaseLoading(false);
+        setIsSyncingLive(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (isOpen && project) {
-      setActiveTab('overview');
+      setIsFullPage(false);
+      setActiveSection('overview');
+      setIsPlayingVideo(false);
       setActiveScreenIndex(0);
+      setGalleryCategory('all');
+      setVisibleGalleryCount(GALLERY_PAGE_SIZE);
       setLightboxOpen(false);
-      setIsPlayingInline(false);
-      setLiveDemoUrl(project.links.liveDemoUrl);
-      setPlaylistUrl(project.links.playlistUrl);
-      setLivePlayUrl(project.links.googlePlay);
-      setStudyCaseContent('');
-      setStudyCaseExists(false);
-      setStudyCaseExistsEn(false);
-      setStudyCaseExistsAr(false);
-      setStudyCaseLoading(true);
+      setCaseStudyData({ en: null, ar: null });
+      setStudyCaseLang(lang === 'ar' ? 'ar' : 'en');
+      setLiveMeta(cachedLiveMedia || null);
+      setReleaseInfo({ hasRelease: false });
 
       if (scrollRef.current) {
         scrollRef.current.scrollTop = 0;
       }
 
-      // Fetch study-case markdown from GitHub backend
-      fetch(`/api/study-case?repo=${project.repoName}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.exists) {
-            setStudyCaseExists(true);
-            setStudyCaseExistsEn(data.existsEn);
-            setStudyCaseExistsAr(data.existsAr);
-            setStudyCaseContentEn(data.contentEn || '');
-            setStudyCaseContentAr(data.contentAr || '');
-            setStudyCaseContent(data.content || '');
-            if (data.activeLang) {
-              setStudyCaseLang(data.activeLang);
-            }
-          } else {
-            setStudyCaseExists(false);
-          }
-        })
-        .catch(() => setStudyCaseExists(false))
-        .finally(() => setStudyCaseLoading(false));
-
-      // 1. Immediately populate from verified list if known to avoid blank delays
       const verified =
         VERIFIED_REPO_SCREENSHOTS[project.repoName] ||
         VERIFIED_REPO_SCREENSHOTS[project.name] ||
-        VERIFIED_REPO_SCREENSHOTS[project.repoName.toLowerCase()];
+        VERIFIED_REPO_SCREENSHOTS[project.repoName.toLowerCase()] ||
+        [];
 
-      if (verified && verified.length > 0) {
-        setScreenshots(verified);
+      const initialScreens = Array.from(
+        new Set([
+          ...(matchedCachedRepo?.discoveredScreenshots || []),
+          ...(cachedLiveMedia?.discoveredScreenshots || []),
+          ...verified,
+        ])
+      ).filter(Boolean);
+
+      if (initialScreens.length > 0) {
+        setScreenshots(initialScreens);
         setLoadingScreens(false);
       } else {
+        setScreenshots([]);
         setLoadingScreens(true);
       }
 
-      // 2. Fetch fresh live README and media from GitHub
-      fetchRepoLiveMetadata(project.repoName)
-        .then((liveMeta) => {
-          if (liveMeta.liveDemoUrl) {
-            setLiveDemoUrl(liveMeta.liveDemoUrl);
-          }
-          if (liveMeta.playlistUrl) {
-            setPlaylistUrl(liveMeta.playlistUrl);
-          }
-          if (liveMeta.googlePlayUrl) {
-            setLivePlayUrl(liveMeta.googlePlayUrl);
-          }
-          if (liveMeta.apkDownloadUrl) {
-            setReleaseInfo((prev) => ({
-              ...prev,
-              hasRelease: true,
-              apkDownloadUrl: liveMeta.apkDownloadUrl,
-              releaseUrl: liveMeta.releaseUrl || prev.releaseUrl,
-            }));
-          }
-        })
-        .catch(() => {});
-
-      // 3. Fetch dynamic screenshot files from GitHub API in parallel
-      fetchRepoScreenshots(project.repoName)
-        .then((urls) => {
-          if (urls.length > 0) {
-            setScreenshots(urls);
-          } else if (verified && verified.length > 0) {
-            setScreenshots(verified);
-          } else if (project.image) {
-            setScreenshots([project.image]);
-          }
-        })
-        .catch(() => {
-          if (verified && verified.length > 0) {
-            setScreenshots(verified);
-          } else if (project.image) {
-            setScreenshots([project.image]);
-          }
-        })
-        .finally(() => setLoadingScreens(false));
-
-      checkRepoRelease(project.repoName).then((rel) => {
-        setReleaseInfo(rel);
-      });
+      const branchHint =
+        cachedLiveMedia?.defaultBranch || matchedCachedRepo?.default_branch || 'main';
+      syncLiveProjectData(project, false, branchHint);
     }
   }, [isOpen, project]);
+
+  // Keep preferred Case Study language aligned with available files
+  useEffect(() => {
+    if (lang === 'ar' && caseStudyData.ar) {
+      setStudyCaseLang('ar');
+    } else if (caseStudyData.en) {
+      setStudyCaseLang('en');
+    } else if (caseStudyData.ar) {
+      setStudyCaseLang('ar');
+    }
+  }, [lang, caseStudyData.en, caseStudyData.ar]);
+
+  const scrollToSection = useCallback((sectionId: WorkspaceSectionId) => {
+    setActiveSection(sectionId);
+    const refMap: Record<WorkspaceSectionId, React.RefObject<HTMLElement | null>> = {
+      overview: overviewRef,
+      specs: specsRef,
+      gallery: galleryRef,
+      architecture: architectureRef,
+      casestudy: casestudyRef,
+    };
+    const target = refMap[sectionId]?.current;
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
+  const handleWorkspaceScroll = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const scrollTop = container.scrollTop;
+    const containerRect = container.getBoundingClientRect();
+
+    // Snap immediately to overview near top
+    if (scrollTop < 40) {
+      setActiveSection('overview');
+      return;
+    }
+
+    // If scrolled nearly to bottom, activate final section
+    if (scrollTop + container.clientHeight >= container.scrollHeight - 28) {
+      setActiveSection('casestudy');
+      return;
+    }
+
+    const candidates: Array<{ id: WorkspaceSectionId; el: HTMLElement | null }> = [
+      { id: 'overview', el: overviewRef.current },
+      { id: 'specs', el: specsRef.current },
+      { id: 'gallery', el: galleryRef.current },
+      { id: 'architecture', el: architectureRef.current },
+      { id: 'casestudy', el: casestudyRef.current },
+    ];
+
+    let current: WorkspaceSectionId = 'overview';
+    const activationLine = containerRect.top + 110;
+    for (const item of candidates) {
+      if (!item.el) continue;
+      const top = item.el.getBoundingClientRect().top;
+      if (top <= activationLine) {
+        current = item.id;
+      }
+    }
+    setActiveSection(current);
+  }, []);
+
+  const nextScreen = useCallback(() => {
+    if (screenshots.length === 0) return;
+    setActiveScreenIndex((prev) => (prev + 1) % screenshots.length);
+  }, [screenshots.length]);
+
+  const prevScreen = useCallback(() => {
+    if (screenshots.length === 0) return;
+    setActiveScreenIndex((prev) => (prev === 0 ? screenshots.length - 1 : prev - 1));
+  }, [screenshots.length]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
       if (e.key === 'Escape') {
-        if (lightboxOpen) setLightboxOpen(false);
-        else onClose();
+        if (lightboxOpen) {
+          setLightboxOpen(false);
+        } else if (isFullPage) {
+          setIsFullPage(false);
+        } else {
+          onClose();
+        }
       } else if (lightboxOpen) {
         if (e.key === 'ArrowRight') nextScreen();
         if (e.key === 'ArrowLeft') prevScreen();
@@ -273,13 +454,38 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, lightboxOpen, screenshots.length]);
+  }, [isOpen, lightboxOpen, isFullPage, nextScreen, prevScreen, onClose]);
+
+  const rawReadme = liveMeta?.rawReadmeText || cachedLiveMedia?.rawReadmeText || '';
+  const defaultBranch =
+    liveMeta?.defaultBranch || matchedCachedRepo?.default_branch || 'main';
+
+  const parsedReadmeData = useMemo(
+    () =>
+      extractStructuredReadmeTemplate(
+        rawReadme,
+        project?.repoName || '',
+        defaultBranch,
+        'ahmed-el-bialy'
+      ),
+    [rawReadme, project?.repoName, defaultBranch]
+  );
+
+  const galleryGroups = useMemo(
+    () => groupScreenshotsByCategory(screenshots, lang),
+    [screenshots, lang]
+  );
+
+  const activeGalleryGroup = useMemo(
+    () => galleryGroups.find((g) => g.id === galleryCategory) || galleryGroups[0],
+    [galleryGroups, galleryCategory]
+  );
 
   if (!isOpen || !project) return null;
 
-  const currentLiveDemoUrl = liveDemoUrl || project.links.liveDemoUrl;
-  const currentPlaylistUrl = playlistUrl || project.links.playlistUrl;
-  const currentPlayUrl = livePlayUrl || project.links.googlePlay;
+  const currentLiveDemoUrl = liveMeta?.liveDemoUrl || project.links.liveDemoUrl;
+  const currentPlaylistUrl = liveMeta?.playlistUrl || project.links.playlistUrl;
+  const currentPlayUrl = liveMeta?.googlePlayUrl || project.links.googlePlay;
   const resolvedModalLinks = resolveSmartProjectLinks(
     {
       ...project.links,
@@ -289,840 +495,1256 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     },
     null
   );
+
   const playerCandidateUrl =
-    resolvedModalLinks.demoVideoUrl ||
-    resolvedModalLinks.playlistUrl ||
-    currentLiveDemoUrl;
+    resolvedModalLinks.demoVideoUrl || resolvedModalLinks.playlistUrl || currentLiveDemoUrl;
   const parsedVideoId = extractYouTubeVideoId(playerCandidateUrl);
   const youtubeIframeSrc = parsedVideoId
     ? `https://www.youtube-nocookie.com/embed/${parsedVideoId}?autoplay=1&rel=0&modestbranding=1`
     : null;
   const youtubePosterUrl = parsedVideoId
-    ? `https://img.youtube.com/vi/${parsedVideoId}/hqdefault.jpg`
+    ? `https://i.ytimg.com/vi/${parsedVideoId}/hqdefault.jpg`
     : null;
 
-  const nextScreen = () => {
-    if (screenshots.length === 0) return;
-    setActiveScreenIndex((prev) => (prev + 1) % screenshots.length);
-  };
-
-  const prevScreen = () => {
-    if (screenshots.length === 0) return;
-    setActiveScreenIndex((prev) => (prev - 1 + screenshots.length) % screenshots.length);
-  };
-
+  const hasPlayStore = Boolean(currentPlayUrl);
   const hasApk = Boolean(
+    project.hasApk ||
+      project.links.apkDownloadUrl ||
+      releaseInfo.apkDownloadUrl ||
+      liveMeta?.apkDownloadUrl ||
+      (releaseInfo.hasRelease && releaseInfo.releaseUrl)
+  );
+  const realApkSizeLabel = formatFileSize(releaseInfo.apkSize);
+
+  // Strictly real GitHub telemetry only (zero fallback guesses)
+  const realStarsCount =
+    typeof matchedCachedRepo?.stargazers_count === 'number'
+      ? matchedCachedRepo.stargazers_count
+      : typeof liveMeta?.starsCount === 'number'
+      ? liveMeta.starsCount
+      : null;
+  const realForksCount =
+    typeof matchedCachedRepo?.forks_count === 'number'
+      ? matchedCachedRepo.forks_count
+      : typeof liveMeta?.forksCount === 'number'
+      ? liveMeta.forksCount
+      : null;
+  const realLanguage = matchedCachedRepo?.language || liveMeta?.language || null;
+  const realPushedAt = matchedCachedRepo?.pushed_at || liveMeta?.pushedAt;
+  const realPushedLabel = realPushedAt
+    ? new Date(realPushedAt).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : null;
+
+  // Cohesive domain category & architecture parity with external project cards
+  const appBlueprint = synthesizeProjectBlueprint(
+    project.repoName,
+    realLanguage || 'Dart',
+    project.description,
+    project.technologies
+  );
+  const BlueprintIcon = appBlueprint.badgeIcon;
+
+  const techTagObjects = extractRepoTechTags({
+    repoName: project.repoName,
+    language: realLanguage || 'Dart',
+    topics: matchedCachedRepo?.topics || liveMeta?.topics,
+    description: project.description || liveMeta?.description,
+    technologies: project.technologies,
+  });
+
+  // Smart structured merging of curated data + live README template extraction
+  const isGenericDescription =
+    !project.description ||
+    project.description.startsWith('Production-ready codebase implementing');
+  const displayDescription =
+    (isGenericDescription && (liveMeta?.description || parsedReadmeData.overviewText)) ||
+    project.description ||
+    liveMeta?.description ||
+    parsedReadmeData.overviewText ||
+    '';
+
+  const isGenericFeatures =
+    project.features.length > 0 &&
+    project.features[0]?.startsWith('Clean architectural separation');
+  const displayFeatures =
+    parsedReadmeData.features.length > 0 && isGenericFeatures
+      ? parsedReadmeData.features
+      : Array.from(
+          new Set([
+            ...project.features,
+            ...(parsedReadmeData.features.length > 0 ? parsedReadmeData.features : []),
+          ])
+        ).slice(0, 10);
+
+  const displayTechStack = Array.from(
+    new Set([
+      ...project.technologies,
+      ...(matchedCachedRepo?.topics || liveMeta?.topics || []),
+      ...parsedReadmeData.techPackages,
+    ])
+  ).slice(0, 16);
+
+  const apkHref =
     project.links.apkDownloadUrl ||
     releaseInfo.apkDownloadUrl ||
-    (releaseInfo.hasRelease && releaseInfo.releaseUrl) ||
-    project.hasApk
-  );
+    liveMeta?.apkDownloadUrl ||
+    releaseInfo.releaseUrl ||
+    `https://github.com/ahmed-el-bialy/${project.repoName}/releases`;
 
-  const hasPlayStore = Boolean(currentPlayUrl);
+  const githubRepoUrl =
+    project.links.github || `https://github.com/ahmed-el-bialy/${project.repoName}`;
 
-  const modalNode = (
+  const handleCopyClone = () => {
+    navigator.clipboard.writeText(`git clone ${githubRepoUrl}.git`);
+    setCopiedClone(true);
+    setTimeout(() => setCopiedClone(false), 1800);
+  };
+
+  const hasEnglishStudyCase = Boolean(caseStudyData.en);
+  const hasArabicStudyCase = Boolean(caseStudyData.ar);
+  const hasAnyStudyCase = hasEnglishStudyCase || hasArabicStudyCase;
+  const activeStudyCaseMarkdown =
+    studyCaseLang === 'ar'
+      ? caseStudyData.ar || caseStudyData.en || ''
+      : caseStudyData.en || caseStudyData.ar || '';
+
+  const distributionLabel = hasPlayStore
+    ? lang === 'ar'
+      ? 'منشور على Google Play'
+      : 'Google Play Production'
+    : hasApk
+    ? lang === 'ar'
+      ? 'إصدار APK موثق'
+      : 'Signed APK Release'
+    : lang === 'ar'
+    ? 'مستودع مفتوح المصدر'
+    : 'Open-Source Codebase';
+
+  const navSections: Array<{ id: WorkspaceSectionId; label: string; count?: number }> = [
+    { id: 'overview', label: lang === 'ar' ? 'نظرة عامة والوسائط' : 'Overview & Media' },
+    {
+      id: 'specs',
+      label: lang === 'ar' ? 'المميزات والتقنيات' : 'Features & Stack',
+      count: displayFeatures.length,
+    },
+    {
+      id: 'gallery',
+      label: lang === 'ar' ? 'معرض الشاشات' : 'Gallery',
+      count: screenshots.length,
+    },
+    { id: 'architecture', label: lang === 'ar' ? 'المعمارية والأوامر' : 'Architecture & CLI' },
+    { id: 'casestudy', label: lang === 'ar' ? 'دراسة الحالة' : 'Study Case' },
+  ];
+
+  const workspaceNode = (
     <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+      dir={dir}
+      className={`fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/75 backdrop-blur-md transition-all duration-200 ${
+        isFullPage ? 'p-0' : 'p-2 sm:p-5'
+      }`}
+      onClick={() => {
+        if (!isFullPage) onClose();
       }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-project-title"
     >
       <div
-        className="relative w-full max-w-4xl my-auto sm:my-auto bg-white dark:bg-[#0c0f18] border-t sm:border border-slate-200 dark:border-white/10 rounded-t-[32px] sm:rounded-3xl shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[90vh] overflow-hidden transition-all duration-300 transform translate-y-0"
+        role="dialog"
+        aria-modal="true"
+        aria-label={project.name}
+        className={`relative flex flex-col overflow-hidden bg-white dark:bg-[#0b0e16] border-slate-200 dark:border-white/10 shadow-2xl transition-all duration-300 ${
+          isFullPage
+            ? 'w-screen h-screen max-w-none max-h-none rounded-none border-0'
+            : 'w-full max-w-5xl h-[92vh] sm:h-[90vh] rounded-3xl border'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Mobile Drag Handle */}
-        <div 
-          className="w-full pt-3 pb-1 flex justify-center sm:hidden cursor-pointer bg-slate-50 dark:bg-[#121624] border-b border-slate-200/50 dark:border-white/5" 
-          onClick={onClose}
-          aria-label="Close bottom sheet"
-        >
-          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-zinc-700" />
-        </div>
-        
-        {/* Header Bar */}
-        <div className="p-3.5 sm:p-5 bg-slate-50 dark:bg-[#121624] border-b border-slate-200 dark:border-white/10 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
+        {/* Clean Editorial Top Workspace Header */}
+        <div className="px-4 sm:px-6 py-3.5 bg-white/95 dark:bg-[#101420]/95 backdrop-blur-md border-b border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-3.5 min-w-0">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center border border-slate-200 dark:border-white/10 shadow-sm shrink-0"
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm border border-white/15"
               style={{
-                backgroundColor: `${getLanguageColor(project.technologies[0])}20`,
-                color: getLanguageColor(project.technologies[0])
+                background: `linear-gradient(135deg, ${appBlueprint.accentColor}, ${appBlueprint.secondaryAccent})`,
               }}
             >
-              <Smartphone size={20} />
+              <BlueprintIcon size={18} />
             </div>
-            <div className="truncate">
-              <div className="flex items-center gap-2">
-                <h3 id="modal-project-title" className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white truncate tracking-tight">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white truncate tracking-tight">
                   {project.name}
-                </h3>
-                {hasPlayStore && (
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold shrink-0">
-                    Google Play Live
-                  </span>
-                )}
-                {hasApk && (
-                  <span className="px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 text-[10px] font-mono font-bold shrink-0 flex items-center gap-1">
-                    <Download size={10} />
-                    <span>APK Ready</span>
-                  </span>
-                )}
+                </h2>
+                <span aria-hidden="true" className="text-slate-300 dark:text-slate-700 hidden sm:inline">
+                  ·
+                </span>
+                <span
+                  className="text-xs font-bold truncate"
+                  style={{ color: appBlueprint.accentColor }}
+                >
+                  {appBlueprint.genre}
+                </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-gray-400 truncate mt-0.5 font-medium">
-                {project.subtitle}
+              <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate mt-0.5 flex flex-wrap items-center gap-x-2">
+                <span>ahmed-el-bialy/{project.repoName}</span>
+                <span aria-hidden="true">·</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                  {distributionLabel}
+                </span>
+                {realLanguage && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span>{realLanguage}</span>
+                  </>
+                )}
+                {realStarsCount !== null && realStarsCount > 0 && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="inline-flex items-center gap-1 text-amber-500 font-semibold tabular-nums">
+                      <Star size={10} fill="currentColor" />
+                      {realStarsCount}
+                    </span>
+                  </>
+                )}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 ms-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
-              onClick={onClose}
-              className="w-9 h-9 rounded-xl bg-slate-200/80 dark:bg-white/10 hover:bg-red-500 hover:text-white text-slate-700 dark:text-gray-300 flex items-center justify-center transition-colors cursor-pointer"
-              aria-label="Close dialog"
+              type="button"
+              onClick={() => syncLiveProjectData(project, true, defaultBranch)}
+              disabled={isSyncingLive}
+              className="btn-kinetic inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
+              title={lang === 'ar' ? 'تحديث البيانات من GitHub' : 'Sync latest from GitHub'}
             >
-              <X size={18} />
+              <RefreshCw size={13} className={isSyncingLive ? 'animate-spin text-[#027DFD]' : ''} />
+              <span className="hidden sm:inline">
+                {isSyncingLive
+                  ? lang === 'ar'
+                    ? 'جارٍ المزامنة...'
+                    : 'Syncing...'
+                  : lang === 'ar'
+                  ? 'مزامنة'
+                  : 'Sync'}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsFullPage((prev) => !prev)}
+              className={`btn-kinetic inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer ${
+                isFullPage
+                  ? 'bg-[#027DFD] text-white border-[#027DFD]'
+                  : 'bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/10'
+              }`}
+              aria-label={isFullPage ? 'Restore modal window' : 'Expand to full page'}
+            >
+              {isFullPage ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+              <span className="hidden sm:inline">
+                {isFullPage
+                  ? lang === 'ar'
+                    ? 'تصغير'
+                    : 'Modal View'
+                  : lang === 'ar'
+                  ? 'ملء الشاشة'
+                  : 'Full Page'}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-rose-500/15 text-slate-500 hover:text-rose-500 border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
+              aria-label="Close workspace"
+            >
+              <X size={16} />
             </button>
           </div>
         </div>
 
-        {/* Deep 4-Tab Navigation: Overview · Architecture · Screenshots · Case Study & Metrics */}
-        <div className="flex items-center px-3 sm:px-6 pt-2.5 bg-slate-50/80 dark:bg-[#121624]/80 border-b border-slate-200 dark:border-white/10 gap-1 sm:gap-2 shrink-0 overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`px-3 sm:px-4 py-2 text-xs font-bold rounded-t-xl transition-all border-b-2 cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-              activeTab === 'overview'
-                ? 'border-blue-600 text-blue-600 dark:text-cyan-400 bg-white dark:bg-[#0c0f18]'
-                : 'border-transparent text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Smartphone size={13} />
-            <span>{lang === 'ar' ? 'نظرة عامة وعرض' : 'Overview & Demo'}</span>
-          </button>
+        {/* Sticky Scroll-Spy Jump Navigation Bar */}
+        <div className="px-4 sm:px-6 py-2.5 bg-slate-50/95 dark:bg-[#0e121d]/95 border-b border-slate-200 dark:border-white/10 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar shrink-0">
+          <nav aria-label="Project sections" className="flex items-center gap-1.5">
+            {navSections.map((section) => {
+              const active = activeSection === section.id;
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => scrollToSection(section.id)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                    active
+                      ? 'bg-[#027DFD] text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-white/8'
+                  }`}
+                >
+                  <span>{section.label}</span>
+                  {typeof section.count === 'number' && section.count > 0 && (
+                    <span
+                      className={`font-mono text-[10px] px-1.5 py-0.2 rounded-md tabular-nums ${
+                        active
+                          ? 'bg-white/20 text-white'
+                          : 'bg-slate-200/80 dark:bg-white/10 text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      {section.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
 
-          <button
-            onClick={() => setActiveTab('architecture')}
-            className={`px-3 sm:px-4 py-2 text-xs font-bold rounded-t-xl transition-all border-b-2 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'architecture'
-                ? 'border-blue-600 text-blue-600 dark:text-cyan-400 bg-white dark:bg-[#0c0f18]'
-                : 'border-transparent text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Layers size={13} />
-            <span>{lang === 'ar' ? 'المعمارية والهندسة' : 'Architecture & Stack'}</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('screenshots')}
-            className={`px-3 sm:px-4 py-2 text-xs font-bold rounded-t-xl transition-all border-b-2 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-              activeTab === 'screenshots'
-                ? 'border-blue-600 text-blue-600 dark:text-cyan-400 bg-white dark:bg-[#0c0f18]'
-                : 'border-transparent text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <ImageIcon size={13} />
-            <span>{lang === 'ar' ? `الشاشات (${screenshots.length})` : `Screenshots (${screenshots.length})`}</span>
-          </button>
-
-          {studyCaseExists && (
-            <button
-              onClick={() => setActiveTab('casestudy')}
-              className={`px-3 sm:px-4 py-2 text-xs font-bold rounded-t-xl transition-all border-b-2 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                activeTab === 'casestudy'
-                  ? 'border-blue-600 text-blue-600 dark:text-cyan-400 bg-white dark:bg-[#0c0f18]'
-                  : 'border-transparent text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <BarChart3 size={13} />
-              <span>{lang === 'ar' ? 'دراسة الحالة والأرقام' : 'Case Study & Metrics'}</span>
-            </button>
+          {releaseInfo.tagName && (
+            <span className="hidden lg:inline-flex items-center gap-1.5 text-[11px] font-mono text-purple-600 dark:text-purple-300 font-semibold shrink-0">
+              <PackageCheck size={13} />
+              <span>{releaseInfo.tagName}</span>
+              {realApkSizeLabel ? <span>· {realApkSizeLabel}</span> : null}
+            </span>
           )}
         </div>
 
-        {/* Modal Scrollable Body */}
-        <div ref={scrollRef} className="overflow-y-auto p-4 sm:p-6 space-y-6 text-xs sm:text-sm text-slate-700 dark:text-gray-300">
-          
-          {/* TAB 1: OVERVIEW & IN-PLACE VIDEO */}
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              
-              {/* Media Preview: Pure in-place YouTube player or YouTube Channel CTA fallback */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-1.5 pb-0.5">
-                  <span className="text-[11px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider font-mono">
-                    {lang === 'ar' ? 'معاينة الفيديو والتطبيق' : 'In-Place Application Demonstration'}
-                  </span>
-                </div>
-
-                {playerCandidateUrl && parsedVideoId ? (
-                  <div className="space-y-2.5">
-                    <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 dark:border-white/10 shadow-xl">
-                      {isPlayingInline && youtubeIframeSrc ? (
-                        <div className="w-full h-full relative bg-black">
-                          <iframe
-                            src={youtubeIframeSrc}
-                            title={`${project.name} Demonstration`}
-                            className="w-full h-full border-0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
-                          <button
-                            onClick={() => setIsPlayingInline(false)}
-                            className="absolute top-3 end-3 px-3 py-1.5 rounded-lg bg-black/80 hover:bg-black text-white text-[11px] font-mono flex items-center gap-1.5 cursor-pointer transition-colors shadow-lg border border-white/10"
-                            title="Reset Player"
-                          >
-                            <RefreshCw size={12} />
-                            <span>{lang === 'ar' ? 'إغلاق الفيديو' : 'Close Player'}</span>
-                          </button>
-                        </div>
-                      ) : (
-                        <div
-                          onClick={() => setIsPlayingInline(true)}
-                          className="relative w-full h-full bg-slate-950 flex items-center justify-center group overflow-hidden cursor-pointer"
-                        >
-                          {youtubePosterUrl ? (
-                            <img
-                              src={youtubePosterUrl}
-                              alt={`${project.name} Video Preview`}
-                              className="w-full h-full object-cover filter brightness-85 group-hover:brightness-100 group-hover:scale-105 transition-all duration-500"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = project.image;
-                              }}
-                            />
-                          ) : (
-                            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950/40 to-slate-950" />
-                          )}
-
-                          {/* YouTube Gradient & Dark Vignette Overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30 group-hover:from-black/40 group-hover:via-black/10 transition-colors" />
-
-                          {/* YouTube Badge Watermark */}
-                          <div className="absolute top-3.5 start-3.5 z-10 px-3 py-1 rounded-xl bg-black/75 backdrop-blur-md border border-white/15 flex items-center gap-1.5 text-white text-xs font-mono shadow-lg">
-                            <Youtube size={15} className="text-red-500 fill-red-500" />
-                            <span className="font-bold tracking-wide">YouTube HD</span>
-                          </div>
-
-                          {/* Perfectly Centered Official YouTube Rounded-Rectangle Play Button */}
-                          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                            <div
-                              className="w-20 h-14 sm:w-24 sm:h-16 rounded-2xl bg-[#ff0000] hover:bg-[#e60000] text-white flex items-center justify-center shadow-[0_12px_35px_rgba(255,0,0,0.55)] group-hover:scale-110 group-hover:shadow-[0_18px_45px_rgba(255,0,0,0.75)] active:scale-95 transition-all duration-300 cursor-pointer pointer-events-auto border border-white/25"
-                              aria-label="Play Video Demonstration"
-                            >
-                              <Play size={28} className="translate-x-0.5 fill-white text-white drop-shadow-md" />
-                            </div>
-                          </div>
-                        </div>
-                      )}
+        {/* Unified Continuous Scrollable Body */}
+        <div
+          ref={scrollRef}
+          onScroll={handleWorkspaceScroll}
+          className="flex-1 overflow-y-auto scroll-smooth"
+        >
+          <div
+            className={`mx-auto px-4 sm:px-7 py-6 sm:py-8 space-y-10 ${
+              isFullPage ? 'max-w-6xl' : 'max-w-5xl'
+            }`}
+          >
+            {/* SECTION 1: OVERVIEW, RECRUITER BRIEF & SIDE-BY-SIDE MEDIA STAGE */}
+            <section ref={overviewRef} id="workspace-overview" className="scroll-mt-4 space-y-6">
+              {/* Recruiter & Client Executive Brief Card (full category + stack parity) */}
+              <div className="p-5 sm:p-6 rounded-3xl bg-slate-50/80 dark:bg-[#101422] border border-slate-200 dark:border-white/10 space-y-4">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="space-y-1.5 max-w-2xl">
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-mono">
+                      <span
+                        className="inline-flex items-center gap-1.5 font-bold"
+                        style={{ color: appBlueprint.accentColor }}
+                      >
+                        <Briefcase size={13} />
+                        <span>{appBlueprint.genre}</span>
+                      </span>
+                      <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
+                        ·
+                      </span>
+                      <span className="text-slate-600 dark:text-slate-300 font-semibold">
+                        {appBlueprint.categoryBadge}
+                      </span>
+                      <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
+                        ·
+                      </span>
+                      <span className="text-slate-500 dark:text-slate-400">
+                        Android &amp; iOS (Flutter)
+                      </span>
                     </div>
-
-                    {/* Smart Conditional Action Bar (Cases A–E) */}
-                    {resolvedModalLinks.mode !== 'none' && (
-                      <div className="flex items-center flex-wrap gap-2 pt-1">
-                        <SmartDemoButtons resolved={resolvedModalLinks} stopPropagation={false} />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 dark:border-white/10 shadow-lg">
-                      <ProjectCardCover
-                        repoName={project.repoName}
-                        language={project.technologies[0] || 'Dart'}
-                        coverUrl={project.image}
-                        description={project.description}
-                        topics={project.technologies}
-                        aspectClassName="w-full h-full"
-                      />
-                    </div>
-
-                    {resolvedModalLinks.mode !== 'none' ? (
-                      <div className="flex items-center flex-wrap gap-2 pt-1">
-                        <SmartDemoButtons resolved={resolvedModalLinks} stopPropagation={false} />
-                      </div>
-                    ) : (
-                      /* Prominent 'Visit YouTube Channel' CTA when project has neither video nor playlist */
-                      <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 flex items-center justify-between flex-wrap gap-3 shadow-xs">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-red-600/10 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 border border-red-500/20">
-                            <Youtube size={20} />
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-slate-900 dark:text-white">
-                              {lang === 'ar' ? `استعراضات وعروض ${project.name} على YouTube` : `${project.name} Full Reviews & Walkthroughs`}
-                            </p>
-                            <p className="text-[11px] text-slate-500 dark:text-gray-400">
-                              {lang === 'ar' ? 'شاهد فيديوهات المراجعة والشرح الكامل للتطبيقات على القناة الرسمية' : 'Explore application demos and full walkthrough reviews on the channel'}
-                            </p>
-                          </div>
-                        </div>
-                        <a
-                          href={AHMED_PROFILE.youtubeUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs transition-all shadow-sm hover:scale-105 whitespace-nowrap"
-                        >
-                          <Youtube size={15} className="shrink-0" />
-                          <span>{lang === 'ar' ? 'زيارة القناة على YouTube' : 'Visit YouTube Channel'}</span>
-                          <ArrowUpRight size={13} className="shrink-0" />
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Status Banner */}
-              <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-[#11162a] border border-blue-200 dark:border-blue-900/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-                    <PackageCheck size={20} />
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
-                      {hasPlayStore
-                        ? (lang === 'ar' ? 'منشور رسميًا على متجر Google Play' : 'Published on Google Play Store')
-                        : hasApk
-                        ? (lang === 'ar' ? 'حزمة APK جاهزة للتحميل الفوري' : 'Android APK Ready for Direct Download')
-                        : (lang === 'ar' ? 'مستودع كود مفتوح المصدر على GitHub' : 'Open Source Mobile Repository')}
-                    </h5>
-                    <p className="text-[11px] text-slate-600 dark:text-gray-300 mt-0.5">
-                      {hasPlayStore
-                        ? (lang === 'ar' ? 'نسخة الإنتاج مفحوصة ومتاحة الآن للمستخدمين حول العالم.' : 'Production build verified and published on Google Play.')
-                        : hasApk
-                        ? (lang === 'ar' ? 'ملف التثبيت (.apk) متاح للاختبار المباشر على أي هاتف أندرويد.' : 'Pre-built Android package (.apk) available for sideloading and testing.')
-                        : (lang === 'ar' ? 'الكود المصدري جاهز للبناء عبر Flutter SDK.' : 'Clean architecture codebase ready to clone and run.')}
+                    <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                      {project.name}
+                    </h3>
+                    <p className="text-xs sm:text-sm font-semibold text-[#027DFD] dark:text-[#7DD3FC]">
+                      {project.subtitle}
                     </p>
                   </div>
+
+                  {/* Verified Live Metrics Summary (Strict Zero-Guessing) */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+                    {isRevio && playStats?.downloads && (
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 font-bold tabular-nums">
+                        {playStats.downloads} {lang === 'ar' ? 'تحميل' : 'Downloads'}
+                      </span>
+                    )}
+                    {isRevio && playStats?.rating && (
+                      <span className="px-2.5 py-1 rounded-lg bg-amber-500/12 text-amber-600 dark:text-amber-300 border border-amber-500/25 font-bold tabular-nums">
+                        ★ {playStats.rating}
+                      </span>
+                    )}
+                    {realStarsCount !== null && realStarsCount > 0 && (
+                      <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/25 inline-flex items-center gap-1 font-bold tabular-nums">
+                        <Star size={12} fill="currentColor" />
+                        {realStarsCount}
+                      </span>
+                    )}
+                    {realForksCount !== null && realForksCount > 0 && (
+                      <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 inline-flex items-center gap-1 tabular-nums">
+                        <GitFork size={12} />
+                        {realForksCount}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                {/* Recruiter Structured Scan Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 py-3 border-y border-slate-200/80 dark:border-white/10 text-xs">
+                  <div>
+                    <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                      {lang === 'ar' ? 'تصنيف التطبيق' : 'App Category'}
+                    </div>
+                    <div className="font-bold text-slate-900 dark:text-white mt-0.5">
+                      {appBlueprint.genre}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                      {lang === 'ar' ? 'نمط المعمارية' : 'Engineering Pattern'}
+                    </div>
+                    <div className="font-bold text-slate-900 dark:text-white mt-0.5">
+                      {appBlueprint.architecturePattern}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                      {lang === 'ar' ? 'الحالة وآخر تحديث' : 'Status & Activity'}
+                    </div>
+                    <div className="font-bold text-slate-900 dark:text-white mt-0.5">
+                      {distributionLabel}
+                      {realPushedLabel ? ` · ${realPushedLabel}` : ''}
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {displayDescription}
+                </p>
+
+                {/* Category-Consistent Stack Badges (Matches Outer Card Identity) */}
+                {techTagObjects.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {techTagObjects.slice(0, 6).map((tag, idx) => (
+                      <TechIconBadge
+                        key={`${project.id}-modal-tag-${tag.id}-${idx}`}
+                        label={tag.label}
+                        id={tag.id}
+                        category={tag.category}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Action Buttons Cluster */}
+                <div className="flex flex-wrap items-center gap-2.5 pt-1">
                   {hasPlayStore && (
                     <a
-                      href={project.links.googlePlay}
+                      href={currentPlayUrl}
                       target="_blank"
-                      rel="noreferrer"
-                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-xs"
+                      rel="noopener noreferrer"
+                      className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm"
                     >
-                      <ArrowUpRight size={14} />
+                      <PackageCheck size={14} />
                       <span>Google Play</span>
+                      <ArrowUpRight size={13} />
                     </a>
                   )}
+
+                  <SmartDemoButtons resolved={resolvedModalLinks} stopPropagation={false} />
+
                   {hasApk && (
                     <a
-                      href={project.links.apkDownloadUrl || releaseInfo.apkDownloadUrl}
+                      href={apkHref}
                       target="_blank"
-                      rel="noreferrer"
-                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all shadow-xs"
+                      rel="noopener noreferrer"
+                      className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-sm"
                     >
                       <Download size={14} />
-                      <span>Download APK</span>
+                      <span>
+                        {project.links.apkDownloadUrl || releaseInfo.apkDownloadUrl || liveMeta?.apkDownloadUrl
+                          ? lang === 'ar'
+                            ? 'تحميل APK'
+                            : 'Download APK'
+                          : lang === 'ar'
+                          ? 'عرض الإصدار'
+                          : 'View Release'}
+                      </span>
+                      {realApkSizeLabel ? (
+                        <span className="px-1.5 py-0.5 rounded bg-black/25 text-[10px] font-mono tabular-nums">
+                          {realApkSizeLabel}
+                        </span>
+                      ) : null}
                     </a>
+                  )}
+
+                  <a
+                    href={githubRepoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white dark:bg-white/8 hover:bg-slate-100 dark:hover:bg-white/15 text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 font-semibold text-xs"
+                  >
+                    <Github size={14} />
+                    <span>GitHub</span>
+                    <ExternalLink size={12} />
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection('gallery')}
+                    className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#027DFD]/10 hover:bg-[#027DFD] text-[#027DFD] dark:text-[#00C7FF] hover:text-white border border-[#027DFD]/20 font-bold text-xs transition-colors cursor-pointer ms-auto"
+                  >
+                    <ImageIcon size={14} />
+                    <span>
+                      {lang === 'ar'
+                        ? `معرض الشاشات (${screenshots.length})`
+                        : `Jump to Gallery (${screenshots.length})`}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Side-by-Side Dual Media Stage: Live Video Demo + Interactive Screens Stage */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                {/* Start Panel: Live Video Demo Showcase */}
+                <div className="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-[#101422] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between gap-3.5 shadow-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-800 dark:text-slate-100">
+                      <Youtube size={16} className="text-red-500 shrink-0" />
+                      <span>
+                        {youtubeIframeSrc
+                          ? lang === 'ar'
+                            ? 'فيديو استعراض التطبيق'
+                            : 'App Video Walkthrough'
+                          : lang === 'ar'
+                          ? 'الهوية المرئية للتطبيق'
+                          : 'Application Visual Card'}
+                      </span>
+                    </div>
+                    {currentPlaylistUrl && (
+                      <a
+                        href={currentPlaylistUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] font-mono font-bold text-[#027DFD] dark:text-[#00C7FF] hover:underline inline-flex items-center gap-1"
+                      >
+                        <span>{lang === 'ar' ? 'قائمة الشرح الكامل' : 'Full Playlist'}</span>
+                        <ExternalLink size={11} />
+                      </a>
+                    )}
+                  </div>
+
+                  {youtubeIframeSrc ? (
+                    <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 dark:border-white/10 shadow-md flex-1">
+                      {isPlayingVideo ? (
+                        <iframe
+                          src={youtubeIframeSrc}
+                          title={`${project.name} Live Video Demo`}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="w-full h-full border-0"
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsPlayingVideo(true)}
+                          className="group relative w-full h-full flex flex-col items-center justify-center overflow-hidden cursor-pointer bg-slate-950"
+                        >
+                          {youtubePosterUrl && (
+                            <img
+                              src={youtubePosterUrl}
+                              alt={`${project.name} demo poster`}
+                              className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 group-hover:opacity-85 transition-all duration-300"
+                            />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+                          <span className="relative z-10 w-14 h-14 rounded-full bg-red-600 group-hover:bg-red-500 text-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                            <Play size={22} fill="currentColor" className="ms-0.5" />
+                          </span>
+                          <span className="relative z-10 mt-2.5 text-xs font-bold text-white drop-shadow">
+                            {lang === 'ar' ? 'تشغيل العرض المباشر هنا' : 'Play Video Demo Inline'}
+                          </span>
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex flex-col justify-between gap-3">
+                      <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10">
+                        <ProjectCardCover
+                          repoName={project.repoName}
+                          language={realLanguage || 'Dart'}
+                          coverUrl={project.image}
+                          discoveredScreenshots={screenshots}
+                          isHighlight={project.highlight}
+                          description={displayDescription}
+                          topics={project.technologies}
+                        />
+                      </div>
+                      <a
+                        href={AHMED_PROFILE.youtubeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-red-500/8 hover:bg-red-500/15 border border-red-500/20 text-xs font-semibold text-red-600 dark:text-red-400 transition-colors"
+                      >
+                        <span>
+                          {lang === 'ar'
+                            ? 'استعراض شروحات القناة على YouTube'
+                            : 'Browse App Demos on YouTube Channel'}
+                        </span>
+                        <ArrowUpRight size={14} />
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Quick Clone Bar */}
+                  <div
+                    dir="ltr"
+                    className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-[#0a0d16] text-slate-200 border border-slate-800 font-mono text-[11px]"
+                  >
+                    <span className="truncate text-cyan-300">
+                      <span className="text-slate-500 select-none me-1.5">$</span>
+                      git clone {githubRepoUrl}.git
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCopyClone}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer shrink-0"
+                    >
+                      {copiedClone ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                      <span>{copiedClone ? 'Copied' : 'Clone'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* End Panel: Interactive Live Screens Preview Side-by-Side */}
+                <div className="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-[#101422] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between gap-3.5 shadow-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-mono font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 truncate">
+                      <Smartphone size={15} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
+                      <span className="truncate capitalize">
+                        {screenshots.length > 0
+                          ? formatReadableScreenName(
+                              screenshots[activeScreenIndex % screenshots.length],
+                              activeScreenIndex
+                            )
+                          : lang === 'ar'
+                          ? 'معاينة الشاشات'
+                          : 'App Screens'}
+                      </span>
+                    </span>
+                    {screenshots.length > 0 && (
+                      <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 tabular-nums shrink-0">
+                        {(activeScreenIndex % screenshots.length) + 1} / {screenshots.length}
+                      </span>
+                    )}
+                  </div>
+
+                  {loadingScreens && screenshots.length === 0 ? (
+                    <div className="flex-1 min-h-[260px] rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse flex items-center justify-center">
+                      <Loader2 size={22} className="animate-spin text-[#027DFD]" />
+                    </div>
+                  ) : screenshots.length > 0 ? (
+                    <>
+                      <div className="relative flex justify-center items-center py-1 flex-1">
+                        <div className="relative w-[180px] sm:w-[195px] aspect-[9/17.8] rounded-[26px] p-1.5 bg-[#080b12] border-2 border-slate-300/90 dark:border-white/20 shadow-2xl overflow-hidden group">
+                          <button
+                            type="button"
+                            onClick={() => setLightboxOpen(true)}
+                            className="w-full h-full rounded-[20px] overflow-hidden bg-slate-950 block cursor-pointer"
+                            aria-label="Open screen in fullscreen lightbox"
+                          >
+                            <img
+                              src={screenshots[activeScreenIndex % screenshots.length]}
+                              alt={`${project.name} preview`}
+                              className="w-full h-full object-cover object-top crisp-screenshot group-hover:scale-[1.02] transition-transform duration-300"
+                            />
+                          </button>
+
+                          {screenshots.length > 1 && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  prevScreen();
+                                }}
+                                className="absolute start-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/70 hover:bg-black text-white opacity-85 sm:opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                aria-label="Previous screen"
+                              >
+                                <ChevronLeft size={15} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  nextScreen();
+                                }}
+                                className="absolute end-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/70 hover:bg-black text-white opacity-85 sm:opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                aria-label="Next screen"
+                              >
+                                <ChevronRight size={15} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Thumbnail Filmstrip + Smooth Scroll Jump to Gallery */}
+                      <div className="pt-2 border-t border-slate-200/80 dark:border-white/8 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                        {screenshots.slice(0, 5).map((thumb, idx) => {
+                          const active = activeScreenIndex % screenshots.length === idx;
+                          return (
+                            <button
+                              key={`${thumb}-${idx}`}
+                              type="button"
+                              onClick={() => setActiveScreenIndex(idx)}
+                              className={`w-11 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer bg-slate-900 ${
+                                active
+                                  ? 'border-[#027DFD] scale-[1.03]'
+                                  : 'border-slate-200 dark:border-white/10 opacity-70 hover:opacity-100'
+                              }`}
+                              aria-label={`Select screen ${idx + 1}`}
+                            >
+                              <img
+                                src={thumb}
+                                alt={`Thumb ${idx + 1}`}
+                                loading="lazy"
+                                className="w-full h-full object-cover object-top crisp-screenshot"
+                              />
+                            </button>
+                          );
+                        })}
+
+                        <button
+                          type="button"
+                          onClick={() => scrollToSection('gallery')}
+                          className="h-16 px-3 rounded-lg border border-dashed border-slate-300 dark:border-white/20 hover:border-[#027DFD] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 hover:text-[#027DFD] dark:hover:text-[#00C7FF] text-[11px] font-mono font-bold shrink-0 flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer ms-auto"
+                        >
+                          <ImageIcon size={13} />
+                          <span>
+                            {lang === 'ar'
+                              ? `الكل (${screenshots.length})`
+                              : `All (${screenshots.length})`}
+                          </span>
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex-1 min-h-[220px] flex flex-col items-center justify-center text-center text-slate-400">
+                      <ImageIcon size={28} className="mb-2 opacity-50" />
+                      <span className="text-xs">
+                        {lang === 'ar' ? 'لا توجد شاشات مرفوعة بعد' : 'No screenshots uploaded yet'}
+                      </span>
+                    </div>
                   )}
                 </div>
               </div>
+            </section>
 
-              {/* Description */}
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-2 flex items-center gap-1.5">
-                  <Code2 size={15} className="text-blue-500" />
-                  <span>{lang === 'ar' ? 'نظرة عامة والهدف الهندسي' : 'Project Overview & Engineering Purpose'}</span>
+            {/* SECTION 2: FEATURES & VERIFIED STACK */}
+            <section
+              ref={specsRef}
+              id="workspace-specs"
+              className="scroll-mt-4 pt-8 border-t border-slate-200 dark:border-white/10 space-y-6"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <h4 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <ListChecks size={18} className="text-emerald-500" />
+                  <span>
+                    {lang === 'ar'
+                      ? 'المميزات المنفذة والتقنيات المستخدمة'
+                      : 'Implemented Features & Verified Stack'}
+                  </span>
                 </h4>
-                <p className="text-slate-600 dark:text-gray-300 leading-relaxed text-xs sm:text-sm">
-                  {project.description}
-                </p>
+                <span className="text-[11px] font-mono text-slate-400 tabular-nums">
+                  {displayFeatures.length} items
+                </span>
               </div>
 
-              {/* Core Features */}
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-2 flex items-center gap-1.5">
-                  <CheckCircle2 size={15} className="text-emerald-500" />
-                  <span>{lang === 'ar' ? 'الميزات الأساسية المنفذة' : 'Core Implementation Features'}</span>
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {project.features.map((feat, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/5 flex items-start gap-2.5 shadow-xs"
-                    >
-                      <CheckCircle2 size={14} className="text-emerald-500 shrink-0 mt-0.5" />
-                      <span className="text-xs text-slate-700 dark:text-gray-300 leading-tight">{feat}</span>
-                    </div>
-                  ))}
+              {parsedReadmeData.badges.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2" dir="ltr">
+                  {parsedReadmeData.badges.map((badge, bi) =>
+                    badge.href ? (
+                      <a
+                        key={bi}
+                        href={badge.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-mono font-semibold text-slate-700 dark:text-[#7DD3FC] hover:border-[#027DFD]/50 transition-colors"
+                      >
+                        {badge.label}
+                      </a>
+                    ) : (
+                      <span
+                        key={bi}
+                        className="px-3 py-1 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-mono text-slate-600 dark:text-slate-300"
+                      >
+                        {badge.label}
+                      </span>
+                    )
+                  )}
                 </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {displayFeatures.map((feat, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/8 flex items-start gap-2.5"
+                  >
+                    <CheckCircle2 size={15} className="text-emerald-500 shrink-0 mt-0.5" />
+                    <span className="text-xs sm:text-[13px] text-slate-700 dark:text-slate-200 leading-snug">
+                      {feat}
+                    </span>
+                  </div>
+                ))}
               </div>
 
-              {/* Technologies */}
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-2 flex items-center gap-1.5">
-                  <Cpu size={15} className="text-purple-500" />
-                  <span>{lang === 'ar' ? 'التقنيات والمكتبات المستخدمة' : 'Technologies & Libraries'}</span>
-                </h4>
+              <div className="space-y-3 pt-2">
+                <h5 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Cpu size={16} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                  <span>
+                    {lang === 'ar'
+                      ? 'المكتبات والحزم والواجهات البرمجية'
+                      : 'Packages, Architecture & APIs'}
+                  </span>
+                </h5>
+
                 <div className="flex flex-wrap gap-2">
-                  {project.technologies.map((tech) => (
+                  {displayTechStack.map((tech) => (
                     <span
                       key={tech}
-                      className="px-3 py-1 rounded-lg bg-blue-50 dark:bg-white/5 border border-blue-200 dark:border-white/10 text-xs font-mono font-semibold text-blue-900 dark:text-cyan-300"
+                      className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-white/5 border border-blue-200/80 dark:border-white/10 text-xs font-mono font-semibold text-blue-900 dark:text-[#7DD3FC]"
                     >
                       {tech}
                     </span>
                   ))}
                 </div>
               </div>
+            </section>
 
-            </div>
-          )}
-
-          {/* TAB 2: ARCHITECTURE & STACK DEEP DIVE */}
-          {activeTab === 'architecture' && (
-            <div className="space-y-6">
-              
-              {/* Clean Architecture Three-Tier Hierarchy */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 space-y-4 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
-                    <ShieldCheck size={18} className="text-cyan-500" />
-                    <span>{lang === 'ar' ? 'هيكلة Clean Architecture المطبقة في فلاتر' : 'Flutter Clean Architecture Specification'}</span>
-                  </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-cyan-400 font-bold border border-blue-500/20">
-                    SOLID Compliant
-                  </span>
-                </div>
-                
-                <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed">
-                  {lang === 'ar'
-                    ? 'فصل صارم بين الطبقات لعزل منطق الأعمال (Business Logic) عن تفاصيل العرض وقواعد البيانات، مما يتيح الاختبار الأحادي بنسبة 100%:'
-                    : 'Strict separation of concerns isolating core business rules from presentation and data sources, enabling maximum modularity and test coverage:'}
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1 text-xs">
-                  {/* Presentation Layer */}
-                  <div className="p-4 rounded-xl bg-white dark:bg-[#0a0d16] border border-blue-500/30 shadow-xs flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Smartphone size={16} className="text-blue-500" />
-                        <span className="font-extrabold text-blue-600 dark:text-cyan-400">1. Presentation</span>
-                      </div>
-                      <p className="text-slate-600 dark:text-gray-300 text-[11px] leading-relaxed">
-                        {project.architecture?.presentationLayer ||
-                          (lang === 'ar'
-                            ? 'واجهات فلاتر (Widgets)، الشاشات (Views)، ومستمعي الحالات (BlocConsumer/BlocBuilder)، وتنسيق الحركات بسلاسة.'
-                            : 'Flutter UI widgets, responsive views, Cubit/Bloc state listeners, and fluid transitions.')}
-                      </p>
-                    </div>
-                    <div className="mt-3 pt-2 border-t border-slate-100 dark:border-white/5 font-mono text-[10px] text-slate-400">
-                      Layer: UI & State Consumers
-                    </div>
-                  </div>
-
-                  {/* Domain Layer */}
-                  <div className="p-4 rounded-xl bg-white dark:bg-[#0a0d16] border border-emerald-500/30 shadow-xs flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <GitBranch size={16} className="text-emerald-500" />
-                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400">2. Domain</span>
-                      </div>
-                      <p className="text-slate-600 dark:text-gray-300 text-[11px] leading-relaxed">
-                        {project.architecture?.domainLayer ||
-                          (lang === 'ar'
-                            ? 'دارت نقي (Pure Dart): الكيانات (Entities)، حالات الاستخدام (UseCases)، وعقود المستودعات (Contracts) بدون أي اعتماد خارجي.'
-                            : 'Pure Dart entities, business use cases, and repository interfaces with zero framework coupling.')}
-                      </p>
-                    </div>
-                    <div className="mt-3 pt-2 border-t border-slate-100 dark:border-white/5 font-mono text-[10px] text-emerald-400">
-                      Layer: Pure Core Business Logic
-                    </div>
-                  </div>
-
-                  {/* Data Layer */}
-                  <div className="p-4 rounded-xl bg-white dark:bg-[#0a0d16] border border-purple-500/30 shadow-xs flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Database size={16} className="text-purple-500" />
-                        <span className="font-extrabold text-purple-600 dark:text-purple-400">3. Data</span>
-                      </div>
-                      <p className="text-slate-600 dark:text-gray-300 text-[11px] leading-relaxed">
-                        {project.architecture?.dataLayer ||
-                          (lang === 'ar'
-                            ? 'نماذج البيانات (Models & Mappers)، التخزين المحلي السريع (Hive Box)، وتكاملات الشبكة (REST API / Retrofit).'
-                            : 'Data models, JSON serializers, Hive local caching boxes, and remote REST/Firebase datasources.')}
-                      </p>
-                    </div>
-                    <div className="mt-3 pt-2 border-t border-slate-100 dark:border-white/5 font-mono text-[10px] text-purple-400">
-                      Layer: Remote & Local Sources
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* State Management & Caching Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* State Management Strategy */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 space-y-2">
-                  <h5 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm flex items-center gap-2">
-                    <RefreshCw size={15} className="text-cyan-500" />
-                    <span>{lang === 'ar' ? 'إدارة الحالة (State Management)' : 'Reactive State Management'}</span>
-                  </h5>
-                  <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed">
-                    {project.architecture?.stateManagementPattern ||
-                      'Unidirectional data flow powered by Cubit/BLoC state machines with immutable state emissions.'}
+            {/* SECTION 3: SCALABLE 40+ SCREEN GALLERY */}
+            <section
+              ref={galleryRef}
+              id="workspace-gallery"
+              className="scroll-mt-4 pt-8 border-t border-slate-200 dark:border-white/10 space-y-5"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <ImageIcon size={18} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                    <span>
+                      {lang === 'ar'
+                        ? `معرض شاشات التطبيق (${screenshots.length})`
+                        : `Mobile Screenshots Gallery (${screenshots.length})`}
+                    </span>
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {lang === 'ar'
+                      ? 'اضغط على أي شاشة للتكبير والتنقل بالأسهم'
+                      : 'Click any screen to inspect fullscreen with keyboard navigation'}
                   </p>
                 </div>
 
-                {/* Storage & Caching Strategy */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 space-y-2">
-                  <h5 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm flex items-center gap-2">
-                    <Database size={15} className="text-emerald-500" />
-                    <span>{lang === 'ar' ? 'استراتيجية التخزين والأوفلاين' : 'Storage & Offline Persistence'}</span>
-                  </h5>
-                  <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed">
-                    {project.architecture?.storageStrategy ||
-                      'Offline-first architecture with instant cache recovery, sub-millisecond local reads, and persistent disk state.'}
-                  </p>
-                </div>
+                {screenshots.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setLightboxOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-[#027DFD] hover:text-white text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
+                  >
+                    <ZoomIn size={13} />
+                    <span>{lang === 'ar' ? 'فتح العارض الشامل' : 'Open Lightbox'}</span>
+                  </button>
+                )}
               </div>
 
-              {/* Predictable Trace Flow */}
-              <div className="p-4 rounded-2xl bg-slate-900 text-slate-200 font-mono text-xs space-y-2 border border-slate-800">
-                <div className="flex items-center justify-between text-cyan-400 font-bold mb-1">
-                  <span className="flex items-center gap-1.5">
-                    <Terminal size={14} />
-                    <span>Runtime Execution Flow</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400">Single Direction</span>
+              {galleryGroups.length > 1 && (
+                <div className="flex flex-wrap items-center gap-1.5 pb-1">
+                  {galleryGroups.map((group) => {
+                    const active = (activeGalleryGroup?.id || 'all') === group.id;
+                    return (
+                      <button
+                        key={group.id}
+                        type="button"
+                        onClick={() => {
+                          setGalleryCategory(group.id);
+                          setVisibleGalleryCount(GALLERY_PAGE_SIZE);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold border transition-colors cursor-pointer ${
+                          active
+                            ? 'bg-[#027DFD] text-white border-[#027DFD]'
+                            : 'bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-[#027DFD]/50'
+                        }`}
+                      >
+                        {group.label}
+                      </button>
+                    );
+                  })}
                 </div>
-                <div className="p-3 rounded-xl bg-black/40 text-slate-300 space-y-1 text-[11px]">
-                  <div className="text-cyan-400">1. UI Interaction (User Tap / Form Submit)</div>
-                  <div className="text-slate-500 ps-4">↓ Triggers Cubit Function</div>
-                  <div className="text-emerald-400 ps-4">2. Cubit executes isolated Domain UseCase</div>
-                  <div className="text-slate-500 ps-8">↓ Invokes Repository Contract (Data Boundary)</div>
-                  <div className="text-purple-400 ps-8">3. Local Hive Box / Remote Dio Client returns typed Result</div>
-                  <div className="text-slate-500 ps-4">↓ Cubit emits new immutable State</div>
-                  <div className="text-blue-400">4. BlocBuilder updates only affected widgets (Zero Frame Drops)</div>
-                </div>
-              </div>
+              )}
 
-              {/* Clone and Run Guide */}
-              <div className="p-4 rounded-2xl bg-slate-900 text-slate-200 font-mono text-xs space-y-2.5 border border-slate-800">
-                <div className="flex items-center justify-between text-cyan-400 font-bold">
-                  <div className="flex items-center gap-2">
-                    <Terminal size={14} />
-                    <span>{lang === 'ar' ? 'أوامر الاستنساخ والتشغيل' : 'Developer Build Commands'}</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400">Flutter SDK 3.x+</span>
-                </div>
-                <div className="space-y-1.5 text-[11px] text-gray-300">
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-400">Clone:</span>
-                    <code className="bg-black/40 px-2 py-0.5 rounded text-emerald-400">git clone https://github.com/ahmed-el-bialy/{project.repoName}.git</code>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-400">Run App:</span>
-                    <code className="bg-black/40 px-2 py-0.5 rounded text-cyan-300">flutter pub get && flutter run</code>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-400">Build Release:</span>
-                    <code className="bg-black/40 px-2 py-0.5 rounded text-purple-300">flutter build apk --release</code>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          )}
-
-          {/* TAB 3: VERIFIED HIGH-PERFORMANCE SCREENSHOTS (ZERO CLS) */}
-          {activeTab === 'screenshots' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between pb-1 flex-wrap gap-2">
-                <span className="text-xs font-semibold text-slate-700 dark:text-gray-300">
-                  {lang === 'ar'
-                    ? `معرض لقطات الشاشة الحية (${screenshots.length} شاشة تم التحقق منها)`
-                    : `Verified Mobile Screenshots Gallery (${screenshots.length} screens)`}
-                </span>
-                <span className="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">
-                  {lang === 'ar' ? 'اضغط على أي شاشة للتكبير الشامل' : 'Click to inspect in fullscreen lightbox'}
-                </span>
-              </div>
-
-              {loadingScreens ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-                  {[1, 2, 3, 4, 5, 6].map((sk) => (
+              {loadingScreens && screenshots.length === 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
+                  {[1, 2, 3, 4].map((sk) => (
                     <div
                       key={sk}
-                      className="aspect-[9/16] rounded-2xl bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 dark:from-slate-800 dark:via-slate-700/60 dark:to-slate-800 animate-pulse"
+                      className="aspect-[9/16] rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse"
                     />
                   ))}
                 </div>
               ) : screenshots.length === 0 ? (
-                <div className="py-14 text-center text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-white/[0.02] rounded-2xl border border-dashed border-slate-300 dark:border-white/10">
-                  <ImageIcon size={36} className="mx-auto mb-2 opacity-50 text-blue-500" />
-                  <p className="font-semibold text-sm">{lang === 'ar' ? 'لم يتم العثور على لقطات شاشة لهذا المستودع.' : 'No screenshot gallery found for this repository.'}</p>
+                <div className="py-12 text-center text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-white/[0.02] rounded-2xl border border-dashed border-slate-300 dark:border-white/10">
+                  <ImageIcon size={32} className="mx-auto mb-2 opacity-50 text-[#027DFD]" />
+                  <p className="font-semibold text-xs sm:text-sm">
+                    {lang === 'ar'
+                      ? 'لم يتم العثور على شاشات لهذا المستودع بعد.'
+                      : 'No screenshot assets found in this repository yet.'}
+                  </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 sm:gap-4">
-                  {screenshots.map((url, i) => (
-                    <ScreenshotCard
-                      key={i}
-                      url={url}
-                      index={i}
-                      projectName={project.name}
-                      onClick={() => {
-                        setActiveScreenIndex(i);
-                        setLightboxOpen(true);
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 4: CASE STUDY & VERIFIED METRICS */}
-          {activeTab === 'casestudy' && (
-            <div className="space-y-6">
-              {/* Language Switcher for Study Case (Shown ONLY if both EN and AR versions exist) */}
-              {studyCaseExistsEn && studyCaseExistsAr && (
-                <div className="flex items-center justify-between bg-slate-100 dark:bg-white/[0.03] p-3 rounded-xl border border-slate-200 dark:border-white/10">
-                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-white">
-                    <FileCode size={16} className="text-cyan-400" />
-                    <span>{lang === 'ar' ? 'دراسة الحالة (Study Case Markdown)' : 'Study Case Documentation'}</span>
+                <>
+                  <div
+                    className={`grid gap-3.5 sm:gap-4 ${
+                      isFullPage
+                        ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
+                        : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
+                    }`}
+                  >
+                    {activeGalleryGroup.items
+                      .slice(0, visibleGalleryCount)
+                      .map((item) => (
+                        <GalleryCard
+                          key={`${item.url}-${item.globalIndex}`}
+                          url={item.url}
+                          label={item.label}
+                          index={item.globalIndex}
+                          projectName={project.name}
+                          isActive={activeScreenIndex === item.globalIndex}
+                          onSelect={() => setActiveScreenIndex(item.globalIndex)}
+                          onInspect={() => {
+                            setActiveScreenIndex(item.globalIndex);
+                            setLightboxOpen(true);
+                          }}
+                        />
+                      ))}
                   </div>
-                  <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-white/10 p-1 rounded-lg">
-                    <button
-                      onClick={() => {
-                        setStudyCaseLang('en');
-                        if (studyCaseContentEn) setStudyCaseContent(studyCaseContentEn);
-                      }}
-                      className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                        studyCaseLang === 'en'
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-slate-600 dark:text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      English
-                    </button>
-                    <button
-                      onClick={() => {
-                        setStudyCaseLang('ar');
-                        if (studyCaseContentAr) setStudyCaseContent(studyCaseContentAr);
-                      }}
-                      className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                        studyCaseLang === 'ar'
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-slate-600 dark:text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      العربية
-                    </button>
-                  </div>
-                </div>
-              )}
 
-              {studyCaseLoading ? (
-                <div className="py-16 text-center text-slate-400 flex flex-col items-center justify-center space-y-3">
-                  <Loader2 size={24} className="animate-spin text-cyan-400" />
-                  <span className="text-xs font-mono">Loading study case markdown...</span>
+                  {activeGalleryGroup.items.length > visibleGalleryCount && (
+                    <div className="flex justify-center pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleGalleryCount((prev) => prev + GALLERY_PAGE_SIZE)}
+                        className="btn-kinetic inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#027DFD] hover:bg-[#026ae0] text-white text-xs font-bold shadow-sm cursor-pointer"
+                      >
+                        <ChevronDown size={15} />
+                        <span>
+                          {lang === 'ar'
+                            ? `عرض المزيد (${
+                                activeGalleryGroup.items.length - visibleGalleryCount
+                              } متبقية)`
+                            : `Show More (${
+                                activeGalleryGroup.items.length - visibleGalleryCount
+                              } remaining)`}
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+
+            {/* SECTION 4: ARCHITECTURE, FOLDER TREE & DEVELOPER CLI */}
+            <section
+              ref={architectureRef}
+              id="workspace-architecture"
+              className="scroll-mt-4 pt-8 border-t border-slate-200 dark:border-white/10 space-y-6"
+            >
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
+                  <Layers size={18} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                  <span>
+                    {lang === 'ar'
+                      ? 'المعمارية الهندسية وهيكل المشروع'
+                      : 'Clean Architecture & Repository Structure'}
+                  </span>
                 </div>
-              ) : studyCaseExists && studyCaseContent ? (
-                <div className="p-5 sm:p-6 rounded-2xl bg-slate-900/90 text-slate-200 font-mono text-xs sm:text-sm leading-relaxed whitespace-pre-wrap border border-white/10 shadow-xl overflow-x-auto">
-                  {studyCaseContent}
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Measurable Performance Metrics Strip */}
+                <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-[#7DD3FC] font-bold border border-blue-500/20">
+                  SOLID Compliant
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-blue-500/25 flex flex-col justify-between">
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-3 flex items-center gap-1.5">
-                      <Activity size={15} className="text-emerald-500" />
-                      <span>{lang === 'ar' ? 'مؤشرات الأداء الفعلية (Performance Metrics)' : 'Production Benchmarks & Metrics'}</span>
-                    </h4>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
-                        <div className="text-[10px] font-mono text-slate-500 dark:text-gray-400 uppercase font-bold">FPS Stability</div>
-                        <div className="text-lg sm:text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
-                          {project.metrics?.fpsStability || '60 FPS'}
-                        </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Smooth Transitions</div>
-                      </div>
-
-                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
-                        <div className="text-[10px] font-mono text-slate-500 dark:text-gray-400 uppercase font-bold">Query Latency</div>
-                        <div className="text-lg sm:text-xl font-extrabold text-blue-600 dark:text-cyan-400 mt-1">
-                          {project.metrics?.loadLatency || '< 200ms'}
-                        </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">Cold Read Time</div>
-                      </div>
-
-                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
-                        <div className="text-[10px] font-mono text-slate-500 dark:text-gray-400 uppercase font-bold">Offline Support</div>
-                        <div className="text-lg sm:text-xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">
-                          {project.metrics?.offlineSupport || '100% Offline'}
-                        </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">No Remote Blocker</div>
-                      </div>
-
-                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
-                        <div className="text-[10px] font-mono text-slate-500 dark:text-gray-400 uppercase font-bold">Binary Footprint</div>
-                        <div className="text-lg sm:text-xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">
-                          {project.metrics?.buildSize || '18.4 MB'}
-                        </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">AAB / APK Release</div>
-                      </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Smartphone size={15} className="text-blue-500" />
+                      <span className="font-extrabold text-blue-600 dark:text-cyan-400">
+                        1. Presentation
+                      </span>
                     </div>
+                    <p className="text-slate-600 dark:text-gray-300 text-xs leading-relaxed">
+                      {project.architecture?.presentationLayer ||
+                        (lang === 'ar'
+                          ? 'واجهات فلاتر المتجاوبة، الشاشات، ومستمعو الحالة (Cubit / BlocBuilder).'
+                          : 'Responsive Flutter UI views, reusable widgets, and Cubit/BLoC state listeners.')}
+                    </p>
                   </div>
+                </div>
 
-                  {/* Challenge vs Solution Narrative */}
-                  <div className="space-y-4">
-                    <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2">
-                      <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400">
-                        <Award size={16} />
-                        <span>{lang === 'ar' ? 'التحدي الهندسي (The Challenge)' : 'The Engineering Challenge'}</span>
-                      </div>
-                      <p className="text-xs sm:text-sm text-slate-700 dark:text-gray-300 leading-relaxed">
-                        {project.caseStudy?.challenge ||
-                          'Overcoming framework overhead and ensuring seamless state recovery across diverse screen form-factors with zero frame drops during heavy user interactions.'}
-                      </p>
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-emerald-500/25 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <GitBranch size={15} className="text-emerald-500" />
+                      <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
+                        2. Domain
+                      </span>
                     </div>
-
-                    <div className="p-4 sm:p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
-                      <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                        <CheckCircle size={16} />
-                        <span>{lang === 'ar' ? 'الحل المعماري والتنفيذ (The Solution)' : 'Architectural Solution & Decisions'}</span>
-                      </div>
-                      <p className="text-xs sm:text-sm text-slate-700 dark:text-gray-300 leading-relaxed">
-                        {project.caseStudy?.solution ||
-                          'Engineered using pure Dart Clean Architecture, isolating domain business logic into dedicated UseCases, coupled with Cubit event streams for predictable UI state emissions.'}
-                      </p>
-                    </div>
-
-                    <div className="p-4 sm:p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20 space-y-2">
-                      <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-blue-600 dark:text-cyan-400">
-                        <Sparkles size={16} />
-                        <span>{lang === 'ar' ? 'الدروس المستفادة والأثر (Key Takeaways)' : 'Key Takeaways & Engineering Impact'}</span>
-                      </div>
-                      <p className="text-xs sm:text-sm text-slate-700 dark:text-gray-300 leading-relaxed">
-                        {project.caseStudy?.keyLearnings ||
-                          'Refined widget lifecycle optimization and eliminated unnecessary rebuild trees using BlocSelector, reducing memory consumption by over 30%.'}
-                      </p>
-                    </div>
+                    <p className="text-slate-600 dark:text-gray-300 text-xs leading-relaxed">
+                      {project.architecture?.domainLayer ||
+                        (lang === 'ar'
+                          ? 'منطق الأعمال النقي (Pure Dart)، الكيانات، وعقود المستودعات.'
+                          : 'Pure Dart business logic, entities, use cases, and repository contracts.')}
+                    </p>
                   </div>
+                </div>
 
-                  {project.metrics?.highlights && project.metrics.highlights.length > 0 && (
-                    <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-2.5 flex items-center gap-1.5">
-                        <CheckCircle2 size={15} className="text-emerald-500" />
-                        <span>{lang === 'ar' ? 'إنجازات تم التحقق منها' : 'Verified Engineering Highlights'}</span>
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        {project.metrics.highlights.map((item, idx) => (
-                          <div
-                            key={idx}
-                            className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 flex items-start gap-2 text-xs text-slate-700 dark:text-gray-300"
-                          >
-                            <CheckCircle2 size={14} className="text-emerald-500 shrink-0 mt-0.5" />
-                            <span>{item}</span>
-                          </div>
-                        ))}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-purple-500/25 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Database size={15} className="text-purple-500" />
+                      <span className="font-extrabold text-purple-600 dark:text-purple-400">
+                        3. Data
+                      </span>
+                    </div>
+                    <p className="text-slate-600 dark:text-gray-300 text-xs leading-relaxed">
+                      {project.architecture?.dataLayer ||
+                        (lang === 'ar'
+                          ? 'موفرو البيانات المحليين والشبكيين (Hive / REST APIs / Firebase).'
+                          : 'DTO models, local caching storage (Hive), and REST API / Firebase datasources.')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {parsedReadmeData.architectureNotes.length > 0 && (
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 space-y-2">
+                  <h5 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                    {lang === 'ar' ? 'ملاحظات معمارية من المستودع' : 'Repository Architecture Notes'}
+                  </h5>
+                  <ul className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                    {parsedReadmeData.architectureNotes.map((note, ni) => (
+                      <li key={ni} className="flex items-start gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#027DFD] mt-1.5 shrink-0" />
+                        <span>{note}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {parsedReadmeData.folderTree && (
+                <div
+                  dir="ltr"
+                  className="p-4 sm:p-5 rounded-2xl bg-[#0a0d16] text-slate-200 font-mono text-xs space-y-2.5 border border-slate-800 shadow-lg"
+                >
+                  <div className="flex items-center justify-between text-[#00C7FF] font-bold">
+                    <span className="flex items-center gap-2">
+                      <FolderTree size={14} />
+                      <span>Folder Structure</span>
+                    </span>
+                    <CopyChip label="Copy Tree" value={parsedReadmeData.folderTree} />
+                  </div>
+                  <pre className="p-3 rounded-xl bg-black/40 border border-white/5 overflow-x-auto text-[11px] leading-relaxed text-slate-300">
+                    {parsedReadmeData.folderTree}
+                  </pre>
+                </div>
+              )}
+
+              {/* Strictly Verified Telemetry Only (no fabricated benchmarks or fallback sizes) */}
+              {(project.metrics?.offlineSupport ||
+                project.metrics?.liveStatus ||
+                realApkSizeLabel ||
+                releaseInfo?.tagName) && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {project.metrics?.offlineSupport && (
+                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
+                      <div className="text-[10px] font-mono text-slate-500 uppercase font-bold">
+                        Offline Mode
+                      </div>
+                      <div className="text-sm sm:text-base font-extrabold text-purple-600 dark:text-purple-400 mt-1">
+                        {project.metrics.offlineSupport}
+                      </div>
+                    </div>
+                  )}
+                  {project.metrics?.liveStatus && (
+                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
+                      <div className="text-[10px] font-mono text-slate-500 uppercase font-bold">
+                        Distribution
+                      </div>
+                      <div className="text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
+                        {project.metrics.liveStatus}
+                      </div>
+                    </div>
+                  )}
+                  {releaseInfo?.tagName && (
+                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
+                      <div className="text-[10px] font-mono text-slate-500 uppercase font-bold">
+                        GitHub Release
+                      </div>
+                      <div className="text-sm sm:text-base font-extrabold text-blue-600 dark:text-cyan-400 mt-1 font-mono tabular-nums">
+                        {releaseInfo.tagName}
+                      </div>
+                    </div>
+                  )}
+                  {realApkSizeLabel && (
+                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
+                      <div className="text-[10px] font-mono text-slate-500 uppercase font-bold">
+                        Verified APK Size
+                      </div>
+                      <div className="text-sm sm:text-base font-extrabold text-amber-600 dark:text-amber-400 mt-1 tabular-nums">
+                        {realApkSizeLabel}
                       </div>
                     </div>
                   )}
                 </div>
               )}
-            </div>
-          )}
 
-        </div>
-
-        {/* Modal Action Footer */}
-        <div className="p-3 sm:p-4.5 bg-slate-50 dark:bg-[#121624] border-t border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            {hasPlayStore && (
-              <a
-                href={project.links.googlePlay}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors shadow-xs"
+              {/* Quick Build Commands */}
+              <div
+                dir="ltr"
+                className="p-4 sm:p-5 rounded-2xl bg-[#0a0d16] text-slate-200 font-mono text-xs space-y-3 border border-slate-800 shadow-lg"
               >
-                <ArrowUpRight size={14} />
-                <span>Google Play</span>
-              </a>
-            )}
-
-            {hasApk && (
-              <a
-                href={
-                  project.links.apkDownloadUrl ||
-                  releaseInfo.apkDownloadUrl ||
-                  releaseInfo.releaseUrl ||
-                  `https://github.com/ahmed-el-bialy/${project.repoName}/releases`
-                }
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-colors shadow-xs"
-              >
-                <Download size={14} />
-                <span>{project.links.apkDownloadUrl || releaseInfo.apkDownloadUrl ? 'Download APK' : 'View Release'}</span>
-                <span className="px-1.5 py-0.5 rounded bg-purple-800/80 text-[10px] font-mono font-bold text-purple-100">
-                  {formatFileSize(releaseInfo.apkSize)}
-                </span>
-              </a>
-            )}
-
-            <SmartDemoButtons resolved={resolvedModalLinks} stopPropagation={false} />
-          </div>
-
-          <div className="flex items-center gap-2 ms-auto flex-wrap">
-            {project.links.github && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-xs">
-                <span className="text-slate-400 select-none hidden sm:inline">$</span>
-                <span className="text-slate-700 dark:text-cyan-300 font-medium text-[11px] truncate max-w-[120px] sm:max-w-[190px]">
-                  git clone {project.repoName}.git
-                </span>
-                <button
-                  type="button"
-                  onClick={handleCopyClone}
-                  className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-gray-300 transition-colors cursor-pointer"
-                  title="Copy git clone command"
-                >
-                  {copiedClone ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
-                </button>
+                <div className="flex items-center justify-between text-[#00C7FF] font-bold">
+                  <div className="flex items-center gap-2">
+                    <Terminal size={14} />
+                    <span>Developer Build Commands</span>
+                  </div>
+                  <CopyChip
+                    label="Copy All"
+                    value={`git clone ${githubRepoUrl}.git\ncd ${project.repoName}\nflutter pub get\nflutter run`}
+                  />
+                </div>
+                <div className="space-y-1.5 text-[11px] sm:text-xs text-gray-300 bg-black/40 p-3.5 rounded-xl border border-white/5 overflow-x-auto">
+                  <div>
+                    <span className="text-slate-500 me-2">$</span>
+                    <span className="text-emerald-400">git clone {githubRepoUrl}.git</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 me-2">$</span>
+                    <span className="text-cyan-300">flutter pub get &amp;&amp; flutter run</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 me-2">$</span>
+                    <span className="text-purple-300">flutter build apk --release</span>
+                  </div>
+                </div>
               </div>
-            )}
+            </section>
 
-            {project.links.github && (
-              <a
-                href={project.links.github}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/15 text-slate-800 dark:text-white border border-slate-300 dark:border-white/10 font-bold text-xs transition-colors shadow-xs"
-              >
-                <Github size={14} />
-                <span>GitHub</span>
-                <ExternalLink size={12} />
-              </a>
-            )}
+            {/* SECTION 5: LIVE GITHUB STUDY CASE (ALWAYS SHOWN, NEVER FABRICATED) */}
+            <section
+              ref={casestudyRef}
+              id="workspace-casestudy"
+              className="scroll-mt-4 pt-8 border-t border-slate-200 dark:border-white/10 space-y-5 pb-4"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
+                  <BookOpen size={18} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                  <span>{lang === 'ar' ? 'دراسة الحالة الهندسية' : 'Engineering Study Case'}</span>
+                </div>
+
+                {hasEnglishStudyCase && hasArabicStudyCase && (
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/10 p-1 rounded-xl border border-slate-200 dark:border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setStudyCaseLang('en')}
+                      className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
+                        studyCaseLang === 'en'
+                          ? 'bg-[#027DFD] text-white'
+                          : 'text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      English
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStudyCaseLang('ar')}
+                      className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
+                        studyCaseLang === 'ar'
+                          ? 'bg-[#027DFD] text-white'
+                          : 'text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      العربية
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {studyCaseLoading ? (
+                <div className="py-12 rounded-3xl bg-slate-50 dark:bg-[#101421] border border-slate-200 dark:border-white/10 flex flex-col items-center justify-center gap-2.5 text-slate-500 dark:text-slate-400">
+                  <Loader2 size={22} className="animate-spin text-[#027DFD]" />
+                  <span className="text-xs font-mono">
+                    {lang === 'ar'
+                      ? 'جارٍ التحقق من ملف CASE_STUDY.md على GitHub...'
+                      : 'Checking GitHub repo for CASE_STUDY.md / CASE_STUDY_AR.md...'}
+                  </span>
+                </div>
+              ) : hasAnyStudyCase && activeStudyCaseMarkdown ? (
+                <div
+                  dir={studyCaseLang === 'ar' ? 'rtl' : 'ltr'}
+                  className="p-5 sm:p-7 rounded-3xl bg-slate-50 dark:bg-[#101421] border border-slate-200 dark:border-white/10"
+                >
+                  <ReadmeDocumentView
+                    rawMarkdown={activeStudyCaseMarkdown}
+                    repoName={project.repoName}
+                    branch={defaultBranch}
+                  />
+                </div>
+              ) : (
+                <div className="py-10 px-6 rounded-3xl bg-slate-50/70 dark:bg-white/[0.02] border border-dashed border-slate-300 dark:border-white/12 text-center space-y-2.5">
+                  <FileCode size={30} className="mx-auto text-slate-400 dark:text-slate-500" />
+                  <h5 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
+                    {lang === 'ar'
+                      ? 'لا توجد دراسة حالة لهذا المشروع حالياً'
+                      : 'There is no study case for now'}
+                  </h5>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                    {lang === 'ar'
+                      ? 'بمجرد إضافة ملف CASE_STUDY.md أو CASE_STUDY_AR.md في جذر المستودع على GitHub سيتم عرضه هنا تلقائياً.'
+                      : 'When CASE_STUDY.md or CASE_STUDY_AR.md is added to this repository root on GitHub, it will load here automatically.'}
+                  </p>
+                </div>
+              )}
+            </section>
           </div>
         </div>
-
       </div>
 
-      {/* Fullscreen Lightbox Overlay with Keyboard Navigation */}
+      {/* Fullscreen Keyboard-Navigable Gallery Lightbox */}
       {lightboxOpen && screenshots.length > 0 && (
         <div
-          className="fixed inset-0 z-[110] bg-black/95 flex items-center justify-center p-4 backdrop-blur-md"
-          onClick={() => setLightboxOpen(false)}
+          className="fixed inset-0 z-[120] bg-black/95 flex flex-col items-center justify-center p-4 backdrop-blur-md"
+          onClick={(e) => {
+            e.stopPropagation();
+            setLightboxOpen(false);
+          }}
         >
-          <button
-            onClick={() => setLightboxOpen(false)}
-            className="absolute top-4 end-4 text-white hover:text-red-400 p-2.5 rounded-full bg-white/10 hover:bg-white/20 cursor-pointer z-20 transition-colors"
-            aria-label="Close Lightbox"
-          >
-            <X size={24} />
-          </button>
+          <div className="absolute top-4 inset-x-4 flex items-center justify-between pointer-events-none z-20">
+            <span className="px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white font-mono text-xs border border-white/10 capitalize">
+              {project.name} ·{' '}
+              {formatReadableScreenName(
+                screenshots[activeScreenIndex % screenshots.length],
+                activeScreenIndex
+              )}{' '}
+              ({(activeScreenIndex % screenshots.length) + 1} / {screenshots.length})
+            </span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxOpen(false);
+              }}
+              className="pointer-events-auto text-white hover:text-rose-400 p-2.5 rounded-full bg-white/10 hover:bg-white/20 cursor-pointer transition-colors"
+              aria-label="Close Lightbox"
+            >
+              <X size={22} />
+            </button>
+          </div>
 
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               prevScreen();
@@ -1134,13 +1756,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           </button>
 
           <img
-            src={screenshots[activeScreenIndex]}
-            alt={`Screenshot ${activeScreenIndex + 1}`}
-            className="max-h-[86vh] max-w-[90vw] object-contain rounded-2xl shadow-2xl border border-white/10"
+            src={screenshots[activeScreenIndex % screenshots.length]}
+            alt={`Screenshot ${(activeScreenIndex % screenshots.length) + 1}`}
+            className="max-h-[75vh] max-w-[90vw] object-contain rounded-2xl shadow-2xl border border-white/10"
             onClick={(e) => e.stopPropagation()}
           />
 
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               nextScreen();
@@ -1151,16 +1774,35 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             <ChevronRight size={24} />
           </button>
 
-          {/* Indicator Counter */}
-          <div className="absolute bottom-6 inset-x-0 flex justify-center pointer-events-none">
-            <span className="px-3.5 py-1.5 rounded-full bg-black/70 backdrop-blur-md text-white font-mono text-xs border border-white/10 shadow-lg">
-              {activeScreenIndex + 1} / {screenshots.length}
-            </span>
-          </div>
+          {screenshots.length > 1 && (
+            <div
+              className="mt-5 flex items-center gap-2 max-w-[90vw] overflow-x-auto px-3 py-2 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md no-scrollbar"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {screenshots.map((imgUrl, idx) => (
+                <button
+                  key={`${imgUrl}-lb-${idx}`}
+                  type="button"
+                  onClick={() => setActiveScreenIndex(idx)}
+                  className={`w-10 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${
+                    activeScreenIndex % screenshots.length === idx
+                      ? 'border-[#00C7FF] scale-110 opacity-100'
+                      : 'border-white/15 opacity-55 hover:opacity-90'
+                  }`}
+                >
+                  <img
+                    src={imgUrl}
+                    alt={`Thumb ${idx + 1}`}
+                    className="w-full h-full object-cover object-top"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 
-  return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : null;
+  return typeof document !== 'undefined' ? createPortal(workspaceNode, document.body) : null;
 };

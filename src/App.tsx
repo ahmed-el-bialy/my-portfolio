@@ -23,7 +23,7 @@ import { ProjectDetailsModal } from './components/ProjectDetailsModal';
 import { ThemeRevealOverlay } from './components/ThemeRevealOverlay';
 import { BrandLogoMark } from './components/BrandLogoMark';
 import { PageSkeletonLoader } from './components/PageSkeletonLoader';
-import { LeafAnimation } from './components/LeafAnimation';
+import { LEAF_DOUBLE_DRAW_MS } from './components/LeafAnimation';
 import { Github, Linkedin, Youtube, Mail, RefreshCw, ArrowUp, Terminal, Sparkles } from 'lucide-react';
 import { WhatsAppLogo, TikTokLogo } from './components/TechLogos';
 import { useLanguage } from './context/LanguageContext';
@@ -91,8 +91,6 @@ export default function App() {
     if (typeof window === 'undefined') return false;
     return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   });
-  const [transitionSection, setTransitionSection] = useState<NavTab | null>(null);
-  const transitionTimerRef = useRef<number | null>(null);
 
   const profile = DEFAULT_PROFILE;
 
@@ -151,12 +149,12 @@ export default function App() {
     applyThemeToDom(isDark);
   }, [isDark]);
 
-  // First site open Leaf entrance overlay (honors full 1.8s draw cadence)
+  // First site open Leaf entrance overlay (3.5s dwell synced with 2 calm 1.75s calligraphy draws)
   useEffect(() => {
     if (!showInitialSplash) return;
     const timer = window.setTimeout(() => {
       setShowInitialSplash(false);
-    }, 1750);
+    }, LEAF_DOUBLE_DRAW_MS);
     return () => window.clearTimeout(timer);
   }, [showInitialSplash]);
 
@@ -381,32 +379,8 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (transitionTimerRef.current) {
-        window.clearTimeout(transitionTimerRef.current);
-      }
-    };
-  }, []);
-
   const handleNavigate = (tab: NavTab) => {
     prefetchTab(tab);
-
-    if (transitionTimerRef.current) {
-      window.clearTimeout(transitionTimerRef.current);
-      transitionTimerRef.current = null;
-    }
-
-    if (tab !== activeTab && !prefersReducedMotion) {
-      setTransitionSection(tab);
-      transitionTimerRef.current = window.setTimeout(() => {
-        setTransitionSection(null);
-        transitionTimerRef.current = null;
-      }, 1750);
-    } else {
-      setTransitionSection(null);
-    }
-
     setActiveTab(tab);
     if (typeof window !== 'undefined') {
       const targetHash = `#${tab}`;
@@ -450,63 +424,64 @@ export default function App() {
           isAnyModalOpen={anyModalOpen}
         />
 
-        {/* Focused Multi-View Main Stage with Smooth Bilingual Crossfade */}
+        {/* Focused Multi-View Main Stage with Inline Leaf Loading & Bilingual Crossfade */}
         <main id="main-content" className="flex-1 pb-24 md:pb-12">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={lang}
-              dir={dir}
-              initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={prefersReducedMotion ? undefined : { opacity: 0, y: -4 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full"
-            >
-              {activeTab === 'overview' && (
-                <motion.div
-                  key="view-overview"
-                  initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18, ease: 'easeOut' }}
-                >
-                  {transitionSection === 'overview' ? (
-                    <PageSkeletonLoader view="overview" isDark={isDark} />
-                  ) : (
-                    <>
-                      <HeroSection
-                        profile={profile}
-                        isDark={isDark}
-                        onOpenContact={() => setIsContactOpen(true)}
-                        onOpenResume={() => setIsResumeOpen(true)}
-                        onOpenBooking={() => openBookingModal(null)}
-                        onExploreProjects={() => handleNavigate('projects')}
-                        onInspectRevio={handleInspectRevio}
-                        totalReposCount={liveRepoCount}
-                      />
-                      <AboutSection onExploreExperience={() => handleNavigate('experience')} />
-                      <OverviewProjectsPreview
-                        githubUsername={profile.githubUsername}
-                        onExploreAllProjects={() => handleNavigate('projects')}
-                      />
-                      <HowIWorkSection
-                        onOpenBooking={() => openBookingModal('discovery-cal')}
-                        onExploreProjects={() => handleNavigate('projects')}
-                      />
-                    </>
-                  )}
-                </motion.div>
-              )}
+          {showInitialSplash ? (
+            <PageSkeletonLoader view={activeTab} isDark={isDark} />
+          ) : isSwitchingLang ? (
+            <PageSkeletonLoader
+              view="language"
+              targetLang={switchingTargetLang}
+              isDark={isDark}
+            />
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={lang}
+                dir={dir}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0, y: -4 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full"
+              >
+                {activeTab === 'overview' && (
+                  <motion.div
+                    key="view-overview"
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                  >
+                    <HeroSection
+                      profile={profile}
+                      isDark={isDark}
+                      onOpenContact={() => setIsContactOpen(true)}
+                      onOpenResume={() => setIsResumeOpen(true)}
+                      onOpenBooking={() => openBookingModal(null)}
+                      onExploreProjects={() => handleNavigate('projects')}
+                      onInspectRevio={handleInspectRevio}
+                      onInspectProject={(proj) => setHeroInspectedProject(proj)}
+                      totalReposCount={liveRepoCount}
+                    />
+                    <AboutSection onExploreExperience={() => handleNavigate('experience')} />
+                    <OverviewProjectsPreview
+                      githubUsername={profile.githubUsername}
+                      onExploreAllProjects={() => handleNavigate('projects')}
+                    />
+                    <HowIWorkSection
+                      onOpenBooking={() => openBookingModal('discovery-cal')}
+                      onExploreProjects={() => handleNavigate('projects')}
+                    />
+                  </motion.div>
+                )}
 
-              {activeTab === 'projects' && (
-                <motion.div
-                  key="view-projects"
-                  initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18, ease: 'easeOut' }}
-                >
-                  {transitionSection === 'projects' ? (
-                    <PageSkeletonLoader view="projects" isDark={isDark} />
-                  ) : (
+                {activeTab === 'projects' && (
+                  <motion.div
+                    key="view-projects"
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                  >
                     <Suspense fallback={<PageSkeletonLoader view="projects" isDark={isDark} />}>
                       <ProjectsSection
                         currentGithubUser={profile.githubUsername}
@@ -514,38 +489,30 @@ export default function App() {
                         isDark={isDark}
                       />
                     </Suspense>
-                  )}
-                </motion.div>
-              )}
+                  </motion.div>
+                )}
 
-              {activeTab === 'experience' && (
-                <motion.div
-                  key="view-experience"
-                  initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18, ease: 'easeOut' }}
-                >
-                  {transitionSection === 'experience' ? (
-                    <PageSkeletonLoader view="experience" isDark={isDark} />
-                  ) : (
+                {activeTab === 'experience' && (
+                  <motion.div
+                    key="view-experience"
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                  >
                     <Suspense fallback={<PageSkeletonLoader view="experience" isDark={isDark} />}>
                       <ExperienceSection onOpenResume={() => setIsResumeOpen(true)} />
                       <StackSection />
                     </Suspense>
-                  )}
-                </motion.div>
-              )}
+                  </motion.div>
+                )}
 
-              {activeTab === 'contact' && (
-                <motion.div
-                  key="view-contact"
-                  initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18, ease: 'easeOut' }}
-                >
-                  {transitionSection === 'contact' ? (
-                    <PageSkeletonLoader view="contact" isDark={isDark} />
-                  ) : (
+                {activeTab === 'contact' && (
+                  <motion.div
+                    key="view-contact"
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                  >
                     <Suspense fallback={<PageSkeletonLoader view="contact" isDark={isDark} />}>
                       <ContactSection
                         profile={profile}
@@ -554,47 +521,12 @@ export default function App() {
                       />
                       <FAQSection />
                     </Suspense>
-                  )}
-                </motion.div>
-              )}
-            </motion.div>
-          </AnimatePresence>
+                  </motion.div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          )}
         </main>
-
-        {/* Initial Site Open Clean Ringless Leaf Entrance */}
-        <AnimatePresence>
-          {showInitialSplash && (
-            <motion.div
-              key="initial-leaf-splash"
-              initial={{ opacity: 1 }}
-              exit={{ opacity: 0, transition: { duration: 0.35, ease: 'easeOut' } }}
-              className="fixed inset-0 z-[100] flex items-center justify-center bg-[#f8fafc] dark:bg-[#08090d]"
-            >
-              <LeafAnimation
-                isDark={isDark}
-                label={lang === 'ar' ? 'أحمد البيلي · مطور تطبيقات Flutter' : 'Ahmed El-Bialy · Flutter Developer'}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* EN <-> AR Language Toggle Leaf Curtain */}
-        <AnimatePresence>
-          {!showInitialSplash && isSwitchingLang && (
-            <motion.div
-              key="lang-switch-leaf-overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { duration: 0.2 } }}
-              exit={{ opacity: 0, transition: { duration: 0.25 } }}
-              className="fixed inset-0 z-[95] flex items-center justify-center bg-[#f8fafc]/95 dark:bg-[#08090d]/95 backdrop-blur-md"
-            >
-              <LeafAnimation
-                isDark={isDark}
-                label={switchingTargetLang === 'ar' ? 'جاري التبديل إلى العربية...' : 'Switching to English...'}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Circular Reveal Theme Switcher CSS Fallback */}
         {isTransitioningTheme && (

@@ -1071,12 +1071,10 @@ export async function fetchRawRepoReadme(repoName: string, username: string = 'a
   const timestamp = Date.now();
 
   try {
-    // 1. Try GitHub REST API first with strict no-cache headers to bypass CDN edge cache
+    // 1. Try GitHub REST API first with timestamp cache-busting (no CORS-blocked Cache-Control headers)
     const apiRes = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/readme?t=${timestamp}`, {
       headers: {
-        Accept: "application/vnd.github.raw+json",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache"
+        Accept: "application/vnd.github.raw+json"
       },
       cache: 'no-store'
     });
@@ -1090,15 +1088,11 @@ export async function fetchRawRepoReadme(repoName: string, username: string = 'a
       }
     }
 
-    // 2. Fallback to raw branches with timestamp & no-cache headers
+    // 2. Fallback to raw branches with timestamp cache-busting (simple CORS-safe GET)
     const branches = ['main', 'master'];
     for (const branch of branches) {
       const url = `https://raw.githubusercontent.com/${username}/${cleanRepo}/${branch}/README.md?t=${timestamp}`;
       const res = await fetch(url, {
-        headers: {
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          "Pragma": "no-cache"
-        },
         cache: 'no-store'
       });
       if (res.ok) {
@@ -1131,6 +1125,88 @@ export async function fetchRepoReadme(repoName: string, username: string = 'ahme
   return raw ? preprocessReadmeContent(raw) : null;
 }
 
+export interface RepoCaseStudyData {
+  en: string | null;
+  ar: string | null;
+}
+
+/**
+ * Fetches live CASE_STUDY.md and CASE_STUDY_AR.md directly from the repository root.
+ * Returns null per missing file so the UI never displays fabricated study case data.
+ */
+export async function fetchRepoCaseStudies(
+  repoName: string,
+  defaultBranch: string = 'main',
+  username: string = 'ahmed-el-bialy',
+  forceRefresh: boolean = false
+): Promise<RepoCaseStudyData> {
+  if (!repoName) return { en: null, ar: null };
+  const cleanRepo = repoName.trim();
+  const cacheKey = `gh_casestudy_v1_${username}_${cleanRepo}`;
+
+  if (!forceRefresh && typeof window !== 'undefined') {
+    try {
+      const cachedRaw = localStorage.getItem(cacheKey);
+      if (cachedRaw) {
+        const parsed = JSON.parse(cachedRaw);
+        if (parsed && Date.now() - (parsed.timestamp || 0) < 1000 * 60 * 15) {
+          return {
+            en: parsed.en || null,
+            ar: parsed.ar || null,
+          };
+        }
+      }
+    } catch {}
+  }
+
+  const branchCandidates = Array.from(new Set([defaultBranch || 'main', 'main', 'master']));
+  const fetchMarkdownFile = async (filename: string): Promise<string | null> => {
+    const bust = forceRefresh ? `?t=${Date.now()}` : '';
+    for (const branch of branchCandidates) {
+      try {
+        const res = await fetch(
+          `https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(
+            cleanRepo
+          )}/${encodeURIComponent(branch)}/${filename}${bust}`,
+          { cache: forceRefresh ? 'no-store' : 'default' }
+        );
+        if (res.ok) {
+          const text = await res.text();
+          if (text && text.trim().length > 15) {
+            return text;
+          }
+        }
+        // If default branch responded explicitly with 404, only check alternate branch if main vs master differs
+        if (res.status === 404 && branch !== defaultBranch) {
+          break;
+        }
+      } catch {}
+    }
+    return null;
+  };
+
+  const [enRaw, arRaw] = await Promise.all([
+    fetchMarkdownFile('CASE_STUDY.md'),
+    fetchMarkdownFile('CASE_STUDY_AR.md'),
+  ]);
+
+  const result: RepoCaseStudyData = {
+    en: enRaw ? preprocessReadmeContent(enRaw) : null,
+    ar: arRaw ? preprocessReadmeContent(arRaw) : null,
+  };
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(
+        cacheKey,
+        JSON.stringify({ timestamp: Date.now(), en: result.en, ar: result.ar })
+      );
+    } catch {}
+  }
+
+  return result;
+}
+
 /**
  * Fetches latest repository release data from GitHub API with full asset and APK inspection with cache-busting
  */
@@ -1144,12 +1220,10 @@ export async function fetchRepositoryReleaseData(
   const timestamp = Date.now();
 
   try {
-    // 1. Query latest published release live from GitHub (no-cache, no-store)
+    // 1. Query latest published release live from GitHub (CORS-safe simple GET + no-store)
     let res = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/releases/latest?t=${timestamp}`, {
       headers: {
-        Accept: "application/vnd.github+json",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache"
+        Accept: "application/vnd.github+json"
       },
       cache: 'no-store'
     });
@@ -1162,9 +1236,7 @@ export async function fetchRepositoryReleaseData(
       // 2. Query release list for pre-releases or recent tags
       const listRes = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/releases?per_page=1&t=${timestamp}`, {
         headers: {
-          Accept: "application/vnd.github+json",
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          "Pragma": "no-cache"
+          Accept: "application/vnd.github+json"
         },
         cache: 'no-store'
       });
@@ -1216,7 +1288,7 @@ export async function fetchRepositoryReleaseData(
 }
 
 export function formatFileSize(bytes?: number): string {
-  if (!bytes || bytes <= 0) return '18.4 MB';
+  if (!bytes || bytes <= 0) return '';
   if (bytes < 1024 * 1024) {
     return `${(bytes / 1024).toFixed(1)} KB`;
   }
@@ -1284,13 +1356,21 @@ export interface RepoLiveMetadata {
   discoveredScreenshots?: string[];
   hasRelease: boolean;
   readmeText?: string;
+  rawReadmeText?: string;
+  defaultBranch?: string;
+  starsCount?: number;
+  forksCount?: number;
+  pushedAt?: string;
+  language?: string | null;
+  topics?: string[];
+  description?: string | null;
   lastChecked: number;
 }
 
 /**
  * Live repository media resolver:
  * Fetches latest raw README with timestamp cache-busting, extracts liveDemoUrl (Latest Update / Live Demo)
- * and playlistUrl (Main Demo / Full Review / Playlist), plus Google Play badges and APK assets.
+ * and playlistUrl (Main Demo / Full Review / Playlist), plus Google Play badges, screenshots, and APK assets.
  */
 export async function fetchRepoLiveMetadata(
   repoName: string,
@@ -1298,28 +1378,31 @@ export async function fetchRepoLiveMetadata(
   forceRefresh: boolean = false
 ): Promise<RepoLiveMetadata> {
   const cleanName = repoName.trim();
-  const cacheKey = `live_media_v2_${username}_${cleanName}`;
+  const cacheKey = `live_media_v3_${username}_${cleanName}`;
 
   if (!forceRefresh && typeof window !== 'undefined') {
     try {
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (Date.now() - (parsed.lastChecked || 0) < 1000 * 60 * 2) {
+        if (Date.now() - (parsed.lastChecked || 0) < 1000 * 60 * 2 && parsed.rawReadmeText) {
           return parsed;
         }
       }
     } catch {}
   }
 
-  // 1. Fetch live fresh raw README with cache-busting timestamp & no-cache headers in parallel with releases
-  const [rawReadme, releaseInfo] = await Promise.all([
+  // 1. Fetch live fresh raw README with cache-busting timestamp & no-cache headers in parallel with releases & repo screenshots
+  const [rawReadme, releaseInfo, folderScreens] = await Promise.all([
     fetchRawRepoReadme(cleanName, username).catch(() => null),
-    fetchRepositoryReleaseData(cleanName, username).catch((): RepoReleaseInfo => ({ hasRelease: false }))
+    fetchRepositoryReleaseData(cleanName, username).catch((): RepoReleaseInfo => ({ hasRelease: false })),
+    fetchRepoScreenshots(cleanName, username).catch((): string[] => []),
   ]);
 
-  // 2. Parse links dynamically from fresh raw README
+  // 2. Parse links & embedded screenshots dynamically from fresh raw README
   const parsedLinks = parseLinksFromReadme(rawReadme);
+  const embeddedScreens = extractEmbeddedReadmeScreenshots(rawReadme);
+  const combinedScreens = Array.from(new Set([...folderScreens, ...embeddedScreens]));
 
   // 3. Verified known fallback mappings ONLY if README didn't declare them
   const known = KNOWN_REPO_MEDIA[cleanName] || KNOWN_REPO_MEDIA[cleanName.toLowerCase()] || {};
@@ -1331,7 +1414,9 @@ export async function fetchRepoLiveMetadata(
     googlePlayUrl: parsedLinks.playStoreUrl || known.playStore,
     apkDownloadUrl: releaseInfo.apkDownloadUrl || parsedLinks.apkUrl,
     releaseUrl: releaseInfo.releaseUrl,
+    discoveredScreenshots: combinedScreens.length > 0 ? combinedScreens : undefined,
     hasRelease: Boolean(releaseInfo.hasRelease),
+    rawReadmeText: rawReadme || undefined,
     readmeText: rawReadme ? preprocessReadmeContent(rawReadme) : undefined,
     lastChecked: Date.now()
   };
@@ -1554,7 +1639,15 @@ export async function fetchConsolidatedGitHubPortfolio(
             releaseUrl: releaseInfo.releaseUrl,
             discoveredScreenshots: discoveredScreens.length > 0 ? discoveredScreens : undefined,
             hasRelease: Boolean(releaseInfo.hasRelease),
+            rawReadmeText: rawReadme || undefined,
             readmeText: rawReadme ? preprocessReadmeContent(rawReadme) : undefined,
+            defaultBranch: repoMatch?.default_branch || 'main',
+            starsCount: repoMatch?.stargazers_count,
+            forksCount: repoMatch?.forks_count,
+            pushedAt: repoMatch?.pushed_at,
+            language: repoMatch?.language,
+            topics: repoMatch?.topics,
+            description: repoMatch?.description,
             lastChecked: Date.now(),
           };
           liveMediaMap[name] = meta;
@@ -1647,7 +1740,15 @@ export async function fetchConsolidatedGitHubPortfolio(
       releaseUrl: r.releaseUrl,
       discoveredScreenshots: readmeScreens.length > 0 ? readmeScreens : undefined,
       hasRelease: Boolean(r.releaseUrl || r.apkDownloadUrl || parsedLinks.apkUrl),
+      rawReadmeText: rawReadme || undefined,
       readmeText: rawReadme ? preprocessReadmeContent(rawReadme) : undefined,
+      defaultBranch: r.default_branch || 'main',
+      starsCount: r.stargazers_count,
+      forksCount: r.forks_count,
+      pushedAt: r.pushed_at,
+      language: r.language,
+      topics: r.topics,
+      description: r.description,
       lastChecked: Date.now(),
     };
 

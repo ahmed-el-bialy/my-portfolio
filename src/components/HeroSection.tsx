@@ -12,7 +12,7 @@ import {
   FolderGit2,
   Smartphone,
 } from 'lucide-react';
-import { DeveloperProfile, FEATURED_PROJECTS } from '../data/portfolioData';
+import { DeveloperProfile, FEATURED_PROJECTS, Project } from '../data/portfolioData';
 import { AHMED_CONFIG } from '../data/config';
 import { WhatsAppLogo, TikTokLogo } from './TechLogos';
 import { BrandLogoMark } from './BrandLogoMark';
@@ -30,6 +30,7 @@ interface HeroSectionProps {
   onExploreProjects: () => void;
   onOpenBooking?: () => void;
   onInspectRevio?: () => void;
+  onInspectProject?: (project: Project) => void;
   totalReposCount?: number;
 }
 
@@ -42,6 +43,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onExploreProjects,
   onOpenBooking,
   onInspectRevio,
+  onInspectProject,
   totalReposCount,
 }) => {
   const { lang, dir, t } = useLanguage();
@@ -135,8 +137,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const availabilityText =
     AHMED_CONFIG.availability === 'open'
       ? lang === 'ar'
-        ? 'متاح لفرص العمل والمشاريع'
-        : 'Open to Work'
+        ? 'متاح الآن للعمل (دوام كامل / فريلانس)'
+        : 'Open to Work · Full-Time & Freelance'
       : lang === 'ar'
       ? 'مشغول حالياً'
       : 'Booked';
@@ -178,13 +180,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           animate="visible"
           className="lg:col-span-6 flex flex-col justify-center items-start gap-4 sm:gap-5"
         >
-          {/* Clean Unboxed Kicker Strip */}
+          {/* High-Clarity Availability & Discipline Strip */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-slate-600 dark:text-[#94a3b8]"
+            className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs sm:text-[13px] font-medium text-slate-600 dark:text-[#94a3b8]"
           >
-            <span className="font-semibold text-emerald-700 dark:text-emerald-400">
-              {availabilityText}
+            <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-2.5 py-1">
+              <span>{availabilityText}</span>
             </span>
             <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
               ·
@@ -193,7 +195,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
               ·
             </span>
-            <span className="font-mono text-[#027DFD] dark:text-[#00C7FF]">
+            <span className="font-mono text-[#027DFD] dark:text-[#00C7FF] font-semibold">
               Flutter &amp; AI
             </span>
           </motion.div>
@@ -365,7 +367,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           transition={{ duration: 0.48, delay: 0.14, ease: EASE_EDITORIAL }}
           className="lg:col-span-6 flex"
         >
-          <RevioShowcaseStage isDark={isDark} onInspectRevio={onInspectRevio} />
+          <RevioShowcaseStage
+            isDark={isDark}
+            onInspectRevio={onInspectRevio}
+            onInspectProject={onInspectProject}
+          />
         </motion.div>
       </div>
 

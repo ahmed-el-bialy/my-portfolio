@@ -304,24 +304,14 @@ export const FEATURED_PROJECTS: Project[] = [
       networkingStrategy: "Local-only with zero remote latency, ready for optional Firebase cloud backup sync."
     },
     metrics: {
-      fpsStability: "60 FPS rock-solid",
-      loadLatency: "< 15ms cold deck read",
       offlineSupport: "100% Offline Capable",
-      buildSize: "18.4 MB optimized AAB",
       liveStatus: "Live on Google Play Store",
       highlights: [
-        "Zero-latency flashcard flipping with native hardware acceleration",
-        "Sub-millisecond CRUD operations with Hive binary serialization",
-        "Zero memory leaks across 500+ card test deck stress tests",
-        "Production deployment following Google Play safety guidelines"
+        "Hardware-accelerated 3D flip-card transitions for active recall",
+        "Local binary CRUD persistence powered by Hive",
+        "Published on Google Play following release & policy checks"
       ]
     },
-    caseStudy: {
-      challenge: "Students and lifelong learners suffer from sluggish flashcard apps bloated with network dependencies, unexpected login barriers, and laggy animations during rapid review sessions.",
-      solution: "Engineered Revio as an offline-first, high-cadence study tool using pure Dart Clean Architecture and Hive CE binary adapters, delivering instantaneous flip transitions and zero network roundtrips.",
-      keyLearnings: "Achieved seamless 3D matrix card flips without frame drops by offloading computational transforms from the widget build method into dedicated animated builder hooks.",
-      businessImpact: "Successfully published to the Google Play Store with 100% user-reported satisfaction on offline reliability."
-    }
   },
   {
     id: 2,
@@ -355,10 +345,7 @@ export const FEATURED_PROJECTS: Project[] = [
       networkingStrategy: "Dio with automatic retry on 429 rate-limits and Bearer token rotation."
     },
     metrics: {
-      fpsStability: "60 FPS parallax scroll",
-      loadLatency: "~250ms API response",
       offlineSupport: "Cached poster browse",
-      buildSize: "21.2 MB release APK",
       liveStatus: "Open-source flagship",
       highlights: [
         "Debounced TMDB query engine preventing redundant API quota usage",
@@ -366,12 +353,6 @@ export const FEATURED_PROJECTS: Project[] = [
         "Comprehensive error boundaries with visual retry mechanics"
       ]
     },
-    caseStudy: {
-      challenge: "Handling complex media hierarchies (cast lists, high-res posters, video trailers, and real-time search) without sluggish scrolling or API rate exhaustion.",
-      solution: "Implemented debounced stream controllers in BLoC, paired with custom Sliver geometry and Dio caching interceptors to eliminate repeat network hits.",
-      keyLearnings: "Mastered Flutter Sliver protocol to ensure silky 60 FPS scrolling while simultaneously buffering YouTube trailer players in-place.",
-      businessImpact: "Serves as an architectural template for streaming and media discovery clients."
-    }
   },
   {
     id: 3,
@@ -403,23 +384,14 @@ export const FEATURED_PROJECTS: Project[] = [
       networkingStrategy: "Optimized payload parsing with Dart compute isolates for heavy JSON lists."
     },
     metrics: {
-      fpsStability: "60 FPS list scrolling",
-      loadLatency: "< 300ms product fetch",
       offlineSupport: "Cart & wishlist stored",
-      buildSize: "19.8 MB",
       liveStatus: "Live demo & source",
       highlights: [
         "Real-time cart pricing math with promotional discounts",
-        "Instant category switching with zero UI flicker",
+        "Instant category switching with clean reactive updates",
         "Optimistic UI updates for add-to-cart interactions"
       ]
     },
-    caseStudy: {
-      challenge: "Building a fluid mobile shopping experience where cart operations and product filtering feel instantaneous even with hundreds of catalog items.",
-      solution: "Employed the Service Layer pattern with Cubit state management, decoupling API parsing from state mutation and providing optimistic UI updates.",
-      keyLearnings: "Learned fine-grained state listening techniques using BlocSelector to prevent rebuilding entire catalog grids on cart increments.",
-      businessImpact: "Demonstrates production readiness for retail, D2C, and mobile commerce applications."
-    }
   },
   {
     id: 4,
@@ -449,23 +421,14 @@ export const FEATURED_PROJECTS: Project[] = [
       networkingStrategy: "Direct REST queries with query sanitization and timeout guards."
     },
     metrics: {
-      fpsStability: "60 FPS gradient blend",
-      loadLatency: "~180ms weather fetch",
       offlineSupport: "Last forecast cached",
-      buildSize: "17.6 MB",
       liveStatus: "Video demo & GitHub",
       highlights: [
         "Color palette interpolation transitioning smoothly between climate types",
-        "Zero-latency search autocomplete with custom Flutter SearchDelegate",
+        "City autocomplete search powered by custom Flutter SearchDelegate",
         "Complete metric & imperial unit support"
       ]
     },
-    caseStudy: {
-      challenge: "Presenting detailed meteorological data (pressure, humidity, UV index, 7-day outlook) cleanly without overwhelming user attention.",
-      solution: "Adopted a neo-minimalist visual hierarchy where background gradients immediately communicate current weather at a glance before reading text numbers.",
-      keyLearnings: "Utilized Flutter's AnimationController and Tween sequences to morph screen gradients smoothly as weather condition states shift.",
-      businessImpact: "A showcase of high visual polish and micro-interaction craft."
-    }
   },
   {
     id: 5,
@@ -495,23 +458,14 @@ export const FEATURED_PROJECTS: Project[] = [
       networkingStrategy: "Automatic header localization (ar/en) and SSL pinning."
     },
     metrics: {
-      fpsStability: "60 FPS feed scrolling",
-      loadLatency: "< 220ms headline feed",
       offlineSupport: "Article titles cached",
-      buildSize: "19.1 MB",
       liveStatus: "Video demo & GitHub",
       highlights: [
-        "Flawless Arabic typography and RTL alignment across all screens",
+        "Arabic typography and RTL alignment across all screens",
         "Type-safe HTTP interface definitions with Retrofit",
         "Clean article readability through tailored in-app WebView"
       ]
     },
-    caseStudy: {
-      challenge: "Arabic script and right-to-left layout dynamics frequently cause layout breaking, clipping, and irregular font kerning in mobile frameworks.",
-      solution: "Architected News-Cloud with strict directional-aware Flutter widgets (Directionality, EdgeInsetsDirectional) and custom Cairo font fallbacks.",
-      keyLearnings: "Gained mastery over bidirectional layout engine mechanics in Flutter to support bilingual audiences seamlessly.",
-      businessImpact: "Validated expertise in localized software development for Middle East & North Africa (MENA) markets."
-    }
   },
   {
     id: 6,
@@ -540,23 +494,14 @@ export const FEATURED_PROJECTS: Project[] = [
       networkingStrategy: "WebSockets / gRPC bidirectional streaming maintained by Google Firebase SDK."
     },
     metrics: {
-      fpsStability: "60 FPS stream scrolling",
-      loadLatency: "< 50ms message sync",
       offlineSupport: "Firestore offline cache",
-      buildSize: "23.4 MB",
       liveStatus: "Open-source GitHub",
       highlights: [
-        "Real-time snapshot streams updating across devices in milliseconds",
+        "Real-time snapshot streams synced via Cloud Firestore",
         "Automatic reconnection and offline message queuing",
-        "Secure Firestore security rules protecting user data"
+        "Scoped Firestore security rules protecting user data"
       ]
     },
-    caseStudy: {
-      challenge: "Managing real-time chat concurrency and message ordering without dropped messages or UI stutter during rapid typing.",
-      solution: "Leveraged Firestore reactive snapshots combined with local optimistic rendering, so messages appear immediately upon send.",
-      keyLearnings: "Deepened practical skills in managing reactive streams, stream subscriptions, and unmounting listeners in Flutter.",
-      businessImpact: "Ready-to-deploy real-time chat infrastructure for social or customer support mobile apps."
-    }
   },
   {
     id: 7,
@@ -584,13 +529,10 @@ export const FEATURED_PROJECTS: Project[] = [
       networkingStrategy: "Fully standalone offline app with zero remote dependencies."
     },
     metrics: {
-      fpsStability: "60 FPS animations",
-      loadLatency: "Instantaneous",
       offlineSupport: "100% Offline Asset-based",
-      buildSize: "16.8 MB",
       liveStatus: "Open-source GitHub",
       highlights: [
-        "Zero-latency audio playback for character pronunciations",
+        "Bundled local audio playback for character pronunciations",
         "Gamified card progression encouraging daily practice"
       ]
     }
@@ -621,13 +563,10 @@ export const FEATURED_PROJECTS: Project[] = [
       networkingStrategy: "Local device operation designed for sports facilities without internet connectivity."
     },
     metrics: {
-      fpsStability: "60 FPS timer ticks",
-      loadLatency: "Instantaneous",
       offlineSupport: "100% Offline",
-      buildSize: "15.4 MB",
       liveStatus: "Open-source GitHub",
       highlights: [
-        "Accurate millisecond game clock with pause/resume precision",
+        "Period countdown game clock with pause/resume controls",
         "Responsive layout adapted for large tablet stadium displays"
       ]
     }

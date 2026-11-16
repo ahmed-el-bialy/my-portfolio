@@ -52,6 +52,7 @@ interface ProjectsSectionProps {
 export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
   currentGithubUser,
   onRepoCountChange,
+  isDark,
 }) => {
   const { lang, t } = useLanguage();
   const queryClient = useQueryClient();
@@ -541,7 +542,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                   {t.projects.hud.publicRepos}
                 </div>
                 <div className="font-extrabold font-mono tabular-nums text-xs sm:text-sm text-slate-900 dark:text-white">
-                  {githubStats.public_repos || githubRepos.length}
+                  {githubStats.public_repos ?? githubRepos.length}
                 </div>
               </div>
             </div>
@@ -555,7 +556,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                   {t.projects.hud.totalStars}
                 </div>
                 <div className="font-extrabold font-mono tabular-nums text-xs sm:text-sm text-slate-900 dark:text-white">
-                  {githubStats.totalStars || 16}
+                  {githubStats.totalStars ?? 0}
                 </div>
               </div>
             </div>
@@ -569,7 +570,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                   {t.projects.hud.totalForks}
                 </div>
                 <div className="font-extrabold font-mono tabular-nums text-xs sm:text-sm text-slate-900 dark:text-white">
-                  {githubStats.totalForks || 5}
+                  {githubStats.totalForks ?? 0}
                 </div>
               </div>
             </div>
@@ -684,6 +685,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
           <div className="absolute inset-0 flex items-center justify-center bg-[#f8fafc]/50 dark:bg-[#08090d]/55 backdrop-blur-sm">
             <LeafAnimation
               compact
+              isDark={isDark}
               label={
                 lang === 'ar'
                   ? 'جاري مزامنة التطبيقات ومستودعات GitHub...'
@@ -777,13 +779,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     r.name.toLowerCase() === project.repoName.toLowerCase() ||
                     r.name.toLowerCase() === project.name.toLowerCase()
                 );
-                const starCount = matchingRepo
-                  ? matchingRepo.stargazers_count
-                  : project.repoName === 'Revio'
-                  ? 3
-                  : project.repoName === 'Movura'
-                  ? 4
-                  : 2;
+                const starCount = matchingRepo ? matchingRepo.stargazers_count : null;
 
                 const techTags = extractRepoTechTags({
                   repoName: project.repoName,
@@ -823,13 +819,15 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                             {project.name}
                           </h3>
                           <div className="flex items-center gap-2 text-xs font-mono shrink-0 text-slate-500 dark:text-slate-400">
-                            <span className="inline-flex items-center gap-1 text-amber-500 font-semibold tabular-nums">
-                              <Star size={12} fill="currentColor" />
-                              {starCount}
-                            </span>
+                            {starCount !== null && starCount > 0 && (
+                              <span className="inline-flex items-center gap-1 text-amber-500 font-semibold tabular-nums">
+                                <Star size={12} fill="currentColor" />
+                                {starCount}
+                              </span>
+                            )}
                             {dynamicPlayUrl && (
                               <>
-                                <span aria-hidden="true">·</span>
+                                {starCount !== null && starCount > 0 && <span aria-hidden="true">·</span>}
                                 <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                                   Play Store
                                 </span>

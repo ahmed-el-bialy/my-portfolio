@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { Language, Translations, translations } from '../data/translations';
+export type { Language };
 
 interface LanguageContextType {
   lang: Language;
@@ -73,18 +74,18 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setSwitchingTargetLang(nextLang);
     setIsSwitchingLang(true);
 
-    // Swap RTL/LTR and strings smoothly behind the self-drawing Leaf curtain
+    // Swap RTL/LTR and strings midway during serene Leaf hold
     swapTimerRef.current = window.setTimeout(() => {
       setLangState(nextLang);
       swapTimerRef.current = null;
-    }, 520);
+    }, 1900);
 
-    // Hold full Leaf draw cadence before revealing swapped UI cleanly
+    // Reveal translated content cleanly after full draw + hold plateau
     endTimerRef.current = window.setTimeout(() => {
       setIsSwitchingLang(false);
       setSwitchingTargetLang(null);
       endTimerRef.current = null;
-    }, 1450);
+    }, 3900);
   };
 
   const setLang = (newLang: Language) => {

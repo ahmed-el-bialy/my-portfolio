@@ -2,7 +2,7 @@
 
 <img src="./public/brand-logo-mark.png" width="84" alt="Ahmed El-Bialy Leaf Emblem" />
 
-# Ahmed El-Bialy — Flutter Mobile Developer
+# Ahmed El-Bialy — Flutter Mobile Developer Portfolio
 
 **Cross-Platform Android & iOS Engineering • Clean Architecture • BLoC / Cubit • Hive • Live on Google Play**
 
@@ -17,6 +17,7 @@
 [![GitHub](https://img.shields.io/badge/GitHub-ahmed--el--bialy-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ahmed-el-bialy)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Ahmed_El--Bialy-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ahmedel-bialy/)
 [![YouTube](https://img.shields.io/badge/YouTube-@AhmedEl--Bialy-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@AhmedEl-Bialy)
+[![TikTok](https://img.shields.io/badge/TikTok-@ahmedelbialydev-010101?style=for-the-badge&logo=tiktok&logoColor=white)](https://www.tiktok.com/@ahmedelbialydev)
 [![Gmail](https://img.shields.io/badge/Gmail-ah.elbialy.dev@gmail.com-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:ah.elbialy.dev@gmail.com)
 [![WhatsApp](https://img.shields.io/badge/WhatsApp-Chat_Now-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/201022121573)
 
@@ -24,11 +25,11 @@
 
 ---
 
-## 📱 Overview
+## 📱 Portfolio Overview
 
-Official engineering portfolio of **Ahmed El-Bialy** — Flutter Mobile Developer and undergraduate at the **Faculty of Artificial Intelligence, Kafrelsheikh University** (`Oct 2023 – Jun 2027`).
+Official web portfolio of **Ahmed El-Bialy** — Flutter Mobile Developer and undergraduate at the **Faculty of Artificial Intelligence, Kafrelsheikh University** (`Oct 2023 – Jun 2027`).
 
-Designed and engineered as a unified full-stack showcase combining a **Name-First Hero Stage**, **live Google Play Store synchronization** for *Revio*, real-time **GitHub repository & README auto-discovery** (supporting both Express backend proxying and browser-direct `raw.githubusercontent.com` static deployments), **Hero-first mobile UI galleries**, an **Executive 2-Column Digital CV** with isolated `@media print` export, and a guided **2-step Cal.com consultation flow** — all bilingual (**English LTR / Arabic RTL**).
+Engineered as a bilingual (**English LTR / Arabic RTL**) full-stack React + Express showcase combining a **Name-First Hero Stage**, **live Google Play Store telemetry** for *Revio*, **automatic GitHub repository, `/screenshots/*` cover & README discovery** (across both the Express API proxy and direct client fallback for static hosting), a **frameless calligraphic Leaf loading sequence**, an **interactive bilingual Developer AI CLI**, an **Executive 2-Column Digital CV** with isolated PDF/print export, and a **2-step Cal.com consultation pipeline**.
 
 ---
 
@@ -125,7 +126,7 @@ class TmdbRepositoryImpl implements MediaRepository {
 
 ## 🛠️ Tech Stack Summary
 
-### Mobile Engineering Stack (Featured Production Apps)
+### Mobile Engineering Stack
 | Domain | Technologies & Patterns |
 | :--- | :--- |
 | **Core & Language** | Flutter SDK, Dart, Null Safety, Responsive Adaptive UI, RTL/LTR Localization |
@@ -138,10 +139,10 @@ class TmdbRepositoryImpl implements MediaRepository {
 ### Portfolio Web Stack (`my-portfolio`)
 | Layer | Technologies |
 | :--- | :--- |
-| **Frontend** | React 19, TypeScript 5, Vite 6, Tailwind CSS v4 |
-| **Motion & Code UI** | Framer Motion (`motion`), Shiki Syntax Highlighter, Lucide React, Canvas Confetti |
-| **Data & Caching** | TanStack React Query v5, Smart `README.md` Parser (`Watch Demo` / `Full Demo`), Dual-Mode Static + Proxy Sync |
-| **Backend Proxy** | Express (`server.ts`), TSX, Google Play & Consolidated GitHub Caching, Google GenAI SDK |
+| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS v4 |
+| **Motion & UI** | Framer Motion (`motion`), Custom SVG Luminance Calligraphy Mask (`LeafAnimation`), Shiki Highlighter, Lucide React |
+| **Data & Caching** | TanStack React Query v5, Smart `README.md` & `/screenshots/*` Auto-Discovery, Dual-Mode Static + Proxy Sync |
+| **Backend Proxy** | Express (`server.ts`), TSX, Google Play & Consolidated GitHub Caching, Google GenAI SDK (`gemini-4-hydrogen`) |
 
 ---
 
@@ -157,12 +158,13 @@ Configured `1200×630` social share card for **LinkedIn**, **WhatsApp**, and **X
 
 ## ✨ Key Portfolio Capabilities
 
-1. **Name-First Hero, Floating Blue-Rimmed Leaf & Interactive `RevioShowcaseStage`:** Pairs Ahmed's glowing blue-rimmed floating v6 Leaf emblem beside his name with a focused interactive *Revio* mobile showcase, balanced primary CTAs (**Explore My Apps · Book Consultation · Compact CV**), and 4 color-coded KPI cards (**Revio ★ Rating**, **Play Downloads**, **GitHub Repositories**, **Shipped Apps**).
-2. **Exact-Match Self-Drawing Leaf Loader (`LeafAnimation`):** SVG brush-stroke reveal mask that traces, holds at full clarity, and erases Ahmed's exact bold white brushstroke Leaf emblem over a frosted backdrop during section transitions.
-3. **AI-Powered Interactive Developer CLI (`TerminalEasterEggModal`):** Responsive mobile sheet and desktop terminal with one-tap quick commands (`whoami`, `stack`, `revio`, `projects`, `experience`, `contact`), command history, and natural-language Q&A via **`/api/ai/cli`** (`gemini-4-hydrogen`) with structured static fallback.
-4. **Hero-First Multi-Screen Covers (`ProjectCardCover`):** Displays high-resolution mobile UI screens immediately in a spacious 2-column grid with interactive numbered screen switchers (`01..04`) and quick cover toggle.
-5. **Smart Demo & Release Resolution (`SmartDemoButtons`):** Merges `portfolioData.ts` with live GitHub `README.md` extraction (both via Express `/api/github/portfolio` and browser-direct `raw.githubusercontent.com` on static hosts like Vercel), classifying single videos as **Watch Demo** and walkthrough playlists as **Full Demo**, alongside **Google Play** and `.apk` release links.
-6. **Executive 2-Column Digital CV (`ResumeModal`) & Guided Consultation (`BookingMeetingModal`):** Instant toggle between formatted 2-column CV (with isolated print export) and Drive PDF viewer, plus a 2-step Cal.com booking pipeline with WhatsApp & Gmail fallbacks.
+1. **Name-First Hero, Glowing Blue-Ringed Floating Leaf & `RevioShowcaseStage`:** Pairs Ahmed's floating v6 Leaf emblem inside a subtle cyan ring beside his name with a focused interactive *Revio* mobile showcase, balanced primary CTAs (**Explore My Apps · Book Consultation · Compact CV**), and 4 live KPI cards (**Revio ★ Rating**, **Play Downloads**, **GitHub Repositories**, **Shipped Apps**).
+2. **Frameless Calligraphy Self-Drawing Leaf Loader (`LeafAnimation`):** Unbordered 3-stroke `1.8s` calligraphy sequence tracing the Leaf emblem from the inner spiral coil out to the triangle base and final tip flick with a soft electric-cyan nib glow trail, synced seamlessly across initial site open (`2.0s`), section navigation (`2.0s`), and EN/AR RTL language toggles (`1.8s`).
+3. **Full Arabic RTL & English AI-Powered Developer CLI (`TerminalEasterEggModal`):** Responsive mobile bottom sheet and desktop terminal with dynamic `RTL`/`LTR` direction, localized one-tap command chips (`whoami`, `stack`, `revio`, `projects`, `experience`, `contact` + Arabic equivalents), command history, and natural-language Q&A via **`/api/ai/cli`** (`gemini-4-hydrogen`) with instant bilingual fallback.
+4. **100% Automatic Cover & Screen Auto-Discovery (`ProjectCardCover` + `/api/github/portfolio`):** Automatically inspects `/screenshots/*` (`cover.png/jpg/webp` + gallery screens) and embedded `README.md` imagery for any newly pushed GitHub repository so project cards and interactive screen switchers update with zero manual edits.
+5. **Symmetric Tech Stack Explorer & Bilingual Experience (`StackSection`):** Interactive capability cards with independent natural card heights (keeping adjacent neighbor cards compact), instant filtering across 16 mobile & AI engineering tools, and complete English/Arabic localization.
+6. **Smart Demo & Release Resolution (`SmartDemoButtons`):** Merges `portfolioData.ts` with live GitHub `README.md` extraction across both Express `/api/github/portfolio` and browser-direct `raw.githubusercontent.com`, classifying single videos as **Watch Demo**, walkthrough series as **Full Demo**, plus **Google Play** and `.apk` releases.
+7. **Executive 2-Column Digital CV (`ResumeModal`) & Guided Consultation (`BookingMeetingModal`):** Instant toggle between formatted 2-column CV (with isolated `@media print` export) and Drive PDF viewer, plus a 2-step Cal.com booking pipeline with WhatsApp & Gmail fallbacks.
 
 ---
 
@@ -175,13 +177,12 @@ Configured `1200×630` social share card for **LinkedIn**, **WhatsApp**, and **X
 │   ├── og-image.jpg / .png          # 1200x630 LinkedIn & WhatsApp preview card (Portrait + Leaf + KPIs)
 │   └── website-poster.png           # Latest portfolio hero banner
 ├── src/
-│   ├── components/                  # Modular React 19 UI, Hero stage, Exact Leaf loader, AI CLI & modals
-│   ├── context/                     # Bilingual EN/AR state & dynamic RTL/LTR switching
+│   ├── components/                  # Modular React 19 UI, Hero stage, Calligraphy Leaf loader, AI CLI & modals
+│   ├── context/                     # Bilingual EN/AR state & coordinated RTL/LTR curtain switching
 │   ├── data/                        # Single source of truth config, Dart snippets, translations & projects
-│   ├── services/                    # Consolidated GitHub client, README parser & Play Store stats hook
+│   ├── services/                    # Consolidated GitHub client, auto-screenshot scanner, README parser & Play Store hook
 │   └── utils/                       # Smart demo button classifier & repository tech tag extractor
 ├── server.ts                        # Express + Vite server (/api/github/portfolio, /api/playstore/app, /api/ai/cli)
-├── GITHUB_PROFILE_README.md         # Ready-to-copy personal GitHub profile README (ahmed-el-bialy)
 ├── index.html                       # Unified favicons, OpenGraph cards & Schema.org JSON-LD
 └── package.json                     # Build, dev, lint & start scripts
 ```
@@ -204,6 +205,15 @@ npm run lint    # tsc --noEmit
 npm run build   # Vite production bundle
 npm start       # Express production server on port 3000
 ```
+
+---
+
+## 🎓 Verified Credentials
+
+- **Faculty of Artificial Intelligence, Kafrelsheikh University** — B.Sc. in Artificial Intelligence (`Oct 2023 – Jun 2027`)
+- **CodeAlpha** — Flutter Development Trainee (`Jun 2026 – Jul 2026`)
+- **Sprints × Microsoft Summer Camp** — Mobile Development (`Jun 2025 – Jul 2025`) • [Certificate](https://sprints.ai/ar-eg/journeys/learning/ID%20-%20SPR%20-%20JC9327/view-certificate-serial)
+- **Udemy Complete Flutter & Dart Development** (`Apr 2026`) • [Certificate](https://www.udemy.com/certificate/UC-46b0d9a2-bf8f-4398-ae93-d3b9e54b9063/)
 
 ---
 
