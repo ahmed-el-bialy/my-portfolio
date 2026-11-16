@@ -1,161 +1,254 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 
 interface LeafAnimationProps {
   label?: string;
   sublabel?: string;
   compact?: boolean;
+  isDark?: boolean;
   className?: string;
 }
 
 /**
- * LeafAnimation renders a penless SVG calligraphy stroke simulation of the
- * Konoha Leaf emblem that smoothly draws itself, pauses with a subtle cyan/blue
- * glow, erases cleanly along the stroke, and loops during section transitions.
+ * Clean ringless self-drawing Leaf loader (1.8s loop):
+ * Uses an SVG luminance-to-alpha extraction filter + animated stroke reveal mask
+ * so Ahmed's exact bold brushstroke Leaf (/brand-logo-mark.png?v=6) paints cleanly
+ * directly onto any dark or light backdrop with zero circular/box borders.
  */
 export const LeafAnimation: React.FC<LeafAnimationProps> = ({
   label,
   sublabel,
   compact = false,
+  isDark,
   className = '',
 }) => {
   const prefersReducedMotion = useReducedMotion();
+  const uid = useId().replace(/:/g, '');
+  const maskId = `leaf-brush-mask-${uid}`;
+  const extractId = `leaf-extract-${uid}`;
+  const glowId = `leaf-tip-glow-${uid}`;
 
-  // Continuous inner spiral unwinding outward into the lower-left triangular stem base
-  const spiralAndStemPath =
-    'M 54 55 C 58.5 54 60.5 48.5 57 44.5 C 52.5 39.5 44 41.5 41.5 48.5 C 38.5 57.5 45.5 67 56.5 66.5 C 68.5 66 76.5 55.5 75 43 C 73.5 30 61 22.5 47.5 24 C 34 25.5 25.5 36.5 21 50 L 13.5 73 L 52 73';
+  const resolvedDark =
+    typeof isDark === 'boolean'
+      ? isDark
+      : typeof document !== 'undefined'
+      ? document.documentElement.classList.contains('dark')
+      : true;
 
-  // Signature upper-right leaf tip flick extending from the outer canopy arch
-  const tipFlickPath = 'M 65.5 26.5 L 74.5 31.5 L 87.5 20';
+  const strokeInk = resolvedDark ? '#F8FAFC' : '#0F172A';
+  const phantomOpacity = resolvedDark ? 0.1 : 0.08;
+
+  // Trajectory mapped directly onto /public/brand-logo-mark.png?v=6:
+  // Center spiral -> outer arch -> lower-left triangular stem base -> bottom sweep.
+  const mainBrushPath =
+    'M 57.5 52 C 58 46.5 52.5 41.5 46.5 44.5 C 40 48 41 59.5 50 63.5 C 61 68 70.5 58 69 45 C 67.5 32 54.5 25.5 42 29 C 31.5 32 25.5 45 20.5 60 L 16.5 73 L 54.5 73';
+
+  // Upper-right leaf tip flick sweeping outward from canopy arch
+  const tipBrushPath = 'M 65.5 31.5 L 72.5 37 L 83 27.5';
 
   return (
     <div
       role="status"
       aria-live="polite"
       className={`flex flex-col items-center justify-center text-center select-none ${
-        compact ? 'py-8 px-4' : 'py-12 px-6'
+        compact ? 'py-6 px-4' : 'py-8 px-6'
       } ${className}`}
     >
-      {/* Thin Glowing Blue Ring Frame + Self-Drawing SVG Canvas */}
+      {/* Pure Ringless Self-Drawing Leaf Emblem */}
       <div
-        className={`relative flex items-center justify-center rounded-full bg-black/95 p-[2px] bg-gradient-to-br from-[#027DFD] via-[#00C7FF] to-[#38BDF8] shadow-[0_0_26px_rgba(2,125,253,0.4)] dark:shadow-[0_0_34px_rgba(0,199,255,0.34)] ${
-          compact ? 'w-20 h-20' : 'w-24 h-24 sm:w-28 sm:h-28'
+        className={`relative flex items-center justify-center ${
+          compact ? 'w-20 h-20' : 'w-28 h-28 sm:w-32 sm:h-32'
         }`}
       >
-        <div className="w-full h-full rounded-full bg-black p-2.5 flex items-center justify-center relative">
-          <svg
-            viewBox="0 0 100 100"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="relative w-full h-full overflow-visible"
-          >
-            <defs>
-              <linearGradient id="leafAnimGrad" x1="12%" y1="80%" x2="88%" y2="20%">
-                <stop offset="0%" stopColor="#FFFFFF" />
-                <stop offset="65%" stopColor="#E0F2FE" />
-                <stop offset="100%" stopColor="#00C7FF" />
-              </linearGradient>
-              <filter id="leafAnimGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="0" stdDeviation="1.8" floodColor="#00C7FF" floodOpacity="0.65" />
-              </filter>
-            </defs>
+        {/* Subtle ambient cyan radial breathing behind Leaf without any hard outline */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 rounded-full blur-2xl pointer-events-none opacity-45"
+          style={{
+            background:
+              'radial-gradient(circle, rgba(2,125,253,0.34) 0%, rgba(0,199,255,0.12) 55%, transparent 75%)',
+          }}
+        />
 
-            {/* Faint guide track to preserve subtle leaf silhouette while erasing */}
-            <path
-              d={spiralAndStemPath}
-              stroke="rgba(255,255,255,0.08)"
-              strokeWidth="5.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d={tipFlickPath}
-              stroke="rgba(255,255,255,0.08)"
-              strokeWidth="5.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+        <svg
+          viewBox="0 0 100 100"
+          className="relative w-full h-full overflow-visible"
+          aria-label="Ahmed El-Bialy Logo Loading"
+        >
+          <defs>
+            {/* Extracts pure white brushstroke texture from brand-logo-mark.png with transparent alpha */}
+            <filter id={extractId} colorInterpolationFilters="sRGB">
+              <feColorMatrix type="luminanceToAlpha" result="alphaMask" />
+              <feFlood floodColor={strokeInk} floodOpacity="1" result="inkColor" />
+              <feComposite in="inkColor" in2="alphaMask" operator="in" />
+            </filter>
 
-            {/* Penless draw -> hold -> erase spiral + stem */}
+            <mask id={maskId} maskUnits="userSpaceOnUse">
+              <rect x="0" y="0" width="100" height="100" fill="black" />
+              <motion.path
+                d={mainBrushPath}
+                fill="none"
+                stroke="white"
+                strokeWidth="18"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={
+                  prefersReducedMotion
+                    ? { pathLength: 1, opacity: 1 }
+                    : { pathLength: 0, pathOffset: 0, opacity: 1 }
+                }
+                animate={
+                  prefersReducedMotion
+                    ? { pathLength: 1, opacity: 1 }
+                    : {
+                        pathLength: [0, 1, 1, 0, 0],
+                        pathOffset: [0, 0, 0, 1, 0],
+                        opacity: [1, 1, 1, 0.95, 0],
+                      }
+                }
+                transition={
+                  prefersReducedMotion
+                    ? undefined
+                    : {
+                        duration: 1.8,
+                        times: [0, 0.48, 0.65, 0.95, 1],
+                        ease: 'easeInOut',
+                        repeat: Infinity,
+                      }
+                }
+              />
+              <motion.path
+                d={tipBrushPath}
+                fill="none"
+                stroke="white"
+                strokeWidth="17"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={
+                  prefersReducedMotion
+                    ? { pathLength: 1, opacity: 1 }
+                    : { pathLength: 0, pathOffset: 0, opacity: 0 }
+                }
+                animate={
+                  prefersReducedMotion
+                    ? { pathLength: 1, opacity: 1 }
+                    : {
+                        pathLength: [0, 0, 1, 1, 0, 0],
+                        pathOffset: [0, 0, 0, 0, 1, 0],
+                        opacity: [0, 0, 1, 1, 0.92, 0],
+                      }
+                }
+                transition={
+                  prefersReducedMotion
+                    ? undefined
+                    : {
+                        duration: 1.8,
+                        times: [0, 0.3, 0.5, 0.65, 0.95, 1],
+                        ease: 'easeInOut',
+                        repeat: Infinity,
+                      }
+                }
+              />
+              {/* 100% brushstroke hold pulse so outer bristles are razor-crisp at hold peak */}
+              {!prefersReducedMotion && (
+                <motion.rect
+                  x="0"
+                  y="0"
+                  width="100"
+                  height="100"
+                  fill="white"
+                  animate={{ opacity: [0, 0, 1, 1, 0, 0] }}
+                  transition={{
+                    duration: 1.8,
+                    times: [0, 0.44, 0.51, 0.64, 0.72, 1],
+                    ease: 'easeInOut',
+                    repeat: Infinity,
+                  }}
+                />
+              )}
+            </mask>
+
+            <filter id={glowId} x="-25%" y="-25%" width="150%" height="150%">
+              <feGaussianBlur stdDeviation="1.4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Ultra-faint ghost imprint keeping visual anchor during erase phase */}
+          <image
+            href="/brand-logo-mark.png?v=6"
+            x="0"
+            y="0"
+            width="100"
+            height="100"
+            preserveAspectRatio="xMidYMid meet"
+            filter={`url(#${extractId})`}
+            opacity={phantomOpacity}
+          />
+
+          {/* Exact Leaf emblem revealed along the animated SVG brush mask */}
+          <image
+            href="/brand-logo-mark.png?v=6"
+            x="0"
+            y="0"
+            width="100"
+            height="100"
+            preserveAspectRatio="xMidYMid meet"
+            filter={`url(#${extractId})`}
+            mask={`url(#${maskId})`}
+          />
+
+          {/* Subtle penless electric-cyan glint tracing drawing frontier */}
+          {!prefersReducedMotion && (
             <motion.path
-              d={spiralAndStemPath}
-              stroke="url(#leafAnimGrad)"
-              strokeWidth="5.4"
+              d={mainBrushPath}
+              fill="none"
+              stroke="#00C7FF"
+              strokeOpacity="0.4"
+              strokeWidth="2.4"
               strokeLinecap="round"
               strokeLinejoin="round"
-              filter="url(#leafAnimGlow)"
-              initial={
-                prefersReducedMotion
-                  ? { pathLength: 1, opacity: 1 }
-                  : { pathLength: 0, pathOffset: 0, opacity: 0.95 }
-              }
-              animate={
-                prefersReducedMotion
-                  ? { pathLength: 1, opacity: 1 }
-                  : {
-                      pathLength: [0, 1, 1, 0, 0],
-                      pathOffset: [0, 0, 0, 1, 0],
-                      opacity: [0.85, 1, 1, 0.75, 0],
-                    }
-              }
-              transition={
-                prefersReducedMotion
-                  ? undefined
-                  : {
-                      duration: 2.0,
-                      times: [0, 0.44, 0.58, 0.92, 1],
-                      ease: 'easeInOut',
-                      repeat: Infinity,
-                    }
-              }
+              filter={`url(#${glowId})`}
+              animate={{
+                pathLength: [0, 0.14, 0.14, 0, 0],
+                pathOffset: [0, 0.86, 0.86, 1, 0],
+                opacity: [0, 0.8, 0, 0.5, 0],
+              }}
+              transition={{
+                duration: 1.8,
+                times: [0, 0.48, 0.65, 0.95, 1],
+                ease: 'easeInOut',
+                repeat: Infinity,
+              }}
             />
-
-            {/* Penless draw -> hold -> erase tip flick */}
-            <motion.path
-              d={tipFlickPath}
-              stroke="url(#leafAnimGrad)"
-              strokeWidth="5.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="url(#leafAnimGlow)"
-              initial={
-                prefersReducedMotion
-                  ? { pathLength: 1, opacity: 1 }
-                  : { pathLength: 0, pathOffset: 0, opacity: 0 }
-              }
-              animate={
-                prefersReducedMotion
-                  ? { pathLength: 1, opacity: 1 }
-                  : {
-                      pathLength: [0, 0, 1, 1, 0, 0],
-                      pathOffset: [0, 0, 0, 0, 1, 0],
-                      opacity: [0, 0, 1, 1, 0.65, 0],
-                    }
-              }
-              transition={
-                prefersReducedMotion
-                  ? undefined
-                  : {
-                      duration: 2.0,
-                      times: [0, 0.28, 0.48, 0.58, 0.92, 1],
-                      ease: 'easeInOut',
-                      repeat: Infinity,
-                    }
-              }
-            />
-          </svg>
-        </div>
+          )}
+        </svg>
       </div>
 
-      {label && (
-        <p className="mt-4 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 tracking-tight">
-          {label}
-        </p>
-      )}
-      {sublabel && (
-        <p className="mt-1 text-[11px] font-mono text-[#027DFD] dark:text-[#00C7FF]">
-          {sublabel}
-        </p>
+      {/* Understated Fine Progress Line & Whisper Label */}
+      {(label || sublabel) && (
+        <div className="mt-4 flex flex-col items-center gap-2 max-w-xs">
+          <div className="w-24 h-[2px] rounded-full bg-slate-200/80 dark:bg-white/10 overflow-hidden relative">
+            <motion.div
+              className="absolute inset-y-0 w-10 rounded-full bg-gradient-to-r from-transparent via-[#027DFD] to-[#00C7FF]"
+              animate={prefersReducedMotion ? undefined : { x: [-44, 100] }}
+              transition={{ duration: 1.35, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </div>
+          {label && (
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-300 tracking-tight">
+              {label}
+            </p>
+          )}
+          {sublabel && (
+            <p className="text-[10.5px] font-mono text-slate-400 dark:text-slate-500">
+              {sublabel}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

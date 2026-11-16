@@ -18,7 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { getVerifiedProjectScreenshots } from '../services/githubService';
+import { getVerifiedProjectScreenshots, fetchRepoScreenshots } from '../services/githubService';
 import { ImageWithSkeleton } from './ImageWithSkeleton';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -26,6 +26,7 @@ export interface ProjectCardCoverProps {
   repoName: string;
   language: string | null;
   coverUrl?: string;
+  discoveredScreenshots?: string[];
   isHighlight?: boolean;
   description?: string | null;
   topics?: string[];
@@ -312,6 +313,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   repoName,
   language,
   coverUrl,
+  discoveredScreenshots,
   description,
   topics,
   isCardHovered = false,
@@ -322,6 +324,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   const [selectedScreenIdx, setSelectedScreenIdx] = useState<number>(0);
   const [showingCoverArt, setShowingCoverArt] = useState<boolean>(false);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [autoDiscoveredScreens, setAutoDiscoveredScreens] = useState<string[]>([]);
   const [isSelfHovered, setIsSelfHovered] = useState<boolean>(false);
   const [manualPausedUntil, setManualPausedUntil] = useState<number>(0);
   const isHovered = Boolean(isCardHovered || isSelfHovered);
@@ -331,21 +334,56 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     [repoName, language, description, topics]
   );
 
+  const curatedScreens = useMemo(() => getVerifiedProjectScreenshots(repoName), [repoName]);
+
+  // Automatic client-side fallback discovery when a brand-new GitHub repo isn't in static VERIFIED_REPO_SCREENSHOTS yet
+  useEffect(() => {
+    let isCancelled = false;
+    if (curatedScreens.length > 0 || (discoveredScreenshots && discoveredScreenshots.length > 0)) {
+      setAutoDiscoveredScreens([]);
+      return;
+    }
+
+    fetchRepoScreenshots(repoName)
+      .then((urls) => {
+        if (!isCancelled && Array.isArray(urls) && urls.length > 0) {
+          setAutoDiscoveredScreens(urls);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [repoName, curatedScreens.length, discoveredScreenshots]);
+
   const verifiedScreenshots = useMemo(() => {
-    const curated = getVerifiedProjectScreenshots(repoName);
-    if (curated.length > 0) return curated.slice(0, 5);
+    if (curatedScreens.length > 0) return curatedScreens.slice(0, 5);
+    if (discoveredScreenshots && discoveredScreenshots.length > 0) {
+      return discoveredScreenshots.slice(0, 5);
+    }
+    if (autoDiscoveredScreens.length > 0) {
+      return autoDiscoveredScreens.slice(0, 5);
+    }
     if (coverUrl && !isStrictScreenshotsCoverUrl(coverUrl)) {
       return [coverUrl];
     }
     return [];
-  }, [repoName, coverUrl]);
+  }, [curatedScreens, discoveredScreenshots, autoDiscoveredScreens, coverUrl]);
 
   useEffect(() => {
     let isCancelled = false;
-    const candidates = [
-      coverUrl && isStrictScreenshotsCoverUrl(coverUrl) ? coverUrl : null,
-      `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/main/screenshots/cover.png`,
-    ].filter(Boolean) as string[];
+    const candidates = Array.from(
+      new Set(
+        [
+          coverUrl && isStrictScreenshotsCoverUrl(coverUrl) ? coverUrl : null,
+          `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/main/screenshots/cover.png`,
+          `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/main/screenshots/cover.jpg`,
+          `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/main/screenshots/cover.webp`,
+          `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/master/screenshots/cover.png`,
+        ].filter(Boolean) as string[]
+      )
+    );
 
     if (candidates.length === 0) {
       setCoverImageUrl(null);

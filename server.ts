@@ -1,12 +1,38 @@
+import 'dotenv/config';
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY || '' });
+const getAiClient = () => {
+  const rawKey = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
+  const apiKey = rawKey.replace(/^["']|["']$/g, '').trim();
+  if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') return null;
+  return new GoogleGenAI({
+    apiKey,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      },
+    },
+  });
+};
+
+const isGeminiAuthError = (error: any): boolean => {
+  const status = Number(error?.status ?? error?.code);
+  const message = String(error?.message || error || '');
+  return (
+    status === 400 ||
+    status === 401 ||
+    status === 403 ||
+    /API key not valid|API_KEY_INVALID|ACCESS_TOKEN_TYPE_UNSUPPORTED|UNAUTHENTICATED|PERMISSION_DENIED/i.test(
+      message
+    )
+  );
+};
 
 async function startServer() {
   const app = express();
@@ -87,6 +113,47 @@ async function startServer() {
     }
   }
 
+  async function fetchRepoScreenshotsServer(
+    username: string,
+    repoName: string,
+    defaultBranch: string
+  ): Promise<{ coverUrl?: string; screens: string[] }> {
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/contents/screenshots`,
+        { headers: githubHeaders() }
+      );
+      if (!res.ok) return { screens: [] };
+      const files = await res.json();
+      if (!Array.isArray(files)) return { screens: [] };
+
+      const imageRegex = /\.(png|jpe?g|webp)$/i;
+      let coverUrl: string | undefined;
+      const screens: string[] = [];
+
+      for (const file of files) {
+        if (file?.type !== 'file' || typeof file?.name !== 'string') continue;
+        if (!imageRegex.test(file.name)) continue;
+
+        const rawUrl =
+          file.download_url ||
+          `https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/${encodeURIComponent(
+            defaultBranch || 'main'
+          )}/screenshots/${encodeURIComponent(file.name)}`;
+
+        if (/^cover\.(png|jpe?g|webp)$/i.test(file.name)) {
+          coverUrl = rawUrl;
+        } else {
+          screens.push(rawUrl);
+        }
+      }
+
+      return { coverUrl, screens };
+    } catch {
+      return { screens: [] };
+    }
+  }
+
   // Consolidated GitHub Portfolio Proxy (reduces 60-100 client requests down to 1 cached call)
   app.get('/api/github/portfolio', async (req, res) => {
     const username = String(req.query.username || 'ahmed-el-bialy').trim() || 'ahmed-el-bialy';
@@ -134,21 +201,25 @@ async function startServer() {
         ? rawRepos.filter((r: any) => r?.name && r.name.toLowerCase() !== username.toLowerCase())
         : [];
 
-      // Fetch raw READMEs from raw.githubusercontent.com (0 REST API rate-limit cost) and single release check for top repos
+      // Fetch raw READMEs, releases, and /screenshots folder contents automatically for top repos
       const targetRepos = reposList.slice(0, 20);
       const rawReadmes: Record<string, string> = {};
       const releasesMap: Record<string, any> = {};
+      const screenshotsMap: Record<string, { coverUrl?: string; screens: string[] }> = {};
 
       await Promise.all(
         targetRepos.map(async (r: any) => {
-          const [readme, release] = await Promise.all([
-            fetchRawReadmeTextServer(username, r.name, r.default_branch || 'main'),
+          const branch = r.default_branch || 'main';
+          const [readme, release, screensInfo] = await Promise.all([
+            fetchRawReadmeTextServer(username, r.name, branch),
             fetchSingleRepoReleaseServer(username, r.name),
+            fetchRepoScreenshotsServer(username, r.name, branch),
           ]);
           if (readme) {
             rawReadmes[r.name] = readme;
           }
           releasesMap[r.name] = release;
+          screenshotsMap[r.name] = screensInfo;
         })
       );
 
@@ -157,6 +228,7 @@ async function startServer() {
         repos: reposList,
         rawReadmes,
         releasesMap,
+        screenshotsMap,
       };
 
       portfolioServerCache.set(cacheKey, {
@@ -284,8 +356,13 @@ async function startServer() {
         });
       }
 
+      const ai = getAiClient();
+      if (!ai) {
+        return res.status(503).json({ success: false, error: 'GEMINI_API_KEY is not configured.' });
+      }
+
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-4-hydrogen',
         contents,
         config: {
           tools: [{ googleSearch: {} }]
@@ -301,8 +378,87 @@ async function startServer() {
 
       return res.json({ success: false, raw: text });
     } catch (error: any) {
-      console.error('CV Parse Error:', error);
-      return res.status(500).json({ success: false, error: error.message });
+      if (isGeminiAuthError(error)) {
+        return res.status(401).json({
+          success: false,
+          keyInvalid: true,
+          error: 'Gemini API key is invalid or unauthorized. Please check GEMINI_API_KEY in Settings > Secrets.',
+        });
+      }
+      console.warn('CV Parse Error:', error?.message || error);
+      return res.status(500).json({ success: false, error: error?.message || 'CV parse failed' });
+    }
+  });
+
+  // Grounded Developer Portfolio AI CLI Assistant Endpoint
+  app.post('/api/ai/cli', async (req, res) => {
+    try {
+      const rawQuestion = typeof req.body?.question === 'string' ? req.body.question.trim() : '';
+      const lang = req.body?.lang === 'ar' ? 'ar' : 'en';
+
+      if (!rawQuestion) {
+        return res.status(400).json({ success: false, error: 'Question is required.' });
+      }
+
+      const question = rawQuestion.slice(0, 400);
+      const ai = getAiClient();
+
+      if (!ai) {
+        return res.json({
+          success: false,
+          fallback: true,
+          keyInvalid: true,
+          error: 'GEMINI_API_KEY is not configured in Settings > Secrets.',
+        });
+      }
+
+      const systemInstruction = `You are the interactive Developer CLI Assistant inside Ahmed El-Bialy's official Flutter Mobile Developer portfolio.
+Answer concisely in plain terminal-friendly text (no bloated markdown headings, under 120 words). Reply in ${lang === 'ar' || /[\u0600-\u06FF]/.test(question) ? 'Arabic (matching the user language cleanly)' : 'English'}.
+
+Strict verified facts only:
+- Name: Ahmed El-Bialy (أحمد البيلي), Flutter Mobile Developer based in El Mansoura, Egypt.
+- Status: Open to Work (Full-time Junior Flutter Developer, Remote/Relocation, or Freelance MVP contracts).
+- Education: B.Sc. in Artificial Intelligence, Faculty of Artificial Intelligence, Kafrelsheikh University (Oct 2023 – Jun 2027).
+- Core Stack: Flutter, Dart, Clean Architecture, BLoC & Cubit state management, Hive offline storage, Dio, Retrofit, REST APIs, Firebase Auth & Cloud Firestore, Python, C++.
+- Flagship Live App: Revio (Flashcard & active-recall study app published live on Google Play Store: https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US, Repo: https://github.com/ahmed-el-bialy/Revio, APK release v1.0.0).
+- Production Apps: Movura (TMDB movie/series client with BLoC & Slivers), Vibrant-Store (DummyJSON e-commerce), Sky-Cast (WeatherAPI adaptive weather), News-Cloud (Bilingual Arabic RTL news with Retrofit & WebView), Shaats (Firebase Firestore real-time chat), Nihon-Seed (Japanese kana trainer), NBN-Basketball (scoreboard), Quotely, piano-tunes.
+- Training & Experience: CodeAlpha Flutter Trainee (June 2026 – July 2026: built Revio & Quotely), Sprints x Microsoft Summer Camp (June 2025 – July 2025: 45+ hours Flutter/Dart), Udemy Complete Flutter & Dart Certificate (April 2026).
+- Contact: Email ah.elbialy.dev@gmail.com | Phone/WhatsApp +20 102 212 1573 | GitHub https://github.com/ahmed-el-bialy | LinkedIn https://www.linkedin.com/in/ahmedel-bialy/.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-4-hydrogen',
+        contents: question,
+        config: {
+          systemInstruction,
+          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+        },
+      });
+
+      const answer = (response.text || '').trim();
+      if (!answer) {
+        return res.json({ success: false, fallback: true, error: 'Empty AI response' });
+      }
+
+      return res.json({
+        success: true,
+        model: 'gemini-4-hydrogen',
+        answer,
+      });
+    } catch (error: any) {
+      if (isGeminiAuthError(error)) {
+        return res.json({
+          success: false,
+          fallback: true,
+          keyInvalid: true,
+          error: 'GEMINI_API_KEY in Settings > Secrets is missing or invalid; serving portfolio advisor.',
+        });
+      }
+      console.warn('CLI AI transient error:', error?.message || 'AI request failed');
+      return res.json({
+        success: false,
+        fallback: true,
+        error: 'Live AI temporarily unavailable; serving portfolio advisor.',
+      });
     }
   });
 

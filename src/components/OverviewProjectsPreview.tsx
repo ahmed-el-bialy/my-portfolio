@@ -102,6 +102,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                     repoName={project.repoName}
                     language="Dart"
                     coverUrl={project.image}
+                    discoveredScreenshots={liveMedia?.discoveredScreenshots}
                     description={project.description}
                     topics={project.technologies}
                     isCardHovered={hoveredCardId === project.id}

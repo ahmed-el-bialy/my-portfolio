@@ -256,15 +256,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               : 'Building responsive Android & iOS applications with Flutter, BLoC / Cubit state streams, REST APIs, and offline-first Hive persistence. Creator of Revio on Google Play and B.Sc. Artificial Intelligence student at Kafrelsheikh University.'}
           </motion.p>
 
-          {/* Primary Kinetic Action Row */}
+          {/* Primary Kinetic Action Row: Explore Apps + Book Call + Compact CV */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1 w-full sm:w-auto"
+            className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5 pt-1 w-full"
           >
             <MagneticButton
               onClick={onExploreProjects}
               strength={0.22}
-              className="btn-kinetic px-6 py-3 rounded-xl bg-[#027DFD] hover:bg-[#026ae0] text-white font-bold text-sm shadow-md shadow-[#027DFD]/25 cursor-pointer min-h-[46px] flex items-center justify-center gap-2 whitespace-nowrap"
+              className="col-span-2 btn-kinetic px-5 py-3 rounded-xl bg-[#027DFD] hover:bg-[#026ae0] text-white font-bold text-sm shadow-md shadow-[#027DFD]/25 cursor-pointer min-h-[46px] flex items-center justify-center gap-2 whitespace-nowrap"
             >
               <span>{t.hero.exploreApps}</span>
               <ArrowRight size={16} className={dir === 'rtl' ? 'rotate-180' : ''} />
@@ -274,7 +274,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <MagneticButton
                 onClick={onOpenBooking}
                 strength={0.2}
-                className="btn-kinetic px-5 py-3 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] text-slate-900 dark:text-[#f1f5f9] font-semibold text-sm border border-slate-300 dark:border-white/15 cursor-pointer min-h-[46px] flex items-center justify-center gap-2 whitespace-nowrap"
+                className="col-span-1 btn-kinetic px-4 py-3 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] text-slate-900 dark:text-[#f1f5f9] font-semibold text-sm border border-slate-300 dark:border-white/15 cursor-pointer min-h-[46px] flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 <Video size={16} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
                 <span>{t.hero.bookConsultation}</span>
@@ -284,10 +284,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <button
               type="button"
               onClick={onOpenResume}
-              className="btn-kinetic px-4 py-3 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] text-slate-800 dark:text-[#f1f5f9] font-semibold text-sm border border-slate-200 dark:border-white/10 cursor-pointer flex items-center justify-center gap-2 min-h-[46px] whitespace-nowrap"
+              title={t.hero.downloadCv}
+              aria-label={t.hero.downloadCv}
+              className="col-span-1 btn-kinetic px-3.5 py-3 rounded-xl bg-emerald-500/8 dark:bg-emerald-500/12 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-semibold text-sm border border-emerald-500/30 hover:border-emerald-500/55 cursor-pointer flex items-center justify-center gap-1.5 min-h-[46px] whitespace-nowrap transition-colors"
             >
               <Download size={15} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span>{t.hero.downloadCv}</span>
+              <span>{lang === 'ar' ? 'السيرة (CV)' : 'CV'}</span>
             </button>
           </motion.div>
 

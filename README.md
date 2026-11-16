@@ -147,7 +147,7 @@ class TmdbRepositoryImpl implements MediaRepository {
 
 ## 🔗 Link Share Preview (`og:image`)
 
-Configured `1200×630` social share card for **LinkedIn**, **WhatsApp**, and **X/Twitter** previews with live KPI summary and zoomed Leaf emblem:
+Configured `1200×630` social share card for **LinkedIn**, **WhatsApp**, and **X/Twitter** combining Ahmed's portrait, glowing blue-ringed v6 Leaf emblem, and live *Revio* Google Play credentials:
 
 <div align="center">
   <img src="./public/og-image.jpg" alt="Ahmed El-Bialy OpenGraph Social Preview Card" width="76%" />
@@ -157,11 +157,11 @@ Configured `1200×630` social share card for **LinkedIn**, **WhatsApp**, and **X
 
 ## ✨ Key Portfolio Capabilities
 
-1. **Name-First Hero, Floating Blue-Rimmed Leaf & Interactive `RevioShowcaseStage`:** Pairs Ahmed's glowing blue-rimmed floating Leaf emblem beside his name with a focused interactive *Revio* mobile showcase and 4 color-coded KPI cards (**Revio ★ Rating**, **Play Downloads**, **GitHub Repositories**, **Shipped Apps**).
-2. **Penless Self-Drawing Leaf Section Loader (`LeafAnimation`):** Signature SVG stroke-trace animation that draws and erases cleanly over a frosted blur backdrop during section transitions and repository syncs.
-3. **Hero-First Multi-Screen Covers (`ProjectCardCover`):** Displays high-resolution mobile UI screens immediately in a spacious 2-column grid with interactive numbered screen switchers (`01..04`) and quick cover toggle.
-4. **Smart Demo & Release Resolution (`SmartDemoButtons`):** Merges `portfolioData.ts` with live GitHub `README.md` extraction (both via Express `/api/github/portfolio` and browser-direct `raw.githubusercontent.com` on static hosts like Vercel), classifying single videos as **Watch Demo** and walkthrough playlists as **Full Demo**, alongside **Google Play** and `.apk` release links.
-5. **Structured 5-Tier Experience & Verified Credentials:** Clear visual separation across **Issuer & Track → Role → Engineering Impact → Skill Chips → Verification Link**.
+1. **Name-First Hero, Floating Blue-Rimmed Leaf & Interactive `RevioShowcaseStage`:** Pairs Ahmed's glowing blue-rimmed floating v6 Leaf emblem beside his name with a focused interactive *Revio* mobile showcase, balanced primary CTAs (**Explore My Apps · Book Consultation · Compact CV**), and 4 color-coded KPI cards (**Revio ★ Rating**, **Play Downloads**, **GitHub Repositories**, **Shipped Apps**).
+2. **Exact-Match Self-Drawing Leaf Loader (`LeafAnimation`):** SVG brush-stroke reveal mask that traces, holds at full clarity, and erases Ahmed's exact bold white brushstroke Leaf emblem over a frosted backdrop during section transitions.
+3. **AI-Powered Interactive Developer CLI (`TerminalEasterEggModal`):** Responsive mobile sheet and desktop terminal with one-tap quick commands (`whoami`, `stack`, `revio`, `projects`, `experience`, `contact`), command history, and natural-language Q&A via **`/api/ai/cli`** (`gemini-4-hydrogen`) with structured static fallback.
+4. **Hero-First Multi-Screen Covers (`ProjectCardCover`):** Displays high-resolution mobile UI screens immediately in a spacious 2-column grid with interactive numbered screen switchers (`01..04`) and quick cover toggle.
+5. **Smart Demo & Release Resolution (`SmartDemoButtons`):** Merges `portfolioData.ts` with live GitHub `README.md` extraction (both via Express `/api/github/portfolio` and browser-direct `raw.githubusercontent.com` on static hosts like Vercel), classifying single videos as **Watch Demo** and walkthrough playlists as **Full Demo**, alongside **Google Play** and `.apk` release links.
 6. **Executive 2-Column Digital CV (`ResumeModal`) & Guided Consultation (`BookingMeetingModal`):** Instant toggle between formatted 2-column CV (with isolated print export) and Drive PDF viewer, plus a 2-step Cal.com booking pipeline with WhatsApp & Gmail fallbacks.
 
 ---
@@ -170,17 +170,18 @@ Configured `1200×630` social share card for **LinkedIn**, **WhatsApp**, and **X
 
 ```text
 ├── public/
-│   ├── brand-logo-mark.png          # High-contrast zoomed white brush Leaf emblem
+│   ├── brand-logo-mark.png          # Balanced circular white brush Leaf emblem (v6)
 │   ├── favicon.svg / .ico / .png    # Synchronized browser tab & Apple touch icons
-│   ├── og-image.jpg / .png          # 1200x630 LinkedIn & WhatsApp preview card
+│   ├── og-image.jpg / .png          # 1200x630 LinkedIn & WhatsApp preview card (Portrait + Leaf + KPIs)
 │   └── website-poster.png           # Latest portfolio hero banner
 ├── src/
-│   ├── components/                  # Modular React 19 UI, Hero stage, modals & motion primitives
+│   ├── components/                  # Modular React 19 UI, Hero stage, Exact Leaf loader, AI CLI & modals
 │   ├── context/                     # Bilingual EN/AR state & dynamic RTL/LTR switching
 │   ├── data/                        # Single source of truth config, Dart snippets, translations & projects
 │   ├── services/                    # Consolidated GitHub client, README parser & Play Store stats hook
 │   └── utils/                       # Smart demo button classifier & repository tech tag extractor
-├── server.ts                        # Express + Vite server with /api/github/portfolio & /api/playstore/app
+├── server.ts                        # Express + Vite server (/api/github/portfolio, /api/playstore/app, /api/ai/cli)
+├── GITHUB_PROFILE_README.md         # Ready-to-copy personal GitHub profile README (ahmed-el-bialy)
 ├── index.html                       # Unified favicons, OpenGraph cards & Schema.org JSON-LD
 └── package.json                     # Build, dev, lint & start scripts
 ```

@@ -23,7 +23,8 @@ import { ProjectDetailsModal } from './components/ProjectDetailsModal';
 import { ThemeRevealOverlay } from './components/ThemeRevealOverlay';
 import { BrandLogoMark } from './components/BrandLogoMark';
 import { PageSkeletonLoader } from './components/PageSkeletonLoader';
-import { Github, Linkedin, Youtube, Mail, RefreshCw, ArrowUp, Terminal } from 'lucide-react';
+import { LeafAnimation } from './components/LeafAnimation';
+import { Github, Linkedin, Youtube, Mail, RefreshCw, ArrowUp, Terminal, Sparkles } from 'lucide-react';
 import { WhatsAppLogo, TikTokLogo } from './components/TechLogos';
 import { useLanguage } from './context/LanguageContext';
 
@@ -70,7 +71,7 @@ function resolveInitialTab(): NavTab {
 }
 
 export default function App() {
-  const { lang, dir, t } = useLanguage();
+  const { lang, dir, t, isSwitchingLang, switchingTargetLang } = useLanguage();
   const prefersReducedMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState<NavTab>(resolveInitialTab);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
@@ -86,7 +87,11 @@ export default function App() {
   const [lastSyncTime, setLastSyncTime] = useState<string>('Just now');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [egyptClock, setEgyptClock] = useState<string>(() => getEgyptLocalTime(lang));
-  const [transitionSection, setTransitionSection] = useState<'projects' | 'experience' | 'contact' | null>(null);
+  const [showInitialSplash, setShowInitialSplash] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  });
+  const [transitionSection, setTransitionSection] = useState<NavTab | null>(null);
   const transitionTimerRef = useRef<number | null>(null);
 
   const profile = DEFAULT_PROFILE;
@@ -145,6 +150,15 @@ export default function App() {
   useEffect(() => {
     applyThemeToDom(isDark);
   }, [isDark]);
+
+  // First site open Leaf entrance overlay (honors full 1.8s draw cadence)
+  useEffect(() => {
+    if (!showInitialSplash) return;
+    const timer = window.setTimeout(() => {
+      setShowInitialSplash(false);
+    }, 1750);
+    return () => window.clearTimeout(timer);
+  }, [showInitialSplash]);
 
   // Keep Egypt local time fresh
   useEffect(() => {
@@ -383,12 +397,12 @@ export default function App() {
       transitionTimerRef.current = null;
     }
 
-    if (tab !== 'overview' && tab !== activeTab && !prefersReducedMotion) {
+    if (tab !== activeTab && !prefersReducedMotion) {
       setTransitionSection(tab);
       transitionTimerRef.current = window.setTimeout(() => {
         setTransitionSection(null);
         transitionTimerRef.current = null;
-      }, 1050);
+      }, 1750);
     } else {
       setTransitionSection(null);
     }
@@ -455,25 +469,31 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.18, ease: 'easeOut' }}
                 >
-                  <HeroSection
-                    profile={profile}
-                    isDark={isDark}
-                    onOpenContact={() => setIsContactOpen(true)}
-                    onOpenResume={() => setIsResumeOpen(true)}
-                    onOpenBooking={() => openBookingModal(null)}
-                    onExploreProjects={() => handleNavigate('projects')}
-                    onInspectRevio={handleInspectRevio}
-                    totalReposCount={liveRepoCount}
-                  />
-                  <AboutSection onExploreExperience={() => handleNavigate('experience')} />
-                  <OverviewProjectsPreview
-                    githubUsername={profile.githubUsername}
-                    onExploreAllProjects={() => handleNavigate('projects')}
-                  />
-                  <HowIWorkSection
-                    onOpenBooking={() => openBookingModal('discovery-cal')}
-                    onExploreProjects={() => handleNavigate('projects')}
-                  />
+                  {transitionSection === 'overview' ? (
+                    <PageSkeletonLoader view="overview" isDark={isDark} />
+                  ) : (
+                    <>
+                      <HeroSection
+                        profile={profile}
+                        isDark={isDark}
+                        onOpenContact={() => setIsContactOpen(true)}
+                        onOpenResume={() => setIsResumeOpen(true)}
+                        onOpenBooking={() => openBookingModal(null)}
+                        onExploreProjects={() => handleNavigate('projects')}
+                        onInspectRevio={handleInspectRevio}
+                        totalReposCount={liveRepoCount}
+                      />
+                      <AboutSection onExploreExperience={() => handleNavigate('experience')} />
+                      <OverviewProjectsPreview
+                        githubUsername={profile.githubUsername}
+                        onExploreAllProjects={() => handleNavigate('projects')}
+                      />
+                      <HowIWorkSection
+                        onOpenBooking={() => openBookingModal('discovery-cal')}
+                        onExploreProjects={() => handleNavigate('projects')}
+                      />
+                    </>
+                  )}
                 </motion.div>
               )}
 
@@ -485,9 +505,9 @@ export default function App() {
                   transition={{ duration: 0.18, ease: 'easeOut' }}
                 >
                   {transitionSection === 'projects' ? (
-                    <PageSkeletonLoader view="projects" />
+                    <PageSkeletonLoader view="projects" isDark={isDark} />
                   ) : (
-                    <Suspense fallback={<PageSkeletonLoader view="projects" />}>
+                    <Suspense fallback={<PageSkeletonLoader view="projects" isDark={isDark} />}>
                       <ProjectsSection
                         currentGithubUser={profile.githubUsername}
                         onRepoCountChange={setLiveRepoCount}
@@ -506,9 +526,9 @@ export default function App() {
                   transition={{ duration: 0.18, ease: 'easeOut' }}
                 >
                   {transitionSection === 'experience' ? (
-                    <PageSkeletonLoader view="experience" />
+                    <PageSkeletonLoader view="experience" isDark={isDark} />
                   ) : (
-                    <Suspense fallback={<PageSkeletonLoader view="experience" />}>
+                    <Suspense fallback={<PageSkeletonLoader view="experience" isDark={isDark} />}>
                       <ExperienceSection onOpenResume={() => setIsResumeOpen(true)} />
                       <StackSection />
                     </Suspense>
@@ -524,9 +544,9 @@ export default function App() {
                   transition={{ duration: 0.18, ease: 'easeOut' }}
                 >
                   {transitionSection === 'contact' ? (
-                    <PageSkeletonLoader view="contact" />
+                    <PageSkeletonLoader view="contact" isDark={isDark} />
                   ) : (
-                    <Suspense fallback={<PageSkeletonLoader view="contact" />}>
+                    <Suspense fallback={<PageSkeletonLoader view="contact" isDark={isDark} />}>
                       <ContactSection
                         profile={profile}
                         onOpenBooking={openBookingModal}
@@ -540,6 +560,41 @@ export default function App() {
             </motion.div>
           </AnimatePresence>
         </main>
+
+        {/* Initial Site Open Clean Ringless Leaf Entrance */}
+        <AnimatePresence>
+          {showInitialSplash && (
+            <motion.div
+              key="initial-leaf-splash"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.35, ease: 'easeOut' } }}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-[#f8fafc] dark:bg-[#08090d]"
+            >
+              <LeafAnimation
+                isDark={isDark}
+                label={lang === 'ar' ? 'أحمد البيلي · مطور تطبيقات Flutter' : 'Ahmed El-Bialy · Flutter Developer'}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* EN <-> AR Language Toggle Leaf Curtain */}
+        <AnimatePresence>
+          {!showInitialSplash && isSwitchingLang && (
+            <motion.div
+              key="lang-switch-leaf-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, transition: { duration: 0.2 } }}
+              exit={{ opacity: 0, transition: { duration: 0.25 } }}
+              className="fixed inset-0 z-[95] flex items-center justify-center bg-[#f8fafc]/95 dark:bg-[#08090d]/95 backdrop-blur-md"
+            >
+              <LeafAnimation
+                isDark={isDark}
+                label={switchingTargetLang === 'ar' ? 'جاري التبديل إلى العربية...' : 'Switching to English...'}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Circular Reveal Theme Switcher CSS Fallback */}
         {isTransitioningTheme && (
@@ -614,53 +669,63 @@ export default function App() {
           </button>
         )}
 
-        {/* Clean Obsidian / Light Studio Footer */}
-        <footer className="w-full border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] pt-8 pb-24 md:pb-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-600 dark:text-[#94a3b8] transition-colors">
-          <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 w-full">
-            <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-start">
-              <div>
-                <div className="flex items-center justify-center sm:justify-start gap-2.5 flex-wrap">
-                  <BrandLogoMark sizeClassName="w-8 h-8" />
-                  <span className="font-bold text-slate-900 dark:text-[#f1f5f9] text-sm">
-                    {AHMED_CONFIG.name[lang]}
-                  </span>
-                  <span className="text-slate-500 dark:text-[#94a3b8] font-mono text-xs">
-                    · {AHMED_CONFIG.title[lang]}
-                  </span>
-                </div>
+        {/* Clean Responsive Obsidian / Light Studio Footer */}
+        <footer className="w-full border-t border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#0d1017]/95 backdrop-blur-sm pt-8 pb-24 lg:pb-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-600 dark:text-[#94a3b8] transition-colors">
+          <div className="max-w-[1440px] mx-auto flex flex-col gap-6 w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-5">
+              {/* Brand Identity + Live Sync Status (Left / Top) */}
+              <div className="lg:col-span-5 flex flex-col sm:flex-row items-center lg:items-start gap-3.5 text-center sm:text-start">
+                <BrandLogoMark sizeClassName="w-10 h-10 shrink-0" />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-2 gap-y-0.5">
+                    <span className="font-extrabold text-slate-900 dark:text-[#f1f5f9] text-sm tracking-tight">
+                      {AHMED_CONFIG.name[lang]}
+                    </span>
+                    <span className="text-slate-300 dark:text-slate-700" aria-hidden="true">·</span>
+                    <span className="text-[#027DFD] dark:text-[#00C7FF] font-mono text-xs font-semibold">
+                      {AHMED_CONFIG.title[lang]}
+                    </span>
+                  </div>
 
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1.5 font-mono text-[11px] tabular-nums">
-                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
-                    {isOnline
-                      ? lang === 'ar'
-                        ? 'متصل'
-                        : 'Online'
-                      : lang === 'ar'
-                      ? 'وضع الأوفلاين'
-                      : 'Cached Offline'}
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <span>
-                    {t.footer.lastSynced}: {lastSyncTime}
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <span>
-                    {lang === 'ar' ? `توقيت القاهرة: ${egyptClock}` : `Cairo: ${egyptClock}`}
-                  </span>
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-2.5 gap-y-1 mt-1.5 font-mono text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                    <span className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold">
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                        }`}
+                      />
+                      {isOnline
+                        ? lang === 'ar'
+                          ? 'متصل ومحدّث'
+                          : 'Online'
+                        : lang === 'ar'
+                        ? 'أوفلاين'
+                        : 'Cached Offline'}
+                    </span>
+                    <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
+                    <span>
+                      {t.footer.lastSynced}: {lastSyncTime}
+                    </span>
+                    <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
+                    <span>
+                      {lang === 'ar' ? `القاهرة ${egyptClock}` : `Cairo ${egyptClock}`}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Action Controls: Refresh Cache + Interactive AI CLI (Center) */}
+              <div className="lg:col-span-4 flex flex-wrap items-center justify-center gap-2.5">
                 <button
                   type="button"
                   onClick={handleManualRefresh}
                   disabled={isSyncing}
-                  className="btn-kinetic flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-[#161b27] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-[#f1f5f9] border border-slate-200 dark:border-white/10 text-xs font-mono font-medium transition-colors cursor-pointer disabled:opacity-50"
-                  title="Refresh GitHub repository cache"
+                  className="btn-kinetic flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#151a26] hover:bg-slate-100 dark:hover:bg-[#1c2333] text-slate-800 dark:text-[#f1f5f9] border border-slate-200 dark:border-white/10 text-xs font-mono font-semibold transition-all cursor-pointer disabled:opacity-50 min-h-[38px]"
+                  title="Refresh GitHub repository & Play stats cache"
                 >
                   <RefreshCw
-                    size={12}
-                    className={isSyncing ? 'animate-spin text-[#027DFD]' : 'text-slate-500'}
+                    size={13}
+                    className={isSyncing ? 'animate-spin text-[#027DFD]' : 'text-slate-500 dark:text-slate-400'}
                   />
                   <span>
                     {isSyncing
@@ -674,76 +739,86 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsTerminalOpen(true)}
-                  className="btn-kinetic flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-[#161b27] hover:border-[#027DFD] text-slate-700 dark:text-[#94a3b8] border border-slate-200 dark:border-white/10 text-xs font-mono transition-colors cursor-pointer"
-                  title="Open Terminal Inspector (or type ahmed)"
-                  aria-label="Open CLI Inspector"
+                  className="btn-kinetic flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#027DFD]/10 dark:bg-[#027DFD]/15 hover:bg-[#027DFD]/18 dark:hover:bg-[#027DFD]/25 text-[#027DFD] dark:text-[#7DD3FC] border border-[#027DFD]/35 dark:border-[#00C7FF]/35 hover:border-[#00C7FF]/70 text-xs font-mono font-bold transition-all cursor-pointer min-h-[38px] shadow-xs"
+                  title="Open AI-Powered Developer CLI Inspector"
+                  aria-label="Open Developer AI CLI"
                 >
-                  <Terminal size={12} className="text-[#027DFD] dark:text-[#00C7FF]" />
-                  <span>CLI</span>
+                  <Terminal size={13} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                  <span>{lang === 'ar' ? 'الطرفية AI CLI' : 'AI CLI'}</span>
+                  <Sparkles size={11} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                </button>
+              </div>
+
+              {/* Social Links Row (Right / Bottom) */}
+              <div className="lg:col-span-3 flex flex-wrap items-center justify-center lg:justify-end gap-2">
+                <a
+                  href={profile.githubUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-slate-400 dark:hover:border-white/25 hover:text-slate-900 dark:hover:text-white transition-all"
+                  title="GitHub"
+                  aria-label="GitHub"
+                >
+                  <Github size={15} />
+                </a>
+                <a
+                  href={profile.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-[#027DFD]/50 hover:text-[#027DFD] transition-all"
+                  title="LinkedIn"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin size={15} />
+                </a>
+                <a
+                  href={profile.youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-red-500/40 hover:text-red-500 transition-all"
+                  title="YouTube"
+                  aria-label="YouTube"
+                >
+                  <Youtube size={15} />
+                </a>
+                <a
+                  href={profile.tiktokUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-pink-500/40 hover:text-pink-500 transition-all"
+                  title="TikTok"
+                  aria-label="TikTok"
+                >
+                  <TikTokLogo size={14} />
+                </a>
+                <a
+                  href={AHMED_CONFIG.socials.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-emerald-500/40 hover:text-emerald-500 transition-all"
+                  title="WhatsApp"
+                  aria-label="WhatsApp"
+                >
+                  <WhatsAppLogo size={15} />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => openEmailClient(profile.email, 'Mobile App Project Inquiry')}
+                  className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-[#027DFD]/50 hover:text-[#027DFD] transition-all cursor-pointer"
+                  title="Send Email"
+                  aria-label="Send Email"
+                >
+                  <Mail size={14} />
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <a
-                href={profile.githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:text-slate-900 dark:hover:text-white transition-colors"
-                title="GitHub"
-              >
-                <Github size={15} />
-              </a>
-              <a
-                href={profile.linkedinUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:text-[#027DFD] transition-colors"
-                title="LinkedIn"
-              >
-                <Linkedin size={15} />
-              </a>
-              <a
-                href={profile.youtubeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:text-red-500 transition-colors"
-                title="YouTube"
-              >
-                <Youtube size={15} />
-              </a>
-              <a
-                href={profile.tiktokUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:text-pink-500 transition-colors"
-                title="TikTok"
-              >
-                <TikTokLogo size={14} />
-              </a>
-              <a
-                href={AHMED_CONFIG.socials.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:text-emerald-500 transition-colors"
-                title="WhatsApp"
-              >
-                <WhatsAppLogo size={15} />
-              </a>
-              <button
-                type="button"
-                onClick={() => openEmailClient(profile.email, 'Mobile App Project Inquiry')}
-                className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:text-[#027DFD] transition-colors cursor-pointer"
-                title="Send Email"
-              >
-                <Mail size={14} />
-              </button>
+            <div className="pt-4 border-t border-slate-200/80 dark:border-white/8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 dark:text-[#94a3b8] gap-2 text-center sm:text-start">
+              <span>© {new Date().getFullYear()} {AHMED_CONFIG.name[lang]} · {t.footer.rights}</span>
+              <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
+                {AHMED_CONFIG.location[lang]} · {t.footer.builtWith}
+              </span>
             </div>
-          </div>
-
-          <div className="max-w-[1440px] mx-auto mt-6 pt-4 border-t border-slate-200 dark:border-white/8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 dark:text-[#94a3b8] gap-2">
-            <span>{t.footer.rights}</span>
-            <span>{t.footer.builtWith}</span>
           </div>
         </footer>
       </div>

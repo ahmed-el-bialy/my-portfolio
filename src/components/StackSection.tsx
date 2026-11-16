@@ -28,8 +28,10 @@ interface TechItem {
   name: string;
   category: 'mobile' | 'state-storage' | 'network-backend' | 'ai-cs' | 'tools';
   categoryLabel: string;
+  categoryLabelAr: string;
   highlightInApp: string;
   description: string;
+  descriptionAr: string;
   subSkills: string[];
   accentColor: string;
   glowRgb: string;
@@ -42,9 +44,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Flutter',
     category: 'mobile',
     categoryLabel: 'Mobile Core',
+    categoryLabelAr: 'نواة تطبيقات الموبايل',
     highlightInApp: 'Revio · Movura · Vibrant Store',
     description:
       'Cross-platform native mobile engineering, custom Slivers, LayoutBuilder, and physics-driven UI.',
+    descriptionAr:
+      'تطوير تطبيقات Android و iOS بأداء أصلي، وتصميم واجهات Slivers مخصصة وحركات تفاعلية سلسة.',
     subSkills: ['Slivers & CustomPaint', 'Custom Animations', 'Arabic RTL', 'Multi-Screen Responsive'],
     accentColor: '#027DFD',
     glowRgb: '2, 125, 253',
@@ -55,9 +60,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Dart',
     category: 'mobile',
     categoryLabel: 'Mobile Core',
+    categoryLabelAr: 'نواة اللغة البرمجية',
     highlightInApp: 'All Mobile Repositories',
     description:
       'Type-safe asynchronous programming with OOP, Mixins, Streams, Futures, and sound null-safety.',
+    descriptionAr:
+      'برمجة آمنة الأنواع مع دعم Null Safety، والبرمجة الكائنية OOP، وإدارة التدفقات Streams و Futures.',
     subSkills: ['OOP & SOLID', 'Async & Streams', 'Isolates', 'Generics & Mixins'],
     accentColor: '#00B4AB',
     glowRgb: '0, 180, 171',
@@ -68,9 +76,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Clean Architecture',
     category: 'mobile',
     categoryLabel: 'Software Architecture',
+    categoryLabelAr: 'المعمارية البرمجية',
     highlightInApp: 'Revio · Movura · News-Cloud',
     description:
       'Domain-Driven Design (Entities, UseCases, Repositories, DataSources) enforcing clean layer boundaries.',
+    descriptionAr:
+      'فصل كامل بين طبقات Domain و Data و Presentation لضمان قابلية التوسع والاختبار والصيانة.',
     subSkills: ['Domain / Data / Presentation', 'Repository Pattern', 'Dependency Injection', 'SOLID Principles'],
     accentColor: '#6366F1',
     glowRgb: '99, 102, 241',
@@ -81,9 +92,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'BLoC Pattern',
     category: 'state-storage',
     categoryLabel: 'State Management',
+    categoryLabelAr: 'إدارة الحالة (Events)',
     highlightInApp: 'Movura · Shaats · Sky-Cast',
     description:
       'Predictable event-driven state machine separating business logic from presentation trees.',
+    descriptionAr:
+      'إدارة حالة مبنية على الأحداث (Event-to-State Streams) تفصل منطق العمل بالكامل عن الواجهات.',
     subSkills: ['Event-to-State Streams', 'Unidirectional Flow', 'BLoC Observer'],
     accentColor: '#00D9FF',
     glowRgb: '0, 217, 255',
@@ -94,9 +108,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Cubit',
     category: 'state-storage',
     categoryLabel: 'State Management',
+    categoryLabelAr: 'إدارة الحالة السريعة',
     highlightInApp: 'Revio (Google Play) · Quotely',
     description:
       'Lightweight, function-driven state management for fast feature iteration and predictable UI rebuilds.',
+    descriptionAr:
+      'إدارة حالة خفيفة ومباشرة لبناء الميزات بسرعة مع تحديث انتقائي دقيق لعناصر الشاشة.',
     subSkills: ['Direct State Emit', 'Lightweight Logic', 'BlocBuilder / Consumer'],
     accentColor: '#22D3EE',
     glowRgb: '34, 211, 238',
@@ -107,9 +124,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Hive',
     category: 'state-storage',
     categoryLabel: 'Local Storage',
+    categoryLabelAr: 'التخزين المحلي السريع',
     highlightInApp: 'Revio Offline Flashcard CRUD',
     description:
       'Zero-latency NoSQL key-value database written in pure Dart (used via hive_ce TypeAdapters).',
+    descriptionAr:
+      'قاعدة بيانات محلية NoSQL فائقة السرعة لعمل التطبيقات بدون إنترنت بكفاءة كاملة عبر hive_ce.',
     subSkills: ['Key-Value NoSQL', 'hive_ce Binary Adapters', 'Offline-First Caching'],
     accentColor: '#FDB813',
     glowRgb: '253, 184, 19',
@@ -120,9 +140,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Dio Client',
     category: 'network-backend',
     categoryLabel: 'Networking',
+    categoryLabelAr: 'الشبكات و HTTP',
     highlightInApp: 'News-Cloud · Movura · Sky-Cast',
     description:
       'Resilient HTTP client configured with global interceptors, timeouts, and structured error mapping.',
+    descriptionAr:
+      'عميل اتصالات متقدم مزوّد بـ Interceptors ومعالجة ذكية للأخطاء وإعادة المحاولة التلقائية.',
     subSkills: ['Global Interceptors', 'Error Mapping', 'Request Cancellation'],
     accentColor: '#0284C7',
     glowRgb: '2, 132, 199',
@@ -133,9 +156,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Retrofit',
     category: 'network-backend',
     categoryLabel: 'Networking',
+    categoryLabelAr: 'توليد واجهات REST',
     highlightInApp: 'Quotely · Clean REST Clients',
     description:
       'Annotation-based REST client generation converting API contracts into type-safe Dart interfaces.',
+    descriptionAr:
+      'توليد تلقائي لعملاء REST API آمنين برمجياً عبر Annotations مع تحويل JSON تلقائياً.',
     subSkills: ['Code Generation', 'Type-Safe Contracts', 'JSON Serialization'],
     accentColor: '#10B981',
     glowRgb: '16, 185, 129',
@@ -146,9 +172,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Firebase & Firestore',
     category: 'network-backend',
     categoryLabel: 'Cloud & Auth',
+    categoryLabelAr: 'السحابة والمصادقة',
     highlightInApp: 'Shaats Real-Time Chat',
     description:
       'Reactive document snapshot streams, Cloud Storage uploads, and Firebase Authentication workflows.',
+    descriptionAr:
+      'تزامن لحظي فوري للبيانات عبر Cloud Firestore وتأمين جلسات المستخدمين بـ Firebase Auth.',
     subSkills: ['Cloud Firestore', 'Firebase Auth', 'Real-time Streams'],
     accentColor: '#FFCA28',
     glowRgb: '255, 202, 40',
@@ -159,9 +188,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Python',
     category: 'ai-cs',
     categoryLabel: 'Computer Science',
+    categoryLabelAr: 'علوم الحاسب والذكاء',
     highlightInApp: 'Algorithms & ML Coursework',
     description:
       'Algorithmic problem solving, structured scripting, and foundational Artificial Intelligence studies.',
+    descriptionAr:
+      'حل المشكلات الخوارزمية وهياكل البيانات وتطبيقات أسس الذكاء الاصطناعي وتعلم الآلة.',
     subSkills: ['Data Structures', 'Algorithms', 'ML Foundations'],
     accentColor: '#3776AB',
     glowRgb: '55, 118, 171',
@@ -172,9 +204,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'CS & Problem Solving',
     category: 'ai-cs',
     categoryLabel: 'Academic Degree',
+    categoryLabelAr: 'الدراسة الأكاديمية',
     highlightInApp: 'Kafrelsheikh AI (2023–2027)',
     description:
       'Discrete math, search algorithms, database systems, and OOP modeling from Faculty of Artificial Intelligence.',
+    descriptionAr:
+      'دراسة أنظمة قواعد البيانات وهندسة البرمجيات والخوارزميات في كلية الذكاء الاصطناعي بكفر الشيخ.',
     subSkills: ['Discrete Math', 'Database Systems', 'Logic & Complexity'],
     accentColor: '#F43F5E',
     glowRgb: '244, 63, 94',
@@ -185,9 +220,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Git Version Control',
     category: 'tools',
     categoryLabel: 'DevOps & VCS',
+    categoryLabelAr: 'إدارة الإصدارات',
     highlightInApp: '13+ Public Repositories',
     description:
       'Feature branching, pull requests, release tagging, and clean semantic commit conventions.',
+    descriptionAr:
+      'إدارة الفروع البرمجية والإصدارات (Tags/Releases) وتوثيق التعديلات باحترافية على GitHub.',
     subSkills: ['Git Flow', 'Releases & Tags', 'Semantic Commits'],
     accentColor: '#F05138',
     glowRgb: '240, 81, 56',
@@ -198,9 +236,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Android Studio',
     category: 'tools',
     categoryLabel: 'Tooling',
+    categoryLabelAr: 'بيئة البناء والنشر',
     highlightInApp: 'Google Play AAB Signing',
     description:
       'Native Android compilation, Gradle configuration, layout inspector, and signed release bundles.',
+    descriptionAr:
+      'تجهيز إعدادات Gradle وتوقيع حزم النشر الرسمية (AAB / APK) ورفعها على متجر Google Play.',
     subSkills: ['Gradle Build', 'Keystore Signing', 'Device Profiling'],
     accentColor: '#3DDC84',
     glowRgb: '61, 220, 132',
@@ -211,9 +252,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'VS Code',
     category: 'tools',
     categoryLabel: 'Tooling',
+    categoryLabelAr: 'بيئة التطوير الأساسية',
     highlightInApp: 'Daily Flutter Toolchain',
     description:
       'Primary IDE setup with Dart static analysis rules, debugging launch configs, and rapid refactoring.',
+    descriptionAr:
+      'إعداد متكامل لفحص الكود الساكن وتنقيح الأخطاء السريع ورفع إنتاجية تطوير تطبيقات Flutter.',
     subSkills: ['Dart Toolchain', 'Hot Reload', 'Static Analysis'],
     accentColor: '#007ACC',
     glowRgb: '0, 122, 204',
@@ -224,9 +268,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Postman',
     category: 'tools',
     categoryLabel: 'Tooling',
+    categoryLabelAr: 'اختبار الـ APIs',
     highlightInApp: 'TMDB · WeatherAPI · DummyJSON',
     description:
       'REST API contract inspection, payload verification, and test environments prior to integration.',
+    descriptionAr:
+      'فحص نقاط الاتصال واستجابات JSON وضبط متغيرات البيئة قبل ربطها بالتطبيقات.',
     subSkills: ['API Inspection', 'Environment Vars', 'Payload Validation'],
     accentColor: '#FF6C37',
     glowRgb: '255, 108, 55',
@@ -237,9 +284,12 @@ export const DEDICATED_TECHS: TechItem[] = [
     name: 'Figma',
     category: 'tools',
     categoryLabel: 'Design to Code',
+    categoryLabelAr: 'ترجمة التصميم لكود',
     highlightInApp: 'Responsive UI Translation',
     description:
       'Accurate design-to-Flutter widget translation with consistent spacing scales and vector exports.',
+    descriptionAr:
+      'تحويل تصميمات UI/UX بدقة عالية إلى Flutter Widgets متجاوبة مع جميع مقاسات الشاشات.',
     subSkills: ['Pixel Precision', 'Design Tokens', 'Asset Export'],
     accentColor: '#A259FF',
     glowRgb: '162, 89, 255',
@@ -294,7 +344,9 @@ export const StackSection: React.FC = () => {
       return (
         item.name.toLowerCase().includes(q) ||
         item.categoryLabel.toLowerCase().includes(q) ||
+        item.categoryLabelAr.toLowerCase().includes(q) ||
         item.description.toLowerCase().includes(q) ||
+        item.descriptionAr.toLowerCase().includes(q) ||
         item.highlightInApp.toLowerCase().includes(q) ||
         item.subSkills.some((s) => s.toLowerCase().includes(q))
       );
@@ -336,7 +388,7 @@ export const StackSection: React.FC = () => {
         </div>
       </RevealOnScroll>
 
-      {/* GitHub-Inspired Category Filter Bar with Counts */}
+      {/* Category Filter Bar with Counts */}
       <div className="flex flex-wrap items-center gap-1.5 mb-7 p-1.5 rounded-2xl bg-slate-100 dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 w-full">
         {filterTabs.map((tab) => {
           const isActive = activeCategory === tab.id;
@@ -366,14 +418,14 @@ export const StackSection: React.FC = () => {
         })}
       </div>
 
-      {/* Interactive Brand-Illuminated Skill Cards Grid */}
+      {/* Independent-Height Brand-Illuminated Skill Cards Grid (items-start prevents stretching siblings) */}
       {filteredTechs.length === 0 ? (
         <div className="text-center py-10 text-slate-500 dark:text-[#94a3b8] rounded-2xl p-6 bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10">
           <Layers size={28} className="mx-auto mb-2 opacity-50" />
           <p className="text-xs font-medium">{t.stack.noTechFound}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
           {filteredTechs.map((tech, idx) => {
             const Logo = tech.LogoComponent;
             const isExpanded = expandedTechId === tech.id;
@@ -382,13 +434,16 @@ export const StackSection: React.FC = () => {
               <RevealOnScroll
                 key={tech.id}
                 delay={Math.min(idx * 0.03, 0.24)}
-                className="flex"
               >
                 <TiltCard
                   maxTilt={5}
                   glareOpacity={0.1}
                   onClick={() => setExpandedTechId(isExpanded ? null : tech.id)}
-                  className="w-full group p-5 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 hover:border-[#027DFD]/50 transition-colors duration-200 flex flex-col justify-between cursor-pointer shadow-2xs hover:shadow-lg"
+                  className={`w-full group p-5 rounded-2xl bg-white dark:bg-[#0f1117] border transition-colors duration-200 flex flex-col cursor-pointer shadow-2xs hover:shadow-lg ${
+                    isExpanded
+                      ? 'border-[#027DFD]/65 ring-1 ring-[#027DFD]/20'
+                      : 'border-slate-200 dark:border-white/10 hover:border-[#027DFD]/50'
+                  }`}
                 >
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-3">
@@ -407,7 +462,7 @@ export const StackSection: React.FC = () => {
                             {tech.name}
                           </h3>
                           <span className="text-[11px] font-medium text-slate-500 dark:text-[#94a3b8]">
-                            {tech.categoryLabel}
+                            {lang === 'ar' ? tech.categoryLabelAr : tech.categoryLabel}
                           </span>
                         </div>
                       </div>
@@ -422,8 +477,8 @@ export const StackSection: React.FC = () => {
                       />
                     </div>
 
-                    <p className="text-xs text-slate-600 dark:text-[#94a3b8] leading-relaxed">
-                      {tech.description}
+                    <p className="text-xs text-slate-600 dark:text-[#94a3b8] leading-relaxed min-h-[3.25rem]">
+                      {lang === 'ar' ? tech.descriptionAr : tech.description}
                     </p>
 
                     <AnimatePresence initial={false}>
@@ -432,17 +487,17 @@ export const StackSection: React.FC = () => {
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.18 }}
+                          transition={{ duration: 0.2 }}
                           className="overflow-hidden"
                         >
-                          <ul className="mt-3 pt-3 border-t border-slate-100 dark:border-white/8 space-y-1">
+                          <ul className="mt-3 pt-3 border-t border-slate-100 dark:border-white/8 space-y-1.5">
                             {tech.subSkills.map((sub) => (
                               <li
                                 key={sub}
                                 className="text-[11px] font-mono text-slate-700 dark:text-slate-300 flex items-center gap-1.5"
                               >
                                 <span style={{ color: tech.accentColor }}>·</span>
-                                <span>{sub}</span>
+                                <span dir="ltr">{sub}</span>
                               </li>
                             ))}
                           </ul>
@@ -452,7 +507,7 @@ export const StackSection: React.FC = () => {
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/8 flex items-center justify-between gap-2 text-[11px]">
-                    <span className="text-[#027DFD] dark:text-[#00C7FF] font-semibold truncate">
+                    <span className="text-[#027DFD] dark:text-[#00C7FF] font-semibold truncate" dir="ltr">
                       {tech.highlightInApp}
                     </span>
                     <span className="text-slate-400 font-mono shrink-0">

@@ -16,6 +16,7 @@ export interface GitHubRepo {
   size: number;
   default_branch: string;
   coverImageUrl?: string;
+  discoveredScreenshots?: string[];
   candidateCoverUrls?: string[];
   liveDemoUrl?: string;
   playlistUrl?: string;
@@ -565,6 +566,31 @@ export function parseImagesFromDescription(description: string | null): string[]
   return urls;
 }
 
+/**
+ * Extracts genuine app screenshots embedded inside a repository README (excluding shields.io, camo, badges, and small icons).
+ */
+export function extractEmbeddedReadmeScreenshots(readmeText?: string | null): string[] {
+  if (!readmeText) return [];
+  const raw = parseImagesFromDescription(readmeText);
+  return raw.filter((url) => {
+    const lower = url.toLowerCase();
+    if (
+      lower.includes('img.shields.io') ||
+      lower.includes('camo.githubusercontent.com') ||
+      lower.includes('capsule-render') ||
+      lower.includes('readme-typing-svg') ||
+      lower.includes('komarev.com') ||
+      lower.includes('skillicons.dev') ||
+      lower.includes('badge') ||
+      lower.endsWith('.gif') ||
+      lower.endsWith('.svg')
+    ) {
+      return false;
+    }
+    return true;
+  });
+}
+
 // Verified screenshot URLs across Ahmed El-Bialy's repositories
 export const VERIFIED_REPO_SCREENSHOTS: Record<string, string[]> = {
   Revio: [
@@ -673,15 +699,28 @@ export async function fetchRepoScreenshots(repoName: string, username: string = 
       const files = await res.json();
       if (Array.isArray(files)) {
         const imageExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
-        const imageUrls = files
-          .filter((file: any) =>
+        const allImageFiles = files.filter(
+          (file: any) =>
             file.type === 'file' &&
             imageExtensions.some((ext) => file.name.toLowerCase().endsWith(ext))
-          )
-          .map((file: any) =>
-            file.download_url ||
-            `https://raw.githubusercontent.com/${username}/${cleanName}/main/screenshots/${encodeURIComponent(file.name)}`
+        );
+
+        const nonCoverScreens = allImageFiles
+          .filter((file: any) => !/^cover\.(png|jpe?g|webp)$/i.test(file.name))
+          .map(
+            (file: any) =>
+              file.download_url ||
+              `https://raw.githubusercontent.com/${username}/${cleanName}/main/screenshots/${encodeURIComponent(file.name)}`
           );
+
+        const imageUrls =
+          nonCoverScreens.length > 0
+            ? nonCoverScreens
+            : allImageFiles.map(
+                (file: any) =>
+                  file.download_url ||
+                  `https://raw.githubusercontent.com/${username}/${cleanName}/main/screenshots/${encodeURIComponent(file.name)}`
+              );
 
         if (imageUrls.length > 0) {
           if (typeof window !== 'undefined') {
@@ -711,9 +750,7 @@ export async function fetchRepoScreenshots(repoName: string, username: string = 
     return verifiedFallback;
   }
 
-  return [
-    `https://raw.githubusercontent.com/${username}/${cleanName}/main/screenshots/cover.png`
-  ];
+  return [];
 }
 
 export interface RepoReleaseInfo {
@@ -1244,6 +1281,7 @@ export interface RepoLiveMetadata {
   googlePlayUrl?: string;
   apkDownloadUrl?: string;
   releaseUrl?: string;
+  discoveredScreenshots?: string[];
   hasRelease: boolean;
   readmeText?: string;
   lastChecked: number;
@@ -1471,6 +1509,8 @@ export async function fetchConsolidatedGitHubPortfolio(
 
         const liveMediaMap: Record<string, RepoLiveMetadata> = {};
         const rawReadmes: Record<string, string> = json.rawReadmes || {};
+        const screenshotsMap: Record<string, { coverUrl?: string; screens?: string[] }> =
+          json.screenshotsMap || {};
         const allNames = Array.from(
           new Set([
             ...repos.map((r) => r.name),
@@ -1483,6 +1523,24 @@ export async function fetchConsolidatedGitHubPortfolio(
             rawReadmes[name] ||
             Object.entries(rawReadmes).find(([rk]) => rk.toLowerCase() === name.toLowerCase())?.[1] ||
             null;
+          const screensEntry =
+            screenshotsMap[name] ||
+            Object.entries(screenshotsMap).find(([sk]) => sk.toLowerCase() === name.toLowerCase())?.[1];
+          const discoveredScreens =
+            screensEntry?.screens && screensEntry.screens.length > 0
+              ? screensEntry.screens
+              : extractEmbeddedReadmeScreenshots(rawReadme);
+
+          const repoMatch = repos.find((r) => r.name.toLowerCase() === name.toLowerCase());
+          if (repoMatch) {
+            if (screensEntry?.coverUrl) {
+              repoMatch.coverImageUrl = screensEntry.coverUrl;
+            }
+            if (discoveredScreens.length > 0) {
+              repoMatch.discoveredScreenshots = discoveredScreens;
+            }
+          }
+
           const parsedLinks = parseLinksFromReadme(rawReadme);
           const known = KNOWN_REPO_MEDIA[name] || KNOWN_REPO_MEDIA[name.toLowerCase()] || {};
           const releaseInfo = releasesMap[name] || releasesMap[name.toLowerCase()] || { hasRelease: false };
@@ -1494,6 +1552,7 @@ export async function fetchConsolidatedGitHubPortfolio(
             googlePlayUrl: parsedLinks.playStoreUrl || known.playStore,
             apkDownloadUrl: releaseInfo.apkDownloadUrl || parsedLinks.apkUrl,
             releaseUrl: releaseInfo.releaseUrl,
+            discoveredScreenshots: discoveredScreens.length > 0 ? discoveredScreens : undefined,
             hasRelease: Boolean(releaseInfo.hasRelease),
             readmeText: rawReadme ? preprocessReadmeContent(rawReadme) : undefined,
             lastChecked: Date.now(),
@@ -1574,6 +1633,10 @@ export async function fetchConsolidatedGitHubPortfolio(
     const rawReadme = directReadmes[r.name] || null;
     const parsedLinks = parseLinksFromReadme(rawReadme);
     const known = KNOWN_REPO_MEDIA[r.name] || KNOWN_REPO_MEDIA[r.name.toLowerCase()] || {};
+    const readmeScreens = extractEmbeddedReadmeScreenshots(rawReadme);
+    if (readmeScreens.length > 0) {
+      r.discoveredScreenshots = readmeScreens;
+    }
 
     const meta: RepoLiveMetadata = {
       repoName: r.name,
@@ -1582,6 +1645,7 @@ export async function fetchConsolidatedGitHubPortfolio(
       googlePlayUrl: parsedLinks.playStoreUrl || r.googlePlayUrl || known.playStore,
       apkDownloadUrl: parsedLinks.apkUrl || r.apkDownloadUrl,
       releaseUrl: r.releaseUrl,
+      discoveredScreenshots: readmeScreens.length > 0 ? readmeScreens : undefined,
       hasRelease: Boolean(r.releaseUrl || r.apkDownloadUrl || parsedLinks.apkUrl),
       readmeText: rawReadme ? preprocessReadmeContent(rawReadme) : undefined,
       lastChecked: Date.now(),

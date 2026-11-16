@@ -807,6 +807,9 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                         repoName={project.repoName}
                         language="Dart"
                         coverUrl={project.image}
+                        discoveredScreenshots={
+                          liveMedia?.discoveredScreenshots || matchingRepo?.discoveredScreenshots
+                        }
                         isHighlight={project.highlight}
                         description={project.description}
                         topics={project.technologies}
@@ -1033,6 +1036,9 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                         repoName={repo.name}
                         language={repo.language}
                         coverUrl={repo.coverImageUrl}
+                        discoveredScreenshots={
+                          repo.discoveredScreenshots || repoLiveMedia?.discoveredScreenshots
+                        }
                         isHighlight={Boolean(
                           projectObj.links.googlePlay || hasSmartMedia || hasReleaseOrApk
                         )}
