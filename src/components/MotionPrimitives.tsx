@@ -12,6 +12,7 @@ interface TiltCardProps {
   className?: string;
   maxTilt?: number;
   glareOpacity?: number;
+  cursorLabel?: string;
   onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
@@ -26,6 +27,7 @@ export const TiltCard: React.FC<TiltCardProps> = ({
   className = '',
   maxTilt = 6,
   glareOpacity = 0.14,
+  cursorLabel,
   onClick,
   onMouseEnter,
   onMouseLeave,
@@ -43,7 +45,7 @@ export const TiltCard: React.FC<TiltCardProps> = ({
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
 
-  const springConfig = { stiffness: 240, damping: 24, mass: 0.4 };
+  const springConfig = { stiffness: 260, damping: 22, mass: 0.45 };
   const smoothX = useSpring(mouseX, springConfig);
   const smoothY = useSpring(mouseY, springConfig);
 
@@ -54,7 +56,7 @@ export const TiltCard: React.FC<TiltCardProps> = ({
   const glareBackground = useTransform(
     [glareX, glareY],
     ([gx, gy]) =>
-      `radial-gradient(420px circle at ${gx} ${gy}, rgba(255,255,255,0.45), transparent 65%)`
+      `radial-gradient(420px circle at ${gx} ${gy}, rgba(255,255,255,0.42), transparent 65%)`
   );
 
   const [isHovered, setIsHovered] = useState(false);
@@ -86,6 +88,7 @@ export const TiltCard: React.FC<TiltCardProps> = ({
     return (
       <div
         ref={ref}
+        data-cursor-label={cursorLabel}
         onClick={onClick}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
@@ -99,17 +102,19 @@ export const TiltCard: React.FC<TiltCardProps> = ({
   return (
     <motion.div
       ref={ref}
+      data-cursor-label={cursorLabel}
       onMouseMove={handleMove}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
       onClick={onClick}
+      whileHover={{ y: -3 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 24 }}
       style={{
-        perspective: 1100,
+        transformPerspective: 1100,
         rotateX,
         rotateY,
-        transformStyle: 'preserve-3d',
       }}
-      className={`relative will-change-transform ${className}`}
+      className={`relative ${className}`}
     >
       {/* Dynamic 3D Specular Light Glare */}
       <motion.div
@@ -208,12 +213,12 @@ export const FloatingPortrait: React.FC<FloatingPortraitProps> = ({
           isTouch
             ? undefined
             : {
+                transformPerspective: 900,
                 rotateX,
                 rotateY,
-                transformStyle: 'preserve-3d',
               }
         }
-        className="relative will-change-transform"
+        className="relative"
       >
         {children}
       </motion.div>

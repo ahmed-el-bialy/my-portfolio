@@ -38,7 +38,7 @@ import { LeafAnimation } from './LeafAnimation';
 import { GitHubActivity } from './GitHubActivity';
 import { TechDistributionChart } from './TechDistributionChart';
 import { GitHubFallbackNotice } from './GitHubFallbackNotice';
-import { ImageWithSkeleton } from './ImageWithSkeleton';
+import { ImageWithSkeleton, preloadImageUrls } from './ImageWithSkeleton';
 import { TiltCard } from './MotionPrimitives';
 import { usePlayStoreAppStats } from '../services/playStoreService';
 import { useLanguage } from '../context/LanguageContext';
@@ -661,7 +661,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                 key={chip.id}
                 type="button"
                 onClick={() => setFrameworkFilter(chip.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 min-h-[36px] rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   isChipActive
                     ? 'bg-blue-600 text-white font-semibold shadow-xs'
                     : 'bg-white dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:border-blue-400'
@@ -793,6 +793,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     key={project.id}
                     maxTilt={4.5}
                     glareOpacity={0.12}
+                    cursorLabel={lang === 'ar' ? 'استعراض' : 'Inspect'}
                     onClick={() => setSelectedProject(dynamicProject)}
                     onMouseEnter={() => setHoveredCardId(project.id)}
                     onMouseLeave={() => setHoveredCardId(null)}
@@ -1024,6 +1025,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     key={repo.id}
                     maxTilt={4}
                     glareOpacity={0.12}
+                    cursorLabel={lang === 'ar' ? 'استعراض' : 'Inspect'}
                     onClick={() => setSelectedProject(dynamicRepoProject)}
                     onMouseEnter={() => setHoveredCardId(repo.id)}
                     onMouseLeave={() => setHoveredCardId(null)}
@@ -1238,10 +1240,15 @@ const RevioSpotlightCard: React.FC<RevioSpotlightCardProps> = ({
   const [activeShot, setActiveShot] = useState(0);
   const screens = VERIFIED_REPO_SCREENSHOTS.Revio.slice(0, 4);
 
+  useEffect(() => {
+    preloadImageUrls(screens);
+  }, [screens]);
+
   return (
     <TiltCard
       maxTilt={3}
       glareOpacity={0.1}
+      cursorLabel={lang === 'ar' ? 'معاينة Revio' : 'Inspect Revio'}
       className="mb-8 p-5 sm:p-7 rounded-3xl bg-white dark:bg-[#0f1117] border border-emerald-500/35 shadow-lg grid grid-cols-1 lg:grid-cols-12 gap-6 items-center"
     >
       <div className="lg:col-span-7 space-y-3.5">
@@ -1286,7 +1293,7 @@ const RevioSpotlightCard: React.FC<RevioSpotlightCardProps> = ({
             href={AHMED_CONFIG.socials.playstore}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm"
+            className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[40px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm"
           >
             <span>{lang === 'ar' ? 'تثبيت من Google Play' : 'Get on Google Play'}</span>
             <ExternalLink size={12} />
@@ -1303,7 +1310,7 @@ const RevioSpotlightCard: React.FC<RevioSpotlightCardProps> = ({
           <button
             type="button"
             onClick={onInspectRevio}
-            className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#161b27] hover:border-[#027DFD] text-slate-800 dark:text-[#f1f5f9] border border-slate-200 dark:border-white/10 font-semibold text-xs cursor-pointer"
+            className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[40px] rounded-xl bg-slate-100 dark:bg-[#161b27] hover:border-[#027DFD] text-slate-800 dark:text-[#f1f5f9] border border-slate-200 dark:border-white/10 font-semibold text-xs cursor-pointer"
           >
             <Eye size={13} />
             <span>{t.projects.actions.viewSpecs}</span>
@@ -1317,14 +1324,16 @@ const RevioSpotlightCard: React.FC<RevioSpotlightCardProps> = ({
           <button
             type="button"
             onClick={onInspectRevio}
-            className="relative w-full max-w-[195px] aspect-[9/18] rounded-[24px] p-1.5 bg-[#080b12] border-2 border-slate-300/90 dark:border-white/20 shadow-2xl overflow-hidden group cursor-pointer"
+            className="relative w-full max-w-[185px] sm:max-w-[195px] aspect-[9/18] rounded-[24px] p-1.5 bg-[#0f1628] border-2 border-slate-300/90 dark:border-white/25 shadow-2xl overflow-hidden group cursor-pointer"
             aria-label="Inspect Revio featured UI"
           >
-            <div className="w-full h-full rounded-[18px] overflow-hidden bg-slate-950">
+            <div className="w-full h-full rounded-[18px] overflow-hidden bg-[#161e31]">
               <ImageWithSkeleton
+                key={screens[activeShot] || screens[0]}
                 src={screens[activeShot] || screens[0]}
                 alt={`Revio spotlight screen ${activeShot + 1}`}
                 loading="eager"
+                variant="phone"
                 className="w-full h-full object-cover object-top crisp-screenshot group-hover:scale-[1.03] transition-transform duration-300"
               />
             </div>
@@ -1337,10 +1346,10 @@ const RevioSpotlightCard: React.FC<RevioSpotlightCardProps> = ({
               key={shot}
               type="button"
               onClick={() => setActiveShot(idx)}
-              className={`h-16 sm:h-[72px] rounded-xl overflow-hidden border-2 transition-all cursor-pointer bg-[#08090d] ${
+              className={`h-16 sm:h-[72px] rounded-xl overflow-hidden border-2 transition-all cursor-pointer bg-[#161e31] ${
                 activeShot === idx
                   ? 'border-emerald-500 scale-[1.04] shadow-md'
-                  : 'border-slate-200 dark:border-white/10 opacity-70 hover:opacity-100'
+                  : 'border-slate-200 dark:border-white/15 opacity-85 hover:opacity-100'
               }`}
               aria-label={`Preview Revio screen ${idx + 1}`}
             >
@@ -1348,6 +1357,7 @@ const RevioSpotlightCard: React.FC<RevioSpotlightCardProps> = ({
                 src={shot}
                 alt={`Revio thumb ${idx + 1}`}
                 loading="eager"
+                variant="phone"
                 className="w-full h-full object-cover object-top crisp-screenshot"
               />
             </button>

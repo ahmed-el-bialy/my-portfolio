@@ -23,22 +23,22 @@ export const SmartDemoButtons: React.FC<SmartDemoButtonsProps> = ({
   }
 
   const youtubeWatchBtnClass = compact
-    ? 'btn-kinetic inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 border border-red-500/25 font-semibold text-[11px] whitespace-nowrap'
+    ? 'btn-kinetic inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[34px] rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white shadow-sm shadow-rose-600/25 font-bold text-[11px] whitespace-nowrap transition-all'
     : `${
-        fullWidthOnRow ? 'flex-1 min-w-[120px]' : ''
-      } btn-kinetic inline-flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl bg-red-500/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 border border-red-500/25 font-semibold text-xs min-h-[38px] whitespace-nowrap`;
+        fullWidthOnRow ? 'flex-1 min-w-[128px]' : ''
+      } btn-kinetic inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white shadow-md shadow-rose-600/25 font-bold text-xs min-h-[40px] whitespace-nowrap transition-all`;
 
   const youtubePlaylistBtnClass = compact
-    ? 'btn-kinetic inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-600 hover:text-white text-amber-700 dark:text-amber-300 border border-amber-500/25 font-semibold text-[11px] whitespace-nowrap'
+    ? 'btn-kinetic inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 min-h-[34px] rounded-xl bg-amber-500/15 hover:bg-amber-600 hover:text-white text-amber-700 dark:text-amber-300 border border-amber-500/35 font-bold text-[11px] whitespace-nowrap transition-all'
     : `${
         fullWidthOnRow ? 'flex-1 min-w-[120px]' : ''
-      } btn-kinetic inline-flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl bg-amber-500/10 hover:bg-amber-600 hover:text-white text-amber-700 dark:text-amber-300 border border-amber-500/25 font-semibold text-xs min-h-[38px] whitespace-nowrap`;
+      } btn-kinetic inline-flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl bg-amber-500/15 hover:bg-amber-600 hover:text-white text-amber-700 dark:text-amber-300 border border-amber-500/35 font-bold text-xs min-h-[40px] whitespace-nowrap transition-all`;
 
   const webLiveBtnClass = compact
-    ? 'btn-kinetic inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] border border-[#027DFD]/25 font-semibold text-[11px] whitespace-nowrap'
+    ? 'btn-kinetic inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[34px] rounded-xl bg-gradient-to-r from-[#027DFD] to-[#0099FF] hover:from-[#026ae0] hover:to-[#027DFD] text-white shadow-sm shadow-[#027DFD]/30 font-bold text-[11px] whitespace-nowrap transition-all'
     : `${
-        fullWidthOnRow ? 'flex-1 min-w-[120px]' : ''
-      } btn-kinetic inline-flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] border border-[#027DFD]/25 font-semibold text-xs min-h-[38px] whitespace-nowrap`;
+        fullWidthOnRow ? 'flex-1 min-w-[128px]' : ''
+      } btn-kinetic inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#027DFD] to-[#0099FF] hover:from-[#026ae0] hover:to-[#027DFD] text-white shadow-md shadow-[#027DFD]/30 font-bold text-xs min-h-[40px] whitespace-nowrap transition-all`;
 
   const handleStop = (e: React.MouseEvent) => {
     if (stopPropagation) {
@@ -58,6 +58,7 @@ export const SmartDemoButtons: React.FC<SmartDemoButtonsProps> = ({
             onClick={handleStop}
             className={youtubeWatchBtnClass}
           >
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
             <Youtube size={compact ? 12 : 14} className="shrink-0" />
             <span>{t.projects.actions.watchDemo}</span>
           </a>
@@ -83,6 +84,7 @@ export const SmartDemoButtons: React.FC<SmartDemoButtonsProps> = ({
           onClick={handleStop}
           className={youtubeWatchBtnClass}
         >
+          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0" />
           <Youtube size={compact ? 12 : 14} className="shrink-0" />
           <span>{t.projects.actions.watchDemo}</span>
         </a>
@@ -111,6 +113,7 @@ export const SmartDemoButtons: React.FC<SmartDemoButtonsProps> = ({
           onClick={handleStop}
           className={webLiveBtnClass}
         >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse shrink-0" />
           <ExternalLink size={compact ? 12 : 14} className="shrink-0" />
           <span>{t.projects.actions.liveDemo}</span>
         </a>

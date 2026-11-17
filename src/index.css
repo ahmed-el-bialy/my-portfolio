@@ -61,7 +61,7 @@ html {
 body {
   background-color: var(--surface-canvas);
   color: var(--text-primary);
-  font-family: 'Plus Jakarta Sans', 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.65;
   letter-spacing: -0.011em;
   overflow-x: hidden;
@@ -152,7 +152,7 @@ html.theme-switching *::after {
 }
 
 /* =========================================================
-   BILINGUAL TYPOGRAPHY (CAIRO ARABIC RTL / LATIN SANS / FIRA CODE)
+   BILINGUAL TYPOGRAPHY (OUTFIT DISPLAY / PLUS JAKARTA SANS / JETBRAINS MONO / CAIRO)
    ========================================================= */
 html[dir="rtl"] body,
 html.rtl-mode body {
@@ -175,23 +175,23 @@ html[dir="rtl"] h6 {
 html[dir="rtl"] .font-mono,
 html[dir="rtl"] code,
 html[dir="rtl"] pre {
-  font-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   direction: ltr;
   unicode-bidi: isolate;
 }
 
-.font-marker {
-  font-family: 'Permanent Marker', cursive;
-}
-
-.font-code {
-  font-family: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace;
+.font-mono,
+.font-code,
+code,
+pre {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /* Typographic scale discipline */
 h1, h2, h3, h4, h5, h6 {
-  letter-spacing: -0.024em;
-  line-height: 1.18;
+  font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  letter-spacing: -0.025em;
+  line-height: 1.16;
 }
 
 h1 {
@@ -226,6 +226,27 @@ h1 {
 
 html.light .ambient-glow-top {
   background: radial-gradient(ellipse 65% 45% at 50% -10%, rgba(2, 125, 253, 0.06), transparent 72%);
+}
+
+/* =========================================================
+   ARCHITECTURAL CANVAS DEPTH (~4% GRID & INTERSECTION DOTS)
+   ========================================================= */
+.bg-architectural-grid {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(0, 199, 255, 0.085) 1px, transparent 0),
+    linear-gradient(to right, rgba(255, 255, 255, 0.038) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.038) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(ellipse 88% 74% at 50% 24%, #000 32%, transparent 94%);
+  mask-image: radial-gradient(ellipse 88% 74% at 50% 24%, #000 32%, transparent 94%);
+  pointer-events: none;
+}
+
+html.light .bg-architectural-grid {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(2, 125, 253, 0.075) 1px, transparent 0),
+    linear-gradient(to right, rgba(15, 23, 42, 0.042) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.042) 1px, transparent 1px);
 }
 
 /* Subtle Scrollbar */
@@ -305,13 +326,25 @@ html.light .ambient-glow-top {
 
 .skeleton-shimmer {
   background: linear-gradient(
-    90deg,
-    var(--surface-elevated) 20%,
-    color-mix(in srgb, var(--accent-primary) 10%, var(--surface-elevated)) 50%,
-    var(--surface-elevated) 80%
+    105deg,
+    #182034 15%,
+    #283757 45%,
+    rgba(2, 125, 253, 0.24) 55%,
+    #182034 85%
   );
-  background-size: 200% 100%;
-  animation: shimmerSweep 1.6s ease-in-out infinite;
+  background-size: 220% 100%;
+  animation: shimmerSweep 1.45s ease-in-out infinite;
+}
+
+html.light .skeleton-shimmer {
+  background: linear-gradient(
+    105deg,
+    #e2e8f0 15%,
+    #f1f5f9 48%,
+    rgba(2, 125, 253, 0.14) 55%,
+    #e2e8f0 85%
+  );
+  background-size: 220% 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -365,9 +398,7 @@ html.light .ambient-glow-top {
 }
 
 .crisp-screenshot {
-  image-rendering: -webkit-optimize-contrast;
-  backface-visibility: hidden;
-  transform: translateZ(0);
+  image-rendering: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {

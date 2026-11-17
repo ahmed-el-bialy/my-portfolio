@@ -20,6 +20,7 @@ import { DeveloperProfile, openEmailClient } from '../data/portfolioData';
 import { AHMED_CONFIG, getEgyptLocalTime } from '../data/config';
 import { WhatsAppLogo } from './TechLogos';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 import { MagneticButton } from './MagneticButton';
 import { MeetingType } from './BookingMeetingModal';
 
@@ -35,6 +36,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
   onOpenResume,
 }) => {
   const { lang, dir, t } = useLanguage();
+  const { showToast } = useToast();
   const [copiedKey, setCopiedKey] = useState<'email' | 'phone' | 'github' | 'linkedin' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -65,6 +67,13 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
   const handleCopy = (key: 'email' | 'phone' | 'github' | 'linkedin', value: string) => {
     navigator.clipboard.writeText(value);
     setCopiedKey(key);
+    const labelMap = {
+      email: lang === 'ar' ? 'تم نسخ البريد الإلكتروني' : 'Email copied to clipboard',
+      phone: lang === 'ar' ? 'تم نسخ رقم الهاتف' : 'Phone number copied',
+      github: lang === 'ar' ? 'تم نسخ رابط GitHub' : 'GitHub link copied',
+      linkedin: lang === 'ar' ? 'تم نسخ رابط LinkedIn' : 'LinkedIn link copied',
+    };
+    showToast({ message: labelMap[key], detail: value });
     setTimeout(() => {
       setCopiedKey((prev) => (prev === key ? null : prev));
     }, 2000);
@@ -382,19 +391,19 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
             </div>
 
             {onOpenBooking && (
-              <div className="grid grid-cols-3 gap-2.5 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-4">
                 {meetingSlots.map((slot) => (
                   <button
                     key={slot.type}
                     type="button"
                     onClick={() => onOpenBooking(slot.type)}
-                    className="p-3 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 hover:border-[#027DFD]/60 text-start transition-all cursor-pointer group"
+                    className="p-3.5 min-h-[54px] rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 hover:border-[#027DFD]/60 text-start transition-all cursor-pointer group flex sm:block items-center justify-between gap-2"
                   >
-                    <div className="flex items-center gap-1 text-xs font-mono font-bold text-[#027DFD] dark:text-[#00C7FF] tabular-nums">
+                    <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#027DFD] dark:text-[#00C7FF] tabular-nums">
                       <Clock size={12} />
                       <span>{slot.duration}</span>
                     </div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-[#f1f5f9] mt-1 truncate group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF]">
+                    <div className="text-xs font-bold text-slate-900 dark:text-[#f1f5f9] sm:mt-1 group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF]">
                       {slot.title}
                     </div>
                   </button>
@@ -444,7 +453,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     onClick={() =>
                       openEmailClient(AHMED_CONFIG.email, 'Mobile App Project Inquiry - Flutter Developer')
                     }
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors cursor-pointer"
                   >
                     <Mail size={11} />
                     <span>{lang === 'ar' ? 'مراسلة' : 'Compose'}</span>
@@ -452,7 +461,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                   <button
                     type="button"
                     onClick={() => handleCopy('email', AHMED_CONFIG.email)}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[34px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
                   >
                     {copiedKey === 'email' ? (
                       <Check size={11} className="text-emerald-500" />
@@ -477,7 +486,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     href={AHMED_CONFIG.socials.whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600/10 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg bg-emerald-600/10 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] transition-colors"
                   >
                     <WhatsAppLogo size={11} />
                     <span>WhatsApp</span>
@@ -485,7 +494,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                   <button
                     type="button"
                     onClick={() => handleCopy('phone', AHMED_CONFIG.phone)}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[34px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
                   >
                     {copiedKey === 'phone' ? (
                       <Check size={11} className="text-emerald-500" />
@@ -508,7 +517,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     href={AHMED_CONFIG.socials.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-200/80 dark:bg-white/10 hover:bg-[#027DFD] hover:text-white text-slate-800 dark:text-slate-200 font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg bg-slate-200/80 dark:bg-white/10 hover:bg-[#027DFD] hover:text-white text-slate-800 dark:text-slate-200 font-semibold text-[11px] transition-colors"
                   >
                     <Github size={11} />
                     <span>{lang === 'ar' ? 'فتح' : 'Open'}</span>
@@ -516,7 +525,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                   <button
                     type="button"
                     onClick={() => handleCopy('github', AHMED_CONFIG.socials.github)}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[34px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
                   >
                     {copiedKey === 'github' ? (
                       <Check size={11} className="text-emerald-500" />
@@ -539,7 +548,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     href={AHMED_CONFIG.socials.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
                   >
                     <Linkedin size={11} />
                     <span>{lang === 'ar' ? 'فتح' : 'Open'}</span>
@@ -547,7 +556,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                   <button
                     type="button"
                     onClick={() => handleCopy('linkedin', AHMED_CONFIG.socials.linkedin)}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[34px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
                   >
                     {copiedKey === 'linkedin' ? (
                       <Check size={11} className="text-emerald-500" />

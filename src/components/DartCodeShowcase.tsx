@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Check, Copy, FileCode2 } from 'lucide-react';
 import { DART_ARCHITECTURE_SNIPPETS, DartSnippetSpec } from '../data/config';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 
 interface DartCodeShowcaseProps {
   isDark?: boolean;
@@ -13,6 +14,7 @@ export const DartCodeShowcase: React.FC<DartCodeShowcaseProps> = ({
   compact = false,
 }) => {
   const { lang } = useLanguage();
+  const { showToast } = useToast();
   const [activeId, setActiveId] = useState<string>(DART_ARCHITECTURE_SNIPPETS[0].id);
   const [highlightedMap, setHighlightedMap] = useState<Record<string, string>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -49,6 +51,10 @@ export const DartCodeShowcase: React.FC<DartCodeShowcaseProps> = ({
   const handleCopy = () => {
     navigator.clipboard.writeText(activeSnippet.code);
     setCopiedId(activeSnippet.id);
+    showToast({
+      message: lang === 'ar' ? 'تم نسخ كود Dart' : 'Dart snippet copied',
+      detail: activeSnippet.fileName,
+    });
     setTimeout(() => setCopiedId(null), 1800);
   };
 

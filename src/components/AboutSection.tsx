@@ -101,14 +101,14 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
               <button
                 type="button"
                 onClick={handleAvatarEasterEgg}
-                className="group relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden p-[3px] bg-gradient-to-br from-[#027DFD] via-[#00C7FF] to-emerald-400 shadow-xl shadow-[#027DFD]/25 ring-1 ring-[#00C7FF]/35 transition-transform duration-300 hover:scale-[1.03] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C7FF]"
+                className="group relative w-32 h-32 sm:w-44 sm:h-44 rounded-2xl overflow-hidden p-[3px] bg-gradient-to-br from-[#027DFD] via-[#00C7FF] to-emerald-400 shadow-xl shadow-[#027DFD]/25 ring-1 ring-[#00C7FF]/35 transition-transform duration-300 hover:scale-[1.03] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C7FF]"
                 aria-label={
                   lang === 'ar'
                     ? 'صورة أحمد البيلي (انقر 5 مرات للمفاجأة)'
                     : 'Ahmed El-Bialy portrait (tap 5 times for a surprise)'
                 }
               >
-                <span className="block w-full h-full rounded-[13px] overflow-hidden bg-slate-950 ring-1 ring-black/40">
+                <span className="block w-full h-full rounded-[13px] overflow-hidden bg-[#161e31] ring-1 ring-black/30">
                   <ImageWithSkeleton
                     src={AHMED_PROFILE.avatarUrl}
                     alt={AHMED_CONFIG.name[lang]}
@@ -218,6 +218,58 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
                 );
               })}
             </div>
+            {/* Scannable 4-Domain Core Flutter & AI Engineering Skill Matrix */}
+            <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-white/8">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <span className="text-xs font-mono font-bold text-[#027DFD] dark:text-[#00C7FF] uppercase tracking-wider">
+                  {lang === 'ar' ? 'مصفوفة المهارات الهندسية' : 'Core Engineering Skill Matrix'}
+                </span>
+                <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                  Flutter · Clean Arch · AI
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {[
+                  {
+                    domain: lang === 'ar' ? 'نواة الموبايل' : 'Mobile Core',
+                    items: ['Flutter', 'Dart (OOP)', 'Slivers & RTL'],
+                    accent: 'text-[#027DFD] dark:text-[#00C7FF]',
+                  },
+                  {
+                    domain: lang === 'ar' ? 'الحالة والتخزين' : 'State & Offline',
+                    items: ['BLoC / Cubit', 'Hive NoSQL', 'SharedPrefs'],
+                    accent: 'text-emerald-600 dark:text-emerald-400',
+                  },
+                  {
+                    domain: lang === 'ar' ? 'الشبكات والبيانات' : 'APIs & Cloud',
+                    items: ['Dio & Retrofit', 'REST / TMDB', 'Firebase Auth'],
+                    accent: 'text-amber-600 dark:text-amber-400',
+                  },
+                  {
+                    domain: lang === 'ar' ? 'الأسس والـ AI' : 'AI & CS Base',
+                    items: ['Clean Arch', 'Python & C++', 'Design Patterns'],
+                    accent: 'text-violet-600 dark:text-violet-400',
+                  },
+                ].map((group) => (
+                  <div
+                    key={group.domain}
+                    className="p-3 rounded-xl bg-slate-50/90 dark:bg-[#161b27]/75 border border-slate-200/80 dark:border-white/8"
+                  >
+                    <div className={`text-[11px] font-mono font-bold mb-1.5 ${group.accent}`}>
+                      {group.domain}
+                    </div>
+                    <ul className="space-y-1 text-[11.5px] font-medium text-slate-700 dark:text-slate-200">
+                      {group.items.map((item) => (
+                        <li key={item} className="truncate">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Academic Foundation Strip */}
@@ -243,7 +295,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
               <button
                 type="button"
                 onClick={onExploreExperience}
-                className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-[#161b27] hover:border-[#027DFD] text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer whitespace-nowrap self-start sm:self-center"
+                className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[40px] rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-[#161b27] hover:border-[#027DFD] text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer whitespace-nowrap self-start sm:self-center"
               >
                 <span>{lang === 'ar' ? 'المسار الأكاديمي والشهادات' : 'Full Timeline & Certs'}</span>
                 <ArrowRight size={14} className={dir === 'rtl' ? 'rotate-180' : ''} />

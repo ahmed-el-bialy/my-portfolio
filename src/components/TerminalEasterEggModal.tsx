@@ -5,6 +5,7 @@ import { AHMED_CONFIG } from '../data/config';
 import { FEATURED_PROJECTS, CERTIFICATES } from '../data/portfolioData';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 
 interface TerminalEasterEggModalProps {
   isOpen: boolean;
@@ -168,6 +169,7 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
 }) => {
   useScrollLock(isOpen);
   const { lang, dir, t } = useLanguage();
+  const { showToast } = useToast();
   const copy = CLI_COPY[lang];
 
   const [input, setInput] = useState('');
@@ -492,6 +494,10 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
     try {
       await navigator.clipboard.writeText(AHMED_CONFIG.email);
       setCopiedEmail(true);
+      showToast({
+        message: lang === 'ar' ? 'تم نسخ البريد الإلكتروني' : 'Email copied to clipboard',
+        detail: AHMED_CONFIG.email,
+      });
       setTimeout(() => setCopiedEmail(false), 1800);
     } catch {}
   };
@@ -525,7 +531,7 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
         {/* Top Terminal Bar */}
         <div className="flex items-center justify-between gap-2 px-4 py-3 bg-[#0f131d] border-b border-white/10 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="hidden xs:flex items-center gap-1.5">
+            <div className="hidden sm:flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
               <span className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
@@ -688,7 +694,7 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
             aria-label={copy.runLabel}
           >
             <Send size={12} className={dir === 'rtl' ? 'rotate-180' : ''} />
-            <span className="hidden xs:inline">{copy.runLabel}</span>
+            <span className="hidden sm:inline">{copy.runLabel}</span>
           </button>
         </form>
       </div>

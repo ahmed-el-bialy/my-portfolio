@@ -18,6 +18,7 @@ import { DeveloperProfile, openEmailClient } from '../data/portfolioData';
 import { WhatsAppLogo } from './TechLogos';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 }) => {
   useScrollLock(isOpen);
   const { lang, dir, t } = useLanguage();
+  const { showToast } = useToast();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -48,6 +50,10 @@ export const ContactModal: React.FC<ContactModalProps> = ({
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(profile.email);
     setCopiedEmail(true);
+    showToast({
+      message: lang === 'ar' ? 'تم نسخ البريد الإلكتروني' : 'Email copied to clipboard',
+      detail: profile.email,
+    });
     setTimeout(() => setCopiedEmail(false), 2000);
   };
 

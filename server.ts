@@ -154,6 +154,82 @@ async function startServer() {
     }
   }
 
+  // Cached Media Proxy for allowlisted GitHub raw screenshots (eliminates repeat multi-MB downloads)
+  const MEDIA_CACHE_MAX_ENTRIES = 48;
+  const MEDIA_CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
+  const mediaServerCache = new Map<
+    string,
+    { buffer: Buffer; contentType: string; timestamp: number }
+  >();
+
+  app.get('/api/media/screen', async (req, res) => {
+    const rawUrl = typeof req.query.url === 'string' ? req.query.url.trim() : '';
+    if (!rawUrl) {
+      return res.status(400).send('Missing url');
+    }
+
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(rawUrl);
+    } catch {
+      return res.status(400).send('Invalid url');
+    }
+
+    const isAllowedOrigin =
+      (parsedUrl.hostname === 'raw.githubusercontent.com' &&
+        parsedUrl.pathname.toLowerCase().startsWith('/ahmed-el-bialy/')) ||
+      parsedUrl.hostname === 'avatars.githubusercontent.com';
+
+    if (!isAllowedOrigin) {
+      return res.status(403).send('Forbidden media origin');
+    }
+
+    const cached = mediaServerCache.get(rawUrl);
+    if (cached && Date.now() - cached.timestamp < MEDIA_CACHE_TTL_MS) {
+      res.setHeader('Content-Type', cached.contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+      res.setHeader('X-Media-Cache', 'HIT');
+      return res.send(cached.buffer);
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const upstream = await fetch(rawUrl, {
+        headers: { 'User-Agent': 'ahmed-el-bialy-portfolio-media' },
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (!upstream.ok) {
+        return res.status(upstream.status).send('Upstream media error');
+      }
+
+      const contentType = upstream.headers.get('content-type') || 'image/png';
+      const arrayBuf = await upstream.arrayBuffer();
+      const buffer = Buffer.from(arrayBuf);
+
+      if (buffer.length > 0 && buffer.length <= 8 * 1024 * 1024) {
+        if (mediaServerCache.size >= MEDIA_CACHE_MAX_ENTRIES) {
+          const oldestKey = mediaServerCache.keys().next().value;
+          if (oldestKey) mediaServerCache.delete(oldestKey);
+        }
+        mediaServerCache.set(rawUrl, {
+          buffer,
+          contentType,
+          timestamp: Date.now(),
+        });
+      }
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+      res.setHeader('X-Media-Cache', 'MISS');
+      return res.send(buffer);
+    } catch {
+      return res.status(504).send('Media fetch timeout');
+    }
+  });
+
   // Consolidated GitHub Portfolio Proxy (reduces 60-100 client requests down to 1 cached call)
   app.get('/api/github/portfolio', async (req, res) => {
     const username = String(req.query.username || 'ahmed-el-bialy').trim() || 'ahmed-el-bialy';

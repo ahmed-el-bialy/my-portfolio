@@ -138,7 +138,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
       {/* 1. Verified Certificates & Training Grid (Redesigned with Instant At-a-Glance Hierarchy) */}
       {(activeSubTab === 'all' || activeSubTab === 'certs') && (
         <div className="mb-14 sm:mb-16">
-          <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 mb-6 pb-3 border-b border-slate-200/80 dark:border-white/8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 pb-3 border-b border-slate-200/80 dark:border-white/8">
             <div className="flex items-center gap-2.5">
               <span className="w-8 h-8 rounded-lg bg-[#027DFD]/10 text-[#027DFD] dark:text-[#00C7FF] flex items-center justify-center shrink-0">
                 <FileCheck2 size={17} />
@@ -158,7 +158,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
             <button
               type="button"
               onClick={onOpenResume}
-              className="btn-kinetic px-3.5 py-2 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 text-xs text-[#027DFD] dark:text-[#00C7FF] font-semibold hover:border-[#027DFD]/50 flex items-center gap-1.5 cursor-pointer self-end xs:self-auto whitespace-nowrap"
+              className="btn-kinetic px-3.5 py-2 min-h-[38px] rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 text-xs text-[#027DFD] dark:text-[#00C7FF] font-semibold hover:border-[#027DFD]/50 flex items-center gap-1.5 cursor-pointer self-start sm:self-auto whitespace-nowrap"
             >
               <span>{t.experience.viewOriginalCv}</span>
               <ArrowUpRight size={13} className={dir === 'rtl' ? 'rotate-180' : ''} />
@@ -172,7 +172,12 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
 
               return (
                 <RevealOnScroll key={cert.id} delay={idx * 0.06} className="flex">
-                  <TiltCard maxTilt={5} glareOpacity={0.12} className="w-full flex">
+                  <TiltCard
+                    maxTilt={5}
+                    glareOpacity={0.12}
+                    cursorLabel={lang === 'ar' ? 'عرض الشهادة' : 'View Cert'}
+                    className="w-full flex"
+                  >
                     <SpotlightCard
                       spotlightColor="rgba(2, 125, 253, 0.14)"
                       borderColor="rgba(0, 199, 255, 0.4)"
@@ -286,7 +291,7 @@ export const ExperienceSection: React.FC<ExperienceSectionProps> = ({ onOpenResu
             <div className="relative border-slate-200 dark:border-white/10 space-y-6 border-s-2 ms-3 ps-6">
               {EXPERIENCES.map((exp, idx) => (
                 <RevealOnScroll key={idx} delay={idx * 0.06} className="relative group">
-                  <div className="absolute top-5 w-3.5 h-3.5 rounded-full bg-white dark:bg-[#08090d] border-2 border-[#027DFD] dark:border-[#00C7FF] -start-[32px] shadow-xs" />
+                  <div className="absolute top-5 w-3.5 h-3.5 rounded-full bg-white dark:bg-[#08090d] border-2 border-[#027DFD] dark:border-[#00C7FF] -start-[31px] shadow-xs" />
 
                   <TiltCard
                     maxTilt={4}

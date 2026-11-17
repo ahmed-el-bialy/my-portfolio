@@ -19,6 +19,7 @@ import {
 import { CertificateItem } from '../data/portfolioData';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 
 interface CertificateModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
 }) => {
   useScrollLock(isOpen);
   const { lang, dir } = useLanguage();
+  const { showToast } = useToast();
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeView, setActiveView] = useState<'details' | 'webview'>('details');
 
@@ -59,6 +61,10 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
     if (!certificate.credentialUrl) return;
     navigator.clipboard.writeText(certificate.credentialUrl);
     setCopiedLink(true);
+    showToast({
+      message: lang === 'ar' ? 'تم نسخ رابط الشهادة' : 'Certificate link copied',
+      detail: certificate.issuer,
+    });
     setTimeout(() => setCopiedLink(false), 2200);
   };
 

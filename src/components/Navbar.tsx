@@ -251,7 +251,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <div
             className={`fixed inset-y-0 ${
-              dir === 'rtl' ? 'left-0' : 'right-0'
+              dir === 'rtl' ? 'left-0 border-e' : 'right-0 border-s'
             } w-[84%] max-w-xs bg-white dark:bg-[#0f1117] border-slate-200 dark:border-white/10 shadow-2xl p-5 flex flex-col justify-between overflow-y-auto`}
             onClick={(e) => e.stopPropagation()}
           >

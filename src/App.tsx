@@ -23,7 +23,8 @@ import { ProjectDetailsModal } from './components/ProjectDetailsModal';
 import { ThemeRevealOverlay } from './components/ThemeRevealOverlay';
 import { BrandLogoMark } from './components/BrandLogoMark';
 import { PageSkeletonLoader } from './components/PageSkeletonLoader';
-import { LEAF_DOUBLE_DRAW_MS } from './components/LeafAnimation';
+import { LEAF_ENTRY_DURATION_MS } from './components/LeafAnimation';
+import { preloadImageUrls } from './components/ImageWithSkeleton';
 import { Github, Linkedin, Youtube, Mail, RefreshCw, ArrowUp, Terminal, Sparkles } from 'lucide-react';
 import { WhatsAppLogo, TikTokLogo } from './components/TechLogos';
 import { useLanguage } from './context/LanguageContext';
@@ -86,10 +87,17 @@ export default function App() {
   );
   const [lastSyncTime, setLastSyncTime] = useState<string>('Just now');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+const SESSION_INTRO_KEY = 'ahmed_portfolio_intro_seen_v1';
+
   const [egyptClock, setEgyptClock] = useState<string>(() => getEgyptLocalTime(lang));
   const [showInitialSplash, setShowInitialSplash] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
-    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+    try {
+      return window.sessionStorage.getItem(SESSION_INTRO_KEY) !== '1';
+    } catch {
+      return false;
+    }
   });
 
   const profile = DEFAULT_PROFILE;
@@ -149,14 +157,23 @@ export default function App() {
     applyThemeToDom(isDark);
   }, [isDark]);
 
-  // First site open Leaf entrance overlay (3.5s dwell synced with 2 calm 1.75s calligraphy draws)
+  const handleSkipIntro = useCallback(() => {
+    try {
+      window.sessionStorage.setItem(SESSION_INTRO_KEY, '1');
+    } catch {
+      // ignore storage failure in private browsing
+    }
+    setShowInitialSplash(false);
+  }, []);
+
+  // Smart Session Entry: plays once per session (~1.45s skippable); subsequent reloads open straight to Hero
   useEffect(() => {
     if (!showInitialSplash) return;
     const timer = window.setTimeout(() => {
-      setShowInitialSplash(false);
-    }, LEAF_DOUBLE_DRAW_MS);
+      handleSkipIntro();
+    }, LEAF_ENTRY_DURATION_MS);
     return () => window.clearTimeout(timer);
-  }, [showInitialSplash]);
+  }, [showInitialSplash, handleSkipIntro]);
 
   // Keep Egypt local time fresh
   useEffect(() => {
@@ -337,12 +354,7 @@ export default function App() {
       })
       .catch(() => {});
 
-    FEATURED_PROJECTS.slice(0, 3).forEach((proj) => {
-      if (proj.image) {
-        const img = new Image();
-        img.src = proj.image;
-      }
-    });
+    preloadImageUrls(FEATURED_PROJECTS.slice(0, 4).map((proj) => proj.image).filter(Boolean));
   }, [profile.githubUsername, profile.cvDriveUrl, profile.linkedinUrl]);
 
   // Sync URL hash changes
@@ -401,6 +413,12 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen relative flex flex-col justify-between selection:bg-[#00C7FF] selection:text-[#08090d] bg-[#f8fafc] dark:bg-[#08090d] text-slate-900 dark:text-[#f1f5f9] transition-colors duration-200">
+        {/* Subtle Architectural Grid/Dot Canvas Layer (~4% opacity, soft vignette edges) */}
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 bg-architectural-grid pointer-events-none z-0"
+        />
+
         {/* Keyboard Accessibility Skip Link */}
         <a href="#main-content" className="skip-to-main">
           {lang === 'ar' ? 'انتقل إلى المحتوى الرئيسي' : 'Skip to main content'}
@@ -424,25 +442,51 @@ export default function App() {
           isAnyModalOpen={anyModalOpen}
         />
 
-        {/* Focused Multi-View Main Stage with Inline Leaf Loading & Bilingual Crossfade */}
-        <main id="main-content" className="flex-1 pb-24 md:pb-12">
-          {showInitialSplash ? (
-            <PageSkeletonLoader view={activeTab} isDark={isDark} />
-          ) : isSwitchingLang ? (
-            <PageSkeletonLoader
-              view="language"
-              targetLang={switchingTargetLang}
-              isDark={isDark}
-            />
-          ) : (
-            <AnimatePresence mode="wait">
+        {/* Focused Multi-View Main Stage with Unified Crossfade Transition */}
+        <main id="main-content" className="relative z-10 flex-1 pb-28 md:pb-12">
+          <AnimatePresence mode="wait">
+            {showInitialSplash ? (
               <motion.div
-                key={lang}
+                key="initial-leaf-stage"
+                initial={prefersReducedMotion ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                className="w-full"
+              >
+                <PageSkeletonLoader
+                  view={activeTab}
+                  isDark={isDark}
+                  pacing="entry"
+                  loop={false}
+                  onSkip={handleSkipIntro}
+                />
+              </motion.div>
+            ) : isSwitchingLang ? (
+              <motion.div
+                key="language-leaf-stage"
+                initial={prefersReducedMotion ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                className="w-full"
+              >
+                <PageSkeletonLoader
+                  view="language"
+                  targetLang={switchingTargetLang}
+                  isDark={isDark}
+                  pacing="artisan"
+                  loop={false}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key={`stage-${lang}`}
                 dir={dir}
                 initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={prefersReducedMotion ? undefined : { opacity: 0, y: -4 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
                 className="w-full"
               >
                 {activeTab === 'overview' && (
@@ -524,8 +568,8 @@ export default function App() {
                   </motion.div>
                 )}
               </motion.div>
-            </AnimatePresence>
-          )}
+            )}
+          </AnimatePresence>
         </main>
 
         {/* Circular Reveal Theme Switcher CSS Fallback */}
@@ -593,7 +637,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-20 lg:bottom-6 end-4 sm:end-6 z-40 p-2.5 sm:p-3 rounded-full bg-[#027DFD] hover:bg-[#026ae0] text-white shadow-lg transition-transform duration-200 hover:scale-105 cursor-pointer border border-white/20 flex items-center justify-center"
+            className="fixed bottom-24 lg:bottom-6 end-4 sm:end-6 z-40 p-2.5 sm:p-3 rounded-full bg-[#027DFD] hover:bg-[#026ae0] text-white shadow-lg transition-transform duration-200 hover:scale-105 cursor-pointer border border-white/20 flex items-center justify-center"
             aria-label={lang === 'ar' ? 'الرجوع للأعلى' : 'Back to top'}
             title={lang === 'ar' ? 'الرجوع للأعلى' : 'Back to top'}
           >
@@ -602,7 +646,7 @@ export default function App() {
         )}
 
         {/* Clean Responsive Obsidian / Light Studio Footer */}
-        <footer className="w-full border-t border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#0d1017]/95 backdrop-blur-sm pt-8 pb-24 lg:pb-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-600 dark:text-[#94a3b8] transition-colors">
+        <footer className="relative z-10 w-full border-t border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#0d1017]/95 backdrop-blur-sm pt-8 pb-28 lg:pb-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-600 dark:text-[#94a3b8] transition-colors">
           <div className="max-w-[1440px] mx-auto flex flex-col gap-6 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-5">
               {/* Brand Identity + Live Sync Status (Left / Top) */}

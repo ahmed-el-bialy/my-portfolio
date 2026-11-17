@@ -157,7 +157,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 8200,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/home_p1.png",
     liveDemoUrl: "https://youtube.com/shorts/9LCJqMSuZno?si=b-7WUOXY8B0IUahe",
     playlistUrl: "https://youtube.com/playlist?list=PLGHDB4nGr8K0&si=Bro9Uai9p9glcGuQ",
   },
@@ -178,7 +178,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 4300,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/HomeView.png",
     liveDemoUrl: "https://youtube.com/shorts/PIg1rYA0CkQ"
   },
   {
@@ -198,7 +198,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 3100,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/sunny_main_weather.png",
     liveDemoUrl: "https://youtube.com/shorts/u5JjIphdrAM?si=h44HWlZMZki8L_GM"
   },
   {
@@ -218,7 +218,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 4700,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/general_view.png",
     liveDemoUrl: "https://youtube.com/shorts/AKbiBjCRIis"
   },
   {
@@ -238,7 +238,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 3800,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/SenderView.png",
   },
   {
     id: 7,
@@ -257,7 +257,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 2900,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Nihon-Seed/main/screenshots/MainView.png",
     liveDemoUrl: "https://youtube.com/shorts/OG-S_8oSN00?si=1K0SkiW8voSb4YR-"
   },
   {
@@ -277,7 +277,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 2600,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/NBN-Basketball/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/NBN-Basketball/main/screenshots/StartView.png",
     liveDemoUrl: "https://youtube.com/shorts/xJaE0pxSpAQ?si=8lF-9tGR68cHibaL"
   },
   {
@@ -297,7 +297,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 3200,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/piano-tunes/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/piano-tunes/main/screenshots/Screenshot_20260426_182814.png",
     liveDemoUrl: "https://youtube.com/shorts/9PWzO0_ozQ0"
   },
   {
@@ -317,7 +317,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 2400,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Note-Keep/main/screenshots/cover.png",
+    coverImageUrl: undefined,
   },
   {
     id: 11,
@@ -336,7 +336,7 @@ export const AHMED_DEFAULT_REPOS: GitHubRepo[] = [
     is_fork: false,
     size: 2100,
     default_branch: "main",
-    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/cover.png",
+    coverImageUrl: "https://raw.githubusercontent.com/ahmed-el-bialy/Quotely/main/screenshots/quote_loaded.png",
     liveDemoUrl: "https://youtube.com/shorts/Ujw3TKIyTPU?si=YQkRMt36eOruCWhS"
   }
 ];
@@ -389,7 +389,13 @@ export async function fetchGitHubUserStats(username: string = 'ahmed-el-bialy'):
       .filter((r) => r.name.toLowerCase() !== cleanUsername.toLowerCase())
       .map((r) => {
         const branch = r.default_branch || "main";
-        const primaryCover = `https://raw.githubusercontent.com/${cleanUsername}/${r.name}/${branch}/screenshots/cover.png`;
+        const verifiedShot =
+          VERIFIED_REPO_SCREENSHOTS[r.name]?.[0] ||
+          VERIFIED_REPO_SCREENSHOTS[r.name.toLowerCase()]?.[0];
+        const primaryCover =
+          r.name.toLowerCase() === "revio"
+            ? `https://raw.githubusercontent.com/${cleanUsername}/${r.name}/${branch}/screenshots/cover.png`
+            : verifiedShot || undefined;
         const known = KNOWN_REPO_MEDIA[r.name] || KNOWN_REPO_MEDIA[r.name.toLowerCase()] || {};
 
         return {

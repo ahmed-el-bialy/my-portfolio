@@ -147,18 +147,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     hidden: {},
     visible: {
       transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.04,
+        staggerChildren: 0.075,
+        delayChildren: 0.05,
       },
     },
   };
 
   const itemVariants = {
-    hidden: prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 },
+    hidden: prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.44, ease: EASE_EDITORIAL },
+      transition: { duration: 0.48, ease: EASE_EDITORIAL },
     },
   };
 
@@ -219,8 +219,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             <p className="text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-200 max-w-xl leading-snug">
               {lang === 'ar'
-                ? 'هندسة تطبيقات Flutter للإنتاج بمعايير Clean Architecture.'
-                : 'Production Flutter apps engineered with Clean Architecture.'}
+                ? 'هندسة تطبيقات Flutter وتجارب الذكاء الاصطناعي بمعايير Clean Architecture.'
+                : 'Production Flutter & AI-integrated mobile apps built with Clean Architecture.'}
             </p>
           </motion.div>
 
@@ -295,16 +295,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </button>
           </motion.div>
 
-          {/* Cleanly Spaced Direct Channels Strip (Fixes wrapping overlap between WhatsApp & Email) */}
+          {/* Cleanly Spaced Direct Channels Strip */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-wrap items-center gap-2.5 pt-2 text-xs text-slate-700 dark:text-slate-300"
+            className="flex flex-wrap items-center gap-2 sm:gap-2.5 pt-2 text-xs text-slate-700 dark:text-slate-300"
           >
             <a
               href={AHMED_CONFIG.socials.whatsapp}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 font-semibold transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-xl bg-emerald-500/12 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 font-semibold transition-all hover:-translate-y-0.5 hover:shadow-sm"
             >
               <WhatsAppLogo size={14} />
               <span>WhatsApp</span>
@@ -314,7 +314,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5 hover:shadow-sm"
             >
               <Github size={14} />
               <span>GitHub</span>
@@ -324,7 +324,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.linkedinUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5 hover:shadow-sm"
             >
               <Linkedin size={14} />
               <span>LinkedIn</span>
@@ -334,7 +334,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.youtubeUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-red-500/40 hover:text-red-500 border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-red-500/40 hover:text-red-500 border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5 hover:shadow-sm"
             >
               <Youtube size={14} />
               <span>YouTube</span>
@@ -344,7 +344,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.tiktokUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-pink-500/40 hover:text-pink-500 border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-pink-500/40 hover:text-pink-500 border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5 hover:shadow-sm"
             >
               <TikTokLogo size={13} />
               <span>TikTok</span>
@@ -352,7 +352,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             <a
               href={`mailto:${profile.email}`}
-              className="inline-flex items-center gap-1.5 min-h-[36px] px-3 py-1.5 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5 hover:shadow-sm"
             >
               <Mail size={14} />
               <span>Email</span>
@@ -362,9 +362,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
         {/* Right Column: Interactive Revio Device Mockup + Shiki Dart Code Stage */}
         <motion.div
-          initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.48, delay: 0.14, ease: EASE_EDITORIAL }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 20, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.52, delay: 0.16, ease: EASE_EDITORIAL }}
           className="lg:col-span-6 flex"
         >
           <RevioShowcaseStage
@@ -376,7 +376,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* Full-Width 4-KPI Rich Bento Strip Below Hero Split */}
-      <div className="max-w-[1440px] mx-auto w-full mt-10 sm:mt-14 pt-8 border-t border-slate-200/80 dark:border-white/10 grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 relative z-10">
+      <div className="max-w-[1440px] mx-auto w-full mt-10 sm:mt-14 pt-8 border-t border-slate-200/80 dark:border-white/10 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 relative z-10">
         {kpis.map((kpi, idx) => {
           const KpiIcon = kpi.icon;
           const cardBody = (

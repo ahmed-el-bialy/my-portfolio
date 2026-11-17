@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Smartphone,
   Layers,
@@ -19,7 +18,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { getVerifiedProjectScreenshots, fetchRepoScreenshots } from '../services/githubService';
-import { ImageWithSkeleton } from './ImageWithSkeleton';
+import { ImageWithSkeleton, preloadImageUrls } from './ImageWithSkeleton';
 import { useLanguage } from '../context/LanguageContext';
 
 export interface ProjectCardCoverProps {
@@ -371,46 +370,25 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     return [];
   }, [curatedScreens, discoveredScreenshots, autoDiscoveredScreens, coverUrl]);
 
+  // Preload up to 4 screens in background so screen swaps never flash black
   useEffect(() => {
-    let isCancelled = false;
-    const candidates = Array.from(
-      new Set(
-        [
-          coverUrl && isStrictScreenshotsCoverUrl(coverUrl) ? coverUrl : null,
-          `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/main/screenshots/cover.png`,
-          `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/main/screenshots/cover.jpg`,
-          `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/main/screenshots/cover.webp`,
-          `https://raw.githubusercontent.com/ahmed-el-bialy/${repoName}/master/screenshots/cover.png`,
-        ].filter(Boolean) as string[]
-      )
-    );
-
-    if (candidates.length === 0) {
-      setCoverImageUrl(null);
-      return;
+    if (verifiedScreenshots.length > 0) {
+      preloadImageUrls(verifiedScreenshots.slice(0, 4));
     }
+  }, [verifiedScreenshots]);
 
-    const probe = async () => {
-      for (const candidate of candidates) {
-        const ok = await new Promise<boolean>((resolve) => {
-          const img = new Image();
-          img.onload = () => resolve(true);
-          img.onerror = () => resolve(false);
-          img.src = candidate;
-        });
-        if (ok && !isCancelled) {
-          setCoverImageUrl(candidate);
-          return;
-        }
-      }
-      if (!isCancelled) setCoverImageUrl(null);
-    };
-
-    probe();
-    return () => {
-      isCancelled = true;
-    };
-  }, [repoName, coverUrl]);
+  // Only expose cover toggle when verified for Revio or passed explicitly (eliminates 404 console probes)
+  useEffect(() => {
+    if (repoName.toLowerCase() === 'revio') {
+      setCoverImageUrl(
+        'https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/cover.png'
+      );
+    } else if (coverUrl && isStrictScreenshotsCoverUrl(coverUrl) && discoveredScreenshots?.includes(coverUrl)) {
+      setCoverImageUrl(coverUrl);
+    } else {
+      setCoverImageUrl(null);
+    }
+  }, [repoName, coverUrl, discoveredScreenshots]);
 
   useEffect(() => {
     setSelectedScreenIdx(0);
@@ -547,38 +525,32 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
             </div>
           </div>
 
-          {/* Main Split: Large Hero Screen (~62-68%) + Interactive Screen Selector Rail */}
-          <div className="flex-1 min-h-0 grid grid-cols-12 gap-3 sm:gap-4 items-center">
-            {/* Large Primary Hero Phone Showcase */}
+          {/* Main Split: Fixed-Height Large Hero Phone + Interactive Thumbnails Rail */}
+          <div className="flex-1 min-h-0 grid grid-cols-12 gap-2.5 sm:gap-4 items-center">
+            {/* Large Primary Hero Phone Showcase with Explicit Concrete Phone Frame Height */}
             <div
               className={`${
-                totalScreens > 1 || !compactMode ? 'col-span-7 sm:col-span-7' : 'col-span-6'
-              } h-full flex items-center justify-center min-h-0 relative`}
+                totalScreens > 1 || !compactMode ? 'col-span-6 sm:col-span-7' : 'col-span-6'
+              } flex items-center justify-center relative`}
             >
               <div
-                className="relative h-full max-h-full aspect-[9/18.2] rounded-[22px] sm:rounded-[26px] p-1.5 bg-[#0b0f19] border-2 border-slate-300/90 dark:border-white/20 shadow-[0_20px_45px_rgba(0,0,0,0.45)] transition-transform duration-300 group-hover/cover:scale-[1.02]"
+                className={`relative ${
+                  compactMode
+                    ? 'h-[205px] sm:h-[225px]'
+                    : 'h-[245px] sm:h-[290px] lg:h-[310px]'
+                } aspect-[9/18.2] rounded-[22px] sm:rounded-[26px] p-1.5 bg-[#0e1320] border-2 border-slate-300/90 dark:border-white/20 shadow-[0_20px_45px_rgba(0,0,0,0.45)] transition-transform duration-300 group-hover/cover:scale-[1.02]`}
               >
                 {/* Minimal Speaker Notch */}
-                <div className="absolute top-2.5 left-1/2 -translate-x-1/2 z-20 w-10 h-1.5 rounded-full bg-slate-800/90" />
+                <div className="absolute top-2.5 left-1/2 -translate-x-1/2 z-20 w-10 h-1.5 rounded-full bg-slate-800/90 pointer-events-none" />
 
-                <div className="relative w-full h-full rounded-[16px] sm:rounded-[20px] overflow-hidden bg-slate-950">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={activeScreenUrl}
-                      initial={{ opacity: 0, y: 6, scale: 0.985 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -6, scale: 0.985 }}
-                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                      className="w-full h-full"
-                    >
-                      <ImageWithSkeleton
-                        src={activeScreenUrl}
-                        alt={`${blueprint.appTitle} hero screen ${selectedScreenIdx + 1}`}
-                        loading="eager"
-                        className="w-full h-full object-cover object-top crisp-screenshot"
-                      />
-                    </motion.div>
-                  </AnimatePresence>
+                <div className="relative w-full h-full rounded-[16px] sm:rounded-[20px] overflow-hidden bg-[#161e31]">
+                  <ImageWithSkeleton
+                    src={activeScreenUrl}
+                    alt={`${blueprint.appTitle} hero screen ${selectedScreenIdx + 1}`}
+                    loading="eager"
+                    variant="phone"
+                    className="w-full h-full object-cover object-top crisp-screenshot"
+                  />
                 </div>
               </div>
 
@@ -589,7 +561,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                     type="button"
                     onClick={handlePrev}
                     aria-label="Previous app screen"
-                    className="opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute start-0 sm:start-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/75 hover:bg-[#027DFD] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
+                    className="opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute start-0 sm:start-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#027DFD] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
                   >
                     {dir === 'rtl' ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
                   </button>
@@ -597,7 +569,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                     type="button"
                     onClick={handleNext}
                     aria-label="Next app screen"
-                    className="opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute end-0 sm:end-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/75 hover:bg-[#027DFD] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
+                    className="opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute end-0 sm:end-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#027DFD] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
                   >
                     {dir === 'rtl' ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
                   </button>
@@ -608,14 +580,14 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
             {/* Right Interactive Rail: Architecture Snapshot + Selectable Sharp Thumbnails */}
             <div
               className={`${
-                totalScreens > 1 || !compactMode ? 'col-span-5 sm:col-span-5' : 'col-span-6'
-              } h-full flex flex-col justify-center gap-2.5 min-w-0`}
+                totalScreens > 1 || !compactMode ? 'col-span-6 sm:col-span-5' : 'col-span-6'
+              } h-full flex flex-col justify-center gap-2 sm:gap-2.5 min-w-0`}
             >
-              <div className="space-y-1 min-w-0">
-                <h4 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white leading-tight truncate">
+              <div className="space-y-0.5 sm:space-y-1 min-w-0">
+                <h4 className="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white leading-tight truncate">
                   {blueprint.appTitle}
                 </h4>
-                <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300 line-clamp-2 leading-snug">
+                <p className="text-[10.5px] sm:text-[11px] font-medium text-slate-600 dark:text-slate-300 line-clamp-2 leading-snug">
                   {blueprint.tagline}
                 </p>
               </div>
@@ -638,11 +610,11 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
               {/* Clickable Sharp Screen Thumbnails Grid */}
               {totalScreens > 1 ? (
                 <div className="space-y-1.5 pt-0.5">
-                  <div className="text-[10px] font-mono font-semibold text-slate-500 dark:text-slate-400">
+                  <div className="text-[9.5px] sm:text-[10px] font-mono font-semibold text-slate-500 dark:text-slate-400">
                     {lang === 'ar' ? 'تبديل الشاشات:' : 'Tap screen to preview:'}
                   </div>
                   <div
-                    className="grid grid-cols-2 sm:grid-cols-2 gap-1.5"
+                    className="grid grid-cols-2 gap-1.5"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {verifiedScreenshots.slice(0, 4).map((thumbUrl, tIdx) => {
@@ -653,23 +625,24 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                           type="button"
                           onClick={(e) => selectScreen(tIdx, e)}
                           aria-label={`Select screen ${tIdx + 1}`}
-                          className={`group/thumb relative h-16 sm:h-20 rounded-xl overflow-hidden bg-slate-950 border-2 transition-all duration-200 cursor-pointer ${
+                          className={`group/thumb relative h-14 sm:h-20 w-full rounded-xl overflow-hidden bg-[#161e31] border-2 transition-all duration-200 cursor-pointer ${
                             isActive
                               ? 'border-[#027DFD] dark:border-[#00C7FF] shadow-md scale-[1.03]'
-                              : 'border-slate-300/80 dark:border-white/15 opacity-70 hover:opacity-100 hover:border-slate-400 dark:hover:border-white/35'
+                              : 'border-slate-300/80 dark:border-white/15 opacity-85 hover:opacity-100 hover:border-slate-400 dark:hover:border-white/35'
                           }`}
                         >
                           <ImageWithSkeleton
                             src={thumbUrl}
                             alt={`${blueprint.appTitle} thumbnail ${tIdx + 1}`}
                             loading="eager"
+                            variant="phone"
                             className="w-full h-full object-cover object-top crisp-screenshot"
                           />
                           <span
                             className={`absolute bottom-1 end-1 px-1 py-0.2 rounded text-[9px] font-mono font-bold ${
                               isActive
                                 ? 'bg-[#027DFD] text-white'
-                                : 'bg-black/70 text-slate-200'
+                                : 'bg-black/75 text-slate-100'
                             }`}
                           >
                             0{tIdx + 1}

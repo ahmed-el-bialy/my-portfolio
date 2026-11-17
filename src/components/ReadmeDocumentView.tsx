@@ -13,6 +13,8 @@ import {
   ChevronRight,
   ZoomIn,
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 
 export interface ReadmeSectionAnchor {
   id: string;
@@ -444,10 +446,16 @@ const InlineMarkdownText: React.FC<InlineRunProps> = ({
 
 const CodeSnippetCard: React.FC<{ language: string; code: string }> = ({ language, code }) => {
   const [copied, setCopied] = useState(false);
+  const { lang } = useLanguage();
+  const { showToast } = useToast();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
     setCopied(true);
+    showToast({
+      message: lang === 'ar' ? 'تم نسخ الكود' : 'Code snippet copied',
+      detail: language || 'code',
+    });
     setTimeout(() => setCopied(false), 1800);
   };
 

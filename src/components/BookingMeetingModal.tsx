@@ -390,7 +390,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
                     className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold hover:underline"
                   >
                     <WhatsAppLogo size={12} />
-                    <span className="hidden xs:inline">WhatsApp</span>
+                    <span className="hidden sm:inline">WhatsApp</span>
                   </a>
                 </div>
               </div>

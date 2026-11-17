@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence, LayoutGroup, useReducedMotion } from 'framer-motion';
 import {
   ExternalLink,
   Youtube,
@@ -8,10 +8,9 @@ import {
   Layers,
   Smartphone,
 } from 'lucide-react';
-import { AHMED_CONFIG } from '../data/config';
 import { FEATURED_PROJECTS, Project } from '../data/portfolioData';
 import { VERIFIED_REPO_SCREENSHOTS } from '../services/githubService';
-import { ImageWithSkeleton } from './ImageWithSkeleton';
+import { ImageWithSkeleton, preloadImageUrls } from './ImageWithSkeleton';
 import { TiltCard } from './MotionPrimitives';
 import { usePlayStoreAppStats } from '../services/playStoreService';
 import { useLanguage } from '../context/LanguageContext';
@@ -43,9 +42,10 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
   onInspectRevio,
   onInspectProject,
 }) => {
-  const { lang, t } = useLanguage();
+  const { lang, dir, t } = useLanguage();
+  const prefersReducedMotion = useReducedMotion();
   const [selectedRepoKey, setSelectedRepoKey] = useState<string>('Revio');
-  const [screenIndex, setScreenIndex] = useState(0);
+  const [[screenIndex, screenDirection], setScreenState] = useState<[number, number]>([0, 1]);
   const { data: revioPlayStats } = usePlayStoreAppStats('com.ahmed.revio');
 
   const showcaseApps = useMemo(() => {
@@ -74,6 +74,15 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
     }));
   }, [activeProject]);
 
+  // Preload active app screens & primary screens of showcase apps on mount/switch
+  useEffect(() => {
+    const urls = [
+      ...activeScreens.map((s) => s.src),
+      ...SHOWCASE_REPO_ORDER.map((k) => VERIFIED_REPO_SCREENSHOTS[k]?.[0]).filter(Boolean) as string[],
+    ];
+    preloadImageUrls(urls);
+  }, [activeScreens]);
+
   if (!activeProject) return null;
 
   const isRevio = activeProject.repoName.toLowerCase() === 'revio';
@@ -82,8 +91,9 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
   const playUrl = activeProject.links.googlePlay;
 
   const handleSelectApp = (repoName: string) => {
+    if (repoName.toLowerCase() === selectedRepoKey.toLowerCase()) return;
     setSelectedRepoKey(repoName);
-    setScreenIndex(0);
+    setScreenState([0, 1]);
   };
 
   const handleInspect = () => {
@@ -96,18 +106,36 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
 
   const handleNext = () => {
     if (activeScreens.length === 0) return;
-    setScreenIndex((prev) => (prev + 1) % activeScreens.length);
+    setScreenState(([prev]) => [(prev + 1) % activeScreens.length, 1]);
   };
 
   const handlePrev = () => {
     if (activeScreens.length === 0) return;
-    setScreenIndex((prev) => (prev - 1 + activeScreens.length) % activeScreens.length);
+    setScreenState(([prev]) => [(prev - 1 + activeScreens.length) % activeScreens.length, -1]);
+  };
+
+  const handleJumpScreen = (targetIdx: number) => {
+    if (targetIdx === screenIndex) return;
+    setScreenState([targetIdx, targetIdx > screenIndex ? 1 : -1]);
+  };
+
+  const slideSign = dir === 'rtl' ? -1 : 1;
+  const screenSlideVariants = {
+    enter: (direction: number) =>
+      prefersReducedMotion
+        ? { opacity: 0 }
+        : { x: direction * 20 * slideSign, opacity: 0, scale: 0.98 },
+    center: { x: 0, opacity: 1, scale: 1 },
+    exit: (direction: number) =>
+      prefersReducedMotion
+        ? { opacity: 0 }
+        : { x: -direction * 20 * slideSign, opacity: 0, scale: 0.98 },
   };
 
   return (
     <TiltCard
-      maxTilt={3}
-      glareOpacity={0.09}
+      maxTilt={2.5}
+      glareOpacity={0.08}
       className="w-full h-full flex flex-col justify-between rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-4 sm:p-5 shadow-xl"
     >
       {/* Interactive Multi-App Switcher Header */}
@@ -140,50 +168,75 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
           </span>
         </div>
 
-        {/* Live Hero App Switcher Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-          {showcaseApps.map((appItem) => {
-            const active = appItem.repoName.toLowerCase() === activeProject.repoName.toLowerCase();
-            return (
-              <button
-                key={appItem.id}
-                type="button"
-                onClick={() => handleSelectApp(appItem.repoName)}
-                className={`px-3 py-1 rounded-lg text-[11px] font-mono font-bold transition-all cursor-pointer whitespace-nowrap border ${
-                  active
-                    ? 'bg-[#027DFD] text-white border-[#027DFD] shadow-xs'
-                    : 'bg-slate-50 dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-[#027DFD]/40'
-                }`}
-              >
-                {appItem.name}
-              </button>
-            );
-          })}
-        </div>
+        {/* Live Hero App Switcher Tabs with Shared layoutId Spring Pill */}
+        <LayoutGroup id="hero-app-switcher">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+            {showcaseApps.map((appItem) => {
+              const active = appItem.repoName.toLowerCase() === activeProject.repoName.toLowerCase();
+              return (
+                <button
+                  key={appItem.id}
+                  type="button"
+                  onClick={() => handleSelectApp(appItem.repoName)}
+                  className={`relative px-3 py-1.5 rounded-lg text-[11px] font-mono font-bold transition-colors cursor-pointer whitespace-nowrap border min-h-[34px] ${
+                    active
+                      ? 'text-white border-transparent'
+                      : 'bg-slate-50 dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-[#027DFD]/40'
+                  }`}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="hero-app-switcher-pill"
+                      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                      className="absolute inset-0 rounded-lg bg-[#027DFD] shadow-xs"
+                    />
+                  )}
+                  <span className="relative z-10">{appItem.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </LayoutGroup>
       </div>
 
       {/* Main Interactive Phone Stage */}
-      <div className="my-4 flex-1 flex items-center justify-center min-h-[340px]">
+      <div className="my-4 flex-1 flex items-center justify-center min-h-[320px] sm:min-h-[340px]">
         <div className="w-full grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
           {/* Portrait Phone Mockup */}
           <div className="sm:col-span-6 flex justify-center">
-            <div className="relative w-[215px] sm:w-[225px] rounded-[34px] p-2.5 bg-[#08090d] border-[3px] border-slate-800 dark:border-slate-700 shadow-2xl">
-              <div className="absolute top-3.5 left-1/2 -translate-x-1/2 z-20 w-14 h-3 rounded-full bg-slate-900 border border-slate-800" />
-              <div className="relative aspect-[9/18.5] rounded-[24px] overflow-hidden bg-slate-950">
-                <AnimatePresence mode="wait">
+            <div className="relative w-[195px] sm:w-[225px] rounded-[34px] p-2.5 bg-[#0c101b] border-[3px] border-slate-300 dark:border-slate-700 shadow-2xl">
+              <div className="absolute top-3.5 left-1/2 -translate-x-1/2 z-20 w-14 h-3 rounded-full bg-slate-900 border border-slate-800 pointer-events-none" />
+              <div
+                onClick={handleInspect}
+                role="button"
+                tabIndex={0}
+                data-cursor-label={lang === 'ar' ? 'معاينة' : 'Inspect'}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleInspect();
+                  }
+                }}
+                aria-label={`Inspect ${activeProject.name}`}
+                className="relative w-full aspect-[9/18.5] rounded-[24px] overflow-hidden bg-[#161e31] cursor-pointer"
+              >
+                <AnimatePresence initial={false} mode="popLayout" custom={screenDirection}>
                   {currentScreen && (
                     <motion.div
                       key={currentScreen.id}
-                      initial={{ opacity: 0, scale: 0.985 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.985 }}
-                      transition={{ duration: 0.2 }}
+                      custom={screenDirection}
+                      variants={screenSlideVariants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
                       className="w-full h-full"
                     >
                       <ImageWithSkeleton
                         src={currentScreen.src}
                         alt={`${activeProject.name} ${currentScreen.label}`}
                         loading="eager"
+                        variant="phone"
                         className="w-full h-full object-cover object-top crisp-screenshot"
                       />
                     </motion.div>
@@ -214,11 +267,11 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
                   <button
                     key={scr.id}
                     type="button"
-                    onClick={() => setScreenIndex(idx)}
-                    className={`px-2.5 py-2 rounded-xl text-[11px] font-mono font-semibold text-start border transition-colors cursor-pointer truncate capitalize ${
+                    onClick={() => handleJumpScreen(idx)}
+                    className={`px-2.5 py-2 rounded-xl text-[11px] font-mono font-semibold text-start border transition-all cursor-pointer truncate capitalize min-h-[38px] ${
                       screenIndex === idx
-                        ? 'bg-[#027DFD]/10 border-[#027DFD]/50 text-[#027DFD] dark:text-[#00C7FF]'
-                        : 'bg-slate-50 dark:bg-[#161b27] border-slate-200 dark:border-white/8 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/20'
+                        ? 'bg-[#027DFD]/12 border-[#027DFD]/60 text-[#027DFD] dark:text-[#00C7FF] shadow-2xs'
+                        : 'bg-slate-50 dark:bg-[#161b27] border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/25'
                     }`}
                   >
                     {scr.label}

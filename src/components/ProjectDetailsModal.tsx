@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import {
   X,
   Github,
@@ -40,6 +41,7 @@ import { Project, AHMED_PROFILE } from '../data/portfolioData';
 import { resolveSmartProjectLinks } from '../utils/projectLinks';
 import { SmartDemoButtons } from './SmartDemoButtons';
 import { ProjectCardCover, synthesizeProjectBlueprint } from './ProjectCardCover';
+import { ImageWithSkeleton, preloadImageUrls, resolveProxiedImageUrl } from './ImageWithSkeleton';
 import { extractRepoTechTags } from '../utils/techTagExtractor';
 import { TechIconBadge } from './TechLogos';
 import { ReadmeDocumentView } from './ReadmeDocumentView';
@@ -63,6 +65,7 @@ import {
 } from '../services/githubService';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 import { usePlayStoreAppStats } from '../services/playStoreService';
 
 interface ProjectDetailsModalProps {
@@ -77,12 +80,18 @@ const GALLERY_PAGE_SIZE = 12;
 
 const CopyChip: React.FC<{ value: string; label?: string }> = ({ value, label }) => {
   const [copied, setCopied] = useState(false);
+  const { lang } = useLanguage();
+  const { showToast } = useToast();
   return (
     <button
       type="button"
       onClick={() => {
         navigator.clipboard.writeText(value);
         setCopied(true);
+        showToast({
+          message: lang === 'ar' ? 'تم نسخ الأمر' : 'Command copied to clipboard',
+          detail: value,
+        });
         setTimeout(() => setCopied(false), 1800);
       }}
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors cursor-pointer text-[11px] font-mono shrink-0"
@@ -112,9 +121,6 @@ const GalleryCard: React.FC<{
   onSelect: () => void;
   onInspect: () => void;
 }> = ({ url, label, index, projectName, isActive, onSelect, onInspect }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
-
   return (
     <div
       onClick={() => {
@@ -130,43 +136,22 @@ const GalleryCard: React.FC<{
           onInspect();
         }
       }}
-      className={`group relative rounded-2xl overflow-hidden bg-slate-950 border transition-all duration-300 cursor-pointer flex flex-col ${
+      className={`group relative rounded-2xl overflow-hidden bg-[#161e31] border transition-all duration-300 cursor-pointer flex flex-col ${
         isActive
           ? 'border-[#027DFD] ring-2 ring-[#027DFD]/25 shadow-lg'
           : 'border-slate-200/80 dark:border-white/10 hover:border-[#027DFD]/60 shadow-sm hover:shadow-xl'
       }`}
     >
-      <div className="relative aspect-[9/16] w-full overflow-hidden bg-slate-900">
-        {!isLoaded && !hasError && (
-          <div className="absolute inset-0 skeleton-shimmer flex flex-col items-center justify-center p-3 text-slate-400">
-            <Loader2 size={20} className="animate-spin mb-1.5 text-[#00C7FF]" />
-            <span className="text-[10px] font-mono text-slate-300 text-center line-clamp-1">
-              {label}
-            </span>
-          </div>
-        )}
+      <div className="relative aspect-[9/16] w-full overflow-hidden bg-[#161e31]">
+        <ImageWithSkeleton
+          src={url}
+          alt={`${projectName} — ${label}`}
+          loading="lazy"
+          variant="phone"
+          className="w-full h-full object-cover object-top group-hover:scale-[1.04] transition-transform duration-300 crisp-screenshot"
+        />
 
-        {hasError ? (
-          <div className="absolute inset-0 bg-slate-900 text-slate-300 p-4 flex flex-col items-center justify-center text-center">
-            <Smartphone size={24} className="text-[#00C7FF] mb-2 opacity-80" />
-            <p className="text-xs font-bold text-white mb-0.5">{projectName}</p>
-            <p className="text-[10px] text-slate-400 font-mono">{label}</p>
-          </div>
-        ) : (
-          <img
-            src={url}
-            alt={`${projectName} — ${label}`}
-            className={`w-full h-full object-cover object-top group-hover:scale-[1.04] transition-transform duration-300 crisp-screenshot ${
-              isLoaded ? 'opacity-100' : 'opacity-0'
-            }`}
-            loading="lazy"
-            decoding="async"
-            onLoad={() => setIsLoaded(true)}
-            onError={() => setHasError(true)}
-          />
-        )}
-
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3 pointer-events-none">
           <span className="text-[11px] font-mono font-bold text-white tabular-nums">
             #{index + 1}
           </span>
@@ -195,6 +180,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 }) => {
   useScrollLock(isOpen);
   const { lang, dir } = useLanguage();
+  const { showToast } = useToast();
   const queryClient = useQueryClient();
 
   const [isFullPage, setIsFullPage] = useState(false);
@@ -349,6 +335,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
       if (initialScreens.length > 0) {
         setScreenshots(initialScreens);
+        preloadImageUrls(initialScreens.slice(0, 6));
         setLoadingScreens(false);
       } else {
         setScreenshots([]);
@@ -599,8 +586,13 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     project.links.github || `https://github.com/ahmed-el-bialy/${project.repoName}`;
 
   const handleCopyClone = () => {
-    navigator.clipboard.writeText(`git clone ${githubRepoUrl}.git`);
+    const cmd = `git clone ${githubRepoUrl}.git`;
+    navigator.clipboard.writeText(cmd);
     setCopiedClone(true);
+    showToast({
+      message: lang === 'ar' ? 'تم نسخ أمر الاستنساخ' : 'Git clone command copied',
+      detail: cmd,
+    });
     setTimeout(() => setCopiedClone(false), 1800);
   };
 
@@ -654,55 +646,55 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-label={project.name}
-        className={`relative flex flex-col overflow-hidden bg-white dark:bg-[#0b0e16] border-slate-200 dark:border-white/10 shadow-2xl transition-all duration-300 ${
+        className={`relative flex flex-col overflow-hidden bg-white dark:bg-[#0b0e16] border-slate-200/90 dark:border-white/10 shadow-2xl transition-all duration-300 ${
           isFullPage
             ? 'w-screen h-screen max-w-none max-h-none rounded-none border-0'
             : 'w-full max-w-5xl h-[92vh] sm:h-[90vh] rounded-3xl border'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Clean Editorial Top Workspace Header */}
-        <div className="px-4 sm:px-6 py-3.5 bg-white/95 dark:bg-[#101420]/95 backdrop-blur-md border-b border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3.5 min-w-0">
+        {/* Slim Editorial Top Workspace Bar */}
+        <div className="px-4 sm:px-7 py-2.5 sm:py-3 bg-white dark:bg-[#0d111c] border-b border-slate-200/75 dark:border-white/8 flex items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm border border-white/15"
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs"
               style={{
                 background: `linear-gradient(135deg, ${appBlueprint.accentColor}, ${appBlueprint.secondaryAccent})`,
               }}
             >
-              <BlueprintIcon size={18} />
+              <BlueprintIcon size={17} />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white truncate tracking-tight">
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="text-sm sm:text-base font-extrabold text-slate-950 dark:text-white truncate tracking-tight">
                   {project.name}
                 </h2>
                 <span aria-hidden="true" className="text-slate-300 dark:text-slate-700 hidden sm:inline">
                   ·
                 </span>
                 <span
-                  className="text-xs font-bold truncate"
+                  className="text-xs font-semibold truncate hidden sm:inline"
                   style={{ color: appBlueprint.accentColor }}
                 >
                   {appBlueprint.genre}
                 </span>
               </div>
-              <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate mt-0.5 flex flex-wrap items-center gap-x-2">
-                <span>ahmed-el-bialy/{project.repoName}</span>
+              <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate flex items-center gap-x-2">
+                <span className="truncate">ahmed-el-bialy/{project.repoName}</span>
                 <span aria-hidden="true">·</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium shrink-0">
                   {distributionLabel}
                 </span>
                 {realLanguage && (
                   <>
-                    <span aria-hidden="true">·</span>
-                    <span>{realLanguage}</span>
+                    <span aria-hidden="true" className="hidden sm:inline">·</span>
+                    <span className="hidden sm:inline shrink-0">{realLanguage}</span>
                   </>
                 )}
                 {realStarsCount !== null && realStarsCount > 0 && (
                   <>
-                    <span aria-hidden="true">·</span>
-                    <span className="inline-flex items-center gap-1 text-amber-500 font-semibold tabular-nums">
+                    <span aria-hidden="true" className="hidden sm:inline">·</span>
+                    <span className="hidden sm:inline-flex items-center gap-1 text-amber-500 font-medium tabular-nums shrink-0">
                       <Star size={10} fill="currentColor" />
                       {realStarsCount}
                     </span>
@@ -712,15 +704,15 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={() => syncLiveProjectData(project, true, defaultBranch)}
               disabled={isSyncingLive}
-              className="btn-kinetic inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
+              className="btn-kinetic inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100/80 dark:bg-white/[0.04] hover:bg-slate-200/80 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/10 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60 whitespace-nowrap"
               title={lang === 'ar' ? 'تحديث البيانات من GitHub' : 'Sync latest from GitHub'}
             >
-              <RefreshCw size={13} className={isSyncingLive ? 'animate-spin text-[#027DFD]' : ''} />
+              <RefreshCw size={12.5} className={isSyncingLive ? 'animate-spin text-[#027DFD]' : ''} />
               <span className="hidden sm:inline">
                 {isSyncingLive
                   ? lang === 'ar'
@@ -735,19 +727,19 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             <button
               type="button"
               onClick={() => setIsFullPage((prev) => !prev)}
-              className={`btn-kinetic inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer ${
+              className={`btn-kinetic inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                 isFullPage
                   ? 'bg-[#027DFD] text-white border-[#027DFD]'
-                  : 'bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/10'
+                  : 'bg-slate-100/80 dark:bg-white/[0.04] hover:bg-slate-200/80 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-white/10'
               }`}
               aria-label={isFullPage ? 'Restore modal window' : 'Expand to full page'}
             >
-              {isFullPage ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+              {isFullPage ? <Minimize2 size={12.5} /> : <Maximize2 size={12.5} />}
               <span className="hidden sm:inline">
                 {isFullPage
                   ? lang === 'ar'
                     ? 'تصغير'
-                    : 'Modal View'
+                    : 'Modal'
                   : lang === 'ar'
                   ? 'ملء الشاشة'
                   : 'Full Page'}
@@ -757,17 +749,17 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-rose-500/15 text-slate-500 hover:text-rose-500 border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg bg-slate-100/80 dark:bg-white/[0.04] hover:bg-rose-500/12 text-slate-500 hover:text-rose-500 border border-slate-200/80 dark:border-white/10 transition-colors cursor-pointer"
               aria-label="Close workspace"
             >
-              <X size={16} />
+              <X size={15} />
             </button>
           </div>
         </div>
 
-        {/* Sticky Scroll-Spy Jump Navigation Bar */}
-        <div className="px-4 sm:px-6 py-2.5 bg-slate-50/95 dark:bg-[#0e121d]/95 border-b border-slate-200 dark:border-white/10 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar shrink-0">
-          <nav aria-label="Project sections" className="flex items-center gap-1.5">
+        {/* Compact Underline Section Jump Bar (Zero Pills) */}
+        <div className="px-4 sm:px-7 bg-slate-50/60 dark:bg-[#0b0e16] border-b border-slate-200/75 dark:border-white/8 flex items-center justify-between gap-4 overflow-x-auto no-scrollbar shrink-0">
+          <nav aria-label="Project sections" className="flex items-center gap-5 sm:gap-7">
             {navSections.map((section) => {
               const active = activeSection === section.id;
               return (
@@ -775,23 +767,31 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   key={section.id}
                   type="button"
                   onClick={() => scrollToSection(section.id)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                  aria-current={active ? 'location' : undefined}
+                  className={`relative py-2.5 text-xs transition-colors cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
                     active
-                      ? 'bg-[#027DFD] text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-white/8'
+                      ? 'text-slate-950 dark:text-white font-bold'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-medium'
                   }`}
                 >
                   <span>{section.label}</span>
                   {typeof section.count === 'number' && section.count > 0 && (
                     <span
-                      className={`font-mono text-[10px] px-1.5 py-0.2 rounded-md tabular-nums ${
+                      className={`font-mono text-[11px] tabular-nums transition-colors ${
                         active
-                          ? 'bg-white/20 text-white'
-                          : 'bg-slate-200/80 dark:bg-white/10 text-slate-600 dark:text-slate-300'
+                          ? 'text-[#027DFD] dark:text-[#00C7FF]'
+                          : 'text-slate-400 dark:text-slate-500'
                       }`}
                     >
                       {section.count}
                     </span>
+                  )}
+                  {active && (
+                    <motion.span
+                      layoutId="modalSectionUnderline"
+                      transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                      className="absolute bottom-0 inset-x-0 h-[2px] rounded-full bg-gradient-to-r from-[#027DFD] to-[#00C7FF]"
+                    />
                   )}
                 </button>
               );
@@ -799,8 +799,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           </nav>
 
           {releaseInfo.tagName && (
-            <span className="hidden lg:inline-flex items-center gap-1.5 text-[11px] font-mono text-purple-600 dark:text-purple-300 font-semibold shrink-0">
-              <PackageCheck size={13} />
+            <span className="hidden lg:inline-flex items-center gap-1.5 text-[11px] font-mono text-slate-500 dark:text-slate-400 shrink-0 tabular-nums">
+              <PackageCheck size={12} className="text-[#027DFD] dark:text-[#00C7FF]" />
               <span>{releaseInfo.tagName}</span>
               {realApkSizeLabel ? <span>· {realApkSizeLabel}</span> : null}
             </span>
@@ -819,14 +819,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             }`}
           >
             {/* SECTION 1: OVERVIEW, RECRUITER BRIEF & SIDE-BY-SIDE MEDIA STAGE */}
-            <section ref={overviewRef} id="workspace-overview" className="scroll-mt-4 space-y-6">
-              {/* Recruiter & Client Executive Brief Card (full category + stack parity) */}
-              <div className="p-5 sm:p-6 rounded-3xl bg-slate-50/80 dark:bg-[#101422] border border-slate-200 dark:border-white/10 space-y-4">
+            <section ref={overviewRef} id="workspace-overview" className="scroll-mt-4 space-y-7">
+              {/* Airy Open Editorial Executive Brief (No Heavy Enclosing Box) */}
+              <div className="space-y-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="space-y-1.5 max-w-2xl">
                     <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-mono">
                       <span
-                        className="inline-flex items-center gap-1.5 font-bold"
+                        className="inline-flex items-center gap-1.5 font-semibold"
                         style={{ color: appBlueprint.accentColor }}
                       >
                         <Briefcase size={13} />
@@ -835,7 +835,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
                         ·
                       </span>
-                      <span className="text-slate-600 dark:text-slate-300 font-semibold">
+                      <span className="text-slate-600 dark:text-slate-300">
                         {appBlueprint.categoryBadge}
                       </span>
                       <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
@@ -845,7 +845,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         Android &amp; iOS (Flutter)
                       </span>
                     </div>
-                    <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    <h3 className="text-2xl sm:text-[28px] font-extrabold text-slate-950 dark:text-white tracking-tight leading-tight">
                       {project.name}
                     </h3>
                     <p className="text-xs sm:text-sm font-semibold text-[#027DFD] dark:text-[#7DD3FC]">
@@ -853,26 +853,26 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     </p>
                   </div>
 
-                  {/* Verified Live Metrics Summary (Strict Zero-Guessing) */}
-                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+                  {/* Verified Live Metrics Summary (Unboxed Typographic Discipline) */}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono text-slate-600 dark:text-slate-300">
                     {isRevio && playStats?.downloads && (
-                      <span className="px-2.5 py-1 rounded-lg bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 font-bold tabular-nums">
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                         {playStats.downloads} {lang === 'ar' ? 'تحميل' : 'Downloads'}
                       </span>
                     )}
                     {isRevio && playStats?.rating && (
-                      <span className="px-2.5 py-1 rounded-lg bg-amber-500/12 text-amber-600 dark:text-amber-300 border border-amber-500/25 font-bold tabular-nums">
+                      <span className="font-bold text-amber-600 dark:text-amber-400 tabular-nums">
                         ★ {playStats.rating}
                       </span>
                     )}
                     {realStarsCount !== null && realStarsCount > 0 && (
-                      <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/25 inline-flex items-center gap-1 font-bold tabular-nums">
+                      <span className="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400 tabular-nums">
                         <Star size={12} fill="currentColor" />
                         {realStarsCount}
                       </span>
                     )}
                     {realForksCount !== null && realForksCount > 0 && (
-                      <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 inline-flex items-center gap-1 tabular-nums">
+                      <span className="inline-flex items-center gap-1 tabular-nums">
                         <GitFork size={12} />
                         {realForksCount}
                       </span>
@@ -880,8 +880,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   </div>
                 </div>
 
-                {/* Recruiter Structured Scan Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 py-3 border-y border-slate-200/80 dark:border-white/10 text-xs">
+                {/* Hairline Architectural Spec Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-3.5 border-y border-slate-200/75 dark:border-white/8 text-xs">
                   <div>
                     <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                       {lang === 'ar' ? 'تصنيف التطبيق' : 'App Category'}
@@ -909,7 +909,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   </div>
                 </div>
 
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl">
                   {displayDescription}
                 </p>
 
@@ -934,7 +934,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       href={currentPlayUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm"
+                      className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs"
                     >
                       <PackageCheck size={14} />
                       <span>Google Play</span>
@@ -949,7 +949,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       href={apkHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-sm"
+                      className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-xs"
                     >
                       <Download size={14} />
                       <span>
@@ -973,7 +973,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     href={githubRepoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white dark:bg-white/8 hover:bg-slate-100 dark:hover:bg-white/15 text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 font-semibold text-xs"
+                    className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100/80 dark:bg-white/[0.06] hover:bg-slate-200/80 dark:hover:bg-white/[0.12] text-slate-800 dark:text-white border border-slate-200/80 dark:border-white/10 font-semibold text-xs"
                   >
                     <Github size={14} />
                     <span>GitHub</span>
@@ -983,7 +983,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   <button
                     type="button"
                     onClick={() => scrollToSection('gallery')}
-                    className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#027DFD]/10 hover:bg-[#027DFD] text-[#027DFD] dark:text-[#00C7FF] hover:text-white border border-[#027DFD]/20 font-bold text-xs transition-colors cursor-pointer ms-auto"
+                    className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#027DFD]/10 hover:bg-[#027DFD] text-[#027DFD] dark:text-[#00C7FF] hover:text-white border border-[#027DFD]/20 font-bold text-xs transition-colors cursor-pointer ms-auto"
                   >
                     <ImageIcon size={14} />
                     <span>
@@ -995,10 +995,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 </div>
               </div>
 
-              {/* Side-by-Side Dual Media Stage: Live Video Demo + Interactive Screens Stage */}
+              {/* Side-by-Side Dual Media Stage: Single-Elevation Studio Framing */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
                 {/* Start Panel: Live Video Demo Showcase */}
-                <div className="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-[#101422] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between gap-3.5 shadow-xs">
+                <div className="lg:col-span-6 p-4 sm:p-5 rounded-2xl bg-slate-50/75 dark:bg-white/[0.025] border border-slate-200/75 dark:border-white/8 flex flex-col justify-between gap-3.5">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-800 dark:text-slate-100">
                       <Youtube size={16} className="text-red-500 shrink-0" />
@@ -1108,7 +1108,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 </div>
 
                 {/* End Panel: Interactive Live Screens Preview Side-by-Side */}
-                <div className="lg:col-span-6 p-4 sm:p-5 rounded-3xl bg-slate-50 dark:bg-[#101422] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between gap-3.5 shadow-xs">
+                <div className="lg:col-span-6 p-4 sm:p-5 rounded-2xl bg-slate-50/75 dark:bg-white/[0.025] border border-slate-200/75 dark:border-white/8 flex flex-col justify-between gap-3.5">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-mono font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 truncate">
                       <Smartphone size={15} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
@@ -1131,22 +1131,25 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   </div>
 
                   {loadingScreens && screenshots.length === 0 ? (
-                    <div className="flex-1 min-h-[260px] rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse flex items-center justify-center">
-                      <Loader2 size={22} className="animate-spin text-[#027DFD]" />
+                    <div className="flex-1 min-h-[260px] rounded-2xl bg-[#161e31] skeleton-shimmer flex items-center justify-center">
+                      <Loader2 size={22} className="animate-spin text-[#00C7FF]" />
                     </div>
                   ) : screenshots.length > 0 ? (
                     <>
                       <div className="relative flex justify-center items-center py-1 flex-1">
-                        <div className="relative w-[180px] sm:w-[195px] aspect-[9/17.8] rounded-[26px] p-1.5 bg-[#080b12] border-2 border-slate-300/90 dark:border-white/20 shadow-2xl overflow-hidden group">
+                        <div className="relative w-[180px] sm:w-[195px] aspect-[9/17.8] rounded-[26px] p-1.5 bg-[#0f1628] border-2 border-slate-300/90 dark:border-white/25 shadow-2xl overflow-hidden group">
                           <button
                             type="button"
                             onClick={() => setLightboxOpen(true)}
-                            className="w-full h-full rounded-[20px] overflow-hidden bg-slate-950 block cursor-pointer"
+                            className="w-full h-full rounded-[20px] overflow-hidden bg-[#161e31] block cursor-pointer"
                             aria-label="Open screen in fullscreen lightbox"
                           >
-                            <img
+                            <ImageWithSkeleton
+                              key={screenshots[activeScreenIndex % screenshots.length]}
                               src={screenshots[activeScreenIndex % screenshots.length]}
                               alt={`${project.name} preview`}
+                              loading="eager"
+                              variant="phone"
                               className="w-full h-full object-cover object-top crisp-screenshot group-hover:scale-[1.02] transition-transform duration-300"
                             />
                           </button>
@@ -1189,17 +1192,18 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                               key={`${thumb}-${idx}`}
                               type="button"
                               onClick={() => setActiveScreenIndex(idx)}
-                              className={`w-11 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer bg-slate-900 ${
+                              className={`w-11 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer bg-[#161e31] ${
                                 active
                                   ? 'border-[#027DFD] scale-[1.03]'
-                                  : 'border-slate-200 dark:border-white/10 opacity-70 hover:opacity-100'
+                                  : 'border-slate-200 dark:border-white/15 opacity-85 hover:opacity-100'
                               }`}
                               aria-label={`Select screen ${idx + 1}`}
                             >
-                              <img
+                              <ImageWithSkeleton
                                 src={thumb}
                                 alt={`Thumb ${idx + 1}`}
-                                loading="lazy"
+                                loading="eager"
+                                variant="phone"
                                 className="w-full h-full object-cover object-top crisp-screenshot"
                               />
                             </button>
@@ -1277,14 +1281,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-7 gap-y-0.5">
                 {displayFeatures.map((feat, idx) => (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/8 flex items-start gap-2.5"
+                    className="py-2.5 border-b border-slate-100 dark:border-white/6 flex items-start gap-2.5"
                   >
                     <CheckCircle2 size={15} className="text-emerald-500 shrink-0 mt-0.5" />
-                    <span className="text-xs sm:text-[13px] text-slate-700 dark:text-slate-200 leading-snug">
+                    <span className="text-xs sm:text-[13px] text-slate-700 dark:text-slate-200 leading-relaxed">
                       {feat}
                     </span>
                   </div>
@@ -1305,7 +1309,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   {displayTechStack.map((tech) => (
                     <span
                       key={tech}
-                      className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-white/5 border border-blue-200/80 dark:border-white/10 text-xs font-mono font-semibold text-blue-900 dark:text-[#7DD3FC]"
+                      className="px-2.5 py-1 rounded-lg bg-slate-100/80 dark:bg-white/[0.04] border border-slate-200/70 dark:border-white/8 text-xs font-mono font-medium text-slate-700 dark:text-[#7DD3FC]"
                     >
                       {tech}
                     </span>
@@ -1350,7 +1354,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               </div>
 
               {galleryGroups.length > 1 && (
-                <div className="flex flex-wrap items-center gap-1.5 pb-1">
+                <div className="flex flex-wrap items-center gap-4 border-b border-slate-200/75 dark:border-white/8">
                   {galleryGroups.map((group) => {
                     const active = (activeGalleryGroup?.id || 'all') === group.id;
                     return (
@@ -1361,13 +1365,16 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                           setGalleryCategory(group.id);
                           setVisibleGalleryCount(GALLERY_PAGE_SIZE);
                         }}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold border transition-colors cursor-pointer ${
+                        className={`relative pb-2 text-xs font-mono transition-colors cursor-pointer whitespace-nowrap ${
                           active
-                            ? 'bg-[#027DFD] text-white border-[#027DFD]'
-                            : 'bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-[#027DFD]/50'
+                            ? 'text-[#027DFD] dark:text-[#00C7FF] font-bold'
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-medium'
                         }`}
                       >
                         {group.label}
+                        {active && (
+                          <span className="absolute bottom-0 inset-x-0 h-[2px] rounded-full bg-[#027DFD] dark:bg-[#00C7FF]" />
+                        )}
                       </button>
                     );
                   })}
@@ -1459,13 +1466,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       : 'Clean Architecture & Repository Structure'}
                   </span>
                 </div>
-                <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-[#7DD3FC] font-bold border border-blue-500/20">
+                <span className="text-xs font-mono text-[#027DFD] dark:text-[#7DD3FC] font-semibold">
                   SOLID Compliant
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-blue-500/25 flex flex-col justify-between">
+              {/* Clean 3-Column Hairline Architecture Band */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 rounded-2xl border border-slate-200/75 dark:border-white/8 bg-slate-50/50 dark:bg-white/[0.02] divide-y sm:divide-y-0 sm:divide-x divide-slate-200/75 dark:divide-white/8 text-xs">
+                <div className="p-4 sm:p-5 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <Smartphone size={15} className="text-blue-500" />
@@ -1482,7 +1490,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-emerald-500/25 flex flex-col justify-between">
+                <div className="p-4 sm:p-5 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <GitBranch size={15} className="text-emerald-500" />
@@ -1499,7 +1507,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-purple-500/25 flex flex-col justify-between">
+                <div className="p-4 sm:p-5 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <Database size={15} className="text-purple-500" />
@@ -1518,14 +1526,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               </div>
 
               {parsedReadmeData.architectureNotes.length > 0 && (
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 space-y-2">
-                  <h5 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                <div className="py-3 border-y border-slate-200/75 dark:border-white/8 space-y-2">
+                  <h5 className="text-xs font-bold text-slate-900 dark:text-white">
                     {lang === 'ar' ? 'ملاحظات معمارية من المستودع' : 'Repository Architecture Notes'}
                   </h5>
                   <ul className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
                     {parsedReadmeData.architectureNotes.map((note, ni) => (
                       <li key={ni} className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#027DFD] mt-1.5 shrink-0" />
+                        <span className="text-[#027DFD] font-mono shrink-0">·</span>
                         <span>{note}</span>
                       </li>
                     ))}
@@ -1551,48 +1559,48 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 </div>
               )}
 
-              {/* Strictly Verified Telemetry Only (no fabricated benchmarks or fallback sizes) */}
+              {/* Strictly Verified Telemetry Only (Hairline Editorial Summary Row) */}
               {(project.metrics?.offlineSupport ||
                 project.metrics?.liveStatus ||
                 realApkSizeLabel ||
                 releaseInfo?.tagName) && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-3.5 border-y border-slate-200/75 dark:border-white/8">
                   {project.metrics?.offlineSupport && (
-                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
-                      <div className="text-[10px] font-mono text-slate-500 uppercase font-bold">
+                    <div>
+                      <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                         Offline Mode
                       </div>
-                      <div className="text-sm sm:text-base font-extrabold text-purple-600 dark:text-purple-400 mt-1">
+                      <div className="text-sm sm:text-base font-extrabold text-purple-600 dark:text-purple-400 mt-0.5">
                         {project.metrics.offlineSupport}
                       </div>
                     </div>
                   )}
                   {project.metrics?.liveStatus && (
-                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
-                      <div className="text-[10px] font-mono text-slate-500 uppercase font-bold">
+                    <div>
+                      <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                         Distribution
                       </div>
-                      <div className="text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
+                      <div className="text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">
                         {project.metrics.liveStatus}
                       </div>
                     </div>
                   )}
                   {releaseInfo?.tagName && (
-                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
-                      <div className="text-[10px] font-mono text-slate-500 uppercase font-bold">
+                    <div>
+                      <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                         GitHub Release
                       </div>
-                      <div className="text-sm sm:text-base font-extrabold text-blue-600 dark:text-cyan-400 mt-1 font-mono tabular-nums">
+                      <div className="text-sm sm:text-base font-extrabold text-blue-600 dark:text-cyan-400 mt-0.5 font-mono tabular-nums">
                         {releaseInfo.tagName}
                       </div>
                     </div>
                   )}
                   {realApkSizeLabel && (
-                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10">
-                      <div className="text-[10px] font-mono text-slate-500 uppercase font-bold">
+                    <div>
+                      <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                         Verified APK Size
                       </div>
-                      <div className="text-sm sm:text-base font-extrabold text-amber-600 dark:text-amber-400 mt-1 tabular-nums">
+                      <div className="text-sm sm:text-base font-extrabold text-amber-600 dark:text-amber-400 mt-0.5 tabular-nums">
                         {realApkSizeLabel}
                       </div>
                     </div>
@@ -1673,7 +1681,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               </div>
 
               {studyCaseLoading ? (
-                <div className="py-12 rounded-3xl bg-slate-50 dark:bg-[#101421] border border-slate-200 dark:border-white/10 flex flex-col items-center justify-center gap-2.5 text-slate-500 dark:text-slate-400">
+                <div className="py-12 rounded-2xl border border-slate-200/75 dark:border-white/8 flex flex-col items-center justify-center gap-2.5 text-slate-500 dark:text-slate-400">
                   <Loader2 size={22} className="animate-spin text-[#027DFD]" />
                   <span className="text-xs font-mono">
                     {lang === 'ar'
@@ -1684,7 +1692,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               ) : hasAnyStudyCase && activeStudyCaseMarkdown ? (
                 <div
                   dir={studyCaseLang === 'ar' ? 'rtl' : 'ltr'}
-                  className="p-5 sm:p-7 rounded-3xl bg-slate-50 dark:bg-[#101421] border border-slate-200 dark:border-white/10"
+                  className="pt-2"
                 >
                   <ReadmeDocumentView
                     rawMarkdown={activeStudyCaseMarkdown}
@@ -1693,8 +1701,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   />
                 </div>
               ) : (
-                <div className="py-10 px-6 rounded-3xl bg-slate-50/70 dark:bg-white/[0.02] border border-dashed border-slate-300 dark:border-white/12 text-center space-y-2.5">
-                  <FileCode size={30} className="mx-auto text-slate-400 dark:text-slate-500" />
+                <div className="py-10 px-6 rounded-2xl border border-dashed border-slate-300/80 dark:border-white/12 text-center space-y-2.5">
+                  <FileCode size={28} className="mx-auto text-slate-400 dark:text-slate-500" />
                   <h5 className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200">
                     {lang === 'ar'
                       ? 'لا توجد دراسة حالة لهذا المشروع حالياً'
@@ -1756,7 +1764,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           </button>
 
           <img
-            src={screenshots[activeScreenIndex % screenshots.length]}
+            src={resolveProxiedImageUrl(screenshots[activeScreenIndex % screenshots.length])}
             alt={`Screenshot ${(activeScreenIndex % screenshots.length) + 1}`}
             className="max-h-[75vh] max-w-[90vw] object-contain rounded-2xl shadow-2xl border border-white/10"
             onClick={(e) => e.stopPropagation()}
@@ -1787,11 +1795,11 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   className={`w-10 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${
                     activeScreenIndex % screenshots.length === idx
                       ? 'border-[#00C7FF] scale-110 opacity-100'
-                      : 'border-white/15 opacity-55 hover:opacity-90'
+                      : 'border-white/15 opacity-70 hover:opacity-100'
                   }`}
                 >
                   <img
-                    src={imgUrl}
+                    src={resolveProxiedImageUrl(imgUrl)}
                     alt={`Thumb ${idx + 1}`}
                     className="w-full h-full object-cover object-top"
                   />

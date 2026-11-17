@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { Language, Translations, translations } from '../data/translations';
+import { LEAF_DOUBLE_DRAW_MS } from '../components/LeafAnimation';
 export type { Language };
 
 interface LanguageContextType {
@@ -74,18 +75,18 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setSwitchingTargetLang(nextLang);
     setIsSwitchingLang(true);
 
-    // Swap RTL/LTR and strings midway during serene Leaf hold
+    // Swap RTL/LTR cleanly as the artisan stroke nears completion before the poised hold plateau
     swapTimerRef.current = window.setTimeout(() => {
       setLangState(nextLang);
       swapTimerRef.current = null;
-    }, 1900);
+    }, Math.round(LEAF_DOUBLE_DRAW_MS * 0.48));
 
-    // Reveal translated content cleanly after full draw + hold plateau
+    // Reveal translated content smoothly after the calm hold plateau
     endTimerRef.current = window.setTimeout(() => {
       setIsSwitchingLang(false);
       setSwitchingTargetLang(null);
       endTimerRef.current = null;
-    }, 3900);
+    }, LEAF_DOUBLE_DRAW_MS);
   };
 
   const setLang = (newLang: Language) => {

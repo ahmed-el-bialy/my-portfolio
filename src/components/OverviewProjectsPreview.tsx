@@ -56,7 +56,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
         <button
           type="button"
           onClick={onExploreAllProjects}
-          className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-white/10 hover:bg-blue-600 dark:hover:bg-blue-600 text-white text-xs font-semibold cursor-pointer whitespace-nowrap self-start md:self-auto"
+          className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[42px] rounded-xl bg-slate-900 dark:bg-white/10 hover:bg-[#027DFD] dark:hover:bg-[#027DFD] text-white text-xs font-semibold cursor-pointer whitespace-nowrap self-start md:self-auto shadow-xs"
         >
           <span>{lang === 'ar' ? 'استعراض كافة المشاريع والمستودعات' : 'View All Projects & Repos'}</span>
           <ArrowRight size={14} className={dir === 'rtl' ? 'rotate-180' : ''} />
@@ -92,10 +92,11 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
               <TiltCard
                 maxTilt={4.5}
                 glareOpacity={0.12}
+                cursorLabel={lang === 'ar' ? 'استعراض' : 'Inspect'}
                 onClick={() => setSelectedProject(dynamicProject)}
                 onMouseEnter={() => setHoveredCardId(project.id)}
                 onMouseLeave={() => setHoveredCardId(null)}
-                className="w-full group rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-colors duration-300 hover:border-[#027DFD]/50 shadow-sm hover:shadow-xl"
+                className="w-full group rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:border-[#027DFD]/50 shadow-sm hover:shadow-xl"
               >
                 <div>
                   <ProjectCardCover
@@ -108,7 +109,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                     isCardHovered={hoveredCardId === project.id}
                   />
 
-                  <div className="p-5 sm:p-6">
+                  <div className="p-4 sm:p-6">
                     <div className="flex items-center justify-between gap-2 mb-1.5">
                       <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white truncate">
                         {project.name}
@@ -119,7 +120,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                         </span>
                       )}
                     </div>
-                    <p className="text-xs sm:text-sm font-medium text-blue-600 dark:text-cyan-400 line-clamp-1 mb-2">
+                    <p className="text-xs sm:text-sm font-medium text-[#027DFD] dark:text-[#00C7FF] line-clamp-1 mb-2">
                       {project.subtitle}
                     </p>
                     <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
@@ -128,14 +129,14 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                   </div>
                 </div>
 
-                <div className="px-5 sm:px-6 py-4 border-t border-slate-100 dark:border-white/8 flex items-center justify-between gap-2.5 flex-wrap">
+                <div className="px-4 sm:px-6 py-4 border-t border-slate-100 dark:border-white/8 flex flex-wrap items-center justify-between gap-2.5">
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedProject(dynamicProject);
                     }}
-                    className="btn-kinetic inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/10 hover:bg-blue-600 hover:text-white text-xs font-semibold text-blue-600 dark:text-cyan-400 border border-blue-500/20 cursor-pointer"
+                    className="btn-kinetic inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[38px] rounded-xl bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-xs font-semibold text-[#027DFD] dark:text-[#00C7FF] border border-[#027DFD]/25 cursor-pointer"
                   >
                     <Eye size={13} />
                     <span>{t.projects.actions.viewSpecs}</span>
@@ -149,7 +150,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="btn-kinetic inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                        className="btn-kinetic inline-flex items-center gap-1 px-3 py-2 min-h-[36px] rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
                       >
                         <span>GitHub</span>
                         <ExternalLink size={12} />

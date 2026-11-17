@@ -40,6 +40,7 @@ import { WhatsAppLogo } from './TechLogos';
 import { BrandLogoMark } from './BrandLogoMark';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 import { usePlayStoreAppStats } from '../services/playStoreService';
 
 interface ResumeModalProps {
@@ -51,6 +52,7 @@ interface ResumeModalProps {
 export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profile }) => {
   useScrollLock(isOpen);
   const { lang, dir, t } = useLanguage();
+  const { showToast } = useToast();
   const { data: playStats } = usePlayStoreAppStats('com.ahmed.revio');
 
   const [copiedLink, setCopiedLink] = useState(false);
@@ -88,6 +90,10 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
     const url = profile.cvDriveUrl || window.location.href;
     navigator.clipboard.writeText(url);
     setCopiedLink(true);
+    showToast({
+      message: lang === 'ar' ? 'تم نسخ رابط السيرة الذاتية' : 'Resume link copied',
+      detail: 'CV PDF',
+    });
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
@@ -196,7 +202,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                 title={t.resume.downloadPdf}
               >
                 <Download size={13} />
-                <span className="hidden xs:inline">{lang === 'ar' ? 'تحميل' : 'Download'}</span>
+                <span className="hidden sm:inline">{lang === 'ar' ? 'تحميل' : 'Download'}</span>
                 <span>PDF</span>
               </a>
             )}
