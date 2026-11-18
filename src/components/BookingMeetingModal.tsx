@@ -146,7 +146,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
 
   const modalNode = (
     <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md overflow-hidden"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-black/78 backdrop-blur-md overflow-hidden"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -397,7 +397,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
 
               <div className="flex-1 relative">
                 {isIframeLoading && (
-                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95 dark:bg-[#0f1117]/95 backdrop-blur-md gap-3 p-6">
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/92 dark:bg-[#0f1117]/92 backdrop-blur-md gap-3 p-6">
                     <div className="w-12 h-12 rounded-2xl bg-[#027DFD]/10 border border-[#027DFD]/25 flex items-center justify-center text-[#027DFD] dark:text-[#00C7FF]">
                       <Loader2 size={24} className="animate-spin" />
                     </div>

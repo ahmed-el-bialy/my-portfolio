@@ -1,0 +1,153 @@
+{
+  "personal": {
+    "name": {
+      "en": "Ahmed El-Bialy",
+      "ar": "أحمد البيلي"
+    },
+    "title": {
+      "en": "Flutter Mobile Developer",
+      "ar": "مطور Flutter للجوال"
+    },
+    "tagline": {
+      "en": "Building clean, fast apps people actually use.",
+      "ar": "ببني تطبيقات نظيفة وسريعة يستخدمها الناس فعلاً."
+    },
+    "bio": {
+      "en": "Junior Flutter Mobile Developer and Artificial Intelligence undergraduate at Kafrelsheikh University. Building production-grade Android and iOS applications using Clean Architecture, BLoC/Cubit state management, Hive offline persistence, and REST APIs. Creator of Revio live on Google Play.",
+      "ar": "مطور تطبيقات Flutter للجوال وطالب في كلية الذكاء الاصطناعي بجامعة كفر الشيخ. أبني تطبيقات Android و iOS احترافية باستخدام Clean Architecture و BLoC/Cubit و Hive و REST APIs، ومطوّر تطبيق Revio المتاح رسمياً على Google Play."
+    },
+    "location": {
+      "en": "El Mansoura, Egypt",
+      "ar": "المنصورة، مصر"
+    },
+    "email": "ah.elbialy.dev@gmail.com",
+    "phone": "+201022121573",
+    "openToWork": true,
+    "availableFor": ["fulltime", "freelance", "remote"]
+  },
+  "education": {
+    "degree": {
+      "en": "Bachelor's Degree in Artificial Intelligence",
+      "ar": "بكالوريوس الذكاء الاصطناعي"
+    },
+    "faculty": {
+      "en": "Faculty of Artificial Intelligence",
+      "ar": "كلية الذكاء الاصطناعي"
+    },
+    "university": {
+      "en": "Kafrelsheikh University",
+      "ar": "جامعة كفر الشيخ"
+    },
+    "period": "Oct 2023 – Jun 2027"
+  },
+  "links": {
+    "portfolio": "https://ahmed-el-bialy.vercel.app",
+    "github": "https://github.com/ahmed-el-bialy",
+    "linkedin": "https://www.linkedin.com/in/ahmedel-bialy/",
+    "youtube": "https://www.youtube.com/@AhmedEl-Bialy",
+    "tiktok": "https://www.tiktok.com/@ahmedelbialydev",
+    "whatsapp": "https://wa.me/201022121573",
+    "playStore": "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US",
+    "cvPdf": "https://drive.google.com/file/d/1lQMnmyIA100YyXLu4jqFdhWluSeig4Pn/view?usp=drive_link",
+    "cvDoc": "https://docs.google.com/document/d/1K_pt4CgqDQ8sr0H3gcmOGP8vhqchWsP-/edit?usp=drive_link"
+  },
+  "skills": {
+    "mobile": ["Flutter", "Dart", "Slivers & CustomPaint", "RTL Localization", "Responsive UI"],
+    "architecture": ["Clean Architecture", "BLoC", "Cubit", "SOLID Principles", "Repository Pattern"],
+    "backendAndStorage": ["Hive (hive_ce)", "Firebase Auth", "Cloud Firestore", "Dio", "Retrofit", "REST APIs"],
+    "tools": ["Git", "GitHub Actions", "Android Studio", "VS Code", "Postman", "Figma"]
+  },
+  "projects": [
+    {
+      "id": "revio",
+      "name": { "en": "Revio", "ar": "ريفيو (Revio)" },
+      "description": {
+        "en": "Minimalist offline-first flashcard and active-recall quiz app live on Google Play, built with Flutter, Clean Architecture, Cubit, and Hive.",
+        "ar": "تطبيق بطاقات تعليمية واختبارات ذكية يعمل بالكامل بدون إنترنت ومنشور على Google Play باستخدام Flutter و Clean Architecture و Cubit و Hive."
+      },
+      "tech": ["Flutter", "Dart", "Cubit", "Clean Architecture", "Hive", "Google Play"],
+      "playStore": "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US",
+      "github": "https://github.com/ahmed-el-bialy/Revio",
+      "demoVideo": "https://youtube.com/shorts/FsG1XUAbmDY",
+      "featured": true,
+      "screenshots": [
+        "https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/cover.png"
+      ]
+    },
+    {
+      "id": "movura",
+      "name": { "en": "Movura", "ar": "موفورا (Movura)" },
+      "description": {
+        "en": "Movie and TV series discovery app powered by TMDB API with Clean Architecture, BLoC/Cubit, Sliver parallax headers, and trailer streaming.",
+        "ar": "تطبيق لاستكشاف الأفلام والمسلسلات عبر TMDB API بمعمارية Clean Architecture و BLoC وواجهات Sliver وتشغيل المقاطع الدعائية."
+      },
+      "tech": ["Flutter", "Dart", "BLoC", "Cubit", "Clean Architecture", "Dio", "TMDB API"],
+      "github": "https://github.com/ahmed-el-bialy/Movura",
+      "demoVideo": "https://youtube.com/shorts/9LCJqMSuZno",
+      "featured": true,
+      "screenshots": [
+        "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/home_p1.png"
+      ]
+    },
+    {
+      "id": "vibrant-store",
+      "name": { "en": "Vibrant-Store", "ar": "متجر Vibrant" },
+      "description": {
+        "en": "Modern e-commerce mobile application consuming DummyJSON API with category chip filtering, wishlist state, and persistent cart flows.",
+        "ar": "تطبيق تجارة إلكترونية حديث متصل بـ DummyJSON API مع بحث وفلاتر حسب الفئة وقائمة مفضلات وسلة تسوق متفاعلة."
+      },
+      "tech": ["Flutter", "Dart", "REST API", "Service Layer", "State Management"],
+      "github": "https://github.com/ahmed-el-bialy/Vibrant-store",
+      "demoVideo": "https://youtube.com/shorts/PIg1rYA0CkQ",
+      "featured": true,
+      "screenshots": [
+        "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/HomeView.png"
+      ]
+    },
+    {
+      "id": "sky-cast",
+      "name": { "en": "Sky-Cast", "ar": "سكاي كاست (Sky-Cast)" },
+      "description": {
+        "en": "Dynamic weather forecast app powered by WeatherAPI with climate-adaptive color palettes and custom SearchDelegate city autocomplete.",
+        "ar": "تطبيق طقس متكيّف يتغير لونه حسب الحالة الجوية عبر WeatherAPI مع بحث ذكي عن المدن وتوقعات متعددة الأيام."
+      },
+      "tech": ["Flutter", "Dart", "WeatherAPI", "SearchDelegate", "Clean Architecture"],
+      "github": "https://github.com/ahmed-el-bialy/Sky-Cast",
+      "demoVideo": "https://youtube.com/shorts/u5JjIphdrAM",
+      "featured": true,
+      "screenshots": [
+        "https://raw.githubusercontent.com/ahmed-el-bialy/Sky-Cast/main/screenshots/sunny_main_weather.png"
+      ]
+    },
+    {
+      "id": "news-cloud",
+      "name": { "en": "News-Cloud", "ar": "نيوز كلاود (News-Cloud)" },
+      "description": {
+        "en": "Bilingual Arabic RTL & English news reader utilizing Retrofit, Repository Pattern, Sliver views, and an integrated in-app WebView.",
+        "ar": "تطبيق قراءة أخبار يدعم العربية RTL والإنجليزية بالكامل مع Retrofit و Repository Pattern ومتصفح مقالات مدمج."
+      },
+      "tech": ["Flutter", "Dart", "Retrofit", "Repository Pattern", "Arabic RTL", "WebView"],
+      "github": "https://github.com/ahmed-el-bialy/News-Cloud",
+      "demoVideo": "https://youtube.com/shorts/AKbiBjCRIis",
+      "featured": false,
+      "screenshots": [
+        "https://raw.githubusercontent.com/ahmed-el-bialy/News-Cloud/main/screenshots/general_view.png"
+      ]
+    },
+    {
+      "id": "shaats",
+      "name": { "en": "Shaats", "ar": "شاتس (Shaats)" },
+      "description": {
+        "en": "Real-time chat app built with Flutter, Firebase Auth, and Cloud Firestore snapshot streams with instant optimistic UI updates.",
+        "ar": "تطبيق محادثة فورية مبني بـ Flutter و Firebase Auth و Cloud Firestore Streams لتزامن الرسائل لحظياً."
+      },
+      "tech": ["Flutter", "Dart", "Firebase Auth", "Cloud Firestore", "Streams"],
+      "github": "https://github.com/ahmed-el-bialy/Shaats",
+      "featured": false,
+      "screenshots": [
+        "https://raw.githubusercontent.com/ahmed-el-bialy/Shaats/main/screenshots/SenderView.png"
+      ]
+    }
+  ],
+  "lastUpdated": "2026-11-18T07:05:00.000Z"
+}

@@ -324,14 +324,14 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                   </div>
                   <div>
                     <div className="flex items-center gap-2.5 flex-wrap">
-                      <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                      <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                         {AHMED_CONFIG.name[lang]}
                       </h1>
-                      <span className="text-[11px] font-mono font-semibold text-emerald-700 dark:text-emerald-400">
+                      <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                         · {lang === 'ar' ? 'متاح للعمل والمشاريع' : 'Available for Hire'}
                       </span>
                     </div>
-                    <p className="text-sm sm:text-base font-bold text-[#027DFD] dark:text-[#00C7FF] mt-0.5">
+                    <p className="font-display text-base sm:text-lg font-bold text-[#027DFD] dark:text-[#00C7FF] mt-0.5 tracking-[-0.01em]">
                       {AHMED_CONFIG.title[lang]}
                     </p>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
@@ -343,18 +343,18 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                 {/* Snapshot Key Credentials */}
                 <div className="flex flex-wrap sm:grid sm:grid-cols-2 gap-2.5 shrink-0">
                   <div className="px-3.5 py-2 rounded-xl bg-white dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 text-center">
-                    <div className="text-sm font-extrabold font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
+                    <div className="font-display text-base font-extrabold tabular-nums text-emerald-600 dark:text-emerald-400">
                       {playStats?.downloads || '10+'} {playStats?.rating ? `· ★${playStats.rating}` : ''}
                     </div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                    <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                       Revio on Google Play
                     </div>
                   </div>
                   <div className="px-3.5 py-2 rounded-xl bg-white dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 text-center">
-                    <div className="text-sm font-extrabold font-mono tabular-nums text-[#027DFD] dark:text-[#00C7FF]">
+                    <div className="font-display text-base font-extrabold tabular-nums text-[#027DFD] dark:text-[#00C7FF]">
                       6+ Apps
                     </div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                    <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                       Clean Architecture
                     </div>
                   </div>

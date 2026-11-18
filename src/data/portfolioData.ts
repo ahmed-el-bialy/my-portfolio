@@ -106,12 +106,12 @@ export interface DeveloperProfile {
 
 export const AHMED_PROFILE: DeveloperProfile = {
   name: "Ahmed El-Bialy",
-  title: "Junior Mobile Developer | Junior Flutter Developer",
+  title: "Flutter Mobile Developer",
   secondaryTitle: "Cross-Platform Android & iOS Engineer",
-  greeting: "Crafting polished, high-performance mobile apps with Flutter & Clean Architecture",
-  bio: "Junior Flutter Developer who has independently built 6 Flutter mobile applications, including one published on Google Play, using Clean Architecture, BLoC/Cubit state management, and REST API integration. Currently pursuing a Bachelor's in Artificial Intelligence at Kafrelsheikh University. Seeking a junior Flutter developer role.",
+  greeting: "Building clean, fast apps people actually use.",
+  bio: "Flutter Mobile Developer who has independently built 6+ Flutter mobile applications, including Revio published live on Google Play, using Clean Architecture, BLoC/Cubit state management, Hive, and REST API integration. Currently pursuing a Bachelor's in Artificial Intelligence at Kafrelsheikh University.",
   email: "ah.elbialy.dev@gmail.com",
-  phone: "+20 102 212 1573",
+  phone: "+201022121573",
   location: "El Mansoura, Egypt (Open to Relocation)",
   githubUsername: "ahmed-el-bialy",
   githubUrl: "https://github.com/ahmed-el-bialy",

@@ -4,8 +4,10 @@ import {
   Github,
   Linkedin,
   Mail,
+  Phone,
   ArrowRight,
-  Video,
+  Briefcase,
+  Rocket,
   Youtube,
   Download,
   Star,
@@ -25,6 +27,7 @@ import { usePlayStoreAppStats } from '../services/playStoreService';
 interface HeroSectionProps {
   profile: DeveloperProfile;
   isDark?: boolean;
+  entryReady?: boolean;
   onOpenContact?: () => void;
   onOpenResume: () => void;
   onExploreProjects: () => void;
@@ -36,9 +39,59 @@ interface HeroSectionProps {
 
 const EASE_EDITORIAL: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
+const CountUpMetric: React.FC<{
+  value: string;
+  trigger: boolean;
+  reducedMotion: boolean;
+}> = ({ value, trigger, reducedMotion }) => {
+  const match = value.match(/^([^0-9]*)(\d+(?:\.\d+)?)(.*)$/);
+  const [display, setDisplay] = useState(value);
+
+  useEffect(() => {
+    if (!match || !trigger || reducedMotion) {
+      setDisplay(value);
+      return;
+    }
+
+    const [, prefix, numStr, suffix] = match;
+    const target = parseFloat(numStr);
+    const isFloat = numStr.includes('.');
+    const decimals = isFloat ? numStr.split('.')[1]?.length || 1 : 0;
+
+    if (!Number.isFinite(target) || target === 0) {
+      setDisplay(value);
+      return;
+    }
+
+    let rafId = 0;
+    const duration = 680;
+    const startTime = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = target * eased;
+      const formatted = isFloat ? current.toFixed(decimals) : Math.round(current).toString();
+      setDisplay(`${prefix}${formatted}${suffix}`);
+      if (progress < 1) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        setDisplay(value);
+      }
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [value, trigger, reducedMotion]);
+
+  return <>{display}</>;
+};
+
 export const HeroSection: React.FC<HeroSectionProps> = ({
   profile,
   isDark = true,
+  entryReady = true,
+  onOpenContact,
   onOpenResume,
   onExploreProjects,
   onOpenBooking,
@@ -136,9 +189,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
   const availabilityText =
     AHMED_CONFIG.availability === 'open'
-      ? lang === 'ar'
-        ? 'متاح الآن للعمل (دوام كامل / فريلانس)'
-        : 'Open to Work · Full-Time & Freelance'
+      ? t.hero.statusBadge
       : lang === 'ar'
       ? 'مشغول حالياً'
       : 'Booked';
@@ -147,82 +198,112 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     hidden: {},
     visible: {
       transition: {
-        staggerChildren: 0.075,
-        delayChildren: 0.05,
+        staggerChildren: 0.08,
+        delayChildren: 0.04,
       },
     },
   };
 
   const itemVariants = {
-    hidden: prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 },
+    hidden: prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.48, ease: EASE_EDITORIAL },
+      transition: { duration: 0.5, ease: EASE_EDITORIAL },
     },
   };
 
   const currentRotatingWord = rotatingWords[rotatingWordIndex % rotatingWords.length];
+  const emailHref = `mailto:${profile.email}?subject=${encodeURIComponent(
+    'Flutter Mobile Developer Opportunity'
+  )}`;
 
   return (
     <section
       id="overview"
-      className="relative px-4 sm:px-6 lg:px-8 pt-24 pb-12 sm:pt-28 sm:pb-16 overflow-x-clip w-full"
+      className="relative px-4 sm:px-6 lg:px-8 pt-[68px] pb-6 sm:pt-24 sm:pb-12 overflow-x-clip w-full"
     >
       <div className="ambient-glow-top absolute inset-0 pointer-events-none" />
 
       {/* Editorial Split Hero (Equal-stretch alignment) */}
-      <div className="max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch relative z-10">
-        {/* Left Column: Staggered Editorial Typography, Specialty Strip & Clear CTAs */}
+      <div className="max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-10 items-stretch relative z-10">
+        {/* Left Column: Staggered Editorial Typography, Specialty Strip & Dual HR/Freelance CTAs */}
         <motion.div
           variants={containerVariants}
           initial={prefersReducedMotion ? false : 'hidden'}
-          animate="visible"
-          className="lg:col-span-6 flex flex-col justify-center items-start gap-4 sm:gap-5"
+          animate={entryReady ? 'visible' : 'hidden'}
+          className="lg:col-span-6 flex flex-col justify-center items-start gap-3 sm:gap-4"
         >
-          {/* High-Clarity Availability & Discipline Strip */}
+          {/* 1. Availability & Discipline Strip */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs sm:text-[13px] font-medium text-slate-600 dark:text-[#94a3b8]"
+            className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] sm:text-[13px] font-medium text-slate-600 dark:text-[#94a3b8]"
           >
-            <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-2.5 py-1">
+            <span className="inline-flex items-center gap-2 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-2.5 py-1">
+              <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
+                {!prefersReducedMotion && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                )}
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
               <span>{availabilityText}</span>
             </span>
             <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
               ·
             </span>
             <span>{AHMED_CONFIG.location[lang]}</span>
-            <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
+            <span aria-hidden="true" className="text-slate-300 dark:text-slate-700 hidden sm:inline">
               ·
             </span>
-            <span className="font-mono text-[#027DFD] dark:text-[#00C7FF] font-semibold">
+            <span className="font-mono text-[#027DFD] dark:text-[#00C7FF] font-semibold hidden sm:inline">
               Flutter &amp; AI
             </span>
           </motion.div>
 
-          {/* Name-First Dominant Editorial Hierarchy */}
-          <motion.div variants={itemVariants} className="space-y-3 w-full">
-            <div className="flex items-center gap-3.5">
-              <BrandLogoMark
-                sizeClassName="w-11 h-11 sm:w-12 sm:h-12"
-                alt="Ahmed El-Bialy Brand Emblem"
-                floatEffect
-              />
-              <h1 className="text-[clamp(2.2rem,4.2vw,3.75rem)] font-extrabold tracking-tight leading-[1.06] text-slate-900 dark:text-[#f1f5f9] [text-wrap:balance]">
+          {/* 2–5. Cohesive Hero Signature Lockup: Compact Geometric Outfit "Meet" Eyebrow + Emblem & Display Name */}
+          <div className="space-y-1.5 sm:space-y-2.5 w-full pt-0.5">
+            <motion.div variants={itemVariants}>
+              <span
+                className={`inline-block font-meet-accent font-bold leading-snug tracking-tight bg-gradient-to-r from-[#027DFD] via-[#00C7FF] to-sky-400 bg-clip-text text-transparent ${
+                  lang === 'ar'
+                    ? 'text-base sm:text-xl lg:text-[22px]'
+                    : 'text-lg sm:text-xl lg:text-[24px]'
+                }`}
+              >
+                {t.hero.thisIs}
+              </span>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="flex items-center gap-3 sm:gap-4 min-w-0">
+              <span className="inline-flex shrink-0">
+                <BrandLogoMark
+                  floatEffect={true}
+                  sizeClassName="w-10 h-10 sm:w-14 sm:h-14"
+                  alt="Ahmed El-Bialy Brand Emblem"
+                />
+              </span>
+              <h1 className="font-display text-[clamp(1.95rem,7.8vw,4.35rem)] font-extrabold tracking-tight leading-[1.04] text-slate-900 dark:text-[#f1f5f9] [text-wrap:balance] min-w-0">
                 {displayName}
               </h1>
-            </div>
+            </motion.div>
 
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold tracking-tight text-[#027DFD] dark:text-[#00C7FF] [text-wrap:balance]">
-              {AHMED_CONFIG.title[lang]}
-            </h2>
+            <motion.h2
+              variants={itemVariants}
+              className="font-display text-[17px] sm:text-2xl lg:text-[26px] font-bold tracking-[-0.015em] text-[#027DFD] dark:text-[#00C7FF] [text-wrap:balance] pt-0.5"
+            >
+              {t.hero.headlineRole}
+            </motion.h2>
 
-            <p className="text-sm sm:text-base font-semibold text-slate-700 dark:text-slate-200 max-w-xl leading-snug">
-              {lang === 'ar'
-                ? 'هندسة تطبيقات Flutter وتجارب الذكاء الاصطناعي بمعايير Clean Architecture.'
-                : 'Production Flutter & AI-integrated mobile apps built with Clean Architecture.'}
-            </p>
-          </motion.div>
+            <motion.p
+              variants={itemVariants}
+              className="text-[15px] sm:text-[17px] font-semibold text-slate-800 dark:text-slate-100 max-w-xl leading-relaxed"
+            >
+              {t.hero.tagline}{' '}
+              <span className="font-normal text-slate-500 dark:text-[#94a3b8]">
+                · {t.hero.subAvailability}
+              </span>
+            </motion.p>
+          </div>
 
           {/* High-Contrast Animated Specialty Line */}
           <motion.div
@@ -253,12 +334,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             variants={itemVariants}
             className="text-sm sm:text-base text-slate-600 dark:text-[#94a3b8] max-w-xl leading-relaxed"
           >
-            {lang === 'ar'
-              ? 'أُطوّر تطبيقات Android و iOS باستخدام Flutter وإدارة الحالة BLoC / Cubit مع التخزين المحلي بدون إنترنت عبر Hive. مطوّر تطبيق Revio المنشور رسمياً على Google Play وطالب بكلية الذكاء الاصطناعي — جامعة كفر الشيخ.'
-              : 'Building responsive Android & iOS applications with Flutter, BLoC / Cubit state streams, REST APIs, and offline-first Hive persistence. Creator of Revio on Google Play and B.Sc. Artificial Intelligence student at Kafrelsheikh University.'}
+            {t.hero.bio}
           </motion.p>
 
-          {/* Primary Kinetic Action Row: Explore Apps + Book Call + Compact CV */}
+          {/* Dual HR & Freelance Action Row: View Projects + Hire Me + Start a Project + Compact CV */}
           <motion.div
             variants={itemVariants}
             className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5 pt-1 w-full"
@@ -266,45 +345,54 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <MagneticButton
               onClick={onExploreProjects}
               strength={0.22}
-              className="col-span-2 btn-kinetic px-5 py-3 rounded-xl bg-[#027DFD] hover:bg-[#026ae0] text-white font-bold text-sm shadow-md shadow-[#027DFD]/25 cursor-pointer min-h-[46px] flex items-center justify-center gap-2 whitespace-nowrap"
+              className="col-span-1 btn-kinetic px-4 sm:px-5 py-3 rounded-xl bg-[#027DFD] hover:bg-[#026ae0] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#027DFD]/25 cursor-pointer min-h-[46px] flex items-center justify-center gap-2 whitespace-nowrap"
             >
               <span>{t.hero.exploreApps}</span>
-              <ArrowRight size={16} className={dir === 'rtl' ? 'rotate-180' : ''} />
+              <ArrowRight size={15} className={dir === 'rtl' ? 'rotate-180 shrink-0' : 'shrink-0'} />
             </MagneticButton>
 
-            {onOpenBooking && (
-              <MagneticButton
-                onClick={onOpenBooking}
-                strength={0.2}
-                className="col-span-1 btn-kinetic px-4 py-3 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] text-slate-900 dark:text-[#f1f5f9] font-semibold text-sm border border-slate-300 dark:border-white/15 cursor-pointer min-h-[46px] flex items-center justify-center gap-2 whitespace-nowrap"
-              >
-                <Video size={16} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
-                <span>{t.hero.bookConsultation}</span>
-              </MagneticButton>
-            )}
+            <MagneticButton
+              onClick={() => (onOpenContact ? onOpenContact() : onOpenResume())}
+              strength={0.2}
+              className="col-span-1 btn-kinetic px-3.5 sm:px-4 py-3 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] text-slate-900 dark:text-[#f1f5f9] font-semibold text-xs sm:text-sm border border-slate-300 dark:border-white/15 hover:border-[#027DFD]/50 cursor-pointer min-h-[46px] flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap"
+            >
+              <Briefcase size={15} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
+              <span>{t.hero.hireMe}</span>
+            </MagneticButton>
+
+            <MagneticButton
+              onClick={() =>
+                onOpenBooking ? onOpenBooking() : onOpenContact ? onOpenContact() : undefined
+              }
+              strength={0.18}
+              className="col-span-1 btn-kinetic px-3.5 sm:px-4 py-3 rounded-xl bg-[#027DFD]/10 dark:bg-[#00C7FF]/10 hover:bg-[#027DFD]/18 dark:hover:bg-[#00C7FF]/20 text-[#027DFD] dark:text-[#00C7FF] font-semibold text-xs sm:text-sm border border-[#027DFD]/30 hover:border-[#027DFD]/60 cursor-pointer min-h-[46px] flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap"
+            >
+              <Rocket size={15} className="shrink-0" />
+              <span>{t.hero.startProject}</span>
+            </MagneticButton>
 
             <button
               type="button"
               onClick={onOpenResume}
               title={t.hero.downloadCv}
               aria-label={t.hero.downloadCv}
-              className="col-span-1 btn-kinetic px-3.5 py-3 rounded-xl bg-emerald-500/8 dark:bg-emerald-500/12 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-semibold text-sm border border-emerald-500/30 hover:border-emerald-500/55 cursor-pointer flex items-center justify-center gap-1.5 min-h-[46px] whitespace-nowrap transition-colors"
+              className="col-span-1 btn-kinetic px-3 sm:px-3.5 py-3 rounded-xl bg-emerald-500/8 dark:bg-emerald-500/12 hover:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 font-semibold text-xs sm:text-sm border border-emerald-500/30 hover:border-emerald-500/55 cursor-pointer flex items-center justify-center gap-1.5 min-h-[46px] whitespace-nowrap transition-colors"
             >
               <Download size={15} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>{lang === 'ar' ? 'السيرة (CV)' : 'CV'}</span>
             </button>
           </motion.div>
 
-          {/* Cleanly Spaced Direct Channels Strip */}
+          {/* Cleanly Spaced Direct Channels Strip (>= 44px touch targets) */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-wrap items-center gap-2 sm:gap-2.5 pt-2 text-xs text-slate-700 dark:text-slate-300"
+            className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1 text-[11.5px] sm:text-xs text-slate-700 dark:text-slate-300 w-full"
           >
             <a
               href={AHMED_CONFIG.socials.whatsapp}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-xl bg-emerald-500/12 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 font-semibold transition-all hover:-translate-y-0.5 hover:shadow-sm"
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-emerald-500/12 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 font-semibold transition-colors"
             >
               <WhatsAppLogo size={14} />
               <span>WhatsApp</span>
@@ -314,7 +402,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5 hover:shadow-sm"
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
             >
               <Github size={14} />
               <span>GitHub</span>
@@ -324,7 +412,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.linkedinUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5 hover:shadow-sm"
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
             >
               <Linkedin size={14} />
               <span>LinkedIn</span>
@@ -334,7 +422,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.youtubeUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-red-500/40 hover:text-red-500 border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5 hover:shadow-sm"
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-red-500/40 hover:text-red-500 border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
             >
               <Youtube size={14} />
               <span>YouTube</span>
@@ -344,27 +432,38 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.tiktokUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-pink-500/40 hover:text-pink-500 border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5 hover:shadow-sm"
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-pink-500/40 hover:text-pink-500 border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
             >
               <TikTokLogo size={13} />
               <span>TikTok</span>
             </a>
 
             <a
-              href={`mailto:${profile.email}`}
-              className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-all hover:-translate-y-0.5 hover:shadow-sm"
+              href={emailHref}
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
             >
               <Mail size={14} />
               <span>Email</span>
             </a>
+
+            <a
+              href={`tel:${profile.phone}`}
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
+              aria-label={lang === 'ar' ? 'اتصال هاتفي' : 'Call Phone'}
+            >
+              <Phone size={14} />
+              <span dir="ltr" className="tabular-nums">
+                {lang === 'ar' ? 'اتصال' : 'Call'}
+              </span>
+            </a>
           </motion.div>
         </motion.div>
 
-        {/* Right Column: Interactive Revio Device Mockup + Shiki Dart Code Stage */}
+        {/* Right Column: Interactive Revio Device Mockup */}
         <motion.div
-          initial={prefersReducedMotion ? false : { opacity: 0, y: 20, scale: 0.985 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.52, delay: 0.16, ease: EASE_EDITORIAL }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+          animate={entryReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+          transition={{ duration: 0.45, delay: 0.12, ease: EASE_EDITORIAL }}
           className="lg:col-span-6 flex"
         >
           <RevioShowcaseStage
@@ -375,15 +474,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </motion.div>
       </div>
 
-      {/* Full-Width 4-KPI Rich Bento Strip Below Hero Split */}
-      <div className="max-w-[1440px] mx-auto w-full mt-10 sm:mt-14 pt-8 border-t border-slate-200/80 dark:border-white/10 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 relative z-10">
+      {/* Full-Width 4-KPI Bento Strip Below Hero Split */}
+      <div className="max-w-[1440px] mx-auto w-full mt-6 sm:mt-12 pt-5 sm:pt-8 border-t border-slate-200/80 dark:border-white/10 grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-5 relative z-10">
         {kpis.map((kpi, idx) => {
           const KpiIcon = kpi.icon;
           const cardBody = (
             <TiltCard
               maxTilt={5}
-              glareOpacity={0.14}
-              className={`w-full h-full p-4 sm:p-5 rounded-2xl border shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col justify-between gap-3 ${kpi.cardSurface}`}
+              glareOpacity={0.1}
+              className={`w-full h-full p-3.5 sm:p-5 rounded-2xl border shadow-sm hover:shadow-lg transition-colors duration-200 flex flex-col justify-between gap-2.5 sm:gap-3 ${kpi.cardSurface}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <div
@@ -391,23 +490,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 >
                   <KpiIcon size={17} />
                 </div>
-                <span className="text-[10.5px] font-mono font-semibold text-slate-500 dark:text-slate-400">
+                <span className="font-display text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide">
                   {kpi.badge}
                 </span>
               </div>
 
               <div>
-                <div className="flex items-baseline gap-2 flex-wrap">
+                <div className="flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
                   <span
-                    className={`text-2xl sm:text-[26px] font-extrabold font-mono tabular-nums tracking-tight ${kpi.accentClass}`}
+                    className={`font-display text-2xl sm:text-[34px] font-extrabold tabular-nums tracking-tight leading-none ${kpi.accentClass}`}
                   >
-                    {kpi.value}
+                    <CountUpMetric
+                      value={kpi.value}
+                      trigger={entryReady}
+                      reducedMotion={Boolean(prefersReducedMotion)}
+                    />
                   </span>
-                  <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">
+                  <span className="font-display text-xs sm:text-[15px] font-bold text-slate-800 dark:text-slate-100 tracking-tight">
                     {kpi.suffix}
                   </span>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-[#94a3b8] mt-1.5 leading-snug">
+                <p className="text-[11px] sm:text-xs text-slate-600 dark:text-[#94a3b8] mt-1.5 sm:mt-2 leading-snug">
                   {kpi.label}
                 </p>
               </div>
@@ -418,7 +521,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <motion.div
               key={kpi.id}
               initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={entryReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
               transition={{
                 duration: 0.38,
                 delay: prefersReducedMotion ? 0 : 0.24 + idx * 0.06,

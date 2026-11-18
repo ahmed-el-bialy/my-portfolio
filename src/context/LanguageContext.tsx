@@ -75,13 +75,15 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setSwitchingTargetLang(nextLang);
     setIsSwitchingLang(true);
 
-    // Swap RTL/LTR cleanly as the artisan stroke nears completion before the poised hold plateau
+    // Swap RTL/LTR cleanly during the calm hold plateau (~2.45s) after the 2.4s stroke finishes
     swapTimerRef.current = window.setTimeout(() => {
-      setLangState(nextLang);
+      React.startTransition(() => {
+        setLangState(nextLang);
+      });
       swapTimerRef.current = null;
-    }, Math.round(LEAF_DOUBLE_DRAW_MS * 0.48));
+    }, Math.round(LEAF_DOUBLE_DRAW_MS * 0.68));
 
-    // Reveal translated content smoothly after the calm hold plateau
+    // Reveal translated content smoothly after the 1.2s calm hold completes
     endTimerRef.current = window.setTimeout(() => {
       setIsSwitchingLang(false);
       setSwitchingTargetLang(null);

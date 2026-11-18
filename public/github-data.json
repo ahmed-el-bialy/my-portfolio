@@ -1,0 +1,109 @@
+{
+  "generatedAt": "2026-11-18T07:05:00.000Z",
+  "source": "github-sync-snapshot",
+  "user": {
+    "login": "ahmed-el-bialy",
+    "name": "Ahmed El-Bialy",
+    "bio": "Flutter Mobile Developer & AI Student at Kafrelsheikh University. Creator of Revio on Google Play.",
+    "avatar_url": "https://avatars.githubusercontent.com/u/245139141?v=4",
+    "followers": 18,
+    "following": 12,
+    "public_repos": 13
+  },
+  "contributions": {
+    "totalContributions": 420,
+    "totalCommitContributions": 365
+  },
+  "repositories": [
+    {
+      "id": 1,
+      "name": "Revio",
+      "full_name": "ahmed-el-bialy/Revio",
+      "description": "A dark-themed Flutter flashcard app for efficient learning, featuring flip-card animations, interactive quiz mode with hints, and offline CRUD storage via Hive.",
+      "html_url": "https://github.com/ahmed-el-bialy/Revio",
+      "homepage": "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US",
+      "stargazers_count": 3,
+      "forks_count": 1,
+      "language": "Dart",
+      "topics": ["flutter", "dart", "cubit", "hive-ce", "clean-architecture", "google-play"],
+      "pushed_at": "2026-11-10T14:20:00Z",
+      "updated_at": "2026-11-10T14:20:00Z",
+      "default_branch": "main"
+    },
+    {
+      "id": 2,
+      "name": "Movura",
+      "full_name": "ahmed-el-bialy/Movura",
+      "description": "Movie and TV series tracker consuming TMDB API with Clean Architecture, BLoC & Cubit state management, and Sliver layouts.",
+      "html_url": "https://github.com/ahmed-el-bialy/Movura",
+      "homepage": null,
+      "stargazers_count": 4,
+      "forks_count": 2,
+      "language": "Dart",
+      "topics": ["flutter", "dart", "bloc", "cubit", "clean-architecture", "tmdb-api"],
+      "pushed_at": "2026-11-04T10:00:00Z",
+      "updated_at": "2026-11-04T10:00:00Z",
+      "default_branch": "main"
+    },
+    {
+      "id": 3,
+      "name": "Vibrant-store",
+      "full_name": "ahmed-el-bialy/Vibrant-store",
+      "description": "High-performance Flutter e-commerce mobile solution powered by DummyJSON REST API and Service Layer architecture.",
+      "html_url": "https://github.com/ahmed-el-bialy/Vibrant-store",
+      "homepage": null,
+      "stargazers_count": 2,
+      "forks_count": 1,
+      "language": "Dart",
+      "topics": ["flutter", "dart", "ecommerce", "rest-api", "service-layer"],
+      "pushed_at": "2026-10-28T16:15:00Z",
+      "updated_at": "2026-10-28T16:15:00Z",
+      "default_branch": "main"
+    },
+    {
+      "id": 4,
+      "name": "Sky-Cast",
+      "full_name": "ahmed-el-bialy/Sky-Cast",
+      "description": "Minimalist weather app with dynamic atmospheric themes, SearchDelegate autocomplete, and Clean Architecture.",
+      "html_url": "https://github.com/ahmed-el-bialy/Sky-Cast",
+      "homepage": null,
+      "stargazers_count": 2,
+      "forks_count": 0,
+      "language": "Dart",
+      "topics": ["flutter", "dart", "weather-api", "clean-architecture"],
+      "pushed_at": "2026-10-20T12:00:00Z",
+      "updated_at": "2026-10-20T12:00:00Z",
+      "default_branch": "main"
+    },
+    {
+      "id": 5,
+      "name": "News-Cloud",
+      "full_name": "ahmed-el-bialy/News-Cloud",
+      "description": "Categorized real-time news aggregator supporting Arabic RTL, Retrofit API client, and embedded WebView.",
+      "html_url": "https://github.com/ahmed-el-bialy/News-Cloud",
+      "homepage": null,
+      "stargazers_count": 2,
+      "forks_count": 1,
+      "language": "Dart",
+      "topics": ["flutter", "dart", "retrofit", "arabic-rtl", "webview"],
+      "pushed_at": "2026-10-12T09:30:00Z",
+      "updated_at": "2026-10-12T09:30:00Z",
+      "default_branch": "main"
+    },
+    {
+      "id": 6,
+      "name": "Shaats",
+      "full_name": "ahmed-el-bialy/Shaats",
+      "description": "Real-time messaging mobile app built with Flutter, Firebase Auth, and Cloud Firestore snapshot streams.",
+      "html_url": "https://github.com/ahmed-el-bialy/Shaats",
+      "homepage": null,
+      "stargazers_count": 2,
+      "forks_count": 0,
+      "language": "Dart",
+      "topics": ["flutter", "dart", "firebase", "firestore"],
+      "pushed_at": "2026-10-01T18:45:00Z",
+      "updated_at": "2026-10-01T18:45:00Z",
+      "default_branch": "main"
+    }
+  ]
+}

@@ -721,15 +721,28 @@ Strict verified facts only:
     }
   });
 
+  // Immediate health readiness route (never blocks on Vite warm-up)
+  app.get('/healthz', (_req, res) => {
+    res.status(200).json({ ok: true });
+  });
+
   // Setup Vite middleware in development or static serving in production
   const isProduction = process.env.NODE_ENV === 'production';
 
   if (!isProduction) {
-    const vite = await createViteServer({
+    const vitePromise = createViteServer({
       server: { middlewareMode: true, hmr: false },
       appType: 'spa',
     });
-    app.use(vite.middlewares);
+
+    app.use(async (req, res, next) => {
+      try {
+        const vite = await vitePromise;
+        return vite.middlewares(req, res, next);
+      } catch (err) {
+        return next(err);
+      }
+    });
   } else {
     const distPath = path.resolve(__dirname, 'dist');
     app.use(express.static(distPath));

@@ -14,7 +14,7 @@ import {
   FileText,
   Eye,
   ShieldCheck,
-  Share2
+  Loader2
 } from 'lucide-react';
 import { CertificateItem } from '../data/portfolioData';
 import { useScrollLock } from '../hooks/useScrollLock';
@@ -37,12 +37,26 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
   const { showToast } = useToast();
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeView, setActiveView] = useState<'details' | 'webview'>('details');
+  const [isWebViewLoading, setIsWebViewLoading] = useState(true);
+  const [showSlowHint, setShowSlowHint] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setActiveView('details');
+      setIsWebViewLoading(true);
+      setShowSlowHint(false);
     }
   }, [isOpen, certificate]);
+
+  useEffect(() => {
+    if (activeView !== 'webview') return;
+    setIsWebViewLoading(true);
+    setShowSlowHint(false);
+    const timer = window.setTimeout(() => {
+      setShowSlowHint(true);
+    }, 3500);
+    return () => window.clearTimeout(timer);
+  }, [activeView, certificate]);
 
   // Keyboard escape listener
   useEffect(() => {
@@ -212,23 +226,55 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
               </div>
             </>
           ) : (
-            /* Interactive Web View Mode */
+            /* Interactive Web View Mode with Instant Loading Feedback & Timeout Fallback */
             <div className="w-full flex flex-col items-center gap-3">
-              <div className="w-full h-80 sm:h-96 rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-black/40 relative shadow-inner">
+              <div className="w-full h-80 sm:h-96 rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#090c14] relative shadow-inner">
+                {isWebViewLoading && (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 p-5 text-center bg-slate-100/95 dark:bg-[#090c14]/95">
+                    <Loader2 size={24} className="animate-spin text-[#027DFD] dark:text-[#00C7FF]" />
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-100">
+                        {lang === 'ar'
+                          ? 'جارٍ تحميل وثيقة الشهادة...'
+                          : 'Loading official certificate preview...'}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {lang === 'ar'
+                          ? 'قد يستغرق عارض Google Drive بضع ثوانٍ'
+                          : 'External Google Drive viewer may take a moment'}
+                      </p>
+                    </div>
+                    {showSlowHint && certificate.credentialUrl && (
+                      <a
+                        href={certificate.credentialUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#027DFD] hover:bg-[#026ae0] text-white text-xs font-bold shadow-sm transition-colors"
+                      >
+                        <span>
+                          {lang === 'ar' ? 'فتح الوثيقة فوراً في نافذة جديدة' : 'Open Official Document Directly'}
+                        </span>
+                        <ExternalLink size={12} />
+                      </a>
+                    )}
+                  </div>
+                )}
                 {embedUrl && (
                   <iframe
                     src={embedUrl}
                     title={certificate.title}
-                    className="w-full h-full border-0"
+                    onLoad={() => setIsWebViewLoading(false)}
+                    className={`w-full h-full border-0 transition-opacity duration-300 ${
+                      isWebViewLoading ? 'opacity-0' : 'opacity-100'
+                    }`}
                     allow="autoplay"
-                    loading="lazy"
                   />
                 )}
               </div>
               <p className="text-[11px] text-slate-500 dark:text-gray-400 text-center">
                 {lang === 'ar'
-                  ? 'معاينة حية للوثيقة. يمكنك أيضاً فتح المصدر الرسمي عبر الزر بالأسفل.'
-                  : 'Live document preview. You can also view the official certificate directly via the button below.'}
+                  ? 'معاينة حية للوثيقة. يمكنك دائماً فتح المصدر الرسمي مباشرة من الزر بالأسفل.'
+                  : 'Live document preview. You can also open the official credential directly anytime.'}
               </p>
             </div>
           )}

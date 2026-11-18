@@ -66,14 +66,13 @@ body {
   letter-spacing: -0.011em;
   overflow-x: hidden;
   background-image:
-    radial-gradient(ellipse 75% 48% at 50% -15%, rgba(2, 125, 253, 0.11), transparent 72%),
-    radial-gradient(ellipse 55% 40% at 88% 18%, rgba(0, 199, 255, 0.07), transparent 68%);
-  background-attachment: fixed;
+    radial-gradient(ellipse 75% 48% at 50% -12%, rgba(2, 125, 253, 0.1), transparent 72%),
+    radial-gradient(ellipse 55% 40% at 88% 18%, rgba(0, 199, 255, 0.06), transparent 68%);
 }
 
 html.light body {
   background-image:
-    radial-gradient(ellipse 75% 48% at 50% -15%, rgba(2, 125, 253, 0.05), transparent 72%),
+    radial-gradient(ellipse 75% 48% at 50% -12%, rgba(2, 125, 253, 0.05), transparent 72%),
     radial-gradient(ellipse 55% 40% at 88% 18%, rgba(0, 86, 204, 0.03), transparent 68%);
 }
 
@@ -198,6 +197,27 @@ h1 {
   letter-spacing: -0.032em;
 }
 
+/* Geometric Eyebrow Font for Hero "Meet" Lead-In */
+.font-meet-accent {
+  font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-style: normal;
+  letter-spacing: -0.01em;
+}
+
+.font-display {
+  font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+html[dir="rtl"] .font-meet-accent,
+html.rtl-mode .font-meet-accent,
+html[dir="rtl"] .font-display,
+html.rtl-mode .font-display {
+  font-family: 'Cairo', system-ui, sans-serif;
+  font-style: normal;
+  letter-spacing: normal;
+}
+
 /* Shared Surface Primitives */
 .glass-nav {
   background: var(--nav-bg);
@@ -233,20 +253,20 @@ html.light .ambient-glow-top {
    ========================================================= */
 .bg-architectural-grid {
   background-image:
-    radial-gradient(circle at 1px 1px, rgba(0, 199, 255, 0.085) 1px, transparent 0),
-    linear-gradient(to right, rgba(255, 255, 255, 0.038) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.038) 1px, transparent 1px);
+    radial-gradient(circle at 1px 1px, rgba(0, 199, 255, 0.065) 1px, transparent 0),
+    linear-gradient(to right, rgba(255, 255, 255, 0.032) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.032) 1px, transparent 1px);
   background-size: 32px 32px;
-  -webkit-mask-image: radial-gradient(ellipse 88% 74% at 50% 24%, #000 32%, transparent 94%);
-  mask-image: radial-gradient(ellipse 88% 74% at 50% 24%, #000 32%, transparent 94%);
+  contain: strict;
+  transform: translateZ(0);
   pointer-events: none;
 }
 
 html.light .bg-architectural-grid {
   background-image:
-    radial-gradient(circle at 1px 1px, rgba(2, 125, 253, 0.075) 1px, transparent 0),
-    linear-gradient(to right, rgba(15, 23, 42, 0.042) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.042) 1px, transparent 1px);
+    radial-gradient(circle at 1px 1px, rgba(2, 125, 253, 0.06) 1px, transparent 0),
+    linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
 }
 
 /* Subtle Scrollbar */
@@ -410,5 +430,82 @@ html.light .skeleton-shimmer {
     transform: none;
   }
 }
+
+/* =========================================================
+   GENTLE CSS FLOATING ANIMATIONS (HEADSHOT & BRAND EMBLEM)
+   ========================================================= */
+@keyframes gentleFloatY {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0);
+  }
+}
+
+@keyframes gentleFloatSway {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate3d(3px, -4px, 0) rotate(1.5deg);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0) rotate(0deg);
+  }
+  75% {
+    transform: translate3d(-3px, -3px, 0) rotate(-1.5deg);
+  }
+}
+
+.animate-float-gentle {
+  animation: gentleFloatY 4.4s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-float-sway {
+  animation: gentleFloatSway 4.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-gentle,
+  .animate-float-sway,
+  .skill-shimmer-card::after {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* Tier 1 GPU-Composited Skill Card Hover Shimmer */
+.skill-shimmer-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.skill-shimmer-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(2, 125, 253, 0.08) 48%,
+    rgba(0, 199, 255, 0.12) 52%,
+    transparent 80%
+  );
+  transform: translate3d(-120%, 0, 0);
+  transition: transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.skill-shimmer-card:hover::after {
+  transform: translate3d(120%, 0, 0);
+}
+
+[dir="rtl"] .progress-bar {
+  transform-origin: right;
+}
+
 
 

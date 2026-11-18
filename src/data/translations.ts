@@ -50,14 +50,19 @@ export interface Translations {
   };
   hero: {
     statusBadge: string;
+    openToWorkBadge: string;
     location: string;
     thisIs: string;
     name: string;
     headlineRole: string;
+    tagline: string;
+    subAvailability: string;
     specializedIn: string;
     rotatingWords: string[];
     bio: string;
     exploreApps: string;
+    hireMe: string;
+    startProject: string;
     resumeCv: string;
     downloadCv: string;
     bookMeeting: string;
@@ -287,11 +292,14 @@ export const translations: Record<Language, Translations> = {
       },
     },
     hero: {
-      statusBadge: "Available for Mobile Roles & Projects",
+      statusBadge: "Open to Work · Full-Time & Freelance",
+      openToWorkBadge: "Open to Work",
       location: "Egypt (Open to Remote & Relocation)",
-      thisIs: "This is",
+      thisIs: "Meet",
       name: "Ahmed El-Bialy",
-      headlineRole: "Junior Flutter & Mobile App Developer",
+      headlineRole: "Flutter Mobile Developer",
+      tagline: "Building clean, fast apps people actually use.",
+      subAvailability: "Open to full-time & freelance opportunities",
       specializedIn: "Specialized in",
       specialistBadge: "Flutter & AI Specialist",
       rotatingWords: [
@@ -301,8 +309,10 @@ export const translations: Record<Language, Translations> = {
         "Production Google Play Apps",
         "REST APIs & Offline Storage (Hive)",
       ],
-      bio: "Junior Flutter & Mobile Application Developer dedicated to building robust, scalable cross-platform apps for Android and iOS with Clean Architecture, BLoC/Cubit, offline-first storage (Hive), and RESTful API integrations. Creator of 'Revio', published live on Google Play.",
-      exploreApps: "Explore My Apps",
+      bio: "Flutter Mobile Developer & AI student at Kafrelsheikh University building production Android and iOS apps with Clean Architecture, BLoC/Cubit, Hive, and REST APIs. Creator of Revio live on Google Play.",
+      exploreApps: "View Projects",
+      hireMe: "Hire Me",
+      startProject: "Start a Project",
       resumeCv: "Resume / CV",
       downloadCv: "Download CV",
       bookMeeting: "Book Meeting",
@@ -576,11 +586,14 @@ export const translations: Record<Language, Translations> = {
       },
     },
     hero: {
-      statusBadge: "متاح لفرص العمل وتطوير التطبيقات",
+      statusBadge: "متاح للعمل · توظيف وعمل حر",
+      openToWorkBadge: "متاح للعمل",
       location: "مصر (متاح للعمل عن بُعد أو الانتقال)",
-      thisIs: "أهلاً بك، أنا",
+      thisIs: "تعرّف على",
       name: "أحمد البيلي",
-      headlineRole: "مطور تطبيقات فلاتر وموبايل (Junior Flutter Developer)",
+      headlineRole: "مطور Flutter للجوال",
+      tagline: "ببني تطبيقات نظيفة وسريعة يستخدمها الناس فعلاً.",
+      subAvailability: "متاح لفرص التوظيف والعمل الحر",
       specializedIn: "متخصص في",
       specialistBadge: "أخصائي Flutter والذكاء الاصطناعي",
       rotatingWords: [
@@ -590,8 +603,10 @@ export const translations: Record<Language, Translations> = {
         "تطبيقات حقيقية منشورة على متجر Google Play",
         "تكامل الـ REST APIs والتخزين المحلي عبر Hive",
       ],
-      bio: "مطور تطبيقات هواتف جونيور متخصص في Flutter & Dart وطالب ذكاء اصطناعي. أركز على بناء وتطوير تطبيقات جوال متقدمة وعالية الكفاءة لنظامي Android و iOS باتباع معمارية Clean Architecture، وإدارة الحالة BLoC/Cubit، والتخزين الداخلي السريع، والربط بالواجهات البرمجية REST APIs. مبرمج ومطور تطبيق 'Revio' المنشور على متجر Google Play.",
-      exploreApps: "استكشف تطبيقاتي",
+      bio: "مطور تطبيقات Flutter وطالب بكلية الذكاء الاصطناعي — جامعة كفر الشيخ. أبني تطبيقات Android و iOS احترافية باستخدام Clean Architecture و BLoC/Cubit و Hive، ومطوّر تطبيق Revio المنشور على Google Play.",
+      exploreApps: "شوف الأعمال",
+      hireMe: "وظّفني",
+      startProject: "ابدأ مشروع",
       resumeCv: "السيرة الذاتية / CV",
       downloadCv: "تحميل السيرة الذاتية (CV)",
       bookMeeting: "حجز موعد واستشارة",

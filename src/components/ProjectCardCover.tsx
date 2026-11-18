@@ -478,7 +478,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                   e.stopPropagation();
                   setShowingCoverArt(false);
                 }}
-                className="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white text-[11px] font-semibold backdrop-blur-xs cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white text-[11px] font-semibold backdrop-blur-xs cursor-pointer border border-white/15"
               >
                 {lang === 'ar' ? 'عرض الشاشات' : 'Show App Screens'}
               </button>

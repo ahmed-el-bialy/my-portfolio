@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-    <title>Ahmed El-Bialy | Flutter Mobile Developer & AI Student</title>
+    <title>Ahmed El-Bialy | Flutter Mobile Developer — Open to Work</title>
 
     <!-- Browser Tab Favicon & App Icons (Zoomed Original Leaf Emblem) -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=6" />
@@ -12,15 +12,16 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=6" />
     <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=6" />
     <link rel="apple-touch-icon" href="/favicon-192.png?v=6" />
+    <link rel="preload" as="image" href="/brand-logo-mark.png?v=6" />
 
     <!-- SEO & Canonical -->
     <meta
       name="description"
-      content="Portfolio of Ahmed El-Bialy — Flutter Mobile Developer & AI Student. Creator of Revio on Google Play, engineered with Clean Architecture, BLoC/Cubit, Hive, and live GitHub sync."
+      content="Ahmed El-Bialy — Flutter Mobile Developer in Egypt, open to work. Building Clean Architecture Android & iOS apps with BLoC/Cubit, Hive, and Revio live on Google Play."
     />
     <meta
       name="keywords"
-      content="Ahmed El-Bialy, Flutter Developer, Mobile App Developer, Dart, Clean Architecture, BLoC, Cubit, Hive, Revio Google Play, Kafrelsheikh AI"
+      content="Ahmed El-Bialy, Flutter Mobile Developer, Flutter Developer Egypt, Open to Work, Dart, Clean Architecture, BLoC, Cubit, Hive, Revio Google Play, Kafrelsheikh AI"
     />
     <meta name="author" content="Ahmed El-Bialy" />
     <meta name="theme-color" content="#08090d" media="(prefers-color-scheme: dark)" />
@@ -59,27 +60,27 @@
     <!-- OpenGraph & Twitter Social Cards (LinkedIn & WhatsApp Link Previews) -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://ahmed-el-bialy.vercel.app/" />
-    <meta property="og:title" content="Ahmed El-Bialy · Flutter Mobile Engineer & AI Student (Open to Work)" />
+    <meta property="og:title" content="Ahmed El-Bialy | Flutter Mobile Developer — Open to Work" />
     <meta
       property="og:description"
-      content="Explore live Flutter mobile apps on interactive device screens, Clean Architecture specs, video demos & Revio live on Google Play."
+      content="Flutter Mobile Developer in Egypt — Building clean, fast Android & iOS apps people actually use. Creator of Revio live on Google Play."
     />
-    <meta property="og:image" content="https://ahmed-el-bialy.vercel.app/og-image.jpg?v=9" />
-    <meta property="og:image:secure_url" content="https://ahmed-el-bialy.vercel.app/og-image.jpg?v=9" />
+    <meta property="og:image" content="https://ahmed-el-bialy.vercel.app/og-image.jpg?v=10" />
+    <meta property="og:image:secure_url" content="https://ahmed-el-bialy.vercel.app/og-image.jpg?v=10" />
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Ahmed El-Bialy — Flutter Mobile Developer, Open to Work, Creator of Revio on Google Play" />
-    <meta property="og:site_name" content="Ahmed El-Bialy · Flutter & AI Portfolio" />
+    <meta property="og:image:alt" content="Ahmed El-Bialy — Flutter Mobile Developer with Revio App Preview" />
+    <meta property="og:site_name" content="Ahmed El-Bialy | Flutter Mobile Developer" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Ahmed El-Bialy · Flutter Mobile Engineer & AI Student" />
+    <meta name="twitter:title" content="Ahmed El-Bialy | Flutter Mobile Developer — Open to Work" />
     <meta
       name="twitter:description"
-      content="Interactive Flutter device showcase, Clean Architecture case studies, live video demos & Revio on Google Play."
+      content="Interactive Flutter showcase, Clean Architecture case studies & Revio live on Google Play."
     />
-    <meta name="twitter:image" content="https://ahmed-el-bialy.vercel.app/og-image.jpg?v=9" />
-    <meta name="twitter:image:alt" content="Ahmed El-Bialy — Flutter Mobile Developer Showcase" />
+    <meta name="twitter:image" content="https://ahmed-el-bialy.vercel.app/og-image.jpg?v=10" />
+    <meta name="twitter:image:alt" content="Ahmed El-Bialy — Flutter Mobile Developer" />
 
     <!-- Runtime Origin Fallback for Dynamic URLs -->
     <script>
@@ -92,7 +93,7 @@
             link.href = origin + window.location.pathname;
             document.head.appendChild(link);
             if (!origin.includes('localhost') && !origin.includes('127.0.0.1')) {
-              var posterUrl = origin + '/og-image.jpg?v=9';
+              var posterUrl = origin + '/og-image.jpg?v=10';
               var ogImg = document.querySelector('meta[property="og:image"]');
               var ogSecImg = document.querySelector('meta[property="og:image:secure_url"]');
               var twImg = document.querySelector('meta[name="twitter:image"]');
@@ -107,7 +108,7 @@
       })();
     </script>
 
-    <!-- Google Fonts: Outfit (Display), Plus Jakarta Sans (Body), JetBrains Mono (Code), Cairo (Arabic RTL) -->
+    <!-- Google Fonts: Outfit (Display & Eyebrow), Plus Jakarta Sans (Body), JetBrains Mono (Code), Cairo (Arabic RTL) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -115,44 +116,67 @@
       rel="stylesheet"
     />
 
-    <!-- Schema.org Person Structured Data (JSON-LD) -->
+    <!-- Schema.org Structured Data Graph: Person + SoftwareApplication (Revio) -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "Person",
-        "name": "Ahmed El-Bialy",
-        "alternateName": ["Ahmed Elbialy", "أحمد البيلي"],
-        "jobTitle": "Flutter Mobile Developer",
-        "description": "Junior Flutter Mobile Developer and Artificial Intelligence undergraduate building Clean Architecture Android and iOS applications, creator of Revio on Google Play.",
-        "url": "https://ahmed-el-bialy.vercel.app/",
-        "email": "mailto:ah.elbialy.dev@gmail.com",
-        "telephone": "+201022121573",
-        "nationality": {
-          "@type": "Country",
-          "name": "Egypt"
-        },
-        "alumniOf": {
-          "@type": "EducationalOrganization",
-          "name": "Faculty of Artificial Intelligence, Kafrelsheikh University"
-        },
-        "sameAs": [
-          "https://github.com/ahmed-el-bialy",
-          "https://www.linkedin.com/in/ahmedel-bialy/",
-          "https://www.youtube.com/@AhmedEl-Bialy",
-          "https://www.tiktok.com/@ahmedelbialydev",
-          "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US"
-        ],
-        "knowsAbout": [
-          "Flutter",
-          "Dart",
-          "Clean Architecture",
-          "BLoC",
-          "Cubit",
-          "Hive",
-          "Dio",
-          "Retrofit",
-          "Firebase Firestore",
-          "Artificial Intelligence"
+        "@graph": [
+          {
+            "@type": "Person",
+            "@id": "https://ahmed-el-bialy.vercel.app/#person",
+            "name": "Ahmed El-Bialy",
+            "alternateName": ["Ahmed Elbialy", "أحمد البيلي"],
+            "jobTitle": "Flutter Mobile Developer",
+            "description": "Flutter Mobile Developer and Artificial Intelligence undergraduate in Egypt building Clean Architecture Android and iOS applications, creator of Revio on Google Play.",
+            "url": "https://ahmed-el-bialy.vercel.app/",
+            "email": "mailto:ah.elbialy.dev@gmail.com",
+            "telephone": "+201022121573",
+            "nationality": {
+              "@type": "Country",
+              "name": "Egypt"
+            },
+            "alumniOf": {
+              "@type": "EducationalOrganization",
+              "name": "Faculty of Artificial Intelligence, Kafrelsheikh University"
+            },
+            "sameAs": [
+              "https://github.com/ahmed-el-bialy",
+              "https://www.linkedin.com/in/ahmedel-bialy/",
+              "https://www.youtube.com/@AhmedEl-Bialy",
+              "https://www.tiktok.com/@ahmedelbialydev",
+              "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US"
+            ],
+            "knowsAbout": [
+              "Flutter",
+              "Dart",
+              "Clean Architecture",
+              "BLoC",
+              "Cubit",
+              "Hive",
+              "Dio",
+              "Retrofit",
+              "Firebase Firestore",
+              "Artificial Intelligence"
+            ]
+          },
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://play.google.com/store/apps/details?id=com.ahmed.revio",
+            "name": "Revio",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Android",
+            "description": "Offline-first Flutter flashcard and active-recall quiz application featuring 3D flip animations, smart typo-tolerant quiz modes, Clean Architecture, Cubit, and Hive local storage.",
+            "url": "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US",
+            "downloadUrl": "https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US",
+            "author": {
+              "@id": "https://ahmed-el-bialy.vercel.app/#person"
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          }
         ]
       }
     </script>

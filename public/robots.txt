@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ahmed-el-bialy.vercel.app/sitemap.xml

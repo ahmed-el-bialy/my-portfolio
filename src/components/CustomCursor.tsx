@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useReducedMotion } from 'framer-motion';
 
 export const CustomCursor: React.FC = () => {
@@ -16,16 +16,22 @@ export const CustomCursor: React.FC = () => {
   const [isLightMode, setIsLightMode] = useState(false);
   const [isOverIframe, setIsOverIframe] = useState(false);
 
+  const isVisibleRef = useRef(false);
+  const isOverIframeRef = useRef(false);
+  const isHoveredRef = useRef(false);
+  const cursorLabelRef = useRef<string | null>(null);
+
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
 
-  // Smooth, refined spring physics for high-end trailing feel
-  const springConfig = { damping: 24, stiffness: 310, mass: 0.42 };
+  // Smooth, refined spring physics for trailing ring
+  const springConfig = { damping: 24, stiffness: 320, mass: 0.4 };
   const smoothX = useSpring(cursorX, springConfig);
   const smoothY = useSpring(cursorY, springConfig);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) {
+    if (typeof window === 'undefined') return;
+    if (window.matchMedia('(pointer: coarse)').matches || prefersReducedMotion) {
       setIsTouchDevice(true);
       return;
     }
@@ -38,8 +44,8 @@ export const CustomCursor: React.FC = () => {
     };
 
     checkTheme();
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
+    const themeObserver = new MutationObserver(checkTheme);
+    themeObserver.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class', 'data-theme'],
     });
@@ -47,8 +53,14 @@ export const CustomCursor: React.FC = () => {
     const moveCursor = (e: MouseEvent) => {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
-      if (!isVisible) setIsVisible(true);
-      if (isOverIframe) setIsOverIframe(false);
+      if (!isVisibleRef.current) {
+        isVisibleRef.current = true;
+        setIsVisible(true);
+      }
+      if (isOverIframeRef.current) {
+        isOverIframeRef.current = false;
+        setIsOverIframe(false);
+      }
     };
 
     const handleMouseDown = () => setIsClicking(true);
@@ -58,74 +70,80 @@ export const CustomCursor: React.FC = () => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
 
-      if (
+      const overFrame = Boolean(
         target.tagName === 'IFRAME' ||
-        target.closest('iframe, .iframe-container, [data-media-embed="true"]')
-      ) {
-        setIsOverIframe(true);
-        setCursorLabel(null);
+          target.closest('iframe, .iframe-container, [data-media-embed="true"]')
+      );
+      if (overFrame) {
+        if (!isOverIframeRef.current) {
+          isOverIframeRef.current = true;
+          setIsOverIframe(true);
+        }
+        if (cursorLabelRef.current !== null) {
+          cursorLabelRef.current = null;
+          setCursorLabel(null);
+        }
         return;
       }
 
-      // Show contextual label only on designated card surfaces when NOT hovering nested buttons/links/inputs
       const nestedControl = target.closest('button, a, input, textarea, select');
       const cardContainer = target.closest('[data-cursor-label]');
-      const labelAttr = !nestedControl && cardContainer ? cardContainer.getAttribute('data-cursor-label') : null;
-      setCursorLabel(labelAttr || null);
+      const nextLabel =
+        !nestedControl && cardContainer ? cardContainer.getAttribute('data-cursor-label') : null;
 
-      const interactive = target.closest(
-        'button, a, input, textarea, select, .card-techno, [role="button"], [data-cursor="pointer"], [data-cursor-label], .cursor-pointer'
+      if (cursorLabelRef.current !== nextLabel) {
+        cursorLabelRef.current = nextLabel;
+        setCursorLabel(nextLabel);
+      }
+
+      const nextHover = Boolean(
+        target.closest(
+          'button, a, input, textarea, select, .card-techno, [role="button"], [data-cursor="pointer"], [data-cursor-label], .cursor-pointer'
+        )
       );
-      setIsHovered(Boolean(interactive));
+      if (isHoveredRef.current !== nextHover) {
+        isHoveredRef.current = nextHover;
+        setIsHovered(nextHover);
+      }
     };
 
     const handleMouseLeave = () => {
+      isVisibleRef.current = false;
+      cursorLabelRef.current = null;
       setIsVisible(false);
       setCursorLabel(null);
     };
 
     const handleMouseEnter = () => {
+      isVisibleRef.current = true;
       setIsVisible(true);
     };
 
     const handleWindowBlur = () => {
       if (document.activeElement?.tagName === 'IFRAME') {
+        isOverIframeRef.current = true;
+        cursorLabelRef.current = null;
         setIsOverIframe(true);
         setCursorLabel(null);
       }
     };
 
     const handleWindowFocus = () => {
+      isOverIframeRef.current = false;
       setIsOverIframe(false);
     };
 
-    const attachIframeListeners = () => {
-      const iframes = document.querySelectorAll('iframe');
-      iframes.forEach((iframe) => {
-        iframe.addEventListener('mouseenter', () => {
-          setIsOverIframe(true);
-          setCursorLabel(null);
-        });
-        iframe.addEventListener('mouseleave', () => setIsOverIframe(false));
-      });
-    };
-
-    attachIframeListeners();
-    const iframeObserver = new MutationObserver(attachIframeListeners);
-    iframeObserver.observe(document.body, { childList: true, subtree: true });
-
-    window.addEventListener('mousemove', moveCursor);
-    window.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('mouseover', handleMouseOver);
+    window.addEventListener('mousemove', moveCursor, { passive: true });
+    window.addEventListener('mousedown', handleMouseDown, { passive: true });
+    window.addEventListener('mouseup', handleMouseUp, { passive: true });
+    window.addEventListener('mouseover', handleMouseOver, { passive: true });
     window.addEventListener('blur', handleWindowBlur);
     window.addEventListener('focus', handleWindowFocus);
     document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('mouseenter', handleMouseEnter);
 
     return () => {
-      observer.disconnect();
-      iframeObserver.disconnect();
+      themeObserver.disconnect();
       window.removeEventListener('mousemove', moveCursor);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
@@ -135,7 +153,7 @@ export const CustomCursor: React.FC = () => {
       document.removeEventListener('mouseleave', handleMouseLeave);
       document.removeEventListener('mouseenter', handleMouseEnter);
     };
-  }, [cursorX, cursorY, isVisible, isOverIframe]);
+  }, [cursorX, cursorY, prefersReducedMotion]);
 
   if (isTouchDevice || prefersReducedMotion || !isVisible) return null;
 
@@ -145,7 +163,7 @@ export const CustomCursor: React.FC = () => {
     <div className="pointer-events-none fixed inset-0 z-[99999] overflow-hidden select-none">
       {/* 1. Core Pinpoint Dot */}
       <motion.div
-        className="fixed top-0 left-0 rounded-full pointer-events-none shadow-sm"
+        className="fixed top-0 left-0 rounded-full pointer-events-none"
         style={{
           x: cursorX,
           y: cursorY,
@@ -198,8 +216,8 @@ export const CustomCursor: React.FC = () => {
             : 'rgba(56, 189, 248, 0.42)',
           backgroundColor: hasLabel
             ? isLightMode
-              ? 'rgba(255, 255, 255, 0.92)'
-              : 'rgba(15, 17, 23, 0.9)'
+              ? 'rgba(255, 255, 255, 0.94)'
+              : 'rgba(15, 17, 23, 0.92)'
             : isLightMode
             ? isHovered
               ? 'rgba(2, 125, 253, 0.08)'
@@ -208,13 +226,6 @@ export const CustomCursor: React.FC = () => {
             ? 'rgba(0, 199, 255, 0.1)'
             : 'rgba(56, 189, 248, 0.03)',
           scale: isClicking ? 0.85 : isOverIframe ? 1.25 : 1,
-          boxShadow: hasLabel
-            ? '0 8px 24px -6px rgba(2, 125, 253, 0.3)'
-            : isHovered
-            ? isLightMode
-              ? '0 0 14px -2px rgba(2, 125, 253, 0.22)'
-              : '0 0 18px -2px rgba(0, 199, 255, 0.32)'
-            : 'none',
         }}
         transition={{
           type: 'spring',

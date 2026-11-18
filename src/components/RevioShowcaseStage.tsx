@@ -141,23 +141,23 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
       {/* Interactive Multi-App Switcher Header */}
       <div className="space-y-3 pb-3.5 border-b border-slate-200/80 dark:border-white/8">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <Smartphone size={14} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
-            <span className="font-mono text-xs font-bold text-[#027DFD] dark:text-[#00C7FF] truncate">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Smartphone size={16} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
+            <span className="font-display text-base sm:text-lg font-extrabold text-slate-900 dark:text-white truncate tracking-tight">
               {activeProject.name}
             </span>
             {isRevio && revioPlayStats?.downloads && (
-              <span className="text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap tabular-nums">
+              <span className="font-display text-xs sm:text-[13px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap tabular-nums">
                 · {revioPlayStats.downloads} {lang === 'ar' ? 'تحميل' : 'Downloads'}
               </span>
             )}
             {isRevio && revioPlayStats?.rating && (
-              <span className="text-[11px] font-mono font-bold text-amber-500 whitespace-nowrap tabular-nums">
+              <span className="font-display text-xs sm:text-[13px] font-bold text-amber-500 whitespace-nowrap tabular-nums">
                 · ★ {revioPlayStats.rating}
               </span>
             )}
             {!isRevio && (
-              <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+              <span className="font-display text-xs font-semibold text-slate-500 dark:text-slate-400">
                 · Flutter App
               </span>
             )}
@@ -178,7 +178,7 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
                   key={appItem.id}
                   type="button"
                   onClick={() => handleSelectApp(appItem.repoName)}
-                  className={`relative px-3 py-1.5 rounded-lg text-[11px] font-mono font-bold transition-colors cursor-pointer whitespace-nowrap border min-h-[34px] ${
+                  className={`font-display relative px-3.5 py-1.5 rounded-lg text-xs sm:text-[13px] font-bold tracking-tight transition-colors cursor-pointer whitespace-nowrap border min-h-[36px] ${
                     active
                       ? 'text-white border-transparent'
                       : 'bg-slate-50 dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-[#027DFD]/40'
@@ -200,11 +200,11 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
       </div>
 
       {/* Main Interactive Phone Stage */}
-      <div className="my-4 flex-1 flex items-center justify-center min-h-[320px] sm:min-h-[340px]">
+      <div className="my-3 sm:my-4 flex-1 flex items-center justify-center min-h-[280px] sm:min-h-[340px]">
         <div className="w-full grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
           {/* Portrait Phone Mockup */}
           <div className="sm:col-span-6 flex justify-center">
-            <div className="relative w-[195px] sm:w-[225px] rounded-[34px] p-2.5 bg-[#0c101b] border-[3px] border-slate-300 dark:border-slate-700 shadow-2xl">
+            <div className="relative w-[178px] sm:w-[220px] rounded-[32px] sm:rounded-[34px] p-2 sm:p-2.5 bg-[#0c101b] border-[3px] border-slate-300 dark:border-slate-700 shadow-2xl">
               <div className="absolute top-3.5 left-1/2 -translate-x-1/2 z-20 w-14 h-3 rounded-full bg-slate-900 border border-slate-800 pointer-events-none" />
               <div
                 onClick={handleInspect}
@@ -249,10 +249,10 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
           {/* Interactive Details & Screen Controls */}
           <div className="sm:col-span-6 flex flex-col justify-between gap-3">
             <div>
-              <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white leading-tight">
+              <h3 className="font-display text-xl sm:text-[22px] font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
                 {activeProject.name}
               </h3>
-              <p className="text-xs font-semibold text-[#027DFD] dark:text-[#00C7FF] mt-0.5 line-clamp-1">
+              <p className="text-xs sm:text-[13px] font-semibold text-[#027DFD] dark:text-[#00C7FF] mt-1 line-clamp-1">
                 {activeProject.subtitle}
               </p>
               <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed line-clamp-3">
@@ -287,24 +287,24 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
                   type="button"
                   onClick={handlePrev}
                   aria-label="Previous screen"
-                  className="w-8 h-8 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#161b27] text-slate-700 dark:text-slate-200 flex items-center justify-center hover:border-[#027DFD] transition-colors cursor-pointer"
+                  className="w-10 h-10 sm:w-9 sm:h-9 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#161b27] text-slate-700 dark:text-slate-200 flex items-center justify-center hover:border-[#027DFD] transition-colors cursor-pointer"
                 >
-                  <ChevronLeft size={15} />
+                  <ChevronLeft size={16} />
                 </button>
                 <button
                   type="button"
                   onClick={handleNext}
                   aria-label="Next screen"
-                  className="w-8 h-8 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#161b27] text-slate-700 dark:text-slate-200 flex items-center justify-center hover:border-[#027DFD] transition-colors cursor-pointer"
+                  className="w-10 h-10 sm:w-9 sm:h-9 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#161b27] text-slate-700 dark:text-slate-200 flex items-center justify-center hover:border-[#027DFD] transition-colors cursor-pointer"
                 >
-                  <ChevronRight size={15} />
+                  <ChevronRight size={16} />
                 </button>
               </div>
 
               <button
                 type="button"
                 onClick={handleInspect}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] text-xs font-bold text-[#027DFD] dark:text-[#00C7FF] hover:text-white border border-[#027DFD]/20 transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[40px] sm:min-h-[36px] rounded-xl bg-[#027DFD]/10 hover:bg-[#027DFD] text-xs font-bold text-[#027DFD] dark:text-[#00C7FF] hover:text-white border border-[#027DFD]/20 transition-colors cursor-pointer whitespace-nowrap"
               >
                 <Layers size={13} />
                 <span>{lang === 'ar' ? 'فتح التفاصيل الكاملة' : 'Open Workspace'}</span>
@@ -321,7 +321,7 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
             href={playUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-kinetic inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold whitespace-nowrap shadow-xs"
+            className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold whitespace-nowrap shadow-xs"
           >
             <ExternalLink size={13} />
             <span>{lang === 'ar' ? 'تطبيق Revio على Google Play' : 'Get Revio on Google Play'}</span>
@@ -331,7 +331,7 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
             href={activeProject.links.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-kinetic inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-white/10 hover:bg-[#027DFD] text-white text-xs font-bold whitespace-nowrap shadow-xs"
+            className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-slate-900 dark:bg-white/10 hover:bg-[#027DFD] text-white text-xs font-bold whitespace-nowrap shadow-xs"
           >
             <ExternalLink size={13} />
             <span>
@@ -345,7 +345,7 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
             href={demoVideoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-kinetic inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 border border-red-500/25 text-xs font-semibold whitespace-nowrap"
+            className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-red-500/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 border border-red-500/25 text-xs font-semibold whitespace-nowrap"
           >
             <Youtube size={13} />
             <span>{t.projects.actions.watchDemo}</span>

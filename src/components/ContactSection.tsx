@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Mail,
   Send,
   Calendar,
   Copy,
@@ -14,9 +13,11 @@ import {
   RotateCcw,
   Github,
   Linkedin,
+  Mail,
+  Phone,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { DeveloperProfile, openEmailClient } from '../data/portfolioData';
+import { DeveloperProfile } from '../data/portfolioData';
 import { AHMED_CONFIG, getEgyptLocalTime } from '../data/config';
 import { WhatsAppLogo } from './TechLogos';
 import { useLanguage } from '../context/LanguageContext';
@@ -104,7 +105,12 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
     setSubmitStatus('idle');
 
     try {
-      const response = await fetch('https://formsubmit.co/ajax/ah.elbialy.dev@gmail.com', {
+      const formspreeId = import.meta.env.VITE_FORMSPREE_ID?.trim();
+      const endpoint = formspreeId
+        ? `https://formspree.io/f/${formspreeId}`
+        : 'https://formsubmit.co/ajax/ah.elbialy.dev@gmail.com';
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +125,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('FormSubmit error');
+        throw new Error('Contact delivery error');
       }
 
       setLastSubmittedName(name.trim());
@@ -299,7 +305,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={lang === 'ar' ? 'أحمد محمد' : 'Your full name'}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#027DFD] focus-visible:ring-2 focus-visible:ring-[#027DFD]/30 transition-colors"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#027DFD] focus-visible:ring-2 focus-visible:ring-[#027DFD]/30 transition-colors min-h-[44px]"
                   />
                 </div>
 
@@ -322,7 +328,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     }}
                     placeholder="name@company.com"
                     aria-invalid={Boolean(emailError)}
-                    className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus-visible:ring-2 transition-colors ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus-visible:ring-2 transition-colors min-h-[44px] ${
                       emailError
                         ? 'border-red-500 focus:border-red-500 focus-visible:ring-red-500/30'
                         : 'border-slate-200 dark:border-white/10 focus:border-[#027DFD] focus-visible:ring-[#027DFD]/30'
@@ -351,7 +357,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder={t.contact.form.messagePlaceholder}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#027DFD] focus-visible:ring-2 focus-visible:ring-[#027DFD]/30 transition-colors resize-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#027DFD] focus-visible:ring-2 focus-visible:ring-[#027DFD]/30 transition-colors resize-none"
                   />
                 </div>
 
@@ -447,26 +453,25 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 <div className="font-mono text-xs text-slate-900 dark:text-[#f1f5f9] font-semibold truncate mt-0.5">
                   {AHMED_CONFIG.email}
                 </div>
-                <div className="flex items-center gap-2 mt-2.5">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openEmailClient(AHMED_CONFIG.email, 'Mobile App Project Inquiry - Flutter Developer')
-                    }
-                    className="inline-flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors cursor-pointer"
+                <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                  <a
+                    href={`mailto:${AHMED_CONFIG.email}?subject=${encodeURIComponent(
+                      'Mobile App Project Inquiry - Flutter Developer'
+                    )}`}
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
                   >
-                    <Mail size={11} />
+                    <Mail size={12} />
                     <span>{lang === 'ar' ? 'مراسلة' : 'Compose'}</span>
-                  </button>
+                  </a>
                   <button
                     type="button"
                     onClick={() => handleCopy('email', AHMED_CONFIG.email)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[34px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
                   >
                     {copiedKey === 'email' ? (
-                      <Check size={11} className="text-emerald-500" />
+                      <Check size={12} className="text-emerald-500" />
                     ) : (
-                      <Copy size={11} />
+                      <Copy size={12} />
                     )}
                     <span>{copiedKey === 'email' ? (lang === 'ar' ? 'تم' : 'Copied') : lang === 'ar' ? 'نسخ' : 'Copy'}</span>
                   </button>
@@ -481,25 +486,32 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 <div className="font-mono text-xs text-slate-900 dark:text-[#f1f5f9] font-semibold truncate mt-0.5 tabular-nums">
                   {AHMED_CONFIG.phone}
                 </div>
-                <div className="flex items-center gap-2 mt-2.5">
+                <div className="flex flex-wrap items-center gap-2 mt-2.5">
                   <a
                     href={AHMED_CONFIG.socials.whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg bg-emerald-600/10 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-emerald-600/10 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] transition-colors"
                   >
-                    <WhatsAppLogo size={11} />
+                    <WhatsAppLogo size={12} />
                     <span>WhatsApp</span>
+                  </a>
+                  <a
+                    href={`tel:${AHMED_CONFIG.phone}`}
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
+                  >
+                    <Phone size={12} />
+                    <span>{lang === 'ar' ? 'اتصال' : 'Call'}</span>
                   </a>
                   <button
                     type="button"
                     onClick={() => handleCopy('phone', AHMED_CONFIG.phone)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[34px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
                   >
                     {copiedKey === 'phone' ? (
-                      <Check size={11} className="text-emerald-500" />
+                      <Check size={12} className="text-emerald-500" />
                     ) : (
-                      <Copy size={11} />
+                      <Copy size={12} />
                     )}
                     <span>{copiedKey === 'phone' ? (lang === 'ar' ? 'تم' : 'Copied') : lang === 'ar' ? 'نسخ' : 'Copy'}</span>
                   </button>
@@ -512,25 +524,25 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 <div className="font-mono text-xs text-slate-900 dark:text-[#f1f5f9] font-semibold truncate mt-0.5">
                   @{AHMED_CONFIG.githubUsername}
                 </div>
-                <div className="flex items-center gap-2 mt-2.5">
+                <div className="flex flex-wrap items-center gap-2 mt-2.5">
                   <a
                     href={AHMED_CONFIG.socials.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg bg-slate-200/80 dark:bg-white/10 hover:bg-[#027DFD] hover:text-white text-slate-800 dark:text-slate-200 font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 hover:bg-[#027DFD] hover:text-white text-slate-800 dark:text-slate-200 font-semibold text-[11px] transition-colors"
                   >
-                    <Github size={11} />
+                    <Github size={12} />
                     <span>{lang === 'ar' ? 'فتح' : 'Open'}</span>
                   </a>
                   <button
                     type="button"
                     onClick={() => handleCopy('github', AHMED_CONFIG.socials.github)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[34px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
                   >
                     {copiedKey === 'github' ? (
-                      <Check size={11} className="text-emerald-500" />
+                      <Check size={12} className="text-emerald-500" />
                     ) : (
-                      <Copy size={11} />
+                      <Copy size={12} />
                     )}
                     <span>{copiedKey === 'github' ? (lang === 'ar' ? 'تم' : 'Copied') : lang === 'ar' ? 'نسخ' : 'Copy'}</span>
                   </button>
@@ -543,25 +555,25 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 <div className="font-mono text-xs text-slate-900 dark:text-[#f1f5f9] font-semibold truncate mt-0.5">
                   in/ahmedel-bialy
                 </div>
-                <div className="flex items-center gap-2 mt-2.5">
+                <div className="flex flex-wrap items-center gap-2 mt-2.5">
                   <a
                     href={AHMED_CONFIG.socials.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
                   >
-                    <Linkedin size={11} />
+                    <Linkedin size={12} />
                     <span>{lang === 'ar' ? 'فتح' : 'Open'}</span>
                   </a>
                   <button
                     type="button"
                     onClick={() => handleCopy('linkedin', AHMED_CONFIG.socials.linkedin)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[34px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
                   >
                     {copiedKey === 'linkedin' ? (
-                      <Check size={11} className="text-emerald-500" />
+                      <Check size={12} className="text-emerald-500" />
                     ) : (
-                      <Copy size={11} />
+                      <Copy size={12} />
                     )}
                     <span>{copiedKey === 'linkedin' ? (lang === 'ar' ? 'تم' : 'Copied') : lang === 'ar' ? 'نسخ' : 'Copy'}</span>
                   </button>

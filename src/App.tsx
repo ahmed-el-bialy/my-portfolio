@@ -23,8 +23,9 @@ import { ProjectDetailsModal } from './components/ProjectDetailsModal';
 import { ThemeRevealOverlay } from './components/ThemeRevealOverlay';
 import { BrandLogoMark } from './components/BrandLogoMark';
 import { PageSkeletonLoader } from './components/PageSkeletonLoader';
-import { LEAF_ENTRY_DURATION_MS } from './components/LeafAnimation';
+import { OpeningBootOverlay } from './components/OpeningBootOverlay';
 import { preloadImageUrls } from './components/ImageWithSkeleton';
+import { VERIFIED_REPO_SCREENSHOTS } from './services/githubService';
 import { Github, Linkedin, Youtube, Mail, RefreshCw, ArrowUp, Terminal, Sparkles } from 'lucide-react';
 import { WhatsAppLogo, TikTokLogo } from './components/TechLogos';
 import { useLanguage } from './context/LanguageContext';
@@ -87,17 +88,10 @@ export default function App() {
   );
   const [lastSyncTime, setLastSyncTime] = useState<string>('Just now');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
-const SESSION_INTRO_KEY = 'ahmed_portfolio_intro_seen_v1';
-
   const [egyptClock, setEgyptClock] = useState<string>(() => getEgyptLocalTime(lang));
   const [showInitialSplash, setShowInitialSplash] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
-    try {
-      return window.sessionStorage.getItem(SESSION_INTRO_KEY) !== '1';
-    } catch {
-      return false;
-    }
+    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   });
 
   const profile = DEFAULT_PROFILE;
@@ -158,22 +152,14 @@ const SESSION_INTRO_KEY = 'ahmed_portfolio_intro_seen_v1';
   }, [isDark]);
 
   const handleSkipIntro = useCallback(() => {
-    try {
-      window.sessionStorage.setItem(SESSION_INTRO_KEY, '1');
-    } catch {
-      // ignore storage failure in private browsing
-    }
     setShowInitialSplash(false);
   }, []);
 
-  // Smart Session Entry: plays once per session (~1.45s skippable); subsequent reloads open straight to Hero
+  // Pre-warm primary Hero portrait & showcase cover during initial load
   useEffect(() => {
-    if (!showInitialSplash) return;
-    const timer = window.setTimeout(() => {
-      handleSkipIntro();
-    }, LEAF_ENTRY_DURATION_MS);
-    return () => window.clearTimeout(timer);
-  }, [showInitialSplash, handleSkipIntro]);
+    const revioFirst = VERIFIED_REPO_SCREENSHOTS.Revio?.[0];
+    preloadImageUrls([DEFAULT_PROFILE.avatarUrl, ...(revioFirst ? [revioFirst] : [])]);
+  }, []);
 
   // Keep Egypt local time fresh
   useEffect(() => {
@@ -182,6 +168,27 @@ const SESSION_INTRO_KEY = 'ahmed_portfolio_intro_seen_v1';
       setEgyptClock(getEgyptLocalTime(lang));
     }, 30000);
     return () => clearInterval(interval);
+  }, [lang]);
+
+  // Read automated sync timestamp from /last-updated.json
+  useEffect(() => {
+    let active = true;
+    fetch('/last-updated.json', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { lastUpdated?: string } | null) => {
+        if (!active || !data?.lastUpdated) return;
+        const parsed = new Date(data.lastUpdated);
+        if (Number.isNaN(parsed.getTime())) return;
+        const formatted = parsed.toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', {
+          month: 'short',
+          day: 'numeric',
+        });
+        setLastSyncTime(formatted);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
   }, [lang]);
 
   // Global CLI Easter Egg listener: typing "ahmed" outside input/textarea
@@ -430,6 +437,13 @@ const SESSION_INTRO_KEY = 'ahmed_portfolio_intro_seen_v1';
         {/* Interactive Cursor */}
         <CustomCursor />
 
+        {/* Opening Boot Overlay (Fixed above pre-mounted page; transitions cleanly into Hero on 100%) */}
+        <AnimatePresence>
+          {showInitialSplash && (
+            <OpeningBootOverlay isDark={isDark} onComplete={handleSkipIntro} />
+          )}
+        </AnimatePresence>
+
         {/* 3-Zone Header Navigation + Mobile Bottom Dock */}
         <Navbar
           activeTab={activeTab}
@@ -443,26 +457,9 @@ const SESSION_INTRO_KEY = 'ahmed_portfolio_intro_seen_v1';
         />
 
         {/* Focused Multi-View Main Stage with Unified Crossfade Transition */}
-        <main id="main-content" className="relative z-10 flex-1 pb-28 md:pb-12">
+        <main id="main-content" className="relative z-10 flex-1 pb-24 md:pb-12">
           <AnimatePresence mode="wait">
-            {showInitialSplash ? (
-              <motion.div
-                key="initial-leaf-stage"
-                initial={prefersReducedMotion ? false : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={prefersReducedMotion ? undefined : { opacity: 0 }}
-                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-                className="w-full"
-              >
-                <PageSkeletonLoader
-                  view={activeTab}
-                  isDark={isDark}
-                  pacing="entry"
-                  loop={false}
-                  onSkip={handleSkipIntro}
-                />
-              </motion.div>
-            ) : isSwitchingLang ? (
+            {isSwitchingLang ? (
               <motion.div
                 key="language-leaf-stage"
                 initial={prefersReducedMotion ? false : { opacity: 0 }}
@@ -477,6 +474,7 @@ const SESSION_INTRO_KEY = 'ahmed_portfolio_intro_seen_v1';
                   isDark={isDark}
                   pacing="artisan"
                   loop={false}
+                  showProgress={true}
                 />
               </motion.div>
             ) : (
@@ -499,6 +497,7 @@ const SESSION_INTRO_KEY = 'ahmed_portfolio_intro_seen_v1';
                     <HeroSection
                       profile={profile}
                       isDark={isDark}
+                      entryReady={!showInitialSplash}
                       onOpenContact={() => setIsContactOpen(true)}
                       onOpenResume={() => setIsResumeOpen(true)}
                       onOpenBooking={() => openBookingModal(null)}
@@ -526,7 +525,7 @@ const SESSION_INTRO_KEY = 'ahmed_portfolio_intro_seen_v1';
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
                   >
-                    <Suspense fallback={<PageSkeletonLoader view="projects" isDark={isDark} />}>
+                    <Suspense fallback={<PageSkeletonLoader view="projects" isDark={isDark} showProgress={true} />}>
                       <ProjectsSection
                         currentGithubUser={profile.githubUsername}
                         onRepoCountChange={setLiveRepoCount}
@@ -543,7 +542,7 @@ const SESSION_INTRO_KEY = 'ahmed_portfolio_intro_seen_v1';
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
                   >
-                    <Suspense fallback={<PageSkeletonLoader view="experience" isDark={isDark} />}>
+                    <Suspense fallback={<PageSkeletonLoader view="experience" isDark={isDark} showProgress={true} />}>
                       <ExperienceSection onOpenResume={() => setIsResumeOpen(true)} />
                       <StackSection />
                     </Suspense>
@@ -557,7 +556,7 @@ const SESSION_INTRO_KEY = 'ahmed_portfolio_intro_seen_v1';
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
                   >
-                    <Suspense fallback={<PageSkeletonLoader view="contact" isDark={isDark} />}>
+                    <Suspense fallback={<PageSkeletonLoader view="contact" isDark={isDark} showProgress={true} />}>
                       <ContactSection
                         profile={profile}
                         onOpenBooking={openBookingModal}
@@ -645,8 +644,8 @@ const SESSION_INTRO_KEY = 'ahmed_portfolio_intro_seen_v1';
           </button>
         )}
 
-        {/* Clean Responsive Obsidian / Light Studio Footer */}
-        <footer className="relative z-10 w-full border-t border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#0d1017]/95 backdrop-blur-sm pt-8 pb-28 lg:pb-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-600 dark:text-[#94a3b8] transition-colors">
+        {/* Clean Responsive Obsidian / Light Studio Glass Footer */}
+        <footer className="relative z-10 w-full border-t border-slate-200 dark:border-white/10 bg-white/90 dark:bg-[#0d1017]/90 backdrop-blur-md pt-8 pb-28 lg:pb-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-600 dark:text-[#94a3b8] transition-colors">
           <div className="max-w-[1440px] mx-auto flex flex-col gap-6 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-5">
               {/* Brand Identity + Live Sync Status (Left / Top) */}

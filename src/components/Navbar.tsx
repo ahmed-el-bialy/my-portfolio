@@ -77,20 +77,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      {/* 1. Strict 3-Zone Top Bar */}
-      <header className="fixed top-0 inset-x-0 z-50 border-b border-slate-200/80 dark:border-white/10 bg-[#f8fafc]/90 dark:bg-[#08090d]/90 backdrop-blur-xl transition-colors duration-200">
-        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4 lg:gap-8">
-          {/* Zone 1: Centered Logo Mark + Single-line Brand Wordmark */}
+      {/* 1. Strict 3-Zone Frosted Glass Top Bar */}
+      <header className="fixed top-0 inset-x-0 z-50 border-b border-slate-200/80 dark:border-white/10 bg-[#f8fafc]/80 dark:bg-[#08090d]/80 backdrop-blur-xl transition-colors duration-200">
+        <div className="w-full max-w-[1440px] mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4 lg:gap-8">
+          {/* Zone 1: Logo Mark + Single-line Brand Wordmark */}
           <button
             type="button"
             onClick={() => handleTabClick('overview')}
-            className="flex items-center gap-3 cursor-pointer group shrink-0 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#027DFD] rounded-lg px-1"
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#027DFD] rounded-lg px-0.5 sm:px-1"
           >
             <BrandLogoMark
-              sizeClassName="w-9 h-9"
+              sizeClassName="w-8 h-8 sm:w-9 sm:h-9"
               className="group-hover:scale-105 transition-transform"
             />
-            <span className="font-bold text-sm sm:text-base tracking-tight text-slate-900 dark:text-[#f1f5f9] group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF] transition-colors whitespace-nowrap shrink-0">
+            <span className="font-bold text-[13px] sm:text-base tracking-tight text-slate-900 dark:text-[#f1f5f9] group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF] transition-colors whitespace-nowrap truncate max-w-[132px] xs:max-w-[165px] sm:max-w-none">
               {AHMED_CONFIG.name[lang]}
             </span>
           </button>
@@ -130,11 +130,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Zone 3: Utilities & Primary Action */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               type="button"
               onClick={toggleLang}
-              className="h-9 px-2.5 rounded-lg flex items-center gap-1.5 bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-800 dark:text-[#f1f5f9] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              className="h-9 px-2 sm:px-2.5 rounded-lg flex items-center gap-1 sm:gap-1.5 bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-800 dark:text-[#f1f5f9] transition-colors cursor-pointer whitespace-nowrap shrink-0"
               aria-label={t.nav.switchLangTooltip}
               title={t.nav.switchLangTooltip}
             >
@@ -209,14 +209,14 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </header>
 
-      {/* 2. Compact Mobile Bottom Dock (< 768px, strictly <= 15% mobile height) */}
+      {/* 2. Compact Mobile Bottom Dock (< 768px) */}
       <nav
-        className={`md:hidden fixed bottom-2.5 inset-x-3 max-w-md mx-auto z-40 transition-all duration-200 ${
+        className={`md:hidden fixed bottom-2 inset-x-3 max-w-md mx-auto z-40 transition-transform duration-200 ${
           isAnyModalOpen ? 'opacity-0 pointer-events-none translate-y-6' : 'opacity-100 translate-y-0'
         }`}
         aria-label="Mobile Bottom Navigation"
       >
-        <div className="bg-white/95 dark:bg-[#0f1117]/95 backdrop-blur-xl border border-slate-200 dark:border-white/12 rounded-2xl shadow-xl p-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] grid grid-cols-4 gap-1">
+        <div className="bg-white/90 dark:bg-[#0f1117]/90 backdrop-blur-xl border border-slate-200 dark:border-white/12 rounded-2xl shadow-lg p-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] grid grid-cols-4 gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -246,7 +246,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* 3. Mobile Slide-Over Drawer */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-xs md:hidden"
+          className="fixed inset-0 z-[60] bg-black/65 backdrop-blur-sm md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         >
           <div

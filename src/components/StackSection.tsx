@@ -383,7 +383,7 @@ export const StackSection: React.FC = () => {
             placeholder={t.stack.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full py-2.5 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 text-xs sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#027DFD] transition-colors ps-9 pe-3.5 min-h-[40px]"
+            className="w-full py-2.5 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#027DFD] transition-colors ps-9 pe-3.5 min-h-[44px]"
           />
         </div>
       </RevealOnScroll>
@@ -397,7 +397,7 @@ export const StackSection: React.FC = () => {
               key={tab.id}
               type="button"
               onClick={() => setActiveCategory(tab.id)}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                 isActive
                   ? 'bg-[#027DFD] text-white shadow-xs'
                   : 'text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-[#f1f5f9]'
@@ -439,7 +439,7 @@ export const StackSection: React.FC = () => {
                   maxTilt={5}
                   glareOpacity={0.1}
                   onClick={() => setExpandedTechId(isExpanded ? null : tech.id)}
-                  className={`w-full group p-5 rounded-2xl bg-white dark:bg-[#0f1117] border transition-colors duration-200 flex flex-col cursor-pointer shadow-2xs hover:shadow-lg ${
+                  className={`skill-shimmer-card w-full group p-5 rounded-2xl bg-white dark:bg-[#0f1117] border transition-colors duration-200 flex flex-col cursor-pointer shadow-2xs hover:shadow-lg ${
                     isExpanded
                       ? 'border-[#027DFD]/65 ring-1 ring-[#027DFD]/20'
                       : 'border-slate-200 dark:border-white/10 hover:border-[#027DFD]/50'

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import {
   motion,
   useMotionValue,
@@ -19,14 +19,13 @@ interface TiltCardProps {
 }
 
 /**
- * Expressive 3D perspective TiltCard with subtle cursor-tracking specular sheen.
- * Strictly GPU-composited and automatically falls back on coarse touch or reduced motion.
+ * Lively GPU-composited TiltCard with responsive spring elevation and pointer glare.
  */
 export const TiltCard: React.FC<TiltCardProps> = ({
   children,
   className = '',
   maxTilt = 6,
-  glareOpacity = 0.14,
+  glareOpacity = 0.12,
   cursorLabel,
   onClick,
   onMouseEnter,
@@ -34,18 +33,11 @@ export const TiltCard: React.FC<TiltCardProps> = ({
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
-  const [isTouch, setIsTouch] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsTouch(window.matchMedia('(pointer: coarse)').matches);
-    }
-  }, []);
 
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
 
-  const springConfig = { stiffness: 260, damping: 22, mass: 0.45 };
+  const springConfig = { stiffness: 280, damping: 24, mass: 0.4 };
   const smoothX = useSpring(mouseX, springConfig);
   const smoothY = useSpring(mouseY, springConfig);
 
@@ -56,15 +48,13 @@ export const TiltCard: React.FC<TiltCardProps> = ({
   const glareBackground = useTransform(
     [glareX, glareY],
     ([gx, gy]) =>
-      `radial-gradient(420px circle at ${gx} ${gy}, rgba(255,255,255,0.42), transparent 65%)`
+      `radial-gradient(360px circle at ${gx} ${gy}, rgba(255,255,255,0.34), transparent 65%)`
   );
 
-  const [isHovered, setIsHovered] = useState(false);
-
-  const disabled = Boolean(prefersReducedMotion || isTouch);
+  const [isHovered, setIsHovered] = React.useState(false);
 
   const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (disabled || !ref.current) return;
+    if (prefersReducedMotion || !ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     const xPct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
     const yPct = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
@@ -84,7 +74,7 @@ export const TiltCard: React.FC<TiltCardProps> = ({
     onMouseLeave?.();
   };
 
-  if (disabled) {
+  if (prefersReducedMotion) {
     return (
       <div
         ref={ref}
@@ -107,8 +97,8 @@ export const TiltCard: React.FC<TiltCardProps> = ({
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
       onClick={onClick}
-      whileHover={{ y: -3 }}
-      transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+      whileHover={{ y: -3, scale: 1.008 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 22 }}
       style={{
         transformPerspective: 1100,
         rotateX,
@@ -116,7 +106,6 @@ export const TiltCard: React.FC<TiltCardProps> = ({
       }}
       className={`relative ${className}`}
     >
-      {/* Dynamic 3D Specular Light Glare */}
       <motion.div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 rounded-[inherit] z-20 transition-opacity duration-300"
@@ -136,7 +125,7 @@ interface FloatingPortraitProps {
 }
 
 /**
- * Signature levitating + pointer-tilting portrait wrapper for Ahmed's personal section.
+ * Lively pointer-reactive portrait frame with gentle ambient float and radial halo pulse.
  */
 export const FloatingPortrait: React.FC<FloatingPortraitProps> = ({
   children,
@@ -144,24 +133,17 @@ export const FloatingPortrait: React.FC<FloatingPortraitProps> = ({
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
-  const [isTouch, setIsTouch] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsTouch(window.matchMedia('(pointer: coarse)').matches);
-    }
-  }, []);
 
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
   const smoothX = useSpring(mouseX, { stiffness: 180, damping: 20 });
   const smoothY = useSpring(mouseY, { stiffness: 180, damping: 20 });
 
-  const rotateX = useTransform(smoothY, [0, 1], [10, -10]);
-  const rotateY = useTransform(smoothX, [0, 1], [-10, 10]);
+  const rotateX = useTransform(smoothY, [0, 1], [8, -8]);
+  const rotateY = useTransform(smoothX, [0, 1], [-8, 8]);
 
   const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (prefersReducedMotion || isTouch || !ref.current) return;
+    if (prefersReducedMotion || !ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     mouseX.set(Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width)));
     mouseY.set(Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height)));
@@ -173,7 +155,7 @@ export const FloatingPortrait: React.FC<FloatingPortraitProps> = ({
   };
 
   if (prefersReducedMotion) {
-    return <div className={className}>{children}</div>;
+    return <div className={`relative flex items-center justify-center ${className}`}>{children}</div>;
   }
 
   return (
@@ -184,40 +166,20 @@ export const FloatingPortrait: React.FC<FloatingPortraitProps> = ({
       className={`relative flex items-center justify-center ${className}`}
       style={{ perspective: 900 }}
     >
-      {/* Subtle Ambient Aura Behind Levitating Portrait */}
       <motion.div
         aria-hidden="true"
-        animate={{
-          scale: [0.95, 1.06, 0.95],
-          opacity: [0.35, 0.6, 0.35],
-        }}
-        transition={{
-          duration: 4.6,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        className="pointer-events-none absolute -inset-3 rounded-3xl bg-gradient-to-br from-[#027DFD]/25 via-[#00C7FF]/20 to-emerald-400/20 blur-xl"
+        className="pointer-events-none absolute -inset-3 rounded-3xl bg-gradient-to-br from-[#027DFD]/22 via-[#00C7FF]/14 to-emerald-400/20"
+        animate={{ scale: [0.97, 1.04, 0.97], opacity: [0.55, 0.9, 0.55] }}
+        transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
       />
-
-      {/* Continuous Levitation + Interactive 3D Tilt */}
       <motion.div
-        animate={{
-          y: [-5, 5, -5],
+        animate={{ y: [-4, 4, -4] }}
+        transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut' }}
+        style={{
+          transformPerspective: 900,
+          rotateX,
+          rotateY,
         }}
-        transition={{
-          duration: 4.4,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        style={
-          isTouch
-            ? undefined
-            : {
-                transformPerspective: 900,
-                rotateX,
-                rotateY,
-              }
-        }
         className="relative"
       >
         {children}

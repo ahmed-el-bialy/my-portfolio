@@ -635,7 +635,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const workspaceNode = (
     <div
       dir={dir}
-      className={`fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/75 backdrop-blur-md transition-all duration-200 ${
+      className={`fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/78 backdrop-blur-md transition-opacity duration-200 ${
         isFullPage ? 'p-0' : 'p-2 sm:p-5'
       }`}
       onClick={() => {
@@ -646,10 +646,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-label={project.name}
-        className={`relative flex flex-col overflow-hidden bg-white dark:bg-[#0b0e16] border-slate-200/90 dark:border-white/10 shadow-2xl transition-all duration-300 ${
+        className={`relative flex flex-col overflow-hidden bg-white dark:bg-[#0b0e16] border-slate-200/90 dark:border-white/10 shadow-2xl transition-all duration-200 ${
           isFullPage
             ? 'w-screen h-screen max-w-none max-h-none rounded-none border-0'
-            : 'w-full max-w-5xl h-[92vh] sm:h-[90vh] rounded-3xl border'
+            : 'w-full max-w-5xl h-[94dvh] sm:h-[90vh] rounded-2xl sm:rounded-3xl border'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -657,49 +657,19 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         <div className="px-4 sm:px-7 py-2.5 sm:py-3 bg-white dark:bg-[#0d111c] border-b border-slate-200/75 dark:border-white/8 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-white shrink-0 shadow-xs"
               style={{
                 background: `linear-gradient(135deg, ${appBlueprint.accentColor}, ${appBlueprint.secondaryAccent})`,
               }}
             >
-              <BlueprintIcon size={17} />
+              <BlueprintIcon size={16} />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2 min-w-0">
-                <h2 className="text-sm sm:text-base font-extrabold text-slate-950 dark:text-white truncate tracking-tight">
-                  {project.name}
-                </h2>
-                <span aria-hidden="true" className="text-slate-300 dark:text-slate-700 hidden sm:inline">
-                  ·
-                </span>
-                <span
-                  className="text-xs font-semibold truncate hidden sm:inline"
-                  style={{ color: appBlueprint.accentColor }}
-                >
-                  {appBlueprint.genre}
-                </span>
-              </div>
-              <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate flex items-center gap-x-2">
-                <span className="truncate">ahmed-el-bialy/{project.repoName}</span>
-                <span aria-hidden="true">·</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-medium shrink-0">
-                  {distributionLabel}
-                </span>
-                {realLanguage && (
-                  <>
-                    <span aria-hidden="true" className="hidden sm:inline">·</span>
-                    <span className="hidden sm:inline shrink-0">{realLanguage}</span>
-                  </>
-                )}
-                {realStarsCount !== null && realStarsCount > 0 && (
-                  <>
-                    <span aria-hidden="true" className="hidden sm:inline">·</span>
-                    <span className="hidden sm:inline-flex items-center gap-1 text-amber-500 font-medium tabular-nums shrink-0">
-                      <Star size={10} fill="currentColor" />
-                      {realStarsCount}
-                    </span>
-                  </>
-                )}
+              <h2 className="font-display text-base sm:text-lg font-extrabold text-slate-950 dark:text-white truncate tracking-tight">
+                {project.name}
+              </h2>
+              <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate">
+                ahmed-el-bialy/{project.repoName}
               </p>
             </div>
           </div>
@@ -814,17 +784,16 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           className="flex-1 overflow-y-auto scroll-smooth"
         >
           <div
-            className={`mx-auto px-4 sm:px-7 py-6 sm:py-8 space-y-10 ${
+            className={`mx-auto px-4 sm:px-7 py-5 sm:py-8 space-y-8 sm:space-y-10 ${
               isFullPage ? 'max-w-6xl' : 'max-w-5xl'
             }`}
           >
-            {/* SECTION 1: OVERVIEW, RECRUITER BRIEF & SIDE-BY-SIDE MEDIA STAGE */}
-            <section ref={overviewRef} id="workspace-overview" className="scroll-mt-4 space-y-7">
-              {/* Airy Open Editorial Executive Brief (No Heavy Enclosing Box) */}
+            {/* SECTION 1: AIRY MINIMALIST EXECUTIVE BRIEF & MEDIA STAGE */}
+            <section ref={overviewRef} id="workspace-overview" className="scroll-mt-4 space-y-6">
               <div className="space-y-4">
-                <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="space-y-1.5 max-w-2xl">
-                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-mono">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-mono">
                       <span
                         className="inline-flex items-center gap-1.5 font-semibold"
                         style={{ color: appBlueprint.accentColor }}
@@ -835,77 +804,52 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
                         ·
                       </span>
-                      <span className="text-slate-600 dark:text-slate-300">
-                        {appBlueprint.categoryBadge}
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                        {distributionLabel}
                       </span>
-                      <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
-                        ·
-                      </span>
-                      <span className="text-slate-500 dark:text-slate-400">
-                        Android &amp; iOS (Flutter)
-                      </span>
+                      {realPushedLabel && (
+                        <>
+                          <span aria-hidden="true" className="text-slate-300 dark:text-slate-700 hidden sm:inline">
+                            ·
+                          </span>
+                          <span className="text-slate-500 dark:text-slate-400 hidden sm:inline">
+                            {realPushedLabel}
+                          </span>
+                        </>
+                      )}
                     </div>
-                    <h3 className="text-2xl sm:text-[28px] font-extrabold text-slate-950 dark:text-white tracking-tight leading-tight">
+                    <h3 className="font-display text-2xl sm:text-[32px] font-extrabold text-slate-950 dark:text-white tracking-tight leading-tight">
                       {project.name}
                     </h3>
-                    <p className="text-xs sm:text-sm font-semibold text-[#027DFD] dark:text-[#7DD3FC]">
+                    <p className="font-display text-sm sm:text-[15px] font-semibold text-[#027DFD] dark:text-[#7DD3FC]">
                       {project.subtitle}
                     </p>
                   </div>
 
-                  {/* Verified Live Metrics Summary (Unboxed Typographic Discipline) */}
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono text-slate-600 dark:text-slate-300">
+                  {/* Verified Metrics Summary */}
+                  <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1 font-display text-sm sm:text-[15px] text-slate-600 dark:text-slate-300">
                     {isRevio && playStats?.downloads && (
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                      <span className="font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums">
                         {playStats.downloads} {lang === 'ar' ? 'تحميل' : 'Downloads'}
                       </span>
                     )}
                     {isRevio && playStats?.rating && (
-                      <span className="font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                      <span className="font-extrabold text-amber-600 dark:text-amber-400 tabular-nums">
                         ★ {playStats.rating}
                       </span>
                     )}
                     {realStarsCount !== null && realStarsCount > 0 && (
-                      <span className="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400 tabular-nums">
-                        <Star size={12} fill="currentColor" />
+                      <span className="inline-flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                        <Star size={14} fill="currentColor" />
                         {realStarsCount}
                       </span>
                     )}
                     {realForksCount !== null && realForksCount > 0 && (
-                      <span className="inline-flex items-center gap-1 tabular-nums">
-                        <GitFork size={12} />
+                      <span className="inline-flex items-center gap-1 font-semibold tabular-nums">
+                        <GitFork size={14} />
                         {realForksCount}
                       </span>
                     )}
-                  </div>
-                </div>
-
-                {/* Hairline Architectural Spec Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-3.5 border-y border-slate-200/75 dark:border-white/8 text-xs">
-                  <div>
-                    <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                      {lang === 'ar' ? 'تصنيف التطبيق' : 'App Category'}
-                    </div>
-                    <div className="font-bold text-slate-900 dark:text-white mt-0.5">
-                      {appBlueprint.genre}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                      {lang === 'ar' ? 'نمط المعمارية' : 'Engineering Pattern'}
-                    </div>
-                    <div className="font-bold text-slate-900 dark:text-white mt-0.5">
-                      {appBlueprint.architecturePattern}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                      {lang === 'ar' ? 'الحالة وآخر تحديث' : 'Status & Activity'}
-                    </div>
-                    <div className="font-bold text-slate-900 dark:text-white mt-0.5">
-                      {distributionLabel}
-                      {realPushedLabel ? ` · ${realPushedLabel}` : ''}
-                    </div>
                   </div>
                 </div>
 
@@ -913,10 +857,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   {displayDescription}
                 </p>
 
-                {/* Category-Consistent Stack Badges (Matches Outer Card Identity) */}
+                {/* Complete Project Stack Badges */}
                 {techTagObjects.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5">
-                    {techTagObjects.slice(0, 6).map((tag, idx) => (
+                    {techTagObjects.map((tag, idx) => (
                       <TechIconBadge
                         key={`${project.id}-modal-tag-${tag.id}-${idx}`}
                         label={tag.label}
@@ -926,6 +870,34 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     ))}
                   </div>
                 )}
+
+                {/* 3-Column Overview Highlight Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                  <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10">
+                    <div className="text-[10.5px] font-mono text-slate-500 dark:text-slate-400">
+                      {lang === 'ar' ? 'تصنيف التطبيق' : 'App Category'}
+                    </div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white mt-0.5 truncate">
+                      {appBlueprint.genre}
+                    </div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10">
+                    <div className="text-[10.5px] font-mono text-slate-500 dark:text-slate-400">
+                      {lang === 'ar' ? 'النمط الهندسي' : 'Engineering Pattern'}
+                    </div>
+                    <div className="text-xs font-bold text-[#027DFD] dark:text-[#00C7FF] mt-0.5 truncate">
+                      Clean Arch · BLoC / Cubit
+                    </div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10">
+                    <div className="text-[10.5px] font-mono text-slate-500 dark:text-slate-400">
+                      {lang === 'ar' ? 'حالة النشر' : 'Distribution'}
+                    </div>
+                    <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">
+                      {distributionLabel}
+                    </div>
+                  </div>
+                </div>
 
                 {/* Action Buttons Cluster */}
                 <div className="flex flex-wrap items-center gap-2.5 pt-1">
@@ -1723,14 +1695,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       {/* Fullscreen Keyboard-Navigable Gallery Lightbox */}
       {lightboxOpen && screenshots.length > 0 && (
         <div
-          className="fixed inset-0 z-[120] bg-black/95 flex flex-col items-center justify-center p-4 backdrop-blur-md"
+          className="fixed inset-0 z-[120] bg-black/95 flex flex-col items-center justify-center p-4"
           onClick={(e) => {
             e.stopPropagation();
             setLightboxOpen(false);
           }}
         >
           <div className="absolute top-4 inset-x-4 flex items-center justify-between pointer-events-none z-20">
-            <span className="px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white font-mono text-xs border border-white/10 capitalize">
+            <span className="px-3.5 py-1.5 rounded-full bg-white/12 text-white font-mono text-xs border border-white/15 capitalize">
               {project.name} ·{' '}
               {formatReadableScreenName(
                 screenshots[activeScreenIndex % screenshots.length],

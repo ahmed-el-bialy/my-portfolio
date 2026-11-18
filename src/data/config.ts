@@ -20,7 +20,7 @@ export const AHMED_CONFIG = {
   },
   title: {
     en: 'Flutter Mobile Developer',
-    ar: 'مطور تطبيقات موبايل Flutter',
+    ar: 'مطور Flutter للجوال',
   },
   location: {
     en: 'El Mansoura, Egypt',
@@ -68,6 +68,7 @@ export const AHMED_CONFIG = {
     'Shaats',
   ],
   cvUrl: 'https://drive.google.com/file/d/1lQMnmyIA100YyXLu4jqFdhWluSeig4Pn/view',
+  cvDocUrl: 'https://docs.google.com/document/d/1K_pt4CgqDQ8sr0H3gcmOGP8vhqchWsP-/edit?usp=drive_link',
 } as const;
 
 export function getEgyptLocalTime(lang: 'en' | 'ar' = 'en'): string {

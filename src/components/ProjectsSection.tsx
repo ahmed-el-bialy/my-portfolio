@@ -682,7 +682,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
               <ProjectSkeletonCard key={sk} />
             ))}
           </div>
-          <div className="absolute inset-0 flex items-center justify-center bg-[#f8fafc]/50 dark:bg-[#08090d]/55 backdrop-blur-sm">
+          <div className="absolute inset-0 flex items-center justify-center bg-[#f8fafc]/75 dark:bg-[#08090d]/75 backdrop-blur-sm">
             <LeafAnimation
               compact
               isDark={isDark}
@@ -813,10 +813,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                         isCardHovered={hoveredCardId === project.id}
                       />
 
-                      <div className="p-5">
+                      <div className="p-4 sm:p-5">
                         {/* Unboxed Single-Line Title & Metrics Row */}
                         <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <h3 className="text-lg font-bold text-slate-900 dark:text-white truncate">
+                          <h3 className="font-display text-xl sm:text-[22px] font-extrabold text-slate-900 dark:text-white truncate tracking-tight">
                             {project.name}
                           </h3>
                           <div className="flex items-center gap-2 text-xs font-mono shrink-0 text-slate-500 dark:text-slate-400">
@@ -868,7 +868,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     </div>
 
                     {/* Card Footer Actions */}
-                    <div className="px-5 py-4 mt-auto border-t border-slate-100 dark:border-white/8 space-y-2.5">
+                    <div className="px-4 sm:px-5 py-4 mt-auto border-t border-slate-100 dark:border-white/8 space-y-2.5">
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
@@ -876,7 +876,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                             e.stopPropagation();
                             setSelectedProject(dynamicProject);
                           }}
-                          className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-blue-600/10 hover:bg-blue-600 hover:text-white text-blue-600 dark:text-cyan-400 font-semibold text-xs border border-blue-500/20 transition-colors cursor-pointer min-h-[40px]"
+                          className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-blue-600/10 hover:bg-blue-600 hover:text-white text-blue-600 dark:text-cyan-400 font-semibold text-xs border border-blue-500/20 transition-colors cursor-pointer min-h-[44px] sm:min-h-[40px]"
                         >
                           <Eye size={14} className="shrink-0" />
                           <span>{t.projects.actions.viewSpecs}</span>
@@ -888,7 +888,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                             target="_blank"
                             rel="noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/10 transition-colors text-xs font-semibold min-h-[40px]"
+                            className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/10 transition-colors text-xs font-semibold min-h-[44px] sm:min-h-[40px]"
                           >
                             <Github size={14} className="shrink-0" />
                             <span>{t.projects.actions.sourceCode}</span>
@@ -906,7 +906,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                               target="_blank"
                               rel="noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="flex-1 min-w-[115px] flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 transition-colors text-xs font-bold min-h-[38px]"
+                              className="flex-1 min-w-[115px] flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 transition-colors text-xs font-bold min-h-[42px] sm:min-h-[38px]"
                             >
                               <ArrowUpRight size={14} className="shrink-0" />
                               <span>{t.projects.actions.playStore}</span>
@@ -920,7 +920,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                                 e.stopPropagation();
                                 setApkModalProject(dynamicProject);
                               }}
-                              className="btn-kinetic flex-1 min-w-[115px] flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 border border-purple-500/20 text-xs font-bold min-h-[38px] cursor-pointer"
+                              className="btn-kinetic flex-1 min-w-[115px] flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 border border-purple-500/20 text-xs font-bold min-h-[42px] sm:min-h-[38px] cursor-pointer"
                             >
                               <Download size={13} className="shrink-0" />
                               <span>{t.projects.actions.downloadApk}</span>
@@ -1062,7 +1062,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                               <FolderGit2 size={15} />
                             </span>
                             <div className="min-w-0">
-                              <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF] transition-colors truncate">
+                              <h3 className="font-display text-lg sm:text-[19px] font-extrabold tracking-tight text-slate-900 dark:text-white group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF] transition-colors truncate">
                                 {repo.name}
                               </h3>
                               {pushedLabel && (
@@ -1252,16 +1252,16 @@ const RevioSpotlightCard: React.FC<RevioSpotlightCardProps> = ({
       className="mb-8 p-5 sm:p-7 rounded-3xl bg-white dark:bg-[#0f1117] border border-emerald-500/35 shadow-lg grid grid-cols-1 lg:grid-cols-12 gap-6 items-center"
     >
       <div className="lg:col-span-7 space-y-3.5">
-        <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-          <span className="font-bold text-emerald-700 dark:text-emerald-400">
+        <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-[13px]">
+          <span className="font-display font-bold text-emerald-700 dark:text-emerald-400">
             {lang === 'ar' ? 'تطبيق منشور على Google Play' : 'Published on Google Play'}
           </span>
           <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-          <span className="text-slate-500 dark:text-[#94a3b8]">com.ahmed.revio</span>
+          <span className="font-mono text-xs text-slate-500 dark:text-[#94a3b8]">com.ahmed.revio</span>
           {playStats?.downloads && (
             <>
               <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-              <span className="font-bold text-emerald-700 dark:text-emerald-300 tabular-nums">
+              <span className="font-display text-sm font-extrabold text-emerald-700 dark:text-emerald-300 tabular-nums">
                 {playStats.downloads} {lang === 'ar' ? 'تحميل' : 'Downloads'}
               </span>
             </>
@@ -1269,14 +1269,14 @@ const RevioSpotlightCard: React.FC<RevioSpotlightCardProps> = ({
           {playStats?.rating && (
             <>
               <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-              <span className="font-bold text-amber-500 tabular-nums">
+              <span className="font-display text-sm font-extrabold text-amber-500 tabular-nums">
                 ★ {playStats.rating}
               </span>
             </>
           )}
         </div>
 
-        <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-[#f1f5f9] tracking-tight">
+        <h2 className="font-display text-2xl sm:text-[28px] font-extrabold text-slate-900 dark:text-[#f1f5f9] tracking-tight leading-tight">
           {lang === 'ar'
             ? 'Revio — تطبيق البطاقات التعليمية الذكية بدون إنترنت'
             : 'Revio — Active Recall & Smart Flashcards'}

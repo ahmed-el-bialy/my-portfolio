@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Check, Info, X } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
+import { BrandLogoMark } from '../components/BrandLogoMark';
 
 export interface ToastPayload {
   message: string;
@@ -37,30 +38,27 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToast(null);
   }, []);
 
-  const showToast = useCallback(
-    (payload: string | ToastPayload) => {
-      const normalized: ToastPayload =
-        typeof payload === 'string' ? { message: payload, tone: 'success' } : payload;
+  const showToast = useCallback((payload: string | ToastPayload) => {
+    const normalized: ToastPayload =
+      typeof payload === 'string' ? { message: payload, tone: 'success' } : payload;
 
-      if (timerRef.current) {
-        window.clearTimeout(timerRef.current);
-      }
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+    }
 
-      idCounterRef.current += 1;
-      setToast({
-        id: idCounterRef.current,
-        message: normalized.message,
-        detail: normalized.detail,
-        tone: normalized.tone ?? 'success',
-      });
+    idCounterRef.current += 1;
+    setToast({
+      id: idCounterRef.current,
+      message: normalized.message,
+      detail: normalized.detail,
+      tone: normalized.tone ?? 'success',
+    });
 
-      timerRef.current = window.setTimeout(() => {
-        setToast(null);
-        timerRef.current = null;
-      }, TOAST_AUTO_DISMISS_MS);
-    },
-    []
-  );
+    timerRef.current = window.setTimeout(() => {
+      setToast(null);
+      timerRef.current = null;
+    }, TOAST_AUTO_DISMISS_MS);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -89,18 +87,26 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.96 }}
               animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
               exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.97 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="pointer-events-auto inline-flex items-center gap-2.5 max-w-[92vw] sm:max-w-md px-3.5 py-2.5 rounded-xl border border-slate-200/95 dark:border-white/14 bg-white/95 dark:bg-[#0f1117]/95 backdrop-blur-md shadow-[0_14px_34px_-10px_rgba(2,125,253,0.22)] dark:shadow-[0_18px_40px_-10px_rgba(0,0,0,0.72)]"
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="pointer-events-auto inline-flex items-center gap-2.5 max-w-[92vw] sm:max-w-md px-3.5 py-2.5 rounded-xl border border-slate-200/95 dark:border-white/14 bg-white/90 dark:bg-[#0f1117]/90 backdrop-blur-md shadow-[0_14px_34px_-10px_rgba(2,125,253,0.22)] dark:shadow-[0_18px_40px_-10px_rgba(0,0,0,0.72)]"
             >
-              <span
-                className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
-                  toast.tone === 'info'
-                    ? 'bg-[#027DFD]/12 text-[#027DFD] dark:text-[#00C7FF]'
-                    : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                }`}
-              >
-                {toast.tone === 'info' ? <Info size={13} /> : <Check size={13} strokeWidth={2.5} />}
-              </span>
+              {/* Branded Leaf Emblem paired with Check Confirmation */}
+              <div className="relative flex items-center justify-center shrink-0">
+                <BrandLogoMark sizeClassName="w-6 h-6" alt="Brand Emblem" />
+                <span
+                  className={`absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 rounded-full border border-white dark:border-[#0f1117] flex items-center justify-center ${
+                    toast.tone === 'info'
+                      ? 'bg-[#027DFD] text-white'
+                      : 'bg-emerald-500 text-white'
+                  }`}
+                >
+                  {toast.tone === 'info' ? (
+                    <Info size={8} strokeWidth={3} />
+                  ) : (
+                    <Check size={8} strokeWidth={3.2} />
+                  )}
+                </span>
+              </div>
 
               <div className="min-w-0 flex items-baseline gap-2">
                 <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
@@ -109,7 +115,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 {toast.detail && (
                   <span
                     dir="ltr"
-                    className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate max-w-[170px] sm:max-w-[230px]"
+                    className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate max-w-[155px] sm:max-w-[220px]"
                   >
                     {toast.detail}
                   </span>
