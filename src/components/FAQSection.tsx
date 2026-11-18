@@ -78,7 +78,7 @@ export const FAQSection: React.FC = () => {
       className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full"
     >
       <RevealOnScroll className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
-        <div className="text-xs font-medium text-blue-600 dark:text-cyan-400 mb-2">
+        <div className="text-xs font-mono font-semibold text-[#0284ff] dark:text-[#00C7FF] mb-2">
           {lang === 'ar' ? 'الأسئلة الشائعة' : 'Frequently Asked Questions'}
         </div>
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
@@ -91,15 +91,21 @@ export const FAQSection: React.FC = () => {
           const isOpen = openIndex === idx;
           return (
             <RevealOnScroll key={idx} delay={idx * 0.04}>
-              <div className="rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 overflow-hidden transition-all duration-200 hover:border-[#027DFD]/40 hover:shadow-sm">
+              <div
+                className={`card-shimmer rounded-2xl bg-white dark:bg-[#0f1117] border overflow-hidden transition-all duration-200 hover:shadow-sm ${
+                  isOpen
+                    ? 'border-[#0284ff]/45'
+                    : 'border-slate-200 dark:border-white/10 hover:border-[#0284ff]/40'
+                }`}
+              >
                 <button
                   type="button"
                   onClick={() => setOpenIndex(isOpen ? null : idx)}
-                  className="w-full flex items-center justify-between gap-3 p-4 sm:p-5 text-start font-bold text-slate-900 dark:text-white text-sm sm:text-base cursor-pointer focus-visible:outline-none"
+                  className="w-full min-h-[52px] flex items-center justify-between gap-3 p-4 sm:p-5 text-start font-bold text-slate-900 dark:text-white text-sm sm:text-base cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]/40 rounded-2xl"
                   aria-expanded={isOpen}
                 >
                   <span className="flex items-center gap-3 min-w-0">
-                    <span className="font-mono tabular-nums text-xs font-bold text-blue-600 dark:text-cyan-400 shrink-0">
+                    <span className="font-mono tabular-nums text-xs font-bold text-[#0284ff] dark:text-[#00C7FF] shrink-0">
                       0{idx + 1}.
                     </span>
                     <span>{faq.q}</span>
@@ -107,7 +113,7 @@ export const FAQSection: React.FC = () => {
                   <ChevronDown
                     size={17}
                     className={`text-slate-500 dark:text-slate-400 transition-transform duration-200 shrink-0 ${
-                      isOpen ? 'rotate-180 text-blue-600 dark:text-cyan-400' : ''
+                      isOpen ? 'rotate-180 text-[#0284ff] dark:text-[#00C7FF]' : ''
                     }`}
                   />
                 </button>

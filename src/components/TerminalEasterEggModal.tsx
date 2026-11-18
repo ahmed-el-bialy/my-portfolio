@@ -523,7 +523,7 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
     >
       <div
         dir={dir}
-        className={`w-full max-w-2xl h-[85dvh] sm:h-auto sm:max-h-[82vh] flex flex-col rounded-t-2xl sm:rounded-2xl bg-[#07090e] border border-white/15 shadow-2xl shadow-[#027DFD]/15 overflow-hidden ${
+        className={`w-full max-w-2xl h-[85dvh] sm:h-auto sm:max-h-[82vh] flex flex-col rounded-t-2xl sm:rounded-2xl bg-[#07090e] border border-white/15 shadow-2xl shadow-[#0284ff]/15 overflow-hidden ${
           lang === 'ar' ? 'text-right font-sans' : 'text-left font-mono'
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -549,7 +549,7 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
               onClick={() => setAiMode((v) => !v)}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
                 aiMode
-                  ? 'bg-[#027DFD]/20 text-[#7DD3FC] border-[#00C7FF]/50'
+                  ? 'bg-[#0284ff]/20 text-[#7DD3FC] border-[#00C7FF]/50'
                   : 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/10'
               }`}
               title={lang === 'ar' ? 'تفعيل أو إيقاف وضع الذكاء الاصطناعي' : 'Toggle direct AI Q&A mode'}
@@ -598,7 +598,7 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
             if (line.type === 'input') {
               return (
                 <div key={line.id} className="flex items-start gap-2 text-[#00C7FF] font-semibold">
-                  <span className="text-[#027DFD] select-none shrink-0 font-mono">$</span>
+                  <span className="text-[#0284ff] select-none shrink-0 font-mono">$</span>
                   <span className="break-words">{line.text}</span>
                 </div>
               );
@@ -613,7 +613,7 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
                 key={line.id}
                 className={`rounded-xl px-3.5 py-2.5 border leading-relaxed whitespace-pre-wrap break-words ${
                   isAi
-                    ? 'bg-[#027DFD]/[0.09] border-[#00C7FF]/30 text-slate-100'
+                    ? 'bg-[#0284ff]/[0.09] border-[#00C7FF]/30 text-slate-100'
                     : isErr
                     ? 'bg-rose-500/10 border-rose-500/30 text-rose-200'
                     : isSys
@@ -640,7 +640,7 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
           })}
 
           {isAiLoading && (
-            <div className="rounded-xl px-3.5 py-2.5 border border-[#00C7FF]/30 bg-[#027DFD]/[0.08] text-[#7DD3FC] flex items-center gap-2">
+            <div className="rounded-xl px-3.5 py-2.5 border border-[#00C7FF]/30 bg-[#0284ff]/[0.08] text-[#7DD3FC] flex items-center gap-2">
               <Sparkles size={13} className="animate-pulse shrink-0" />
               <span>{copy.thinking}</span>
             </div>
@@ -656,7 +656,7 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
               onClick={() => runCommand(chip.cmd)}
               className={`shrink-0 px-2.5 py-1.5 rounded-lg text-[11px] font-medium border transition-colors cursor-pointer whitespace-nowrap ${
                 chip.isAi
-                  ? 'bg-[#027DFD]/15 hover:bg-[#027DFD]/25 text-[#7DD3FC] border-[#00C7FF]/40 inline-flex items-center gap-1'
+                  ? 'bg-[#0284ff]/15 hover:bg-[#0284ff]/25 text-[#7DD3FC] border-[#00C7FF]/40 inline-flex items-center gap-1'
                   : 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/10'
               }`}
             >
@@ -690,7 +690,7 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
           <button
             type="submit"
             disabled={!input.trim() || isAiLoading}
-            className="px-3 py-1.5 rounded-lg bg-[#027DFD] hover:bg-[#026ae0] disabled:opacity-40 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-[#0284ff] hover:bg-[#026ae0] disabled:opacity-40 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors"
             aria-label={copy.runLabel}
           >
             <Send size={12} className={dir === 'rtl' ? 'rotate-180' : ''} />

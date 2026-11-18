@@ -135,7 +135,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
         particleCount: 65,
         spread: 55,
         origin: { y: 0.75 },
-        colors: ['#027DFD', '#00C7FF', '#10B981'],
+        colors: ['#0284ff', '#00C7FF', '#10B981'],
       });
     } catch {
       setIsSubmitting(false);
@@ -172,7 +172,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
     >
       {/* Editorial Section Header */}
       <div className="flex flex-col items-center text-center max-w-2xl mx-auto mb-10 sm:mb-12">
-        <div className="flex items-center gap-2 text-xs font-medium text-[#027DFD] dark:text-[#00C7FF] mb-2">
+        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0284ff] dark:text-[#00C7FF] mb-2">
           <span>{t.contact.badge}</span>
           <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
             ·
@@ -192,7 +192,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
       {/* 2-Column Layout: Streamlined Form Left + Consultation & Quick Copy Channels Right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
         {/* Left Column: 3-Field Inquiry Form & Paper-Plane Success Card */}
-        <div className="lg:col-span-6 p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 shadow-sm">
+        <div className="card-shimmer overflow-hidden lg:col-span-6 p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 shadow-sm">
           {submitStatus === 'success' ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 10 }}
@@ -305,7 +305,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={lang === 'ar' ? 'أحمد محمد' : 'Your full name'}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#027DFD] focus-visible:ring-2 focus-visible:ring-[#027DFD]/30 transition-colors min-h-[44px]"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#0284ff] focus-visible:ring-2 focus-visible:ring-[#0284ff]/30 transition-colors min-h-[44px]"
                   />
                 </div>
 
@@ -331,7 +331,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus-visible:ring-2 transition-colors min-h-[44px] ${
                       emailError
                         ? 'border-red-500 focus:border-red-500 focus-visible:ring-red-500/30'
-                        : 'border-slate-200 dark:border-white/10 focus:border-[#027DFD] focus-visible:ring-[#027DFD]/30'
+                        : 'border-slate-200 dark:border-white/10 focus:border-[#0284ff] focus-visible:ring-[#0284ff]/30'
                     }`}
                   />
                   {emailError && (
@@ -357,7 +357,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder={t.contact.form.messagePlaceholder}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#027DFD] focus-visible:ring-2 focus-visible:ring-[#027DFD]/30 transition-colors resize-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#0284ff] focus-visible:ring-2 focus-visible:ring-[#0284ff]/30 transition-colors resize-none"
                   />
                 </div>
 
@@ -366,7 +366,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     type="submit"
                     disabled={isSubmitting}
                     strength={0.18}
-                    className="w-full py-3 rounded-xl bg-[#027DFD] hover:bg-[#026ae0] text-white font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-md shadow-[#027DFD]/25 cursor-pointer disabled:opacity-50 min-h-[46px]"
+                    className="btn-kinetic w-full py-3 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-md shadow-[#0284ff]/25 cursor-pointer disabled:opacity-50 min-h-[46px]"
                   >
                     <Send size={15} />
                     <span>
@@ -382,9 +382,9 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
         {/* Right Column: Cal.com Scheduling + Copy-to-Clipboard Contact Cards */}
         <div className="lg:col-span-6 space-y-6">
           {/* Elevated Cal.com Consultation Spotlight Card */}
-          <div className="p-6 sm:p-7 rounded-2xl bg-white dark:bg-[#0f1117] border-2 border-[#027DFD]/35 shadow-lg">
+          <div className="card-shimmer overflow-hidden p-6 sm:p-7 rounded-2xl bg-white dark:bg-[#0f1117] border-2 border-[#0284ff]/35 shadow-lg">
             <div className="mb-4">
-              <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#027DFD] dark:text-[#00C7FF]">
+              <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#0284ff] dark:text-[#00C7FF]">
                 <Calendar size={13} />
                 <span>Cal.com Scheduling</span>
               </span>
@@ -403,13 +403,13 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     key={slot.type}
                     type="button"
                     onClick={() => onOpenBooking(slot.type)}
-                    className="p-3.5 min-h-[54px] rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 hover:border-[#027DFD]/60 text-start transition-all cursor-pointer group flex sm:block items-center justify-between gap-2"
+                    className="p-3.5 min-h-[54px] rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 hover:border-[#0284ff]/60 text-start transition-all cursor-pointer group flex sm:block items-center justify-between gap-2"
                   >
-                    <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#027DFD] dark:text-[#00C7FF] tabular-nums">
+                    <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#0284ff] dark:text-[#00C7FF] tabular-nums">
                       <Clock size={12} />
                       <span>{slot.duration}</span>
                     </div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-[#f1f5f9] sm:mt-1 group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF]">
+                    <div className="text-xs font-bold text-slate-900 dark:text-[#f1f5f9] sm:mt-1 group-hover:text-[#0284ff] dark:group-hover:text-[#00C7FF]">
                       {slot.title}
                     </div>
                   </button>
@@ -421,7 +421,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenBooking(null)}
-                className="w-full py-3 px-5 rounded-xl bg-[#027DFD] hover:bg-[#026ae0] text-white font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-md shadow-[#027DFD]/25 cursor-pointer min-h-[46px]"
+                className="btn-kinetic w-full py-3 px-5 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-md shadow-[#0284ff]/25 cursor-pointer min-h-[46px]"
               >
                 <Calendar size={16} />
                 <span>{t.contact.meetingCard.button}</span>
@@ -431,7 +431,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
           </div>
 
           {/* Clickable Copy-to-Clipboard Direct Channels */}
-          <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 space-y-4">
+          <div className="card-shimmer overflow-hidden p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 space-y-4">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-bold text-slate-900 dark:text-[#f1f5f9]">
                 {t.contact.directChannels}
@@ -458,7 +458,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     href={`mailto:${AHMED_CONFIG.email}?subject=${encodeURIComponent(
                       'Mobile App Project Inquiry - Flutter Developer'
                     )}`}
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0284ff] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
                   >
                     <Mail size={12} />
                     <span>{lang === 'ar' ? 'مراسلة' : 'Compose'}</span>
@@ -498,7 +498,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                   </a>
                   <a
                     href={`tel:${AHMED_CONFIG.phone}`}
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0284ff] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
                   >
                     <Phone size={12} />
                     <span>{lang === 'ar' ? 'اتصال' : 'Call'}</span>
@@ -529,7 +529,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     href={AHMED_CONFIG.socials.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 hover:bg-[#027DFD] hover:text-white text-slate-800 dark:text-slate-200 font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 hover:bg-[#0284ff] hover:text-white text-slate-800 dark:text-slate-200 font-semibold text-[11px] transition-colors"
                   >
                     <Github size={12} />
                     <span>{lang === 'ar' ? 'فتح' : 'Open'}</span>
@@ -560,7 +560,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     href={AHMED_CONFIG.socials.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-[#027DFD] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0284ff] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
                   >
                     <Linkedin size={12} />
                     <span>{lang === 'ar' ? 'فتح' : 'Open'}</span>
@@ -587,7 +587,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 <button
                   type="button"
                   onClick={onOpenResume}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-900 dark:bg-[#161b27] hover:bg-[#027DFD] dark:hover:bg-[#027DFD] text-white font-semibold text-xs border border-transparent dark:border-white/10 transition-colors cursor-pointer"
+                  className="btn-kinetic flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 min-h-[44px] rounded-xl bg-slate-900 dark:bg-[#161b27] hover:bg-[#0284ff] dark:hover:bg-[#0284ff] text-white font-semibold text-xs border border-transparent dark:border-white/10 transition-colors cursor-pointer"
                 >
                   <FileText size={14} />
                   <span>{lang === 'ar' ? 'استعراض السيرة التفاعلية' : 'Open Interactive CV'}</span>
@@ -597,9 +597,9 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 href={profile.cvDriveUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-[#161b27] hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-[#f1f5f9] font-semibold text-xs border border-slate-200 dark:border-white/10 transition-colors"
+                className="btn-kinetic flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 min-h-[44px] rounded-xl bg-slate-100 dark:bg-[#161b27] hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-[#f1f5f9] font-semibold text-xs border border-slate-200 dark:border-white/10 transition-colors"
               >
-                <ExternalLink size={13} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                <ExternalLink size={13} className="text-[#0284ff] dark:text-[#00C7FF]" />
                 <span>{lang === 'ar' ? 'تحميل PDF الرسمي' : 'Download PDF CV'}</span>
               </a>
             </div>

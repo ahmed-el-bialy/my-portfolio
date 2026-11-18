@@ -88,7 +88,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
               exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.97 }}
               transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className="pointer-events-auto inline-flex items-center gap-2.5 max-w-[92vw] sm:max-w-md px-3.5 py-2.5 rounded-xl border border-slate-200/95 dark:border-white/14 bg-white/90 dark:bg-[#0f1117]/90 backdrop-blur-md shadow-[0_14px_34px_-10px_rgba(2,125,253,0.22)] dark:shadow-[0_18px_40px_-10px_rgba(0,0,0,0.72)]"
+              className="pointer-events-auto inline-flex items-center gap-2.5 max-w-[92vw] sm:max-w-md px-3.5 py-2.5 rounded-xl border border-slate-200/95 dark:border-white/14 bg-white/90 dark:bg-[#0f1117]/90 backdrop-blur-md shadow-[0_14px_34px_-10px_rgba(2,132,255,0.22)] dark:shadow-[0_18px_40px_-10px_rgba(0,0,0,0.72)]"
             >
               {/* Branded Leaf Emblem paired with Check Confirmation */}
               <div className="relative flex items-center justify-center shrink-0">
@@ -96,7 +96,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 <span
                   className={`absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 rounded-full border border-white dark:border-[#0f1117] flex items-center justify-center ${
                     toast.tone === 'info'
-                      ? 'bg-[#027DFD] text-white'
+                      ? 'bg-[#0284ff] text-white'
                       : 'bg-emerald-500 text-white'
                   }`}
                 >

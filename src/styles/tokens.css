@@ -1,0 +1,161 @@
+:root {
+  --accent: #0284ff;
+  --accent-hover: #0070e0;
+  --accent-glow: rgba(2, 132, 255, 0.25);
+  --accent-subtle: rgba(2, 132, 255, 0.08);
+
+  --bg-dark: #08090d;
+  --bg-dark-2: #0f1117;
+  --bg-glass: rgba(15, 17, 23, 0.72);
+
+  --text-primary: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(2, 132, 255, 0.2);
+
+  --radius-card: 16px;
+  --radius-pill: 9999px;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-hover:
+    0 4px 6px rgba(0, 0, 0, 0.3),
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(2, 132, 255, 0.15);
+  --shadow-glow: 0 0 40px var(--accent-glow);
+
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+  --font-en-display: 'Outfit', system-ui, sans-serif;
+  --font-en-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-ar: 'Cairo', system-ui, sans-serif;
+}
+
+html.light,
+[data-theme="light"] {
+  --bg-dark-2: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.85);
+  --text-primary: #0f172a;
+  --text-muted: #475569;
+  --text-subtle: #64748b;
+  --border: rgba(15, 23, 42, 0.08);
+  --border-hover: rgba(2, 132, 255, 0.28);
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.08), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --shadow-hover:
+    0 4px 6px rgba(15, 23, 42, 0.08),
+    0 20px 40px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(2, 132, 255, 0.2);
+}
+
+@layer components {
+  /* Scroll reveal — base (GPU-composited transform & opacity) */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+  }
+  .reveal.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Stagger children */
+  .stagger-reveal > * {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+  }
+  .stagger-reveal.in-view > *:nth-child(1) { transition-delay: 0ms; opacity: 1; transform: none; }
+  .stagger-reveal.in-view > *:nth-child(2) { transition-delay: 80ms; opacity: 1; transform: none; }
+  .stagger-reveal.in-view > *:nth-child(3) { transition-delay: 160ms; opacity: 1; transform: none; }
+  .stagger-reveal.in-view > *:nth-child(4) { transition-delay: 240ms; opacity: 1; transform: none; }
+  .stagger-reveal.in-view > *:nth-child(5) { transition-delay: 320ms; opacity: 1; transform: none; }
+  .stagger-reveal.in-view > *:nth-child(6) { transition-delay: 400ms; opacity: 1; transform: none; }
+
+  /* Glassmorphism */
+  .glass {
+    background: var(--bg-glass);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--border);
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, #0284ff, #38bdf8, #00c7ff, #0284ff);
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-move 5s linear infinite;
+  }
+
+  /* Card base & top shimmer motif */
+  .card {
+    position: relative;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--border);
+    background: var(--bg-dark-2);
+    box-shadow: var(--shadow-card);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+  .card:hover {
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .card-shimmer {
+    position: relative;
+  }
+
+  .card::before,
+  .card-shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), #00c7ff, transparent);
+    opacity: 0;
+    transition: opacity 0.28s var(--ease-spring);
+    pointer-events: none;
+    z-index: 30;
+  }
+
+  .card:hover::before,
+  .card-shimmer:hover::before,
+  .card-shimmer:focus-within::before {
+    opacity: 1;
+  }
+}
+
+@keyframes gradient-move {
+  to {
+    background-position: 220% center;
+  }
+}
+
+/* RTL override */
+[dir="rtl"] {
+  font-family: var(--font-ar);
+}
+[dir="rtl"] .arrow {
+  transform: scaleX(-1);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .stagger-reveal > * {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .gradient-text {
+    animation: none;
+  }
+}

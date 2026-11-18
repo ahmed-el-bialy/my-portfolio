@@ -136,10 +136,10 @@ const GalleryCard: React.FC<{
           onInspect();
         }
       }}
-      className={`group relative rounded-2xl overflow-hidden bg-[#161e31] border transition-all duration-300 cursor-pointer flex flex-col ${
+      className={`card-shimmer group relative rounded-2xl overflow-hidden bg-[#161e31] border transition-all duration-300 cursor-pointer flex flex-col ${
         isActive
-          ? 'border-[#027DFD] ring-2 ring-[#027DFD]/25 shadow-lg'
-          : 'border-slate-200/80 dark:border-white/10 hover:border-[#027DFD]/60 shadow-sm hover:shadow-xl'
+          ? 'border-[#0284ff] ring-2 ring-[#0284ff]/25 shadow-lg'
+          : 'border-slate-200/80 dark:border-white/10 hover:border-[#0284ff]/60 shadow-sm hover:shadow-xl'
       }`}
     >
       <div className="relative aspect-[9/16] w-full overflow-hidden bg-[#161e31]">
@@ -155,7 +155,7 @@ const GalleryCard: React.FC<{
           <span className="text-[11px] font-mono font-bold text-white tabular-nums">
             #{index + 1}
           </span>
-          <span className="p-1.5 rounded-lg bg-[#027DFD] text-white shadow-md">
+          <span className="p-1.5 rounded-lg bg-[#0284ff] text-white shadow-md">
             <ZoomIn size={14} />
           </span>
         </div>
@@ -679,10 +679,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               type="button"
               onClick={() => syncLiveProjectData(project, true, defaultBranch)}
               disabled={isSyncingLive}
-              className="btn-kinetic inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100/80 dark:bg-white/[0.04] hover:bg-slate-200/80 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/10 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60 whitespace-nowrap"
+              className="btn-kinetic inline-flex items-center gap-1.5 px-2.5 py-1.5 min-h-[40px] sm:min-h-0 rounded-lg bg-slate-100/80 dark:bg-white/[0.04] hover:bg-slate-200/80 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/10 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60 whitespace-nowrap"
               title={lang === 'ar' ? 'تحديث البيانات من GitHub' : 'Sync latest from GitHub'}
             >
-              <RefreshCw size={12.5} className={isSyncingLive ? 'animate-spin text-[#027DFD]' : ''} />
+              <RefreshCw size={12.5} className={isSyncingLive ? 'animate-spin text-[#0284ff]' : ''} />
               <span className="hidden sm:inline">
                 {isSyncingLive
                   ? lang === 'ar'
@@ -697,9 +697,9 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             <button
               type="button"
               onClick={() => setIsFullPage((prev) => !prev)}
-              className={`btn-kinetic inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+              className={`btn-kinetic inline-flex items-center gap-1.5 px-2.5 py-1.5 min-h-[40px] sm:min-h-0 rounded-lg border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                 isFullPage
-                  ? 'bg-[#027DFD] text-white border-[#027DFD]'
+                  ? 'bg-[#0284ff] text-white border-[#0284ff]'
                   : 'bg-slate-100/80 dark:bg-white/[0.04] hover:bg-slate-200/80 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-white/10'
               }`}
               aria-label={isFullPage ? 'Restore modal window' : 'Expand to full page'}
@@ -719,7 +719,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg bg-slate-100/80 dark:bg-white/[0.04] hover:bg-rose-500/12 text-slate-500 hover:text-rose-500 border border-slate-200/80 dark:border-white/10 transition-colors cursor-pointer"
+              className="w-10 h-10 sm:w-8 sm:h-8 rounded-lg bg-slate-100/80 dark:bg-white/[0.04] hover:bg-rose-500/12 text-slate-500 hover:text-rose-500 border border-slate-200/80 dark:border-white/10 flex items-center justify-center transition-colors cursor-pointer"
               aria-label="Close workspace"
             >
               <X size={15} />
@@ -749,7 +749,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     <span
                       className={`font-mono text-[11px] tabular-nums transition-colors ${
                         active
-                          ? 'text-[#027DFD] dark:text-[#00C7FF]'
+                          ? 'text-[#0284ff] dark:text-[#00C7FF]'
                           : 'text-slate-400 dark:text-slate-500'
                       }`}
                     >
@@ -760,7 +760,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     <motion.span
                       layoutId="modalSectionUnderline"
                       transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                      className="absolute bottom-0 inset-x-0 h-[2px] rounded-full bg-gradient-to-r from-[#027DFD] to-[#00C7FF]"
+                      className="absolute bottom-0 inset-x-0 h-[2px] rounded-full bg-gradient-to-r from-[#0284ff] to-[#00C7FF]"
                     />
                   )}
                 </button>
@@ -770,7 +770,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
           {releaseInfo.tagName && (
             <span className="hidden lg:inline-flex items-center gap-1.5 text-[11px] font-mono text-slate-500 dark:text-slate-400 shrink-0 tabular-nums">
-              <PackageCheck size={12} className="text-[#027DFD] dark:text-[#00C7FF]" />
+              <PackageCheck size={12} className="text-[#0284ff] dark:text-[#00C7FF]" />
               <span>{releaseInfo.tagName}</span>
               {realApkSizeLabel ? <span>· {realApkSizeLabel}</span> : null}
             </span>
@@ -821,7 +821,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     <h3 className="font-display text-2xl sm:text-[32px] font-extrabold text-slate-950 dark:text-white tracking-tight leading-tight">
                       {project.name}
                     </h3>
-                    <p className="font-display text-sm sm:text-[15px] font-semibold text-[#027DFD] dark:text-[#7DD3FC]">
+                    <p className="font-display text-sm sm:text-[15px] font-semibold text-[#0284ff] dark:text-[#7DD3FC]">
                       {project.subtitle}
                     </p>
                   </div>
@@ -885,7 +885,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     <div className="text-[10.5px] font-mono text-slate-500 dark:text-slate-400">
                       {lang === 'ar' ? 'النمط الهندسي' : 'Engineering Pattern'}
                     </div>
-                    <div className="text-xs font-bold text-[#027DFD] dark:text-[#00C7FF] mt-0.5 truncate">
+                    <div className="text-xs font-bold text-[#0284ff] dark:text-[#00C7FF] mt-0.5 truncate">
                       Clean Arch · BLoC / Cubit
                     </div>
                   </div>
@@ -955,7 +955,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   <button
                     type="button"
                     onClick={() => scrollToSection('gallery')}
-                    className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#027DFD]/10 hover:bg-[#027DFD] text-[#027DFD] dark:text-[#00C7FF] hover:text-white border border-[#027DFD]/20 font-bold text-xs transition-colors cursor-pointer ms-auto"
+                    className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2 min-h-[44px] sm:min-h-0 rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] text-[#0284ff] dark:text-[#00C7FF] hover:text-white border border-[#0284ff]/20 font-bold text-xs transition-colors cursor-pointer ms-auto"
                   >
                     <ImageIcon size={14} />
                     <span>
@@ -970,7 +970,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               {/* Side-by-Side Dual Media Stage: Single-Elevation Studio Framing */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
                 {/* Start Panel: Live Video Demo Showcase */}
-                <div className="lg:col-span-6 p-4 sm:p-5 rounded-2xl bg-slate-50/75 dark:bg-white/[0.025] border border-slate-200/75 dark:border-white/8 flex flex-col justify-between gap-3.5">
+                <div className="card-shimmer overflow-hidden lg:col-span-6 p-4 sm:p-5 rounded-2xl bg-slate-50/75 dark:bg-white/[0.025] border border-slate-200/75 dark:border-white/8 flex flex-col justify-between gap-3.5">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-800 dark:text-slate-100">
                       <Youtube size={16} className="text-red-500 shrink-0" />
@@ -989,7 +989,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         href={currentPlaylistUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[11px] font-mono font-bold text-[#027DFD] dark:text-[#00C7FF] hover:underline inline-flex items-center gap-1"
+                        className="text-[11px] font-mono font-bold text-[#0284ff] dark:text-[#00C7FF] hover:underline inline-flex items-center gap-1"
                       >
                         <span>{lang === 'ar' ? 'قائمة الشرح الكامل' : 'Full Playlist'}</span>
                         <ExternalLink size={11} />
@@ -1080,10 +1080,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 </div>
 
                 {/* End Panel: Interactive Live Screens Preview Side-by-Side */}
-                <div className="lg:col-span-6 p-4 sm:p-5 rounded-2xl bg-slate-50/75 dark:bg-white/[0.025] border border-slate-200/75 dark:border-white/8 flex flex-col justify-between gap-3.5">
+                <div className="card-shimmer overflow-hidden lg:col-span-6 p-4 sm:p-5 rounded-2xl bg-slate-50/75 dark:bg-white/[0.025] border border-slate-200/75 dark:border-white/8 flex flex-col justify-between gap-3.5">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-mono font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 truncate">
-                      <Smartphone size={15} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
+                      <Smartphone size={15} className="text-[#0284ff] dark:text-[#00C7FF] shrink-0" />
                       <span className="truncate capitalize">
                         {screenshots.length > 0
                           ? formatReadableScreenName(
@@ -1134,10 +1134,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                                   e.stopPropagation();
                                   prevScreen();
                                 }}
-                                className="absolute start-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/70 hover:bg-black text-white opacity-85 sm:opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                className="absolute start-2 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-7 sm:h-7 rounded-full bg-black/70 hover:bg-black text-white opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
                                 aria-label="Previous screen"
                               >
-                                <ChevronLeft size={15} />
+                                <ChevronLeft size={15} className={dir === 'rtl' ? 'rotate-180' : ''} />
                               </button>
                               <button
                                 type="button"
@@ -1145,10 +1145,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                                   e.stopPropagation();
                                   nextScreen();
                                 }}
-                                className="absolute end-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/70 hover:bg-black text-white opacity-85 sm:opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                className="absolute end-2 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-7 sm:h-7 rounded-full bg-black/70 hover:bg-black text-white opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
                                 aria-label="Next screen"
                               >
-                                <ChevronRight size={15} />
+                                <ChevronRight size={15} className={dir === 'rtl' ? 'rotate-180' : ''} />
                               </button>
                             </>
                           )}
@@ -1166,7 +1166,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                               onClick={() => setActiveScreenIndex(idx)}
                               className={`w-11 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer bg-[#161e31] ${
                                 active
-                                  ? 'border-[#027DFD] scale-[1.03]'
+                                  ? 'border-[#0284ff] scale-[1.03]'
                                   : 'border-slate-200 dark:border-white/15 opacity-85 hover:opacity-100'
                               }`}
                               aria-label={`Select screen ${idx + 1}`}
@@ -1185,7 +1185,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         <button
                           type="button"
                           onClick={() => scrollToSection('gallery')}
-                          className="h-16 px-3 rounded-lg border border-dashed border-slate-300 dark:border-white/20 hover:border-[#027DFD] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 hover:text-[#027DFD] dark:hover:text-[#00C7FF] text-[11px] font-mono font-bold shrink-0 flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer ms-auto"
+                          className="h-16 px-3 rounded-lg border border-dashed border-slate-300 dark:border-white/20 hover:border-[#0284ff] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 hover:text-[#0284ff] dark:hover:text-[#00C7FF] text-[11px] font-mono font-bold shrink-0 flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer ms-auto"
                         >
                           <ImageIcon size={13} />
                           <span>
@@ -1237,7 +1237,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         href={badge.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-1 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-mono font-semibold text-slate-700 dark:text-[#7DD3FC] hover:border-[#027DFD]/50 transition-colors"
+                        className="px-3 py-1 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-mono font-semibold text-slate-700 dark:text-[#7DD3FC] hover:border-[#0284ff]/50 transition-colors"
                       >
                         {badge.label}
                       </a>
@@ -1269,7 +1269,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
               <div className="space-y-3 pt-2">
                 <h5 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Cpu size={16} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                  <Cpu size={16} className="text-[#0284ff] dark:text-[#00C7FF]" />
                   <span>
                     {lang === 'ar'
                       ? 'المكتبات والحزم والواجهات البرمجية'
@@ -1299,7 +1299,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h4 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <ImageIcon size={18} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                    <ImageIcon size={18} className="text-[#0284ff] dark:text-[#00C7FF]" />
                     <span>
                       {lang === 'ar'
                         ? `معرض شاشات التطبيق (${screenshots.length})`
@@ -1317,7 +1317,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setLightboxOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-[#027DFD] hover:text-white text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] sm:min-h-0 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-[#0284ff] hover:text-white text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
                   >
                     <ZoomIn size={13} />
                     <span>{lang === 'ar' ? 'فتح العارض الشامل' : 'Open Lightbox'}</span>
@@ -1339,13 +1339,13 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         }}
                         className={`relative pb-2 text-xs font-mono transition-colors cursor-pointer whitespace-nowrap ${
                           active
-                            ? 'text-[#027DFD] dark:text-[#00C7FF] font-bold'
+                            ? 'text-[#0284ff] dark:text-[#00C7FF] font-bold'
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-medium'
                         }`}
                       >
                         {group.label}
                         {active && (
-                          <span className="absolute bottom-0 inset-x-0 h-[2px] rounded-full bg-[#027DFD] dark:bg-[#00C7FF]" />
+                          <span className="absolute bottom-0 inset-x-0 h-[2px] rounded-full bg-[#0284ff] dark:bg-[#00C7FF]" />
                         )}
                       </button>
                     );
@@ -1364,7 +1364,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 </div>
               ) : screenshots.length === 0 ? (
                 <div className="py-12 text-center text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-white/[0.02] rounded-2xl border border-dashed border-slate-300 dark:border-white/10">
-                  <ImageIcon size={32} className="mx-auto mb-2 opacity-50 text-[#027DFD]" />
+                  <ImageIcon size={32} className="mx-auto mb-2 opacity-50 text-[#0284ff]" />
                   <p className="font-semibold text-xs sm:text-sm">
                     {lang === 'ar'
                       ? 'لم يتم العثور على شاشات لهذا المستودع بعد.'
@@ -1404,7 +1404,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setVisibleGalleryCount((prev) => prev + GALLERY_PAGE_SIZE)}
-                        className="btn-kinetic inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#027DFD] hover:bg-[#026ae0] text-white text-xs font-bold shadow-sm cursor-pointer"
+                        className="btn-kinetic inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0284ff] hover:bg-[#026ae0] text-white text-xs font-bold shadow-sm cursor-pointer"
                       >
                         <ChevronDown size={15} />
                         <span>
@@ -1431,14 +1431,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             >
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2 text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
-                  <Layers size={18} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                  <Layers size={18} className="text-[#0284ff] dark:text-[#00C7FF]" />
                   <span>
                     {lang === 'ar'
                       ? 'المعمارية الهندسية وهيكل المشروع'
                       : 'Clean Architecture & Repository Structure'}
                   </span>
                 </div>
-                <span className="text-xs font-mono text-[#027DFD] dark:text-[#7DD3FC] font-semibold">
+                <span className="text-xs font-mono text-[#0284ff] dark:text-[#7DD3FC] font-semibold">
                   SOLID Compliant
                 </span>
               </div>
@@ -1505,7 +1505,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   <ul className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
                     {parsedReadmeData.architectureNotes.map((note, ni) => (
                       <li key={ni} className="flex items-start gap-2">
-                        <span className="text-[#027DFD] font-mono shrink-0">·</span>
+                        <span className="text-[#0284ff] font-mono shrink-0">·</span>
                         <span>{note}</span>
                       </li>
                     ))}
@@ -1620,7 +1620,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
-                  <BookOpen size={18} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                  <BookOpen size={18} className="text-[#0284ff] dark:text-[#00C7FF]" />
                   <span>{lang === 'ar' ? 'دراسة الحالة الهندسية' : 'Engineering Study Case'}</span>
                 </div>
 
@@ -1631,7 +1631,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       onClick={() => setStudyCaseLang('en')}
                       className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
                         studyCaseLang === 'en'
-                          ? 'bg-[#027DFD] text-white'
+                          ? 'bg-[#0284ff] text-white'
                           : 'text-slate-600 dark:text-slate-300'
                       }`}
                     >
@@ -1642,7 +1642,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       onClick={() => setStudyCaseLang('ar')}
                       className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
                         studyCaseLang === 'ar'
-                          ? 'bg-[#027DFD] text-white'
+                          ? 'bg-[#0284ff] text-white'
                           : 'text-slate-600 dark:text-slate-300'
                       }`}
                     >
@@ -1654,7 +1654,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
               {studyCaseLoading ? (
                 <div className="py-12 rounded-2xl border border-slate-200/75 dark:border-white/8 flex flex-col items-center justify-center gap-2.5 text-slate-500 dark:text-slate-400">
-                  <Loader2 size={22} className="animate-spin text-[#027DFD]" />
+                  <Loader2 size={22} className="animate-spin text-[#0284ff]" />
                   <span className="text-xs font-mono">
                     {lang === 'ar'
                       ? 'جارٍ التحقق من ملف CASE_STUDY.md على GitHub...'
@@ -1729,10 +1729,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               e.stopPropagation();
               prevScreen();
             }}
-            className="absolute start-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/25 text-white cursor-pointer z-20 transition-all hover:scale-110"
+            className="absolute start-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white cursor-pointer z-20 transition-all hover:scale-110 flex items-center justify-center"
             aria-label="Previous Screenshot"
           >
-            <ChevronLeft size={24} />
+            <ChevronLeft size={24} className={dir === 'rtl' ? 'rotate-180' : ''} />
           </button>
 
           <img
@@ -1748,10 +1748,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               e.stopPropagation();
               nextScreen();
             }}
-            className="absolute end-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/25 text-white cursor-pointer z-20 transition-all hover:scale-110"
+            className="absolute end-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white cursor-pointer z-20 transition-all hover:scale-110 flex items-center justify-center"
             aria-label="Next Screenshot"
           >
-            <ChevronRight size={24} />
+            <ChevronRight size={24} className={dir === 'rtl' ? 'rotate-180' : ''} />
           </button>
 
           {screenshots.length > 1 && (

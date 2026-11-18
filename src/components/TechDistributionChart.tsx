@@ -25,7 +25,7 @@ export const TechDistributionChart: React.FC<TechDistributionChartProps> = ({ la
     <div className="mt-5 pt-4 border-t border-slate-200/75 dark:border-white/8 transition-colors">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
         <div className="flex items-center gap-2">
-          <Code2 size={14} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
+          <Code2 size={14} className="text-[#0284ff] dark:text-[#00C7FF] shrink-0" />
           <span className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
             {lang === 'ar' ? 'توزيع اللغات البرمجية عبر المستودعات' : 'Repository Language Breakdown'}
           </span>

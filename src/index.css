@@ -10,16 +10,16 @@
   --surface-elevated: #161b27;
   --surface-glass: rgba(15, 17, 23, 0.78);
 
-  --accent-primary: #027dfd;
+  --accent-primary: #0284ff;
   --accent-secondary: #00c7ff;
-  --accent-glow: rgba(2, 125, 253, 0.28);
+  --accent-glow: rgba(2, 132, 255, 0.25);
 
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
 
   --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(2, 125, 253, 0.42);
+  --border-hover: rgba(2, 132, 255, 0.42);
   --nav-bg: rgba(8, 9, 13, 0.88);
 
   color-scheme: dark;
@@ -32,16 +32,16 @@ html.light,
   --surface-elevated: #f1f5f9;
   --surface-glass: rgba(255, 255, 255, 0.88);
 
-  --accent-primary: #027dfd;
+  --accent-primary: #0284ff;
   --accent-secondary: #0056cc;
-  --accent-glow: rgba(2, 125, 253, 0.14);
+  --accent-glow: rgba(2, 132, 255, 0.14);
 
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;
 
   --border-subtle: rgba(15, 23, 42, 0.09);
-  --border-hover: rgba(2, 125, 253, 0.45);
+  --border-hover: rgba(2, 132, 255, 0.45);
   --nav-bg: rgba(248, 250, 252, 0.92);
 
   color-scheme: light;
@@ -66,14 +66,14 @@ body {
   letter-spacing: -0.011em;
   overflow-x: hidden;
   background-image:
-    radial-gradient(ellipse 75% 48% at 50% -12%, rgba(2, 125, 253, 0.1), transparent 72%),
-    radial-gradient(ellipse 55% 40% at 88% 18%, rgba(0, 199, 255, 0.06), transparent 68%);
+    radial-gradient(ellipse 75% 48% at 50% -12%, rgba(2, 132, 255, 0.11), transparent 72%),
+    radial-gradient(ellipse 55% 40% at 88% 18%, rgba(0, 199, 255, 0.065), transparent 68%);
 }
 
 html.light body {
   background-image:
-    radial-gradient(ellipse 75% 48% at 50% -12%, rgba(2, 125, 253, 0.05), transparent 72%),
-    radial-gradient(ellipse 55% 40% at 88% 18%, rgba(0, 86, 204, 0.03), transparent 68%);
+    radial-gradient(ellipse 75% 48% at 50% -12%, rgba(2, 132, 255, 0.06), transparent 72%),
+    radial-gradient(ellipse 55% 40% at 88% 18%, rgba(0, 86, 204, 0.035), transparent 68%);
 }
 
 /* Accessibility: Visible Custom Focus Rings & Skip Link */
@@ -93,7 +93,7 @@ html.light body {
   color: #ffffff;
   font-size: 0.8125rem;
   font-weight: 700;
-  box-shadow: 0 10px 25px rgba(2, 125, 253, 0.35);
+  box-shadow: 0 10px 25px rgba(2, 132, 255, 0.35);
   transition: top 160ms ease-out;
 }
 
@@ -240,12 +240,12 @@ html.rtl-mode .font-display {
 
 /* Subtle Ambient Glows */
 .ambient-glow-top {
-  background: radial-gradient(ellipse 65% 45% at 50% -10%, rgba(2, 125, 253, 0.14), transparent 72%);
+  background: radial-gradient(ellipse 65% 45% at 50% -10%, rgba(2, 132, 255, 0.15), transparent 72%);
   pointer-events: none;
 }
 
 html.light .ambient-glow-top {
-  background: radial-gradient(ellipse 65% 45% at 50% -10%, rgba(2, 125, 253, 0.06), transparent 72%);
+  background: radial-gradient(ellipse 65% 45% at 50% -10%, rgba(2, 132, 255, 0.065), transparent 72%);
 }
 
 /* =========================================================
@@ -264,7 +264,7 @@ html.light .ambient-glow-top {
 
 html.light .bg-architectural-grid {
   background-image:
-    radial-gradient(circle at 1px 1px, rgba(2, 125, 253, 0.06) 1px, transparent 0),
+    radial-gradient(circle at 1px 1px, rgba(2, 132, 255, 0.06) 1px, transparent 0),
     linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
 }
@@ -349,7 +349,7 @@ html.light .bg-architectural-grid {
     105deg,
     #182034 15%,
     #283757 45%,
-    rgba(2, 125, 253, 0.24) 55%,
+    rgba(2, 132, 255, 0.24) 55%,
     #182034 85%
   );
   background-size: 220% 100%;
@@ -361,7 +361,7 @@ html.light .skeleton-shimmer {
     105deg,
     #e2e8f0 15%,
     #f1f5f9 48%,
-    rgba(2, 125, 253, 0.14) 55%,
+    rgba(2, 132, 255, 0.14) 55%,
     #e2e8f0 85%
   );
   background-size: 220% 100%;
@@ -439,7 +439,7 @@ html.light .skeleton-shimmer {
     transform: translate3d(0, 0, 0);
   }
   50% {
-    transform: translate3d(0, -6px, 0);
+    transform: translate3d(0, -11px, 0);
   }
 }
 
@@ -448,23 +448,23 @@ html.light .skeleton-shimmer {
     transform: translate3d(0, 0, 0) rotate(0deg);
   }
   25% {
-    transform: translate3d(3px, -4px, 0) rotate(1.5deg);
+    transform: translate3d(9px, -10px, 0) rotate(6deg);
   }
   50% {
-    transform: translate3d(0, -6px, 0) rotate(0deg);
+    transform: translate3d(2px, -13px, 0) rotate(1.5deg);
   }
   75% {
-    transform: translate3d(-3px, -3px, 0) rotate(-1.5deg);
+    transform: translate3d(-7px, -4px, 0) rotate(-5.5deg);
   }
 }
 
 .animate-float-gentle {
-  animation: gentleFloatY 4.4s ease-in-out infinite;
+  animation: gentleFloatY 3.8s ease-in-out infinite;
   will-change: transform;
 }
 
 .animate-float-sway {
-  animation: gentleFloatSway 4.8s ease-in-out infinite;
+  animation: gentleFloatSway 3.6s ease-in-out infinite;
   will-change: transform;
 }
 
@@ -490,7 +490,7 @@ html.light .skeleton-shimmer {
   background: linear-gradient(
     110deg,
     transparent 20%,
-    rgba(2, 125, 253, 0.08) 48%,
+    rgba(2, 132, 255, 0.085) 48%,
     rgba(0, 199, 255, 0.12) 52%,
     transparent 80%
   );

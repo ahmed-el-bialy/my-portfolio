@@ -25,6 +25,7 @@ import {
   Cpu,
   CheckCircle2,
   Star,
+  RefreshCw,
 } from 'lucide-react';
 import {
   DeveloperProfile,
@@ -42,14 +43,28 @@ import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import { usePlayStoreAppStats } from '../services/playStoreService';
+import type { ParsedProfileData } from '../services/cvParserService';
+import type { GitHubRepo } from '../services/githubService';
 
 interface ResumeModalProps {
   isOpen: boolean;
   onClose: () => void;
   profile: DeveloperProfile;
+  liveCvData?: ParsedProfileData | null;
+  liveRepos?: GitHubRepo[];
+  onRefreshCv?: () => Promise<void> | void;
+  isRefreshingCv?: boolean;
 }
 
-export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profile }) => {
+export const ResumeModal: React.FC<ResumeModalProps> = ({
+  isOpen,
+  onClose,
+  profile,
+  liveCvData,
+  liveRepos = [],
+  onRefreshCv,
+  isRefreshingCv = false,
+}) => {
   useScrollLock(isOpen);
   const { lang, dir, t } = useLanguage();
   const { showToast } = useToast();
@@ -59,6 +74,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
   const [isMaximized, setIsMaximized] = useState(false);
   const [viewMode, setViewMode] = useState<'web' | 'pdf'>('web');
   const [isPdfLoading, setIsPdfLoading] = useState(true);
+  const [pdfRefreshNonce, setPdfRefreshNonce] = useState<number>(0);
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -72,9 +88,24 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
 
   if (!isOpen) return null;
 
-  const pdfPreviewUrl = (profile.cvDriveUrl || '')
+  const basePdfPreviewUrl = (profile.cvDriveUrl || '')
     .replace('/view?usp=drive_link', '/preview')
     .replace('/view', '/preview');
+  const pdfPreviewUrl = pdfRefreshNonce > 0
+    ? `${basePdfPreviewUrl}${basePdfPreviewUrl.includes('?') ? '&' : '?'}sync=${pdfRefreshNonce}`
+    : basePdfPreviewUrl;
+
+  const handleSyncDriveCv = async () => {
+    setIsPdfLoading(true);
+    setPdfRefreshNonce(Date.now());
+    if (onRefreshCv) {
+      await onRefreshCv();
+    }
+    showToast({
+      message: lang === 'ar' ? 'تمت مزامنة السيرة الذاتية مع Google Drive' : 'CV synced with Google Drive',
+      detail: liveCvData?.pdfHash ? `#${liveCvData.pdfHash.slice(0, 8)}` : 'Live PDF',
+    });
+  };
 
   const handleToggleViewMode = () => {
     setViewMode((prev) => {
@@ -110,7 +141,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
     }, 80);
   };
 
-  const stackGroups = [
+  const baseStackGroups = [
     {
       label: lang === 'ar' ? 'نواة تطوير الموبايل' : 'Mobile Core',
       items: ['Flutter', 'Dart', 'Clean Architecture', 'SOLID Principles', 'Responsive UI'],
@@ -124,6 +155,36 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
       items: ['Dio', 'Retrofit', 'RESTful APIs', 'Firebase Auth & Firestore'],
     },
   ];
+
+  const stackGroups =
+    liveCvData?.aiEnriched && liveCvData.skills.length > 0
+      ? liveCvData.skills.map((s) => ({ label: s.category, items: s.items }))
+      : baseStackGroups;
+
+  const featuredNames = new Set(
+    FEATURED_PROJECTS.flatMap((p) => [p.repoName.toLowerCase(), p.name.toLowerCase()])
+  );
+  const syncedExtraProjects = liveRepos
+    .filter(
+      (r) =>
+        r?.name &&
+        !r.is_fork &&
+        r.name.toLowerCase() !== profile.githubUsername.toLowerCase() &&
+        !featuredNames.has(r.name.toLowerCase())
+    )
+    .slice(0, 4)
+    .map((repo) => ({
+      id: repo.id,
+      name: repo.name,
+      subtitle: repo.description || `${repo.language || 'Dart'} Project`,
+      technologies: [repo.language || 'Dart', ...(repo.topics || [])].slice(0, 4),
+      links: {
+        github: repo.html_url,
+        googlePlay: repo.googlePlayUrl,
+      },
+    }));
+
+  const resumeProjects = [...FEATURED_PROJECTS, ...syncedExtraProjects];
 
   const modalContent = (
     <div
@@ -164,10 +225,10 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
             <button
               type="button"
               onClick={handleToggleViewMode}
-              className={`btn-kinetic flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border min-h-[36px] ${
+              className={`btn-kinetic flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border min-h-[42px] sm:min-h-[36px] ${
                 viewMode === 'pdf'
-                  ? 'bg-[#027DFD] text-white border-[#027DFD] shadow-sm'
-                  : 'bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-[#027DFD] dark:text-[#00C7FF] border-slate-200 dark:border-white/10'
+                  ? 'bg-[#0284ff] text-white border-[#0284ff] shadow-sm'
+                  : 'bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-[#0284ff] dark:text-[#00C7FF] border-slate-200 dark:border-white/10'
               }`}
             >
               {viewMode === 'pdf' ? (
@@ -189,7 +250,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
               className="btn-kinetic hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-xs text-slate-700 dark:text-gray-200 border border-slate-200 dark:border-white/10 font-semibold transition-colors cursor-pointer min-h-[36px]"
               title={t.resume.print}
             >
-              <Printer size={13} className="text-[#027DFD] dark:text-[#00C7FF]" />
+              <Printer size={13} className="text-[#0284ff] dark:text-[#00C7FF]" />
               <span>{lang === 'ar' ? 'طباعة' : 'Print'}</span>
             </button>
 
@@ -198,7 +259,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                 href={profile.cvDriveUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="btn-kinetic flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs text-white font-bold shadow-sm transition-colors cursor-pointer min-h-[36px]"
+                className="btn-kinetic flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs text-white font-bold shadow-sm transition-colors cursor-pointer min-h-[42px] sm:min-h-[36px]"
                 title={t.resume.downloadPdf}
               >
                 <Download size={13} />
@@ -210,7 +271,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
             <button
               type="button"
               onClick={handleCopyLink}
-              className="w-9 h-9 sm:w-auto sm:px-3 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-xs text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-white/10 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              className="w-10 h-10 sm:w-auto sm:h-9 sm:px-3 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-xs text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-white/10 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               title={t.resume.copyLink}
             >
               {copiedLink ? <Check size={13} className="text-emerald-500" /> : <Share2 size={13} />}
@@ -238,7 +299,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
             <button
               type="button"
               onClick={onClose}
-              className="w-9 h-9 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-600 hover:text-white border border-red-500/25 flex items-center justify-center transition-all cursor-pointer"
+              className="w-10 h-10 sm:w-9 sm:h-9 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-600 hover:text-white border border-red-500/25 flex items-center justify-center transition-all cursor-pointer"
               aria-label="Close CV Dialog"
             >
               <X size={17} strokeWidth={2.5} />
@@ -248,31 +309,49 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
 
         {viewMode === 'pdf' ? (
           <div className="flex-1 min-h-0 flex flex-col w-full h-full bg-slate-100 dark:bg-[#0c0d14] relative">
-            <div className="px-4 py-2.5 bg-slate-200/70 dark:bg-white/[0.04] border-b border-slate-300 dark:border-white/10 flex items-center justify-between text-xs text-slate-700 dark:text-gray-300 shrink-0">
-              <div className="flex items-center gap-2">
-                <FileText size={15} className="text-[#027DFD] dark:text-[#00C7FF]" />
-                <span className="font-semibold text-xs sm:text-sm">
+            <div className="px-4 py-2.5 bg-slate-200/70 dark:bg-white/[0.04] border-b border-slate-300 dark:border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-700 dark:text-gray-300 shrink-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <FileText size={15} className="text-[#0284ff] dark:text-[#00C7FF] shrink-0" />
+                <span className="font-semibold text-xs sm:text-sm truncate">
                   {lang === 'ar' ? 'مستند السيرة الذاتية (PDF المعتمد)' : 'Official PDF Resume Document'}
                 </span>
+                {liveCvData?.verifiedDrive && (
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-mono">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Drive Live
+                  </span>
+                )}
               </div>
 
-              {profile.cvDriveUrl && (
-                <a
-                  href={profile.cvDriveUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-white/10 text-[#027DFD] dark:text-[#00C7FF] font-semibold text-xs border border-slate-200 dark:border-white/10"
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleSyncDriveCv}
+                  disabled={isRefreshingCv}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white dark:bg-white/10 hover:border-[#0284ff]/40 text-slate-700 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-white/10 cursor-pointer disabled:opacity-50"
                 >
-                  <span>{lang === 'ar' ? 'فتح في نافذة جديدة' : 'Open External'}</span>
-                  <ExternalLink size={12} />
-                </a>
-              )}
+                  <RefreshCw size={12} className={isRefreshingCv ? 'animate-spin text-[#0284ff]' : ''} />
+                  <span>{lang === 'ar' ? 'تحديث الملف' : 'Sync Drive PDF'}</span>
+                </button>
+
+                {profile.cvDriveUrl && (
+                  <a
+                    href={profile.cvDriveUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-white/10 text-[#0284ff] dark:text-[#00C7FF] font-semibold text-xs border border-slate-200 dark:border-white/10"
+                  >
+                    <span>{lang === 'ar' ? 'فتح في نافذة جديدة' : 'Open External'}</span>
+                    <ExternalLink size={12} />
+                  </a>
+                )}
+              </div>
             </div>
 
             <div className="flex-1 min-h-0 w-full h-full relative overflow-hidden">
               {isPdfLoading && (
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-slate-100/95 dark:bg-[#0c0d14]/95 backdrop-blur-sm">
-                  <div className="w-12 h-12 rounded-2xl bg-[#027DFD]/10 border border-[#027DFD]/25 flex items-center justify-center mb-4 text-[#027DFD] dark:text-[#00C7FF]">
+                  <div className="w-12 h-12 rounded-2xl bg-[#0284ff]/10 border border-[#0284ff]/25 flex items-center justify-center mb-4 text-[#0284ff] dark:text-[#00C7FF]">
                     <Loader2 size={24} className="animate-spin" />
                   </div>
                   <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-1.5 text-center">
@@ -300,6 +379,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
               )}
 
               <iframe
+                key={pdfRefreshNonce}
                 src={pdfPreviewUrl}
                 onLoad={() => setIsPdfLoading(false)}
                 className="w-full h-full border-0"
@@ -313,9 +393,9 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
           <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-7 lg:p-8 print:p-0 text-slate-700 dark:text-gray-300">
             <div className="max-w-5xl mx-auto space-y-6">
               {/* Executive Masthead Card */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-blue-50/40 dark:from-[#141926] dark:via-[#111520] dark:to-[#0c1018] border border-slate-200/90 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="card-shimmer overflow-hidden p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-slate-50 via-white to-blue-50/40 dark:from-[#141926] dark:via-[#111520] dark:to-[#0c1018] border border-slate-200/90 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-start sm:items-center gap-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl p-[2px] bg-gradient-to-br from-[#027DFD] via-[#00C7FF] to-emerald-400 shrink-0 shadow-md">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl p-[2px] bg-gradient-to-br from-[#0284ff] via-[#00C7FF] to-emerald-400 shrink-0 shadow-md">
                     <img
                       src={profile.avatarUrl}
                       alt={profile.name}
@@ -331,7 +411,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                         · {lang === 'ar' ? 'متاح للعمل والمشاريع' : 'Available for Hire'}
                       </span>
                     </div>
-                    <p className="font-display text-base sm:text-lg font-bold text-[#027DFD] dark:text-[#00C7FF] mt-0.5 tracking-[-0.01em]">
+                    <p className="font-display text-base sm:text-lg font-bold text-[#0284ff] dark:text-[#00C7FF] mt-0.5 tracking-[-0.01em]">
                       {AHMED_CONFIG.title[lang]}
                     </p>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
@@ -351,8 +431,8 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                     </div>
                   </div>
                   <div className="px-3.5 py-2 rounded-xl bg-white dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 text-center">
-                    <div className="font-display text-base font-extrabold tabular-nums text-[#027DFD] dark:text-[#00C7FF]">
-                      6+ Apps
+                    <div className="font-display text-base font-extrabold tabular-nums text-[#0284ff] dark:text-[#00C7FF]">
+                      {resumeProjects.length}+ Apps
                     </div>
                     <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                       Clean Architecture
@@ -368,7 +448,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                   {/* Direct Contact */}
                   <div className="p-5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.025] border border-slate-200/85 dark:border-white/10 space-y-3">
                     <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                      <Mail size={14} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                      <Mail size={14} className="text-[#0284ff] dark:text-[#00C7FF]" />
                       <span>{lang === 'ar' ? 'قنوات التواصل' : 'Contact & Profiles'}</span>
                     </h2>
 
@@ -377,9 +457,9 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                         href={getGmailComposeUrl(profile.email)}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#027DFD] dark:hover:text-[#00C7FF] font-medium break-all"
+                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#0284ff] dark:hover:text-[#00C7FF] font-medium break-all"
                       >
-                        <Mail size={14} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
+                        <Mail size={14} className="text-[#0284ff] dark:text-[#00C7FF] shrink-0" />
                         <span>{profile.email}</span>
                       </a>
 
@@ -397,7 +477,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                         href={profile.githubUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#027DFD] dark:hover:text-[#00C7FF] font-medium"
+                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#0284ff] dark:hover:text-[#00C7FF] font-medium"
                       >
                         <Github size={14} className="shrink-0" />
                         <span>github.com/{profile.githubUsername}</span>
@@ -407,7 +487,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                         href={profile.linkedinUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#027DFD] dark:hover:text-[#00C7FF] font-medium"
+                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#0284ff] dark:hover:text-[#00C7FF] font-medium"
                       >
                         <Linkedin size={14} className="text-blue-600 dark:text-blue-400 shrink-0" />
                         <span>LinkedIn · ahmedel-bialy</span>
@@ -423,7 +503,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                   {/* Categorized Technical Stack */}
                   <div className="p-5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.025] border border-slate-200/85 dark:border-white/10 space-y-4">
                     <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                      <Cpu size={14} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                      <Cpu size={14} className="text-[#0284ff] dark:text-[#00C7FF]" />
                       <span>{t.resume.skillsTitle}</span>
                     </h2>
 
@@ -451,7 +531,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                   {/* Languages */}
                   <div className="p-5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.025] border border-slate-200/85 dark:border-white/10 space-y-3">
                     <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                      <Globe size={14} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                      <Globe size={14} className="text-[#0284ff] dark:text-[#00C7FF]" />
                       <span>{lang === 'ar' ? 'اللغات' : 'Languages'}</span>
                     </h2>
                     <div className="space-y-2 text-xs">
@@ -504,7 +584,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                   {/* Experience Timeline */}
                   <div className="space-y-3">
                     <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                      <Briefcase size={15} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                      <Briefcase size={15} className="text-[#0284ff] dark:text-[#00C7FF]" />
                       <span>{t.resume.experienceTitle}</span>
                     </h2>
 
@@ -519,7 +599,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                               <h3 className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">
                                 {exp.role}
                               </h3>
-                              <div className="text-xs font-semibold text-[#027DFD] dark:text-[#00C7FF]">
+                              <div className="text-xs font-semibold text-[#0284ff] dark:text-[#00C7FF]">
                                 {exp.organization} · {exp.location}
                               </div>
                             </div>
@@ -549,12 +629,12 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                   {/* Production Projects */}
                   <div className="space-y-3">
                     <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                      <FolderGit2 size={15} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                      <FolderGit2 size={15} className="text-[#0284ff] dark:text-[#00C7FF]" />
                       <span>{t.resume.projectsTitle}</span>
                     </h2>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      {FEATURED_PROJECTS.map((proj) => (
+                      {resumeProjects.map((proj) => (
                         <div
                           key={proj.id}
                           className="p-4 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200/85 dark:border-white/10 flex flex-col justify-between gap-3"
@@ -596,7 +676,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                                 href={proj.links.github}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-[#027DFD] dark:text-[#00C7FF] font-bold hover:underline inline-flex items-center gap-1"
+                                className="text-[#0284ff] dark:text-[#00C7FF] font-bold hover:underline inline-flex items-center gap-1"
                               >
                                 <span>Source</span>
                                 <ArrowUpRight size={11} />
@@ -611,7 +691,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                   {/* Academic Degree */}
                   <div className="space-y-3">
                     <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                      <GraduationCap size={15} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                      <GraduationCap size={15} className="text-[#0284ff] dark:text-[#00C7FF]" />
                       <span>{t.resume.educationTitle}</span>
                     </h2>
 
@@ -620,7 +700,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, profi
                         <h3 className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">
                           {t.experience.degreeTitle}
                         </h3>
-                        <div className="text-xs text-[#027DFD] dark:text-[#00C7FF] font-bold mt-0.5">
+                        <div className="text-xs text-[#0284ff] dark:text-[#00C7FF] font-bold mt-0.5">
                           {t.experience.faculty} · {t.experience.university}
                         </div>
                         <div className="text-[11px] font-mono text-slate-600 dark:text-slate-400 mt-2">

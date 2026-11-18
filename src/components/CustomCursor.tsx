@@ -177,7 +177,7 @@ export const CustomCursor: React.FC = () => {
           opacity: isOverIframe ? 0.5 : hasLabel ? 0.35 : 1,
           backgroundColor: isLightMode
             ? isHovered
-              ? '#027DFD'
+              ? '#0284ff'
               : '#0284c7'
             : isHovered
             ? '#00C7FF'
@@ -205,11 +205,11 @@ export const CustomCursor: React.FC = () => {
           opacity: isOverIframe ? 0.4 : 1,
           borderColor: hasLabel
             ? isLightMode
-              ? 'rgba(2, 125, 253, 0.55)'
+              ? 'rgba(2, 132, 255, 0.55)'
               : 'rgba(0, 199, 255, 0.6)'
             : isLightMode
             ? isHovered
-              ? 'rgba(2, 125, 253, 0.72)'
+              ? 'rgba(2, 132, 255, 0.72)'
               : 'rgba(2, 132, 199, 0.42)'
             : isHovered
             ? 'rgba(0, 199, 255, 0.8)'
@@ -220,7 +220,7 @@ export const CustomCursor: React.FC = () => {
               : 'rgba(15, 17, 23, 0.92)'
             : isLightMode
             ? isHovered
-              ? 'rgba(2, 125, 253, 0.08)'
+              ? 'rgba(2, 132, 255, 0.08)'
               : 'rgba(2, 132, 199, 0.03)'
             : isHovered
             ? 'rgba(0, 199, 255, 0.1)'
@@ -242,7 +242,7 @@ export const CustomCursor: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.12 }}
-              className="text-[10px] font-mono font-bold tracking-wide whitespace-nowrap text-[#027DFD] dark:text-[#00C7FF]"
+              className="text-[10px] font-mono font-bold tracking-wide whitespace-nowrap text-[#0284ff] dark:text-[#00C7FF]"
             >
               {cursorLabel}
             </motion.span>

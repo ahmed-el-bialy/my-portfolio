@@ -9,6 +9,7 @@ interface LeafAnimationProps {
   compact?: boolean;
   isDark?: boolean;
   pacing?: LeafAnimationPacing;
+  cycles?: number;
   loop?: boolean;
   showProgress?: boolean;
   progress?: number;
@@ -23,9 +24,9 @@ const CALLIGRAPHY_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 export const LEAF_DRAW_CYCLE_SEC = 3.6;
 export const LEAF_DOUBLE_DRAW_MS = 3600;
 
-// Session Start Entry Sequence: crisp 1.35s artistic draw (within 1.2s–1.5s window)
-export const LEAF_ENTRY_CYCLE_SEC = 1.35;
-export const LEAF_ENTRY_DURATION_MS = 1350;
+// Session Start Entry Sequence: calm 2.2s artistic draw (~4.4s total across 2 clear cycles)
+export const LEAF_ENTRY_CYCLE_SEC = 2.2;
+export const LEAF_ENTRY_DURATION_MS = 2200;
 
 const STAMP_SIZE = 320;
 
@@ -202,6 +203,7 @@ export const LeafAnimation: React.FC<LeafAnimationProps> = ({
   compact = false,
   isDark,
   pacing = 'artisan',
+  cycles = 1,
   loop = true,
   showProgress = false,
   progress,
@@ -233,8 +235,10 @@ export const LeafAnimation: React.FC<LeafAnimationProps> = ({
       ? document.documentElement.classList.contains('dark')
       : true;
 
+  const safeCycles = Math.max(1, Math.round(cycles));
   const totalSec = pacing === 'entry' ? LEAF_ENTRY_CYCLE_SEC : LEAF_DRAW_CYCLE_SEC;
   const totalMs = totalSec * 1000;
+  const sequenceMs = totalMs * safeCycles;
 
   // Memoize geometric Path2D calligraphy curves + length LUT once
   const memoizedStrokes = useMemo(() => {
@@ -317,18 +321,33 @@ export const LeafAnimation: React.FC<LeafAnimationProps> = ({
 
     const drawFrame = (now: number) => {
       const elapsed = now - startTime;
+      const clampedElapsed = Math.min(elapsed, sequenceMs);
+      const currentCycleIndex = loop
+        ? 0
+        : Math.min(safeCycles - 1, Math.floor(clampedElapsed / totalMs));
+      const cycleElapsed = clampedElapsed - currentCycleIndex * totalMs;
+      const isSequenceFinished = !loop && clampedElapsed >= sequenceMs;
+
       const u = prefersReducedMotion
         ? 0.85
         : loop
         ? (elapsed % totalMs) / totalMs
-        : Math.min(1, elapsed / totalMs);
+        : isSequenceFinished
+        ? 1
+        : cycleElapsed / totalMs;
 
-      const s1 = u <= 0 ? 0 : u >= 0.275 ? 1 : easeOutCubic(u / 0.275);
-      const s2 = u <= 0.26 ? 0 : u >= 0.555 ? 1 : easeOutCubic((u - 0.26) / 0.295);
-      const s3 = u <= 0.54 ? 0 : u >= 0.667 ? 1 : easeOutCubic((u - 0.54) / 0.127);
+      const s1 = u <= 0 ? 0 : u >= 0.30 ? 1 : easeOutCubic(u / 0.30);
+      const s2 = u <= 0.28 ? 0 : u >= 0.60 ? 1 : easeOutCubic((u - 0.28) / 0.32);
+      const s3 = u <= 0.58 ? 0 : u >= 0.74 ? 1 : easeOutCubic((u - 0.58) / 0.16);
 
-      const fadeAlpha =
-        loop && u > 0.96 ? Math.max(0, 1 - (u - 0.96) / 0.04) : 1;
+      const isFinalPass = currentCycleIndex >= safeCycles - 1;
+      const fadeAlpha = loop
+        ? u > 0.96
+          ? Math.max(0, 1 - (u - 0.96) / 0.04)
+          : 1
+        : !isFinalPass && u > 0.86
+        ? Math.max(0.06, 1 - (u - 0.86) / 0.14)
+        : 1;
 
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, backingSize, backingSize);
@@ -385,19 +404,19 @@ export const LeafAnimation: React.FC<LeafAnimationProps> = ({
       ctx.restore();
 
       // 3. Trailing Cobalt-to-Cyan Painterly Gradient Ink Tip (active during stroke phases)
-      if (!prefersReducedMotion && u < 0.68) {
+      if (!prefersReducedMotion && u < 0.745) {
         let activeNib: SampledPoint | null = null;
         let nibAlpha = 1;
 
-        if (u < 0.275 && s1 > 0.02) {
+        if (u < 0.30 && s1 > 0.02) {
           activeNib = getPointAtFraction(memoizedStrokes.innerSpiral, s1);
-          nibAlpha = u > 0.24 ? (0.275 - u) / 0.035 : 1;
-        } else if (u >= 0.26 && u < 0.555 && s2 > 0.02) {
+          nibAlpha = u > 0.265 ? (0.30 - u) / 0.035 : 1;
+        } else if (u >= 0.28 && u < 0.60 && s2 > 0.02) {
           activeNib = getPointAtFraction(memoizedStrokes.outerArchAndBase, s2);
-          nibAlpha = u > 0.52 ? (0.555 - u) / 0.035 : 1;
-        } else if (u >= 0.54 && u < 0.675 && s3 > 0.02) {
+          nibAlpha = u > 0.565 ? (0.60 - u) / 0.035 : 1;
+        } else if (u >= 0.58 && u < 0.745 && s3 > 0.02) {
           activeNib = getPointAtFraction(memoizedStrokes.tipFlick, s3);
-          nibAlpha = u > 0.64 ? Math.max(0, (0.675 - u) / 0.035) : 1;
+          nibAlpha = u > 0.71 ? Math.max(0, (0.745 - u) / 0.035) : 1;
         }
 
         if (activeNib && nibAlpha > 0.02) {
@@ -409,8 +428,8 @@ export const LeafAnimation: React.FC<LeafAnimationProps> = ({
           ctx.globalAlpha = nibAlpha * fadeAlpha;
           const grad = ctx.createRadialGradient(nx, ny, 0.5 * scale, nx, ny, haloRadius);
           grad.addColorStop(0, 'rgba(0, 199, 255, 0.95)');
-          grad.addColorStop(0.42, 'rgba(2, 125, 253, 0.55)');
-          grad.addColorStop(1, 'rgba(2, 125, 253, 0)');
+          grad.addColorStop(0.42, 'rgba(2, 132, 255, 0.55)');
+          grad.addColorStop(1, 'rgba(2, 132, 255, 0)');
           ctx.fillStyle = grad;
           ctx.beginPath();
           ctx.arc(nx, ny, haloRadius, 0, Math.PI * 2);
@@ -424,14 +443,14 @@ export const LeafAnimation: React.FC<LeafAnimationProps> = ({
         }
       }
 
-      const gateReady = isReadyRef ? isReadyRef.current || elapsed >= totalMs + 350 : true;
+      const gateReady = isReadyRef ? isReadyRef.current || elapsed >= sequenceMs + 400 : true;
 
       if (showProgressRef.current && !hasExternalProgressRef.current) {
         const rawRatio = prefersReducedMotion
           ? 1
           : loop
           ? (elapsed % totalMs) / (totalMs * 0.85)
-          : elapsed / (totalMs * 0.88);
+          : elapsed / (sequenceMs * 0.9);
         const easedPct = Math.round(easeOutCubic(Math.min(1, rawRatio)) * 100);
         const cappedPct = gateReady ? easedPct : Math.min(96, easedPct);
 
@@ -446,7 +465,7 @@ export const LeafAnimation: React.FC<LeafAnimationProps> = ({
         }
       }
 
-      if (!loop && !completedEmittedRef.current && (prefersReducedMotion || (elapsed >= totalMs && gateReady))) {
+      if (!loop && !completedEmittedRef.current && (prefersReducedMotion || (elapsed >= sequenceMs && gateReady))) {
         completedEmittedRef.current = true;
         if (percentTextRef.current) {
           percentTextRef.current.textContent = '100%';
@@ -473,7 +492,7 @@ export const LeafAnimation: React.FC<LeafAnimationProps> = ({
       redrawLastFrameRef.current = null;
       if (rafId) window.cancelAnimationFrame(rafId);
     };
-  }, [compact, isReadyRef, loop, memoizedStrokes, prefersReducedMotion, resolvedDark, totalMs]);
+  }, [compact, isReadyRef, loop, memoizedStrokes, prefersReducedMotion, resolvedDark, safeCycles, sequenceMs, totalMs]);
 
   const initialStaticPercent =
     typeof progress === 'number'
@@ -498,7 +517,7 @@ export const LeafAnimation: React.FC<LeafAnimationProps> = ({
       >
         <motion.div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-4 rounded-full bg-gradient-to-tr from-[#027DFD]/15 via-[#00C7FF]/10 to-transparent"
+          className="pointer-events-none absolute inset-4 rounded-full bg-gradient-to-tr from-[#0284ff]/15 via-[#00C7FF]/10 to-transparent"
           animate={
             prefersReducedMotion
               ? undefined
@@ -520,7 +539,7 @@ export const LeafAnimation: React.FC<LeafAnimationProps> = ({
           {showProgress && (
             <div
               ref={percentTextRef}
-              className="font-display text-2xl sm:text-[26px] font-extrabold tabular-nums tracking-tight bg-gradient-to-r from-[#027DFD] via-[#00C7FF] to-sky-400 bg-clip-text text-transparent"
+              className="font-display text-2xl sm:text-[26px] font-extrabold tabular-nums tracking-tight bg-gradient-to-r from-[#0284ff] via-[#00C7FF] to-sky-400 bg-clip-text text-transparent"
             >
               {initialStaticPercent}%
             </div>
@@ -530,20 +549,20 @@ export const LeafAnimation: React.FC<LeafAnimationProps> = ({
             {showProgress ? (
               <div
                 ref={progressBarRef}
-                className="h-full w-full origin-left rounded-full bg-gradient-to-r from-[#027DFD] via-[#00C7FF] to-sky-400 will-change-transform"
+                className="progress-bar h-full w-full origin-left rounded-full bg-gradient-to-r from-[#0284ff] via-[#00C7FF] to-sky-400 will-change-transform"
                 style={{
                   transform: `scaleX(${initialStaticPercent / 100})`,
                 }}
               />
             ) : loop ? (
               <motion.div
-                className="absolute inset-y-0 w-10 rounded-full bg-gradient-to-r from-transparent via-[#027DFD] to-[#00C7FF]"
+                className="absolute inset-y-0 w-10 rounded-full bg-gradient-to-r from-transparent via-[#0284ff] to-[#00C7FF]"
                 animate={prefersReducedMotion ? undefined : { x: [-44, 152] }}
                 transition={{ duration: totalSec, repeat: Infinity, ease: CALLIGRAPHY_EASE }}
               />
             ) : (
               <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-[#027DFD] to-[#00C7FF] origin-left"
+                className="progress-bar h-full rounded-full bg-gradient-to-r from-[#0284ff] to-[#00C7FF] origin-left"
                 initial={prefersReducedMotion ? { scaleX: 1 } : { scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ duration: totalSec * 0.67, ease: CALLIGRAPHY_EASE }}

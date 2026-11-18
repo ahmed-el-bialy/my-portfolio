@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { Language, Translations, translations } from '../data/translations';
-import { LEAF_DOUBLE_DRAW_MS } from '../components/LeafAnimation';
 export type { Language };
 
 interface LanguageContextType {
@@ -9,6 +8,7 @@ interface LanguageContextType {
   isArabic: boolean;
   isSwitchingLang: boolean;
   switchingTargetLang: Language | null;
+  completeLanguageSwitch: () => void;
   setLang: (lang: Language) => void;
   toggleLang: () => void;
   t: Translations;
@@ -30,7 +30,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isSwitchingLang, setIsSwitchingLang] = useState(false);
   const [switchingTargetLang, setSwitchingTargetLang] = useState<Language | null>(null);
   const swapTimerRef = useRef<number | null>(null);
-  const endTimerRef = useRef<number | null>(null);
+  const fallbackEndTimerRef = useRef<number | null>(null);
 
   const dir: 'ltr' | 'rtl' = lang === 'ar' ? 'rtl' : 'ltr';
   const isArabic = lang === 'ar';
@@ -53,15 +53,25 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     return () => {
       if (swapTimerRef.current) window.clearTimeout(swapTimerRef.current);
-      if (endTimerRef.current) window.clearTimeout(endTimerRef.current);
+      if (fallbackEndTimerRef.current) window.clearTimeout(fallbackEndTimerRef.current);
     };
   }, []);
 
+  const completeLanguageSwitch = useCallback(() => {
+    if (fallbackEndTimerRef.current) {
+      window.clearTimeout(fallbackEndTimerRef.current);
+      fallbackEndTimerRef.current = null;
+    }
+    setIsSwitchingLang(false);
+    setSwitchingTargetLang(null);
+  }, []);
+
   const triggerLanguageTransition = (nextLang: Language) => {
-    if (nextLang === lang) return;
+    if (nextLang === lang && !isSwitchingLang) return;
+    if (isSwitchingLang && switchingTargetLang === nextLang) return;
 
     if (swapTimerRef.current) window.clearTimeout(swapTimerRef.current);
-    if (endTimerRef.current) window.clearTimeout(endTimerRef.current);
+    if (fallbackEndTimerRef.current) window.clearTimeout(fallbackEndTimerRef.current);
 
     const prefersReducedMotion =
       typeof window !== 'undefined' &&
@@ -69,26 +79,26 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     if (prefersReducedMotion) {
       setLangState(nextLang);
+      setIsSwitchingLang(false);
+      setSwitchingTargetLang(null);
       return;
     }
 
     setSwitchingTargetLang(nextLang);
     setIsSwitchingLang(true);
 
-    // Swap RTL/LTR cleanly during the calm hold plateau (~2.45s) after the 2.4s stroke finishes
+    // Swap entire app language/RTL silently at ~480ms once full-viewport curtain is opaque
     swapTimerRef.current = window.setTimeout(() => {
       React.startTransition(() => {
         setLangState(nextLang);
       });
       swapTimerRef.current = null;
-    }, Math.round(LEAF_DOUBLE_DRAW_MS * 0.68));
+    }, 480);
 
-    // Reveal translated content smoothly after the 1.2s calm hold completes
-    endTimerRef.current = window.setTimeout(() => {
-      setIsSwitchingLang(false);
-      setSwitchingTargetLang(null);
-      endTimerRef.current = null;
-    }, LEAF_DOUBLE_DRAW_MS);
+    // Hard safety cap so curtain can never stay stuck if overlay animation callback fails
+    fallbackEndTimerRef.current = window.setTimeout(() => {
+      completeLanguageSwitch();
+    }, 3200);
   };
 
   const setLang = (newLang: Language) => {
@@ -110,6 +120,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         isArabic,
         isSwitchingLang,
         switchingTargetLang,
+        completeLanguageSwitch,
         setLang,
         toggleLang,
         t: currentTranslations,

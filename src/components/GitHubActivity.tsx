@@ -210,7 +210,7 @@ export const GitHubActivity: React.FC<GitHubActivityProps> = ({
         </div>
 
         <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/8 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#027DFD]/12 text-[#027DFD] dark:text-[#00C7FF] flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-[#0284ff]/12 text-[#0284ff] dark:text-[#00C7FF] flex items-center justify-center shrink-0">
             <CalendarDays size={15} />
           </div>
           <div>

@@ -129,7 +129,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
         {/* Modal Header */}
         <div className="mb-6 pe-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0284ff]/10 border border-[#0284ff]/25 text-[#0284ff] dark:text-[#00C7FF] text-xs font-semibold uppercase tracking-wider mb-2">
             <Mail size={13} />
             <span>{t.contact.badge}</span>
           </div>
@@ -144,7 +144,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           {/* Left Info Column */}
           <div className="md:col-span-2 space-y-4 text-xs sm:text-sm">
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-3">
+            <div className="card-shimmer overflow-hidden p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-3">
               <div className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
                 {t.contact.directChannels}
               </div>
@@ -157,12 +157,12 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   className="w-full min-h-[44px] flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-colors text-start group"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <Mail size={15} className="text-cyan-500 shrink-0" />
+                    <Mail size={15} className="text-[#0284ff] dark:text-[#00C7FF] shrink-0" />
                     <span className="text-xs text-slate-800 dark:text-gray-200 font-medium truncate">
                       {profile.email}
                     </span>
                   </div>
-                  <span className="text-[10px] text-blue-600 dark:text-cyan-400 font-semibold group-hover:underline shrink-0">
+                  <span className="text-[10px] text-[#0284ff] dark:text-[#00C7FF] font-semibold group-hover:underline shrink-0">
                     {lang === 'ar' ? 'فتح' : 'Open'}
                   </span>
                 </a>
@@ -184,15 +184,15 @@ export const ContactModal: React.FC<ContactModalProps> = ({
 
                 <a
                   href={`tel:${profile.phone}`}
-                  className="min-h-[44px] flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-colors text-start group"
+                  className="min-h-[44px] flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-white/5 hover:bg-[#0284ff]/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-colors text-start group"
                 >
                   <div className="flex items-center gap-2">
-                    <Phone size={15} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
+                    <Phone size={15} className="text-[#0284ff] dark:text-[#00C7FF] shrink-0" />
                     <span className="text-xs text-slate-800 dark:text-gray-200 font-medium">
                       {lang === 'ar' ? 'اتصال مباشر' : 'Call Directly'}
                     </span>
                   </div>
-                  <ArrowUpRight size={13} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                  <ArrowUpRight size={13} className="text-[#0284ff] dark:text-[#00C7FF]" />
                 </a>
               </div>
 
@@ -203,7 +203,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     onClose();
                     onOpenBooking();
                   }}
-                  className="w-full min-h-[44px] flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-semibold text-xs transition-all shadow-sm cursor-pointer"
+                  className="btn-kinetic w-full min-h-[44px] flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#0284ff] to-[#00C7FF] hover:opacity-95 text-white font-semibold text-xs transition-all shadow-sm cursor-pointer"
                 >
                   <Video size={13} />
                   <span>{t.hero.bookMeeting}</span>
@@ -260,7 +260,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                       </a>
                       <a
                         href={mailtoHref}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] rounded-lg bg-[#027DFD] text-white font-semibold text-xs"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] sm:min-h-[38px] rounded-lg bg-[#0284ff] hover:bg-[#0070e0] text-white font-semibold text-xs transition-colors"
                       >
                         <Mail size={13} />
                         <span>{lang === 'ar' ? 'تطبيق البريد' : 'Email App'}</span>
@@ -279,7 +279,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={t.contact.form.namePlaceholder}
-                    className="w-full px-3.5 py-2.5 text-base sm:text-sm rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 min-h-[44px]"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-sm rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#0284ff] min-h-[44px]"
                   />
                 </div>
 
@@ -293,7 +293,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t.contact.form.emailPlaceholder}
-                    className="w-full px-3.5 py-2.5 text-base sm:text-sm rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 min-h-[44px]"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-sm rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#0284ff] min-h-[44px]"
                   />
                 </div>
 
@@ -306,7 +306,7 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder={t.contact.form.subjectPlaceholder}
-                    className="w-full px-3.5 py-2.5 text-base sm:text-sm rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 min-h-[44px]"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-sm rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#0284ff] min-h-[44px]"
                   />
                 </div>
 
@@ -320,14 +320,14 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder={t.contact.form.messagePlaceholder}
-                    className="w-full px-3.5 py-2.5 text-base sm:text-sm rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 resize-none"
+                    className="w-full px-3.5 py-2.5 text-base sm:text-sm rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#0284ff] resize-none"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full min-h-[46px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm shadow-md shadow-blue-600/30 transition-all cursor-pointer disabled:opacity-50"
+                  className="btn-kinetic w-full min-h-[46px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-semibold text-sm shadow-md shadow-[#0284ff]/30 transition-all cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <span>{t.contact.form.sendingButton}</span>

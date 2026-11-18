@@ -81,10 +81,10 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
     <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full">
       <RevealOnScroll className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 sm:mb-10">
         <div className="max-w-2xl">
-          <div className="flex items-center gap-2 text-xs font-medium text-blue-600 dark:text-cyan-400 mb-2">
+          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0284ff] dark:text-[#00C7FF] mb-2">
             <span>{lang === 'ar' ? 'منهجية العمل الهندسي' : 'Engineering Process'}</span>
-            <span aria-hidden="true">·</span>
-            <span className="text-slate-500 dark:text-slate-400">
+            <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
+            <span className="text-slate-500 dark:text-slate-400 font-sans">
               {lang === 'ar' ? 'من الفكرة إلى المتجر' : 'Concept to Play Store'}
             </span>
           </div>
@@ -93,12 +93,12 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
           </h2>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           {onExploreProjects && (
             <button
               type="button"
               onClick={onExploreProjects}
-              className="px-4 py-2 rounded-lg border border-slate-300 dark:border-white/15 bg-white dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.08] text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap btn-kinetic"
+              className="btn-kinetic px-4 py-2.5 min-h-[44px] sm:min-h-[40px] rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-[#0f1117] hover:border-[#0284ff]/50 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
             >
               {lang === 'ar' ? 'استكشاف كل التطبيقات' : 'View All Projects'}
             </button>
@@ -107,7 +107,7 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
             <button
               type="button"
               onClick={onOpenBooking}
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-sm btn-kinetic"
+              className="btn-kinetic px-4 py-2.5 min-h-[44px] sm:min-h-[40px] rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white text-xs font-semibold transition-colors inline-flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-sm shadow-[#0284ff]/25"
             >
               <span>{lang === 'ar' ? 'احجز مكالمة استكشافية' : 'Book a Discovery Call'}</span>
               <ArrowRight size={13} className={dir === 'rtl' ? 'rotate-180' : ''} />
@@ -123,14 +123,14 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
             <RevealOnScroll key={step.num} delay={idx * 0.06} className="h-full">
               <TiltCard
                 maxTilt={6}
-                className="h-full p-5 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between transition-colors duration-200 hover:border-[#027DFD]/40"
+                className="card-shimmer overflow-hidden h-full p-5 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between transition-colors duration-200 hover:border-[#0284ff]/45 shadow-sm hover:shadow-lg"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <span className="font-mono tabular-nums text-xs font-bold text-blue-600 dark:text-cyan-400">
+                    <span className="font-mono tabular-nums text-xs font-bold text-[#0284ff] dark:text-[#00C7FF]">
                       {step.num}.
                     </span>
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-cyan-300 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-xl bg-[#0284ff]/10 border border-[#0284ff]/20 text-[#0284ff] dark:text-[#00C7FF] flex items-center justify-center">
                       <StepIcon size={16} />
                     </div>
                   </div>

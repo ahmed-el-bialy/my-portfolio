@@ -190,7 +190,7 @@ export const ImageWithSkeleton: React.FC<ImageWithSkeletonProps> = ({
       {error &&
         (fallbackContent || (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-[#141b2d] to-[#0d1322] text-slate-300 p-3 text-center">
-            <div className="w-9 h-9 rounded-xl bg-[#027DFD]/20 border border-[#00C7FF]/30 flex items-center justify-center text-[#00C7FF]">
+            <div className="w-9 h-9 rounded-xl bg-[#0284ff]/20 border border-[#00C7FF]/30 flex items-center justify-center text-[#00C7FF]">
               <Smartphone size={18} />
             </div>
             <span className="text-[10px] font-mono text-slate-300/90 line-clamp-2 leading-tight">

@@ -149,10 +149,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       label: lang === 'ar'
         ? 'إجمالي تحميلات Revio مباشرة من صفحة المتجر'
         : 'Revio installs synced from Google Play listing',
-      accentClass: 'text-[#027DFD] dark:text-[#00C7FF]',
-      iconBg: 'bg-[#027DFD]/15 text-[#027DFD] dark:text-[#00C7FF] border-[#027DFD]/25',
+      accentClass: 'text-[#0284ff] dark:text-[#00C7FF]',
+      iconBg: 'bg-[#0284ff]/15 text-[#0284ff] dark:text-[#00C7FF] border-[#0284ff]/25',
       cardSurface:
-        'bg-gradient-to-br from-[#027DFD]/[0.08] via-white to-white dark:from-[#027DFD]/[0.12] dark:via-[#0f1117] dark:to-[#0f1117] border-[#027DFD]/30 hover:border-[#00C7FF]/55',
+        'bg-gradient-to-br from-[#0284ff]/[0.08] via-white to-white dark:from-[#0284ff]/[0.12] dark:via-[#0f1117] dark:to-[#0f1117] border-[#0284ff]/30 hover:border-[#00C7FF]/55',
       href: AHMED_CONFIG.socials.playstore,
     },
     {
@@ -255,7 +255,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <span aria-hidden="true" className="text-slate-300 dark:text-slate-700 hidden sm:inline">
               ·
             </span>
-            <span className="font-mono text-[#027DFD] dark:text-[#00C7FF] font-semibold hidden sm:inline">
+            <span className="font-mono text-[#0284ff] dark:text-[#00C7FF] font-semibold hidden sm:inline">
               Flutter &amp; AI
             </span>
           </motion.div>
@@ -264,7 +264,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <div className="space-y-1.5 sm:space-y-2.5 w-full pt-0.5">
             <motion.div variants={itemVariants}>
               <span
-                className={`inline-block font-meet-accent font-bold leading-snug tracking-tight bg-gradient-to-r from-[#027DFD] via-[#00C7FF] to-sky-400 bg-clip-text text-transparent ${
+                className={`inline-block font-meet-accent font-bold leading-snug tracking-tight gradient-text ${
                   lang === 'ar'
                     ? 'text-base sm:text-xl lg:text-[22px]'
                     : 'text-lg sm:text-xl lg:text-[24px]'
@@ -274,7 +274,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </span>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <motion.div variants={itemVariants} className="flex items-center gap-3.5 sm:gap-5 min-w-0 ps-1">
               <span className="inline-flex shrink-0">
                 <BrandLogoMark
                   floatEffect={true}
@@ -289,7 +289,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             <motion.h2
               variants={itemVariants}
-              className="font-display text-[17px] sm:text-2xl lg:text-[26px] font-bold tracking-[-0.015em] text-[#027DFD] dark:text-[#00C7FF] [text-wrap:balance] pt-0.5"
+              className="font-display text-[17px] sm:text-2xl lg:text-[26px] font-bold tracking-[-0.015em] text-[#0284ff] dark:text-[#00C7FF] [text-wrap:balance] pt-0.5"
             >
               {t.hero.headlineRole}
             </motion.h2>
@@ -321,7 +321,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   animate={{ y: 0, opacity: 1 }}
                   exit={prefersReducedMotion ? undefined : { y: -12, opacity: 0 }}
                   transition={{ duration: 0.26, ease: EASE_EDITORIAL }}
-                  className="font-bold text-[#027DFD] dark:text-[#00C7FF]"
+                  className="font-bold text-[#0284ff] dark:text-[#00C7FF]"
                 >
                   {currentRotatingWord}
                 </motion.span>
@@ -345,7 +345,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <MagneticButton
               onClick={onExploreProjects}
               strength={0.22}
-              className="col-span-1 btn-kinetic px-4 sm:px-5 py-3 rounded-xl bg-[#027DFD] hover:bg-[#026ae0] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#027DFD]/25 cursor-pointer min-h-[46px] flex items-center justify-center gap-2 whitespace-nowrap"
+              className="col-span-1 btn-kinetic px-4 sm:px-5 py-3 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#0284ff]/30 cursor-pointer min-h-[46px] flex items-center justify-center gap-2 whitespace-nowrap"
             >
               <span>{t.hero.exploreApps}</span>
               <ArrowRight size={15} className={dir === 'rtl' ? 'rotate-180 shrink-0' : 'shrink-0'} />
@@ -354,9 +354,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <MagneticButton
               onClick={() => (onOpenContact ? onOpenContact() : onOpenResume())}
               strength={0.2}
-              className="col-span-1 btn-kinetic px-3.5 sm:px-4 py-3 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] text-slate-900 dark:text-[#f1f5f9] font-semibold text-xs sm:text-sm border border-slate-300 dark:border-white/15 hover:border-[#027DFD]/50 cursor-pointer min-h-[46px] flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap"
+              className="col-span-1 btn-kinetic px-3.5 sm:px-4 py-3 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] text-slate-900 dark:text-[#f1f5f9] font-semibold text-xs sm:text-sm border border-slate-300 dark:border-white/15 hover:border-[#0284ff]/55 cursor-pointer min-h-[46px] flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap"
             >
-              <Briefcase size={15} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
+              <Briefcase size={15} className="text-[#0284ff] dark:text-[#00C7FF] shrink-0" />
               <span>{t.hero.hireMe}</span>
             </MagneticButton>
 
@@ -365,7 +365,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onOpenBooking ? onOpenBooking() : onOpenContact ? onOpenContact() : undefined
               }
               strength={0.18}
-              className="col-span-1 btn-kinetic px-3.5 sm:px-4 py-3 rounded-xl bg-[#027DFD]/10 dark:bg-[#00C7FF]/10 hover:bg-[#027DFD]/18 dark:hover:bg-[#00C7FF]/20 text-[#027DFD] dark:text-[#00C7FF] font-semibold text-xs sm:text-sm border border-[#027DFD]/30 hover:border-[#027DFD]/60 cursor-pointer min-h-[46px] flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap"
+              className="col-span-1 btn-kinetic px-3.5 sm:px-4 py-3 rounded-xl bg-[#0284ff]/10 dark:bg-[#00C7FF]/10 hover:bg-[#0284ff]/18 dark:hover:bg-[#00C7FF]/20 text-[#0284ff] dark:text-[#00C7FF] font-semibold text-xs sm:text-sm border border-[#0284ff]/30 hover:border-[#0284ff]/60 cursor-pointer min-h-[46px] flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap"
             >
               <Rocket size={15} className="shrink-0" />
               <span>{t.hero.startProject}</span>
@@ -402,7 +402,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#0284ff]/45 hover:text-[#0284ff] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
             >
               <Github size={14} />
               <span>GitHub</span>
@@ -412,7 +412,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               href={profile.linkedinUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#0284ff]/45 hover:text-[#0284ff] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
             >
               <Linkedin size={14} />
               <span>LinkedIn</span>
@@ -440,7 +440,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             <a
               href={emailHref}
-              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#0284ff]/45 hover:text-[#0284ff] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
             >
               <Mail size={14} />
               <span>Email</span>
@@ -448,7 +448,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             <a
               href={`tel:${profile.phone}`}
-              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#027DFD]/45 hover:text-[#027DFD] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
+              className="inline-flex items-center gap-1.5 min-h-[44px] px-3 sm:px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0f1117] hover:border-[#0284ff]/45 hover:text-[#0284ff] dark:hover:text-[#00C7FF] border border-slate-200/90 dark:border-white/10 font-medium transition-colors"
               aria-label={lang === 'ar' ? 'اتصال هاتفي' : 'Call Phone'}
             >
               <Phone size={14} />
@@ -482,7 +482,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <TiltCard
               maxTilt={5}
               glareOpacity={0.1}
-              className={`w-full h-full p-3.5 sm:p-5 rounded-2xl border shadow-sm hover:shadow-lg transition-colors duration-200 flex flex-col justify-between gap-2.5 sm:gap-3 ${kpi.cardSurface}`}
+              className={`card-shimmer overflow-hidden w-full h-full p-3.5 sm:p-5 rounded-2xl border shadow-sm hover:shadow-xl transition-colors duration-200 flex flex-col justify-between gap-2.5 sm:gap-3 ${kpi.cardSurface}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <div
@@ -534,7 +534,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   href={kpi.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#027DFD] rounded-2xl"
+                  className="flex w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded-2xl"
                 >
                   {cardBody}
                 </a>
@@ -542,7 +542,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <button
                   type="button"
                   onClick={kpi.onClick}
-                  className="flex w-full text-start cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#027DFD] rounded-2xl"
+                  className="flex w-full text-start cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded-2xl"
                 >
                   {cardBody}
                 </button>

@@ -512,7 +512,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                     e.stopPropagation();
                     setShowingCoverArt(true);
                   }}
-                  className="text-[10px] font-mono font-semibold text-slate-500 dark:text-slate-400 hover:text-[#027DFD] dark:hover:text-[#00C7FF] cursor-pointer px-1.5 py-0.5 rounded bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10"
+                  className="text-[10px] font-mono font-semibold text-slate-500 dark:text-slate-400 hover:text-[#0284ff] dark:hover:text-[#00C7FF] cursor-pointer px-1.5 py-0.5 rounded bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10"
                 >
                   {lang === 'ar' ? 'الغلاف' : 'Cover'}
                 </button>
@@ -561,7 +561,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                     type="button"
                     onClick={handlePrev}
                     aria-label="Previous app screen"
-                    className="opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute start-0 sm:start-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#027DFD] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
+                    className="opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute start-0 sm:start-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
                   >
                     {dir === 'rtl' ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
                   </button>
@@ -569,7 +569,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                     type="button"
                     onClick={handleNext}
                     aria-label="Next app screen"
-                    className="opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute end-0 sm:end-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#027DFD] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
+                    className="opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute end-0 sm:end-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
                   >
                     {dir === 'rtl' ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
                   </button>
@@ -627,7 +627,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                           aria-label={`Select screen ${tIdx + 1}`}
                           className={`group/thumb relative h-14 sm:h-20 w-full rounded-xl overflow-hidden bg-[#161e31] border-2 transition-all duration-200 cursor-pointer ${
                             isActive
-                              ? 'border-[#027DFD] dark:border-[#00C7FF] shadow-md scale-[1.03]'
+                              ? 'border-[#0284ff] dark:border-[#00C7FF] shadow-md scale-[1.03]'
                               : 'border-slate-300/80 dark:border-white/15 opacity-85 hover:opacity-100 hover:border-slate-400 dark:hover:border-white/35'
                           }`}
                         >
@@ -641,7 +641,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                           <span
                             className={`absolute bottom-1 end-1 px-1 py-0.2 rounded text-[9px] font-mono font-bold ${
                               isActive
-                                ? 'bg-[#027DFD] text-white'
+                                ? 'bg-[#0284ff] text-white'
                                 : 'bg-black/75 text-slate-100'
                             }`}
                           >

@@ -45,7 +45,7 @@ export const ScrollProgressBar: React.FC<ScrollProgressBarProps> = ({ activeTab 
       aria-hidden="true"
     >
       <div
-        className="h-full bg-gradient-to-r from-blue-600 via-cyan-400 to-blue-500 transition-[width] duration-100 ease-out"
+        className="h-full bg-gradient-to-r from-[#0284ff] via-[#00C7FF] to-[#38bdf8] transition-[width] duration-100 ease-out"
         style={{ width: `${scrollProgress}%` }}
       />
     </div>

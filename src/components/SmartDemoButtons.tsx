@@ -35,10 +35,10 @@ export const SmartDemoButtons: React.FC<SmartDemoButtonsProps> = ({
       } btn-kinetic inline-flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl bg-amber-500/15 hover:bg-amber-600 hover:text-white text-amber-700 dark:text-amber-300 border border-amber-500/35 font-bold text-xs min-h-[40px] whitespace-nowrap transition-all`;
 
   const webLiveBtnClass = compact
-    ? 'btn-kinetic inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[34px] rounded-xl bg-gradient-to-r from-[#027DFD] to-[#0099FF] hover:from-[#026ae0] hover:to-[#027DFD] text-white shadow-sm shadow-[#027DFD]/30 font-bold text-[11px] whitespace-nowrap transition-all'
+    ? 'btn-kinetic inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[34px] rounded-xl bg-gradient-to-r from-[#0284ff] to-[#0099FF] hover:from-[#026ae0] hover:to-[#0284ff] text-white shadow-sm shadow-[#0284ff]/30 font-bold text-[11px] whitespace-nowrap transition-all'
     : `${
         fullWidthOnRow ? 'flex-1 min-w-[128px]' : ''
-      } btn-kinetic inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#027DFD] to-[#0099FF] hover:from-[#026ae0] hover:to-[#027DFD] text-white shadow-md shadow-[#027DFD]/30 font-bold text-xs min-h-[40px] whitespace-nowrap transition-all`;
+      } btn-kinetic inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#0284ff] to-[#0099FF] hover:from-[#026ae0] hover:to-[#0284ff] text-white shadow-md shadow-[#0284ff]/30 font-bold text-xs min-h-[40px] whitespace-nowrap transition-all`;
 
   const handleStop = (e: React.MouseEvent) => {
     if (stopPropagation) {

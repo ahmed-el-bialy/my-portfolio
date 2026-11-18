@@ -8,26 +8,32 @@ interface PageSkeletonLoaderProps {
   isDark?: boolean;
   targetLang?: Language | null;
   pacing?: LeafAnimationPacing;
+  cycles?: number;
   loop?: boolean;
   showProgress?: boolean;
   progress?: number;
   fullScreen?: boolean;
+  isReadyRef?: React.MutableRefObject<boolean>;
+  onSequenceComplete?: () => void;
   onSkip?: () => void;
 }
 
 /**
- * Centered calligraphy loader integrated either as the initial full-viewport opening gate
- * with synchronized percentage readiness, or inline inside lazy section/language transitions.
+ * Centered calligraphy loader used inside full-viewport transition overlays
+ * or full-height lazy section fallbacks so the footer stays below the fold.
  */
 export const PageSkeletonLoader: React.FC<PageSkeletonLoaderProps> = ({
   view,
   isDark,
   targetLang,
   pacing = 'artisan',
+  cycles = 1,
   loop = true,
   showProgress = false,
   progress,
   fullScreen = false,
+  isReadyRef,
+  onSequenceComplete,
   onSkip,
 }) => {
   const { lang, dir } = useLanguage();
@@ -56,7 +62,7 @@ export const PageSkeletonLoader: React.FC<PageSkeletonLoaderProps> = ({
   return (
     <div
       className={`w-full flex flex-col items-center justify-center px-4 ${
-        fullScreen ? 'min-h-dvh py-10' : 'min-h-[82dvh] pt-20 pb-12'
+        fullScreen ? 'min-h-dvh py-10' : 'min-h-dvh pt-20 pb-12'
       }`}
       aria-busy="true"
       aria-live="polite"
@@ -65,16 +71,19 @@ export const PageSkeletonLoader: React.FC<PageSkeletonLoaderProps> = ({
         label={loadingText}
         isDark={isDark}
         pacing={pacing}
+        cycles={cycles}
         loop={loop}
         showProgress={showProgress}
         progress={progress}
+        isReadyRef={isReadyRef}
+        onSequenceComplete={onSequenceComplete}
       />
 
       {onSkip && (
         <button
           type="button"
           onClick={onSkip}
-          className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-white/12 bg-white/75 dark:bg-white/[0.04] hover:border-[#027DFD]/50 text-[11px] font-mono font-semibold text-slate-600 dark:text-slate-300 hover:text-[#027DFD] dark:hover:text-[#00C7FF] transition-colors cursor-pointer"
+          className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-white/12 bg-white/75 dark:bg-white/[0.04] hover:border-[#0284ff]/50 text-[11px] font-mono font-semibold text-slate-600 dark:text-slate-300 hover:text-[#0284ff] dark:hover:text-[#00C7FF] transition-colors cursor-pointer"
         >
           <span>{lang === 'ar' ? 'تخطي' : 'Skip'}</span>
           <ArrowRight size={12} className={dir === 'rtl' ? 'rotate-180' : ''} />

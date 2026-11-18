@@ -7,8 +7,12 @@ import { AHMED_CONFIG, getEgyptLocalTime } from './data/config';
 import {
   fetchConsolidatedGitHubPortfolio,
   clearAllGitHubLocalCache,
+  type GitHubRepo,
 } from './services/githubService';
-import { parseCvAndLinkedinProfile } from './services/cvParserService';
+import {
+  parseCvAndLinkedinProfile,
+  type ParsedProfileData,
+} from './services/cvParserService';
 import { Navbar, NavTab } from './components/Navbar';
 import { ScrollProgressBar } from './components/ScrollProgressBar';
 import { CustomCursor } from './components/CustomCursor';
@@ -24,6 +28,7 @@ import { ThemeRevealOverlay } from './components/ThemeRevealOverlay';
 import { BrandLogoMark } from './components/BrandLogoMark';
 import { PageSkeletonLoader } from './components/PageSkeletonLoader';
 import { OpeningBootOverlay } from './components/OpeningBootOverlay';
+import { LanguageTransitionOverlay } from './components/LanguageTransitionOverlay';
 import { preloadImageUrls } from './components/ImageWithSkeleton';
 import { VERIFIED_REPO_SCREENSHOTS } from './services/githubService';
 import { Github, Linkedin, Youtube, Mail, RefreshCw, ArrowUp, Terminal, Sparkles } from 'lucide-react';
@@ -73,7 +78,7 @@ function resolveInitialTab(): NavTab {
 }
 
 export default function App() {
-  const { lang, dir, t, isSwitchingLang, switchingTargetLang } = useLanguage();
+  const { lang, dir, t, isSwitchingLang, switchingTargetLang, completeLanguageSwitch } = useLanguage();
   const prefersReducedMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState<NavTab>(resolveInitialTab);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
@@ -83,6 +88,10 @@ export default function App() {
   const [bookingInitialType, setBookingInitialType] = useState<MeetingType | null>(null);
   const [heroInspectedProject, setHeroInspectedProject] = useState<Project | null>(null);
   const [liveRepoCount, setLiveRepoCount] = useState<number>(13);
+  const [liveRepos, setLiveRepos] = useState<GitHubRepo[]>([]);
+  const [liveCvData, setLiveCvData] = useState<ParsedProfileData | null>(null);
+  const [isRefreshingCv, setIsRefreshingCv] = useState<boolean>(false);
+  const lastWebhookPushRef = useRef<string | null>(null);
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
@@ -110,20 +119,45 @@ export default function App() {
     }
   };
 
-  const handleManualRefresh = async () => {
+  const handleRefreshCvOnly = useCallback(async () => {
+    setIsRefreshingCv(true);
+    try {
+      const parsedCv = await parseCvAndLinkedinProfile(
+        profile.cvDriveUrl,
+        profile.linkedinUrl,
+        true
+      );
+      setLiveCvData(parsedCv);
+    } catch {
+      // ignore offline
+    } finally {
+      setIsRefreshingCv(false);
+    }
+  }, [profile.cvDriveUrl, profile.linkedinUrl]);
+
+  const handleManualRefresh = useCallback(async () => {
     setIsSyncing(true);
     try {
       clearAllGitHubLocalCache();
-      const fresh = await fetchConsolidatedGitHubPortfolio(profile.githubUsername, true);
+      const [fresh, parsedCv] = await Promise.all([
+        fetchConsolidatedGitHubPortfolio(profile.githubUsername, true),
+        parseCvAndLinkedinProfile(profile.cvDriveUrl, profile.linkedinUrl, true).catch(() => null),
+      ]);
       queryClient.setQueryData(['github-consolidated', profile.githubUsername], fresh);
-      setLiveRepoCount(fresh.repos.length || liveRepoCount);
+      if (fresh.repos?.length) {
+        setLiveRepos(fresh.repos);
+        setLiveRepoCount(fresh.repos.length);
+      }
+      if (parsedCv) {
+        setLiveCvData(parsedCv);
+      }
       setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     } catch {
       // ignore offline
     } finally {
       setTimeout(() => setIsSyncing(false), 400);
     }
-  };
+  }, [profile.githubUsername, profile.cvDriveUrl, profile.linkedinUrl]);
 
   // Theme state with localStorage persistence (Obsidian Dark default)
   const [isDark, setIsDark] = useState<boolean>(() => {
@@ -340,15 +374,17 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Single consolidated GitHub prefetch + CV metadata + first 3 project covers
+  // Single consolidated GitHub prefetch + CV Drive live sync + first 4 project covers
   useEffect(() => {
-    parseCvAndLinkedinProfile(profile.cvDriveUrl, profile.linkedinUrl).catch(() => {});
+    parseCvAndLinkedinProfile(profile.cvDriveUrl, profile.linkedinUrl)
+      .then((parsed) => setLiveCvData(parsed))
+      .catch(() => {});
 
     queryClient
       .prefetchQuery({
         queryKey: ['github-consolidated', profile.githubUsername],
         queryFn: () => fetchConsolidatedGitHubPortfolio(profile.githubUsername),
-        staleTime: 1000 * 60 * 30,
+        staleTime: 1000 * 60 * 5,
       })
       .then(() => {
         const cached = queryClient.getQueryData<any>([
@@ -356,6 +392,7 @@ export default function App() {
           profile.githubUsername,
         ]);
         if (cached?.repos?.length) {
+          setLiveRepos(cached.repos);
           setLiveRepoCount(cached.repos.length);
         }
       })
@@ -363,6 +400,43 @@ export default function App() {
 
     preloadImageUrls(FEATURED_PROJECTS.slice(0, 4).map((proj) => proj.image).filter(Boolean));
   }, [profile.githubUsername, profile.cvDriveUrl, profile.linkedinUrl]);
+
+  // Automatic webhook push detection: refetch automatically when GitHub pushes update /api/github/status
+  useEffect(() => {
+    let active = true;
+    const checkWebhookUpdates = async () => {
+      if (!active || (typeof navigator !== 'undefined' && !navigator.onLine)) return;
+      try {
+        const res = await fetch('/api/github/status', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const pushTs = data?.lastPushTimestamp;
+        if (!pushTs) return;
+        if (lastWebhookPushRef.current === null) {
+          lastWebhookPushRef.current = pushTs;
+          return;
+        }
+        if (lastWebhookPushRef.current !== pushTs) {
+          lastWebhookPushRef.current = pushTs;
+          await handleManualRefresh();
+        }
+      } catch {
+        // Silent no-op on static deployments without Express server
+      }
+    };
+
+    checkWebhookUpdates();
+    const interval = setInterval(checkWebhookUpdates, 1000 * 60 * 5);
+    const onFocus = () => {
+      checkWebhookUpdates();
+    };
+    window.addEventListener('focus', onFocus);
+    return () => {
+      active = false;
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [handleManualRefresh]);
 
   // Sync URL hash changes
   useEffect(() => {
@@ -437,10 +511,21 @@ export default function App() {
         {/* Interactive Cursor */}
         <CustomCursor />
 
-        {/* Opening Boot Overlay (Fixed above pre-mounted page; transitions cleanly into Hero on 100%) */}
+        {/* Opening Boot Overlay (Fixed above pre-mounted page; two crisp leaf cycles, no skip) */}
         <AnimatePresence>
           {showInitialSplash && (
             <OpeningBootOverlay isDark={isDark} onComplete={handleSkipIntro} />
+          )}
+        </AnimatePresence>
+
+        {/* Full-Viewport Language Switch Curtain (Covers Header, Bottom Dock, Main & Footer atomically) */}
+        <AnimatePresence>
+          {isSwitchingLang && (
+            <LanguageTransitionOverlay
+              targetLang={switchingTargetLang}
+              isDark={isDark}
+              onComplete={completeLanguageSwitch}
+            />
           )}
         </AnimatePresence>
 
@@ -456,119 +541,116 @@ export default function App() {
           isAnyModalOpen={anyModalOpen}
         />
 
-        {/* Focused Multi-View Main Stage with Unified Crossfade Transition */}
-        <main id="main-content" className="relative z-10 flex-1 pb-24 md:pb-12">
-          <AnimatePresence mode="wait">
-            {isSwitchingLang ? (
+        {/* Focused Multi-View Main Stage with Atomic Language/Dir Sync & Full-Height Suspense */}
+        <main id="main-content" className="relative z-10 flex-1 min-h-dvh pb-24 md:pb-12">
+          <div key={`stage-${lang}`} dir={dir} className="w-full">
+            {activeTab === 'overview' && (
               <motion.div
-                key="language-leaf-stage"
-                initial={prefersReducedMotion ? false : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={prefersReducedMotion ? undefined : { opacity: 0 }}
-                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-                className="w-full"
-              >
-                <PageSkeletonLoader
-                  view="language"
-                  targetLang={switchingTargetLang}
-                  isDark={isDark}
-                  pacing="artisan"
-                  loop={false}
-                  showProgress={true}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key={`stage-${lang}`}
-                dir={dir}
+                key="view-overview"
                 initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={prefersReducedMotion ? undefined : { opacity: 0 }}
-                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full"
+                transition={{ duration: 0.18, ease: 'easeOut' }}
               >
-                {activeTab === 'overview' && (
-                  <motion.div
-                    key="view-overview"
-                    initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
-                  >
-                    <HeroSection
-                      profile={profile}
-                      isDark={isDark}
-                      entryReady={!showInitialSplash}
-                      onOpenContact={() => setIsContactOpen(true)}
-                      onOpenResume={() => setIsResumeOpen(true)}
-                      onOpenBooking={() => openBookingModal(null)}
-                      onExploreProjects={() => handleNavigate('projects')}
-                      onInspectRevio={handleInspectRevio}
-                      onInspectProject={(proj) => setHeroInspectedProject(proj)}
-                      totalReposCount={liveRepoCount}
-                    />
-                    <AboutSection onExploreExperience={() => handleNavigate('experience')} />
-                    <OverviewProjectsPreview
-                      githubUsername={profile.githubUsername}
-                      onExploreAllProjects={() => handleNavigate('projects')}
-                    />
-                    <HowIWorkSection
-                      onOpenBooking={() => openBookingModal('discovery-cal')}
-                      onExploreProjects={() => handleNavigate('projects')}
-                    />
-                  </motion.div>
-                )}
-
-                {activeTab === 'projects' && (
-                  <motion.div
-                    key="view-projects"
-                    initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
-                  >
-                    <Suspense fallback={<PageSkeletonLoader view="projects" isDark={isDark} showProgress={true} />}>
-                      <ProjectsSection
-                        currentGithubUser={profile.githubUsername}
-                        onRepoCountChange={setLiveRepoCount}
-                        isDark={isDark}
-                      />
-                    </Suspense>
-                  </motion.div>
-                )}
-
-                {activeTab === 'experience' && (
-                  <motion.div
-                    key="view-experience"
-                    initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
-                  >
-                    <Suspense fallback={<PageSkeletonLoader view="experience" isDark={isDark} showProgress={true} />}>
-                      <ExperienceSection onOpenResume={() => setIsResumeOpen(true)} />
-                      <StackSection />
-                    </Suspense>
-                  </motion.div>
-                )}
-
-                {activeTab === 'contact' && (
-                  <motion.div
-                    key="view-contact"
-                    initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
-                  >
-                    <Suspense fallback={<PageSkeletonLoader view="contact" isDark={isDark} showProgress={true} />}>
-                      <ContactSection
-                        profile={profile}
-                        onOpenBooking={openBookingModal}
-                        onOpenResume={() => setIsResumeOpen(true)}
-                      />
-                      <FAQSection />
-                    </Suspense>
-                  </motion.div>
-                )}
+                <HeroSection
+                  profile={profile}
+                  isDark={isDark}
+                  entryReady={!showInitialSplash}
+                  onOpenContact={() => setIsContactOpen(true)}
+                  onOpenResume={() => setIsResumeOpen(true)}
+                  onOpenBooking={() => openBookingModal(null)}
+                  onExploreProjects={() => handleNavigate('projects')}
+                  onInspectRevio={handleInspectRevio}
+                  onInspectProject={(proj) => setHeroInspectedProject(proj)}
+                  totalReposCount={liveRepoCount}
+                />
+                <AboutSection onExploreExperience={() => handleNavigate('experience')} />
+                <OverviewProjectsPreview
+                  githubUsername={profile.githubUsername}
+                  onExploreAllProjects={() => handleNavigate('projects')}
+                />
+                <HowIWorkSection
+                  onOpenBooking={() => openBookingModal('discovery-cal')}
+                  onExploreProjects={() => handleNavigate('projects')}
+                />
               </motion.div>
             )}
-          </AnimatePresence>
+
+            {activeTab === 'projects' && (
+              <motion.div
+                key="view-projects"
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+              >
+                <Suspense
+                  fallback={
+                    <PageSkeletonLoader
+                      view="projects"
+                      isDark={isDark}
+                      fullScreen={true}
+                      showProgress={true}
+                    />
+                  }
+                >
+                  <ProjectsSection
+                    currentGithubUser={profile.githubUsername}
+                    onRepoCountChange={setLiveRepoCount}
+                    isDark={isDark}
+                  />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {activeTab === 'experience' && (
+              <motion.div
+                key="view-experience"
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+              >
+                <Suspense
+                  fallback={
+                    <PageSkeletonLoader
+                      view="experience"
+                      isDark={isDark}
+                      fullScreen={true}
+                      showProgress={true}
+                    />
+                  }
+                >
+                  <ExperienceSection onOpenResume={() => setIsResumeOpen(true)} />
+                  <StackSection />
+                </Suspense>
+              </motion.div>
+            )}
+
+            {activeTab === 'contact' && (
+              <motion.div
+                key="view-contact"
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+              >
+                <Suspense
+                  fallback={
+                    <PageSkeletonLoader
+                      view="contact"
+                      isDark={isDark}
+                      fullScreen={true}
+                      showProgress={true}
+                    />
+                  }
+                >
+                  <ContactSection
+                    profile={profile}
+                    onOpenBooking={openBookingModal}
+                    onOpenResume={() => setIsResumeOpen(true)}
+                  />
+                  <FAQSection />
+                </Suspense>
+              </motion.div>
+            )}
+          </div>
         </main>
 
         {/* Circular Reveal Theme Switcher CSS Fallback */}
@@ -606,6 +688,10 @@ export default function App() {
           isOpen={isResumeOpen}
           onClose={() => setIsResumeOpen(false)}
           profile={profile}
+          liveCvData={liveCvData}
+          liveRepos={liveRepos}
+          onRefreshCv={handleRefreshCvOnly}
+          isRefreshingCv={isRefreshingCv}
         />
 
         <BookingMeetingModal
@@ -636,7 +722,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-24 lg:bottom-6 end-4 sm:end-6 z-40 p-2.5 sm:p-3 rounded-full bg-[#027DFD] hover:bg-[#026ae0] text-white shadow-lg transition-transform duration-200 hover:scale-105 cursor-pointer border border-white/20 flex items-center justify-center"
+            className="fixed bottom-24 lg:bottom-6 end-4 sm:end-6 z-40 w-11 h-11 rounded-full bg-[#0284ff] hover:bg-[#0070e0] text-white shadow-lg shadow-[#0284ff]/30 transition-transform duration-200 hover:scale-105 cursor-pointer border border-white/20 flex items-center justify-center"
             aria-label={lang === 'ar' ? 'الرجوع للأعلى' : 'Back to top'}
             title={lang === 'ar' ? 'الرجوع للأعلى' : 'Back to top'}
           >
@@ -657,7 +743,7 @@ export default function App() {
                       {AHMED_CONFIG.name[lang]}
                     </span>
                     <span className="text-slate-300 dark:text-slate-700" aria-hidden="true">·</span>
-                    <span className="text-[#027DFD] dark:text-[#00C7FF] font-mono text-xs font-semibold">
+                    <span className="text-[#0284ff] dark:text-[#00C7FF] font-mono text-xs font-semibold">
                       {AHMED_CONFIG.title[lang]}
                     </span>
                   </div>
@@ -695,12 +781,12 @@ export default function App() {
                   type="button"
                   onClick={handleManualRefresh}
                   disabled={isSyncing}
-                  className="btn-kinetic flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#151a26] hover:bg-slate-100 dark:hover:bg-[#1c2333] text-slate-800 dark:text-[#f1f5f9] border border-slate-200 dark:border-white/10 text-xs font-mono font-semibold transition-all cursor-pointer disabled:opacity-50 min-h-[38px]"
+                  className="btn-kinetic flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#151a26] hover:bg-slate-100 dark:hover:bg-[#1c2333] text-slate-800 dark:text-[#f1f5f9] border border-slate-200 dark:border-white/10 text-xs font-mono font-semibold transition-all cursor-pointer disabled:opacity-50 min-h-[44px] sm:min-h-[38px]"
                   title="Refresh GitHub repository & Play stats cache"
                 >
                   <RefreshCw
                     size={13}
-                    className={isSyncing ? 'animate-spin text-[#027DFD]' : 'text-slate-500 dark:text-slate-400'}
+                    className={isSyncing ? 'animate-spin text-[#0284ff]' : 'text-slate-500 dark:text-slate-400'}
                   />
                   <span>
                     {isSyncing
@@ -714,13 +800,13 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsTerminalOpen(true)}
-                  className="btn-kinetic flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#027DFD]/10 dark:bg-[#027DFD]/15 hover:bg-[#027DFD]/18 dark:hover:bg-[#027DFD]/25 text-[#027DFD] dark:text-[#7DD3FC] border border-[#027DFD]/35 dark:border-[#00C7FF]/35 hover:border-[#00C7FF]/70 text-xs font-mono font-bold transition-all cursor-pointer min-h-[38px] shadow-xs"
+                  className="btn-kinetic flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#0284ff]/10 dark:bg-[#0284ff]/15 hover:bg-[#0284ff]/18 dark:hover:bg-[#0284ff]/25 text-[#0284ff] dark:text-[#7DD3FC] border border-[#0284ff]/35 dark:border-[#00C7FF]/35 hover:border-[#00C7FF]/70 text-xs font-mono font-bold transition-all cursor-pointer min-h-[44px] sm:min-h-[38px] shadow-xs"
                   title="Open AI-Powered Developer CLI Inspector"
                   aria-label="Open Developer AI CLI"
                 >
-                  <Terminal size={13} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                  <Terminal size={13} className="text-[#0284ff] dark:text-[#00C7FF]" />
                   <span>{lang === 'ar' ? 'الطرفية AI CLI' : 'AI CLI'}</span>
-                  <Sparkles size={11} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                  <Sparkles size={11} className="text-[#0284ff] dark:text-[#00C7FF]" />
                 </button>
               </div>
 
@@ -730,7 +816,7 @@ export default function App() {
                   href={profile.githubUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-slate-400 dark:hover:border-white/25 hover:text-slate-900 dark:hover:text-white transition-all"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-slate-400 dark:hover:border-white/25 hover:text-slate-900 dark:hover:text-white transition-all"
                   title="GitHub"
                   aria-label="GitHub"
                 >
@@ -740,7 +826,7 @@ export default function App() {
                   href={profile.linkedinUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-[#027DFD]/50 hover:text-[#027DFD] transition-all"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-[#0284ff]/50 hover:text-[#0284ff] transition-all"
                   title="LinkedIn"
                   aria-label="LinkedIn"
                 >
@@ -750,7 +836,7 @@ export default function App() {
                   href={profile.youtubeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-red-500/40 hover:text-red-500 transition-all"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-red-500/40 hover:text-red-500 transition-all"
                   title="YouTube"
                   aria-label="YouTube"
                 >
@@ -760,7 +846,7 @@ export default function App() {
                   href={profile.tiktokUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-pink-500/40 hover:text-pink-500 transition-all"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-pink-500/40 hover:text-pink-500 transition-all"
                   title="TikTok"
                   aria-label="TikTok"
                 >
@@ -770,7 +856,7 @@ export default function App() {
                   href={AHMED_CONFIG.socials.whatsapp}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-emerald-500/40 hover:text-emerald-500 transition-all"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-emerald-500/40 hover:text-emerald-500 transition-all"
                   title="WhatsApp"
                   aria-label="WhatsApp"
                 >
@@ -779,7 +865,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => openEmailClient(profile.email, 'Mobile App Project Inquiry')}
-                  className="w-9 h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-[#027DFD]/50 hover:text-[#027DFD] transition-all cursor-pointer"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-[#0284ff]/50 hover:text-[#0284ff] transition-all cursor-pointer"
                   title="Send Email"
                   aria-label="Send Email"
                 >

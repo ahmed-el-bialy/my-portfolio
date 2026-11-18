@@ -231,7 +231,7 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
               <div className="w-full h-80 sm:h-96 rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#090c14] relative shadow-inner">
                 {isWebViewLoading && (
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 p-5 text-center bg-slate-100/95 dark:bg-[#090c14]/95">
-                    <Loader2 size={24} className="animate-spin text-[#027DFD] dark:text-[#00C7FF]" />
+                    <Loader2 size={24} className="animate-spin text-[#0284ff] dark:text-[#00C7FF]" />
                     <div className="space-y-1">
                       <p className="text-xs font-semibold text-slate-800 dark:text-slate-100">
                         {lang === 'ar'
@@ -249,7 +249,7 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
                         href={certificate.credentialUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#027DFD] hover:bg-[#026ae0] text-white text-xs font-bold shadow-sm transition-colors"
+                        className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0284ff] hover:bg-[#026ae0] text-white text-xs font-bold shadow-sm transition-colors"
                       >
                         <span>
                           {lang === 'ar' ? 'فتح الوثيقة فوراً في نافذة جديدة' : 'Open Official Document Directly'}

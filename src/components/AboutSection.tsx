@@ -28,7 +28,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
         particleCount: 90,
         spread: 70,
         origin: { y: 0.65 },
-        colors: ['#027DFD', '#00C7FF', '#10B981'],
+        colors: ['#0284ff', '#00C7FF', '#10B981'],
       });
       setTimeout(() => setEggTriggered(false), 3500);
     }
@@ -78,7 +78,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
     >
       {/* Clear Section Title Header */}
       <RevealOnScroll className="mb-5 sm:mb-8">
-        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#027DFD] dark:text-[#00C7FF] mb-1">
+        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0284ff] dark:text-[#00C7FF] mb-1">
           <span>{lang === 'ar' ? 'نبذة عني' : 'About Me'}</span>
           <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
           <span className="text-slate-500 dark:text-slate-400">
@@ -93,7 +93,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
       {/* Redesigned Compact Full-Width Profile Strip — Zero Dead Vertical Whitespace */}
       <RevealOnScroll
         delay={0}
-        className="mb-4 sm:mb-6 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-4 sm:p-6"
+        className="card-shimmer overflow-hidden mb-4 sm:mb-6 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-4 sm:p-6 shadow-sm hover:border-[#0284ff]/35 transition-colors"
       >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-5 lg:gap-7 items-center">
           {/* 1. CSS-Floating Headshot + Side-by-Side Brand Logo & Display Name */}
@@ -102,7 +102,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
               <button
                 type="button"
                 onClick={handleAvatarEasterEgg}
-                className="group relative w-[72px] h-[72px] sm:w-24 sm:h-24 rounded-2xl overflow-hidden p-[2.5px] bg-gradient-to-br from-[#027DFD] via-[#00C7FF] to-emerald-400 shadow-lg shadow-[#027DFD]/20 ring-1 ring-[#00C7FF]/30 transition-transform duration-300 hover:scale-[1.04] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C7FF]"
+                className="group relative w-[72px] h-[72px] sm:w-24 sm:h-24 rounded-2xl overflow-hidden p-[2.5px] bg-gradient-to-br from-[#0284ff] via-[#00C7FF] to-emerald-400 shadow-lg shadow-[#0284ff]/25 ring-1 ring-[#00C7FF]/30 transition-transform duration-300 hover:scale-[1.04] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C7FF]"
                 aria-label={
                   lang === 'ar'
                     ? 'صورة أحمد البيلي (انقر 5 مرات للمفاجأة)'
@@ -121,7 +121,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
             </div>
 
             <div className="min-w-0 flex-1 space-y-0.5 sm:space-y-1">
-              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 ps-1">
                 <BrandLogoMark
                   floatEffect={true}
                   floatMode="sway"
@@ -132,7 +132,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
                   {AHMED_CONFIG.name[lang]}
                 </h3>
               </div>
-              <p className="font-display text-[13px] sm:text-[15px] font-bold text-[#027DFD] dark:text-[#00C7FF] leading-snug">
+              <p className="font-display text-[13px] sm:text-[15px] font-bold text-[#0284ff] dark:text-[#00C7FF] leading-snug">
                 {AHMED_CONFIG.title[lang]}
               </p>
               <p className="text-[11.5px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -168,7 +168,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
           {/* 3. Compact Spoken Languages Matrix (3-col tight row on mobile, clean stack on desktop) */}
           <div className="lg:col-span-3 border-t lg:border-t-0 lg:border-s border-slate-200/80 dark:border-white/8 pt-3 lg:pt-0 lg:ps-6 space-y-2">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200">
-              <Globe size={13} className="text-[#027DFD] dark:text-[#00C7FF]" />
+              <Globe size={13} className="text-[#0284ff] dark:text-[#00C7FF]" />
               <span>{lang === 'ar' ? 'اللغات' : 'Languages'}</span>
             </div>
             <div className="grid grid-cols-3 lg:grid-cols-1 gap-2 lg:gap-1.5">
@@ -195,7 +195,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
         {/* Left: Airy Story & 3 Human Mindset Pillars */}
         <RevealOnScroll
           delay={0.05}
-          className="lg:col-span-7 flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-4 sm:p-7"
+          className="card-shimmer overflow-hidden lg:col-span-7 flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-4 sm:p-7 shadow-sm hover:border-[#0284ff]/35 transition-colors"
         >
           <div>
             <h3 className="font-display text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight [text-wrap:balance]">
@@ -227,10 +227,10 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
                   key={pillar.title}
                   maxTilt={5}
                   glareOpacity={0.1}
-                  className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27]/85 border border-slate-200/80 dark:border-white/10 hover:border-[#027DFD]/40 transition-colors"
+                  className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27]/85 border border-slate-200/80 dark:border-white/10 hover:border-[#0284ff]/45 transition-colors"
                 >
                   <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white mb-1">
-                    <Icon size={14} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
+                    <Icon size={14} className="text-[#0284ff] dark:text-[#00C7FF] shrink-0" />
                     <span>{pillar.title}</span>
                   </div>
                   <p className="text-[11.5px] text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -245,11 +245,11 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
         {/* Right: Core Engineering Skill Matrix & Academic Foundation */}
         <RevealOnScroll
           delay={0.1}
-          className="lg:col-span-5 flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-4 sm:p-7"
+          className="card-shimmer overflow-hidden lg:col-span-5 flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-4 sm:p-7 shadow-sm hover:border-[#0284ff]/35 transition-colors"
         >
           <div>
             <div className="flex items-center justify-between gap-2 mb-3.5">
-              <span className="text-xs font-mono font-bold text-[#027DFD] dark:text-[#00C7FF] uppercase tracking-wider">
+              <span className="text-xs font-mono font-bold text-[#0284ff] dark:text-[#00C7FF]">
                 {lang === 'ar' ? 'مصفوفة المهارات الهندسية' : 'Core Engineering Skill Matrix'}
               </span>
               <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
@@ -262,30 +262,35 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
                 {
                   domain: lang === 'ar' ? 'نواة الموبايل' : 'Mobile Core',
                   items: ['Flutter', 'Dart (OOP)', 'Slivers & RTL'],
-                  accent: 'text-[#027DFD] dark:text-[#00C7FF]',
+                  accent: 'text-[#0284ff] dark:text-[#00C7FF]',
+                  dot: 'bg-[#0284ff] dark:bg-[#00C7FF]',
                 },
                 {
                   domain: lang === 'ar' ? 'الحالة والتخزين' : 'State & Offline',
                   items: ['BLoC / Cubit', 'Hive NoSQL', 'SharedPrefs'],
                   accent: 'text-emerald-600 dark:text-emerald-400',
+                  dot: 'bg-emerald-500',
                 },
                 {
                   domain: lang === 'ar' ? 'الشبكات والبيانات' : 'APIs & Cloud',
                   items: ['Dio & Retrofit', 'REST / TMDB', 'Firebase Auth'],
                   accent: 'text-amber-600 dark:text-amber-400',
+                  dot: 'bg-amber-500',
                 },
                 {
                   domain: lang === 'ar' ? 'الأسس والـ AI' : 'AI & CS Base',
                   items: ['Clean Arch', 'Python & C++', 'Design Patterns'],
                   accent: 'text-violet-600 dark:text-violet-400',
+                  dot: 'bg-violet-500',
                 },
               ].map((group) => (
                 <div
                   key={group.domain}
-                  className="p-3.5 rounded-xl bg-slate-50/90 dark:bg-[#161b27]/75 border border-slate-200/80 dark:border-white/10 hover:border-[#027DFD]/30 transition-colors"
+                  className="skill-shimmer-card p-3.5 rounded-xl bg-slate-50/90 dark:bg-[#161b27]/75 border border-slate-200/80 dark:border-white/10 hover:border-[#0284ff]/35 transition-colors"
                 >
-                  <div className={`text-[11px] font-mono font-bold mb-1.5 ${group.accent}`}>
-                    {group.domain}
+                  <div className={`flex items-center gap-1.5 text-[11px] font-mono font-bold mb-1.5 ${group.accent}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${group.dot}`} aria-hidden="true" />
+                    <span className="truncate">{group.domain}</span>
                   </div>
                   <ul className="space-y-1 text-xs font-medium text-slate-700 dark:text-slate-200">
                     {group.items.map((item) => (
@@ -302,7 +307,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
           {/* Academic Foundation Strip */}
           <div className="mt-6 pt-5 border-t border-slate-200/80 dark:border-white/8 space-y-4">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#027DFD]/10 text-[#027DFD] dark:text-[#00C7FF] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[#0284ff]/10 text-[#0284ff] dark:text-[#00C7FF] flex items-center justify-center shrink-0">
                 <GraduationCap size={20} />
               </div>
               <div>
@@ -322,7 +327,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
               <button
                 type="button"
                 onClick={onExploreExperience}
-                className="btn-kinetic w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[42px] rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-[#161b27] hover:border-[#027DFD] text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer whitespace-nowrap"
+                className="btn-kinetic w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-[#161b27] hover:border-[#0284ff] hover:text-[#0284ff] dark:hover:text-[#00C7FF] text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer whitespace-nowrap transition-colors"
               >
                 <span>{lang === 'ar' ? 'المسار الأكاديمي والشهادات' : 'Full Timeline & Certs'}</span>
                 <ArrowRight size={14} className={dir === 'rtl' ? 'rotate-180' : ''} />

@@ -78,19 +78,19 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <>
       {/* 1. Strict 3-Zone Frosted Glass Top Bar */}
-      <header className="fixed top-0 inset-x-0 z-50 border-b border-slate-200/80 dark:border-white/10 bg-[#f8fafc]/80 dark:bg-[#08090d]/80 backdrop-blur-xl transition-colors duration-200">
+      <header className="fixed top-0 inset-x-0 z-50 border-b border-slate-200/80 dark:border-white/[0.08] bg-[#f8fafc]/82 dark:bg-[#08090d]/82 backdrop-blur-xl shadow-2xs transition-colors duration-200">
         <div className="w-full max-w-[1440px] mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4 lg:gap-8">
           {/* Zone 1: Logo Mark + Single-line Brand Wordmark */}
           <button
             type="button"
             onClick={() => handleTabClick('overview')}
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#027DFD] rounded-lg px-0.5 sm:px-1"
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded-lg px-0.5 sm:px-1 min-h-[44px] sm:min-h-0"
           >
             <BrandLogoMark
               sizeClassName="w-8 h-8 sm:w-9 sm:h-9"
               className="group-hover:scale-105 transition-transform"
             />
-            <span className="font-bold text-[13px] sm:text-base tracking-tight text-slate-900 dark:text-[#f1f5f9] group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF] transition-colors whitespace-nowrap truncate max-w-[132px] xs:max-w-[165px] sm:max-w-none">
+            <span className="font-bold text-[13px] sm:text-base tracking-tight text-slate-900 dark:text-[#f1f5f9] group-hover:text-[#0284ff] dark:group-hover:text-[#00C7FF] transition-colors whitespace-nowrap truncate max-w-[132px] xs:max-w-[165px] sm:max-w-none">
               {AHMED_CONFIG.name[lang]}
             </span>
           </button>
@@ -109,9 +109,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => handleTabClick(item.id)}
                   onMouseEnter={() => onPrefetchTab?.(item.id)}
                   onFocus={() => onPrefetchTab?.(item.id)}
-                  className={`relative py-2 text-xs lg:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#027DFD] rounded ${
+                  className={`relative py-2 text-xs lg:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded ${
                     isActive
-                      ? 'text-[#027DFD] dark:text-[#00C7FF]'
+                      ? 'text-[#0284ff] dark:text-[#00C7FF]'
                       : 'text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-[#f1f5f9]'
                   }`}
                   aria-current={isActive ? 'page' : undefined}
@@ -120,7 +120,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {isActive && (
                     <motion.span
                       layoutId="desktopNavUnderline"
-                      className="absolute bottom-0 inset-x-0 h-[2px] rounded-full bg-[#027DFD] dark:bg-[#00C7FF]"
+                      className="absolute bottom-0 inset-x-0 h-[2px] rounded-full bg-gradient-to-r from-[#0284ff] to-[#00C7FF]"
                       transition={{ type: 'spring', stiffness: 460, damping: 34 }}
                     />
                   )}
@@ -134,11 +134,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={toggleLang}
-              className="h-9 px-2 sm:px-2.5 rounded-lg flex items-center gap-1 sm:gap-1.5 bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-800 dark:text-[#f1f5f9] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              className="h-10 sm:h-9 px-2.5 sm:px-3 rounded-lg flex items-center gap-1 sm:gap-1.5 bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-800 dark:text-[#f1f5f9] transition-colors cursor-pointer whitespace-nowrap shrink-0"
               aria-label={t.nav.switchLangTooltip}
               title={t.nav.switchLangTooltip}
             >
-              <Languages size={14} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />
+              <Languages size={14} className="text-[#0284ff] dark:text-[#00C7FF] shrink-0" />
               <span>{lang === 'en' ? 'عربي' : 'EN'}</span>
             </button>
 
@@ -156,7 +156,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={onOpenBooking}
-                className="hidden lg:inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[#027DFD] hover:bg-[#026ae0] text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 shadow-sm shadow-[#027DFD]/20"
+                className="btn-kinetic hidden lg:inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[#0284ff] hover:bg-[#0070e0] text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 shadow-sm shadow-[#0284ff]/25"
                 title={t.nav.bookMeeting}
               >
                 <Video size={14} className="shrink-0" />
@@ -171,7 +171,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               disabled={isAnyModalOpen}
               whileHover={isAnyModalOpen ? undefined : { scale: 1.06 }}
               whileTap={isAnyModalOpen ? undefined : { scale: 0.94 }}
-              className={`theme-toggle-vt relative w-9 h-9 rounded-lg flex items-center justify-center border transition-colors shrink-0 ${
+              className={`theme-toggle-vt relative w-10 h-10 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center border transition-colors shrink-0 ${
                 isAnyModalOpen
                   ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-[#0f1117] border-slate-200 dark:border-white/5'
                   : 'bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] border-slate-200 dark:border-white/15 cursor-pointer'
@@ -191,7 +191,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {isDark ? (
                     <Sun size={16} className="text-amber-400" />
                   ) : (
-                    <Moon size={16} className="text-[#027DFD]" />
+                    <Moon size={16} className="text-[#0284ff]" />
                   )}
                 </motion.div>
               </AnimatePresence>
@@ -200,7 +200,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] border border-slate-200 dark:border-white/15 text-slate-800 dark:text-[#f1f5f9] transition-colors cursor-pointer shrink-0"
+              className="md:hidden w-10 h-10 rounded-lg flex items-center justify-center bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] border border-slate-200 dark:border-white/15 text-slate-800 dark:text-[#f1f5f9] transition-colors cursor-pointer shrink-0"
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open navigation menu'}
             >
               {isMobileMenuOpen ? <X size={17} /> : <Menu size={17} />}
@@ -228,7 +228,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onTouchStart={() => onPrefetchTab?.(item.id)}
                 className={`relative flex flex-col items-center justify-center min-h-[44px] py-1 px-1 rounded-xl transition-colors cursor-pointer select-none ${
                   isActive
-                    ? 'text-[#027DFD] dark:text-[#00C7FF] bg-[#027DFD]/10 dark:bg-[#00C7FF]/10 font-bold'
+                    ? 'text-[#0284ff] dark:text-[#00C7FF] bg-[#0284ff]/10 dark:bg-[#00C7FF]/10 font-bold'
                     : 'text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-[#f1f5f9] font-medium'
                 }`}
                 aria-current={isActive ? 'page' : undefined}
@@ -272,14 +272,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#161b27] text-slate-600 dark:text-[#94a3b8] flex items-center justify-center cursor-pointer"
+                  className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-[#161b27] text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white flex items-center justify-center cursor-pointer transition-colors"
                   aria-label="Close menu"
                 >
-                  <X size={16} />
+                  <X size={17} />
                 </button>
               </div>
 
-              <div className="mt-5 space-y-1">
+              <div className="mt-5 space-y-1.5">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
@@ -288,9 +288,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                       key={item.id}
                       type="button"
                       onClick={() => handleTabClick(item.id)}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                      className={`w-full min-h-[44px] flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                         isActive
-                          ? 'bg-[#027DFD] text-white'
+                          ? 'bg-[#0284ff] text-white shadow-sm shadow-[#0284ff]/25'
                           : 'text-slate-700 dark:text-[#94a3b8] hover:bg-slate-100 dark:hover:bg-[#161b27]'
                       }`}
                     >
@@ -311,7 +311,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     setIsMobileMenuOpen(false);
                     onOpenResume();
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-[#161b27] text-slate-900 dark:text-[#f1f5f9] text-xs font-bold border border-slate-200 dark:border-white/10 cursor-pointer"
+                  className="w-full min-h-[44px] flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-[#161b27] text-slate-900 dark:text-[#f1f5f9] text-xs font-bold border border-slate-200 dark:border-white/10 cursor-pointer"
                 >
                   <FileText size={14} className="text-emerald-500" />
                   <span>{t.nav.resume}</span>
@@ -324,7 +324,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setIsMobileMenuOpen(false);
                       onOpenBooking();
                     }}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#027DFD] text-white text-xs font-bold cursor-pointer"
+                    className="w-full min-h-[44px] flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white text-xs font-bold cursor-pointer shadow-sm shadow-[#0284ff]/20"
                   >
                     <Video size={14} />
                     <span>{t.nav.bookMeeting}</span>
@@ -335,7 +335,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   href={AHMED_CONFIG.socials.whatsapp}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-600/10 text-emerald-700 dark:text-emerald-400 font-bold text-xs border border-emerald-500/25"
+                  className="w-full min-h-[44px] flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-600/10 text-emerald-700 dark:text-emerald-400 font-bold text-xs border border-emerald-500/25"
                 >
                   <WhatsAppLogo size={14} />
                   <span>{lang === 'ar' ? 'محادثة واتساب' : 'Direct WhatsApp'}</span>
@@ -349,36 +349,36 @@ export const Navbar: React.FC<NavbarProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub"
-                className="p-2 hover:text-slate-900 dark:hover:text-white"
+                className="w-11 h-11 rounded-xl flex items-center justify-center hover:text-slate-900 dark:hover:text-white transition-colors"
               >
-                <Github size={16} />
+                <Github size={17} />
               </a>
               <a
                 href={profile.linkedinUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn"
-                className="p-2 hover:text-[#027DFD]"
+                className="w-11 h-11 rounded-xl flex items-center justify-center hover:text-[#0284ff] transition-colors"
               >
-                <Linkedin size={16} />
+                <Linkedin size={17} />
               </a>
               <a
                 href={profile.youtubeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="YouTube"
-                className="p-2 hover:text-red-500"
+                className="w-11 h-11 rounded-xl flex items-center justify-center hover:text-red-500 transition-colors"
               >
-                <Youtube size={16} />
+                <Youtube size={17} />
               </a>
               <a
                 href={profile.tiktokUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="TikTok"
-                className="p-2 hover:text-pink-500"
+                className="w-11 h-11 rounded-xl flex items-center justify-center hover:text-pink-500 transition-colors"
               >
-                <TikTokLogo size={14} />
+                <TikTokLogo size={15} />
               </a>
             </div>
           </div>

@@ -1,3 +1,4 @@
+import './styles/tokens.css';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import { LanguageProvider } from './context/LanguageContext';

@@ -168,7 +168,7 @@ export const FloatingPortrait: React.FC<FloatingPortraitProps> = ({
     >
       <motion.div
         aria-hidden="true"
-        className="pointer-events-none absolute -inset-3 rounded-3xl bg-gradient-to-br from-[#027DFD]/22 via-[#00C7FF]/14 to-emerald-400/20"
+        className="pointer-events-none absolute -inset-3 rounded-3xl bg-gradient-to-br from-[#0284ff]/22 via-[#00C7FF]/14 to-emerald-400/20"
         animate={{ scale: [0.97, 1.04, 0.97], opacity: [0.55, 0.9, 0.55] }}
         transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
       />

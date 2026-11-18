@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 
@@ -369,98 +370,154 @@ async function startServer() {
     });
   });
 
-  // Endpoint to parse CV PDF & LinkedIn automatically using Gemini
+  // In-memory TTL cache for live Google Drive CV verification & optional Gemini parsing
+  const CV_CACHE_TTL_MS = 1000 * 60 * 20; // 20 minutes
+  const cvParseCache = new Map<string, { timestamp: number; payload: any }>();
+
+  // Endpoint to verify live Google Drive CV PDF and parse structured fields when GEMINI_API_KEY is available
   app.post('/api/parse-cv', async (req, res) => {
     try {
-      const { pdfUrl, linkedinUrl, githubUsername } = req.body;
-      
-      let downloadUrl = pdfUrl;
-      if (pdfUrl && pdfUrl.includes('drive.google.com')) {
-        const match = pdfUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-        if (match && match[1]) {
-          downloadUrl = `https://drive.google.com/uc?export=download&id=${match[1]}`;
+      const { pdfUrl, linkedinUrl, githubUsername, forceRefresh } = req.body || {};
+      const cacheKey = `${String(pdfUrl || 'default')}::${String(githubUsername || 'ahmed-el-bialy')}`;
+      const cached = cvParseCache.get(cacheKey);
+
+      if (!forceRefresh && cached && Date.now() - cached.timestamp < CV_CACHE_TTL_MS) {
+        return res.json({
+          ...cached.payload,
+          cached: true,
+        });
+      }
+
+      let downloadUrl = typeof pdfUrl === 'string' ? pdfUrl.trim() : '';
+      if (downloadUrl && downloadUrl.includes('drive.google.com')) {
+        const idMatch =
+          downloadUrl.match(/\/d\/([a-zA-Z0-9_-]+)/) ||
+          downloadUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (idMatch && idMatch[1]) {
+          downloadUrl = `https://drive.google.com/uc?export=download&id=${idMatch[1]}`;
         }
       }
 
       let pdfBase64 = '';
+      let pdfHash: string | undefined;
+      let pdfByteLength = 0;
+      let pdfLastModified: string | undefined;
+      let verifiedDrive = false;
+
       try {
         if (downloadUrl) {
-          const pdfRes = await fetch(downloadUrl);
+          const pdfRes = await fetch(downloadUrl, {
+            redirect: 'follow',
+            headers: {
+              'User-Agent': 'ahmed-el-bialy-portfolio-server',
+            },
+          });
           if (pdfRes.ok) {
-            const buffer = await pdfRes.arrayBuffer();
-            pdfBase64 = Buffer.from(buffer).toString('base64');
+            const contentType = (pdfRes.headers.get('content-type') || '').toLowerCase();
+            const lastMod = pdfRes.headers.get('last-modified');
+            if (lastMod) pdfLastModified = lastMod;
+
+            const arrayBuf = await pdfRes.arrayBuffer();
+            const buffer = Buffer.from(arrayBuf);
+            const looksLikePdf =
+              buffer.byteLength > 1000 &&
+              (contentType.includes('pdf') ||
+                contentType.includes('octet-stream') ||
+                buffer.subarray(0, 4).toString('utf8') === '%PDF');
+
+            if (looksLikePdf) {
+              verifiedDrive = true;
+              pdfByteLength = buffer.byteLength;
+              pdfHash = crypto.createHash('sha256').update(buffer).digest('hex').slice(0, 16);
+              pdfBase64 = buffer.toString('base64');
+            }
           }
         }
-      } catch (e) {
-        console.warn('Could not download PDF directly from Drive, relying on search grounding & AI synthesis');
+      } catch {
+        console.warn('Could not download PDF directly from Drive, serving cached/verified metadata');
       }
 
-      const prompt = `Analyze this candidate's resume/CV (PDF attached if available, github username: ${githubUsername || 'ahmed-el-bialy'}, linkedin: ${linkedinUrl || 'https://www.linkedin.com/in/ahmedel-bialy'}) and extract structured portfolio data as a JSON object with:
-      {
-        "name": "...",
-        "title": "...",
-        "about": "...",
-        "skills": ["..."],
-        "experience": [
-          {
-            "company": "...",
-            "role": "...",
-            "period": "...",
-            "description": "...",
-            "technologies": ["..."]
-          }
-        ],
-        "projects": [
-          {
-            "name": "...",
-            "description": "...",
-            "tech": ["..."],
-            "github": "...",
-            "demo": "..."
-          }
-        ]
-      }
-      Return ONLY valid JSON.`;
-
-      const contents: any[] = [prompt];
-      if (pdfBase64) {
-        contents.push({
-          inlineData: {
-            mimeType: 'application/pdf',
-            data: pdfBase64
-          }
-        });
-      }
+      const checkedAt = new Date().toISOString();
+      const basePayload = {
+        success: true,
+        verifiedDrive,
+        pdfHash,
+        pdfByteLength,
+        pdfLastModified,
+        checkedAt,
+        aiEnriched: false,
+      };
 
       const ai = getAiClient();
       if (!ai) {
-        return res.status(503).json({ success: false, error: 'GEMINI_API_KEY is not configured.' });
+        cvParseCache.set(cacheKey, { timestamp: Date.now(), payload: basePayload });
+        return res.json(basePayload);
       }
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-4-hydrogen',
-        contents,
-        config: {
-          tools: [{ googleSearch: {} }]
+      try {
+        const prompt = `Analyze this candidate's resume/CV (PDF attached if available, github username: ${githubUsername || 'ahmed-el-bialy'}, linkedin: ${linkedinUrl || 'https://www.linkedin.com/in/ahmedel-bialy'}) and extract structured portfolio data as a JSON object with:
+        {
+          "name": "...",
+          "title": "...",
+          "about": "...",
+          "skills": [{"category": "...", "items": ["..."]}],
+          "experience": [
+            {
+              "organization": "...",
+              "role": "...",
+              "period": "...",
+              "description": "..."
+            }
+          ],
+          "projects": [
+            {
+              "name": "...",
+              "description": "...",
+              "technologies": ["..."]
+            }
+          ]
         }
-      });
+        Return ONLY valid JSON.`;
 
-      const text = response.text || '';
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsedData = JSON.parse(jsonMatch[0]);
-        return res.json({ success: true, data: parsedData });
-      }
+        const contents: any[] = [prompt];
+        if (pdfBase64) {
+          contents.push({
+            inlineData: {
+              mimeType: 'application/pdf',
+              data: pdfBase64,
+            },
+          });
+        }
 
-      return res.json({ success: false, raw: text });
-    } catch (error: any) {
-      if (isGeminiAuthError(error)) {
-        return res.status(401).json({
-          success: false,
-          keyInvalid: true,
-          error: 'Gemini API key is invalid or unauthorized. Please check GEMINI_API_KEY in Settings > Secrets.',
+        const response = await ai.models.generateContent({
+          model: 'gemini-4-hydrogen',
+          contents,
+          config: {
+            tools: [{ googleSearch: {} }],
+          },
         });
+
+        const text = response.text || '';
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsedData = JSON.parse(jsonMatch[0]);
+          const enrichedPayload = {
+            ...basePayload,
+            aiEnriched: true,
+            data: parsedData,
+          };
+          cvParseCache.set(cacheKey, { timestamp: Date.now(), payload: enrichedPayload });
+          return res.json(enrichedPayload);
+        }
+      } catch (aiErr: any) {
+        if (!isGeminiAuthError(aiErr)) {
+          console.warn('CV AI enrichment fallback:', aiErr?.message || aiErr);
+        }
       }
+
+      cvParseCache.set(cacheKey, { timestamp: Date.now(), payload: basePayload });
+      return res.json(basePayload);
+    } catch (error: any) {
       console.warn('CV Parse Error:', error?.message || error);
       return res.status(500).json({ success: false, error: error?.message || 'CV parse failed' });
     }

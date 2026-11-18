@@ -72,7 +72,7 @@ export const DartCodeShowcase: React.FC<DartCodeShowcaseProps> = ({
                 onClick={() => setActiveId(snippet.id)}
                 className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-mono transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                   isActive
-                    ? 'bg-[#027DFD] text-white font-semibold shadow-xs'
+                    ? 'bg-[#0284ff] text-white font-semibold shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -107,7 +107,7 @@ export const DartCodeShowcase: React.FC<DartCodeShowcaseProps> = ({
 
       {/* Metadata Header */}
       <div className="flex items-center justify-between px-4 py-2 text-[11px] font-mono border-b border-slate-100 dark:border-white/5 bg-white dark:bg-[#0f1117]">
-        <span className="text-[#027DFD] dark:text-[#00C7FF] font-semibold">
+        <span className="text-[#0284ff] dark:text-[#00C7FF] font-semibold">
           {activeSnippet.projectLabel}
         </span>
         <span className="text-slate-500 dark:text-slate-400">{activeSnippet.layerTag}</span>

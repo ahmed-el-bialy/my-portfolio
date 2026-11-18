@@ -51,8 +51,8 @@ export const DEDICATED_TECHS: TechItem[] = [
     descriptionAr:
       'تطوير تطبيقات Android و iOS بأداء أصلي، وتصميم واجهات Slivers مخصصة وحركات تفاعلية سلسة.',
     subSkills: ['Slivers & CustomPaint', 'Custom Animations', 'Arabic RTL', 'Multi-Screen Responsive'],
-    accentColor: '#027DFD',
-    glowRgb: '2, 125, 253',
+    accentColor: '#0284ff',
+    glowRgb: '2, 132, 255',
     LogoComponent: FlutterLogo,
   },
   {
@@ -361,10 +361,10 @@ export const StackSection: React.FC = () => {
       {/* Header & Search */}
       <RevealOnScroll className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div className="max-w-2xl">
-          <div className="flex items-center gap-2 text-xs font-medium text-[#027DFD] dark:text-[#00C7FF] mb-2">
+          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0284ff] dark:text-[#00C7FF] mb-2">
             <span>{t.stack.badge}</span>
-            <span aria-hidden="true">·</span>
-            <span className="text-slate-500 dark:text-[#94a3b8]">
+            <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
+            <span className="text-slate-500 dark:text-[#94a3b8] font-sans">
               {lang === 'ar' ? 'مهارات وأدوات هندسية موثقة' : 'Verified Production Stack'}
             </span>
           </div>
@@ -383,7 +383,7 @@ export const StackSection: React.FC = () => {
             placeholder={t.stack.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full py-2.5 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#027DFD] transition-colors ps-9 pe-3.5 min-h-[44px]"
+            className="w-full py-2.5 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#0284ff] transition-colors ps-9 pe-3.5 min-h-[44px]"
           />
         </div>
       </RevealOnScroll>
@@ -399,7 +399,7 @@ export const StackSection: React.FC = () => {
               onClick={() => setActiveCategory(tab.id)}
               className={`inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                 isActive
-                  ? 'bg-[#027DFD] text-white shadow-xs'
+                  ? 'bg-[#0284ff] text-white shadow-xs shadow-[#0284ff]/25'
                   : 'text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-[#f1f5f9]'
               }`}
             >
@@ -439,10 +439,10 @@ export const StackSection: React.FC = () => {
                   maxTilt={5}
                   glareOpacity={0.1}
                   onClick={() => setExpandedTechId(isExpanded ? null : tech.id)}
-                  className={`skill-shimmer-card w-full group p-5 rounded-2xl bg-white dark:bg-[#0f1117] border transition-colors duration-200 flex flex-col cursor-pointer shadow-2xs hover:shadow-lg ${
+                  className={`card-shimmer skill-shimmer-card w-full group p-5 rounded-2xl bg-white dark:bg-[#0f1117] border transition-colors duration-200 flex flex-col cursor-pointer shadow-2xs hover:shadow-lg ${
                     isExpanded
-                      ? 'border-[#027DFD]/65 ring-1 ring-[#027DFD]/20'
-                      : 'border-slate-200 dark:border-white/10 hover:border-[#027DFD]/50'
+                      ? 'border-[#0284ff]/65 ring-1 ring-[#0284ff]/20'
+                      : 'border-slate-200 dark:border-white/10 hover:border-[#0284ff]/50'
                   }`}
                 >
                   <div>
@@ -458,7 +458,7 @@ export const StackSection: React.FC = () => {
                           <Logo size={23} />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="text-sm font-bold text-slate-900 dark:text-[#f1f5f9] truncate group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF] transition-colors">
+                          <h3 className="text-sm font-bold text-slate-900 dark:text-[#f1f5f9] truncate group-hover:text-[#0284ff] dark:group-hover:text-[#00C7FF] transition-colors">
                             {tech.name}
                           </h3>
                           <span className="text-[11px] font-medium text-slate-500 dark:text-[#94a3b8]">
@@ -471,8 +471,8 @@ export const StackSection: React.FC = () => {
                         size={14}
                         className={`shrink-0 transition-colors ${
                           isExpanded
-                            ? 'text-[#027DFD] dark:text-[#00C7FF]'
-                            : 'text-slate-400 group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF]'
+                            ? 'text-[#0284ff] dark:text-[#00C7FF]'
+                            : 'text-slate-400 group-hover:text-[#0284ff] dark:group-hover:text-[#00C7FF]'
                         }`}
                       />
                     </div>
@@ -507,7 +507,7 @@ export const StackSection: React.FC = () => {
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/8 flex items-center justify-between gap-2 text-[11px]">
-                    <span className="text-[#027DFD] dark:text-[#00C7FF] font-semibold truncate" dir="ltr">
+                    <span className="text-[#0284ff] dark:text-[#00C7FF] font-semibold truncate" dir="ltr">
                       {tech.highlightInApp}
                     </span>
                     <span className="text-slate-400 font-mono shrink-0">

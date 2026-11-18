@@ -64,8 +64,8 @@ const MEETING_OPTIONS: MeetingOption[] = [
     badgeEn: 'Fast Intro',
     badgeAr: 'تعارف سريع',
     icon: Zap,
-    accentClass: 'text-[#027DFD] dark:text-[#00C7FF]',
-    iconBgClass: 'bg-[#027DFD]/12 border-[#027DFD]/25 text-[#027DFD] dark:text-[#00C7FF]',
+    accentClass: 'text-[#0284ff] dark:text-[#00C7FF]',
+    iconBgClass: 'bg-[#0284ff]/12 border-[#0284ff]/25 text-[#0284ff] dark:text-[#00C7FF]',
   },
   {
     id: 'discovery-cal',
@@ -170,14 +170,14 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedType(null)}
-                  className="w-9 h-9 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-700 dark:text-gray-200 transition-colors cursor-pointer shrink-0"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-700 dark:text-gray-200 transition-colors cursor-pointer shrink-0"
                   title={isArabic ? 'العودة لاختيار نوع الجلسة' : 'Back to session options'}
                 >
                   {isArabic ? <ArrowRight size={16} /> : <ArrowLeft size={16} />}
                 </button>
               )}
 
-              <div className="w-9 h-9 rounded-xl bg-[#027DFD]/12 border border-[#027DFD]/25 flex items-center justify-center text-[#027DFD] dark:text-[#00C7FF] shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-[#0284ff]/12 border border-[#0284ff]/25 flex items-center justify-center text-[#0284ff] dark:text-[#00C7FF] shrink-0">
                 <Calendar size={18} />
               </div>
 
@@ -219,7 +219,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-9 h-9 rounded-xl bg-white dark:bg-white/5 hover:bg-red-500 hover:text-white border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-600 dark:text-gray-300 transition-colors cursor-pointer"
+                className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-white dark:bg-white/5 hover:bg-red-500 hover:text-white border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-600 dark:text-gray-300 transition-colors cursor-pointer"
                 aria-label="Close booking dialog"
               >
                 <X size={17} />
@@ -232,9 +232,9 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
             <button
               type="button"
               onClick={() => setSelectedType(null)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 min-h-[36px] sm:min-h-0 rounded-lg transition-colors cursor-pointer ${
                 currentStep === 1
-                  ? 'bg-[#027DFD] text-white font-bold'
+                  ? 'bg-[#0284ff] text-white font-bold'
                   : 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-400 font-semibold'
               }`}
             >
@@ -247,7 +247,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
             <div
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${
                 currentStep === 2
-                  ? 'bg-[#027DFD] text-white font-bold'
+                  ? 'bg-[#0284ff] text-white font-bold'
                   : 'bg-slate-200/70 dark:bg-white/5 text-slate-500 dark:text-slate-400'
               }`}
             >
@@ -283,7 +283,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
                         maxTilt={5}
                         glareOpacity={0.12}
                         onClick={() => handleSelectType(opt.id)}
-                        className="group p-5 rounded-2xl bg-slate-50/90 dark:bg-[#141824] border border-slate-200 dark:border-white/10 hover:border-[#027DFD]/50 cursor-pointer shadow-sm hover:shadow-xl flex flex-col justify-between gap-4 transition-all duration-200"
+                        className="card-shimmer overflow-hidden group p-5 rounded-2xl bg-slate-50/90 dark:bg-[#141824] border border-slate-200 dark:border-white/10 hover:border-[#0284ff]/50 cursor-pointer shadow-sm hover:shadow-xl flex flex-col justify-between gap-4 transition-all duration-200"
                       >
                         <div className="space-y-3.5">
                           <div className="flex items-center justify-between gap-2">
@@ -293,7 +293,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
                               <SessionIcon size={18} />
                             </div>
                             <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-white/5 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-white/10">
-                              <Clock size={12} className="text-[#027DFD] dark:text-[#00C7FF]" />
+                              <Clock size={12} className="text-[#0284ff] dark:text-[#00C7FF]" />
                               {opt.duration}
                             </span>
                           </div>
@@ -302,7 +302,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
                             <span className={`text-[10.5px] font-mono font-bold ${opt.accentClass}`}>
                               {isArabic ? opt.badgeAr : opt.badgeEn}
                             </span>
-                            <h5 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-[#027DFD] dark:group-hover:text-[#00C7FF] transition-colors mt-0.5">
+                            <h5 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-[#0284ff] dark:group-hover:text-[#00C7FF] transition-colors mt-0.5">
                               {isArabic ? opt.titleAr : opt.titleEn}
                             </h5>
                             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-1.5">
@@ -323,7 +323,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
                           </ul>
                         </div>
 
-                        <div className="btn-kinetic w-full py-2.5 px-3 rounded-xl bg-white dark:bg-white/5 group-hover:bg-[#027DFD] text-[#027DFD] dark:text-[#00C7FF] group-hover:text-white border border-slate-200 dark:border-white/10 group-hover:border-[#027DFD] flex items-center justify-between text-xs font-bold transition-colors">
+                        <div className="btn-kinetic min-h-[44px] sm:min-h-0 w-full py-2.5 px-3 rounded-xl bg-white dark:bg-white/5 group-hover:bg-[#0284ff] text-[#0284ff] dark:text-[#00C7FF] group-hover:text-white border border-slate-200 dark:border-white/10 group-hover:border-[#0284ff] flex items-center justify-between text-xs font-bold transition-colors">
                           <span>{isArabic ? 'اختيار الموعد' : 'Pick Time Slot'}</span>
                           <ArrowRight size={14} className={dir === 'rtl' ? 'rotate-180' : ''} />
                         </div>
@@ -349,7 +349,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
                     href={AHMED_CONFIG.socials.whatsapp}
                     target="_blank"
                     rel="noreferrer"
-                    className="btn-kinetic inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs"
+                    className="btn-kinetic inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[36px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs"
                   >
                     <WhatsAppLogo size={13} />
                     <span>WhatsApp</span>
@@ -358,7 +358,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
                     href={getGmailComposeUrl(profile.email, 'Meeting Inquiry - Flutter Portfolio')}
                     target="_blank"
                     rel="noreferrer"
-                    className="btn-kinetic inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/10 text-xs font-semibold"
+                    className="btn-kinetic inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[36px] rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/10 text-xs font-semibold"
                   >
                     <Mail size={13} />
                     <span>Email</span>
@@ -378,7 +378,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
                     href={activeOption?.url.replace('?embed=true', '')}
                     target="_blank"
                     rel="noreferrer"
-                    className="sm:hidden inline-flex items-center gap-1 text-[#027DFD] dark:text-[#00C7FF] font-bold"
+                    className="sm:hidden inline-flex items-center gap-1 text-[#0284ff] dark:text-[#00C7FF] font-bold"
                   >
                     <span>{isArabic ? 'رابط مباشر' : 'Direct Link'}</span>
                     <ExternalLink size={11} />
@@ -398,7 +398,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
               <div className="flex-1 relative">
                 {isIframeLoading && (
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/92 dark:bg-[#0f1117]/92 backdrop-blur-md gap-3 p-6">
-                    <div className="w-12 h-12 rounded-2xl bg-[#027DFD]/10 border border-[#027DFD]/25 flex items-center justify-center text-[#027DFD] dark:text-[#00C7FF]">
+                    <div className="w-12 h-12 rounded-2xl bg-[#0284ff]/10 border border-[#0284ff]/25 flex items-center justify-center text-[#0284ff] dark:text-[#00C7FF]">
                       <Loader2 size={24} className="animate-spin" />
                     </div>
                     <div className="text-center space-y-1">
@@ -438,7 +438,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
               <button
                 type="button"
                 onClick={() => setSelectedType(null)}
-                className="px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-gray-200 border border-slate-200 dark:border-white/10 font-semibold transition-colors cursor-pointer"
+                className="px-3 py-1.5 min-h-[44px] sm:min-h-[34px] rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-gray-200 border border-slate-200 dark:border-white/10 font-semibold transition-colors cursor-pointer"
               >
                 {isArabic ? 'تغيير الجلسة' : 'Change Session'}
               </button>
@@ -446,7 +446,7 @@ export const BookingMeetingModal: React.FC<BookingMeetingModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-1.5 rounded-xl bg-[#027DFD] hover:bg-[#026ae0] text-white font-semibold transition-colors cursor-pointer"
+              className="px-4 py-1.5 min-h-[44px] sm:min-h-[34px] rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-semibold transition-colors cursor-pointer"
             >
               {isArabic ? 'إغلاق' : 'Close'}
             </button>

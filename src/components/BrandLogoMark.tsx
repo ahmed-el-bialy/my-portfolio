@@ -33,7 +33,7 @@ export const BrandLogoMark: React.FC<BrandLogoMarkProps> = ({
       <span
         className={`relative inline-flex items-center justify-center rounded-full shrink-0 transition-shadow duration-300 ${
           showBlueRing
-            ? 'p-[2px] bg-gradient-to-br from-[#027DFD] via-[#00C7FF] to-[#38BDF8] ring-1 ring-[#00C7FF]/70 shadow-[0_0_18px_rgba(2,125,253,0.48)] dark:shadow-[0_0_22px_rgba(0,199,255,0.46)]'
+            ? 'p-[2px] bg-gradient-to-br from-[#0284ff] via-[#00C7FF] to-[#38BDF8] ring-1 ring-[#00C7FF]/70 shadow-[0_0_18px_rgba(2,132,255,0.48)] dark:shadow-[0_0_22px_rgba(0,199,255,0.46)]'
             : 'ring-1 ring-slate-300/80 dark:ring-white/20 shadow-sm'
         } ${sizeClassName} ${className}`}
       >

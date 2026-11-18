@@ -41,10 +41,10 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
     <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full">
       <RevealOnScroll className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 sm:mb-10">
         <div className="max-w-2xl">
-          <div className="flex items-center gap-2 text-xs font-medium text-blue-600 dark:text-cyan-400 mb-2">
+          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0284ff] dark:text-[#00C7FF] mb-2">
             <span>{lang === 'ar' ? 'أبرز التطبيقات المختارة' : 'Selected Mobile Builds'}</span>
-            <span aria-hidden="true">·</span>
-            <span className="text-slate-500 dark:text-slate-400">
+            <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
+            <span className="text-slate-500 dark:text-slate-400 font-sans">
               {lang === 'ar' ? 'منشورة ومفتوحة المصدر' : 'Play Store & Production Apps'}
             </span>
           </div>
@@ -56,7 +56,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
         <button
           type="button"
           onClick={onExploreAllProjects}
-          className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[42px] rounded-xl bg-slate-900 dark:bg-white/10 hover:bg-[#027DFD] dark:hover:bg-[#027DFD] text-white text-xs font-semibold cursor-pointer whitespace-nowrap self-start md:self-auto shadow-xs"
+          className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl bg-slate-900 dark:bg-white/10 hover:bg-[#0284ff] dark:hover:bg-[#0284ff] text-white text-xs font-semibold cursor-pointer whitespace-nowrap self-start md:self-auto shadow-xs"
         >
           <span>{lang === 'ar' ? 'استعراض كافة المشاريع والمستودعات' : 'View All Projects & Repos'}</span>
           <ArrowRight size={14} className={dir === 'rtl' ? 'rotate-180' : ''} />
@@ -96,7 +96,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                 onClick={() => setSelectedProject(dynamicProject)}
                 onMouseEnter={() => setHoveredCardId(project.id)}
                 onMouseLeave={() => setHoveredCardId(null)}
-                className="w-full group rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:border-[#027DFD]/50 shadow-sm hover:shadow-xl"
+                className="card-shimmer w-full group rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:border-[#0284ff]/50 shadow-sm hover:shadow-xl"
               >
                 <div>
                   <ProjectCardCover
@@ -120,7 +120,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                         </span>
                       )}
                     </div>
-                    <p className="text-xs sm:text-sm font-medium text-[#027DFD] dark:text-[#00C7FF] line-clamp-1 mb-1.5">
+                    <p className="text-xs sm:text-sm font-medium text-[#0284ff] dark:text-[#00C7FF] line-clamp-1 mb-1.5">
                       {project.subtitle}
                     </p>
                     <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
@@ -136,7 +136,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                       e.stopPropagation();
                       setSelectedProject(dynamicProject);
                     }}
-                    className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-[#027DFD]/10 hover:bg-[#027DFD] hover:text-white text-xs font-semibold text-[#027DFD] dark:text-[#00C7FF] border border-[#027DFD]/25 cursor-pointer whitespace-nowrap"
+                    className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-xs font-semibold text-[#0284ff] dark:text-[#00C7FF] border border-[#0284ff]/25 cursor-pointer whitespace-nowrap"
                   >
                     <Eye size={13} />
                     <span>{t.projects.actions.viewSpecs}</span>
@@ -150,7 +150,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-3 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white whitespace-nowrap"
+                        className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white whitespace-nowrap"
                       >
                         <span>GitHub</span>
                         <ExternalLink size={12} />
