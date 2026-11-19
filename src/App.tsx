@@ -87,6 +87,7 @@ export default function App() {
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [bookingInitialType, setBookingInitialType] = useState<MeetingType | null>(null);
   const [heroInspectedProject, setHeroInspectedProject] = useState<Project | null>(null);
+  const [heroInspectedScreenIndex, setHeroInspectedScreenIndex] = useState<number>(0);
   const [liveRepoCount, setLiveRepoCount] = useState<number>(13);
   const [liveRepos, setLiveRepos] = useState<GitHubRepo[]>([]);
   const [liveCvData, setLiveCvData] = useState<ParsedProfileData | null>(null);
@@ -110,10 +111,76 @@ export default function App() {
     setIsBookingOpen(true);
   };
 
+  const inspectHeroProjectSafely = useCallback(
+    (rawProject: Project | null | undefined, screenIdx: number = 0) => {
+      if (!rawProject) return;
+      try {
+        const cached = queryClient.getQueryData<any>([
+          'github-consolidated',
+          profile.githubUsername,
+        ]);
+        const safeRepo = (rawProject.repoName || rawProject.name || 'Revio').trim();
+        const liveMedia =
+          cached?.liveMediaMap?.[safeRepo] ||
+          cached?.liveMediaMap?.[rawProject.name || ''] ||
+          cached?.liveMediaMap?.[safeRepo.toLowerCase()];
+        const liveRelease =
+          cached?.releasesMap?.[safeRepo] ||
+          cached?.releasesMap?.[safeRepo.toLowerCase()];
+
+        const normalizedProject: Project = {
+          ...rawProject,
+          id: rawProject.id ?? safeRepo,
+          name: rawProject.name || safeRepo,
+          repoName: safeRepo,
+          subtitle: rawProject.subtitle || '',
+          description: rawProject.description || '',
+          image: rawProject.image || '',
+          technologies: Array.isArray(rawProject.technologies) ? rawProject.technologies : [],
+          features: Array.isArray(rawProject.features) ? rawProject.features : [],
+          hasApk: Boolean(
+            rawProject.hasApk ||
+              rawProject.links?.apkDownloadUrl ||
+              liveRelease?.apkDownloadUrl ||
+              liveMedia?.apkDownloadUrl
+          ),
+          links: {
+            ...rawProject.links,
+            github:
+              rawProject.links?.github ||
+              `https://github.com/${profile.githubUsername}/${safeRepo}`,
+            googlePlay: liveMedia?.googlePlayUrl || rawProject.links?.googlePlay,
+            liveDemoUrl: liveMedia?.liveDemoUrl || rawProject.links?.liveDemoUrl,
+            playlistUrl: liveMedia?.playlistUrl || rawProject.links?.playlistUrl,
+            apkDownloadUrl:
+              liveRelease?.apkDownloadUrl ||
+              liveMedia?.apkDownloadUrl ||
+              rawProject.links?.apkDownloadUrl,
+            releaseUrl:
+              liveRelease?.releaseUrl ||
+              liveMedia?.releaseUrl ||
+              rawProject.links?.releaseUrl,
+          },
+        };
+
+        setHeroInspectedScreenIndex(
+          typeof screenIdx === 'number' && Number.isFinite(screenIdx) && screenIdx >= 0
+            ? Math.trunc(screenIdx)
+            : 0
+        );
+        setHeroInspectedProject(normalizedProject);
+      } catch {
+        setHeroInspectedScreenIndex(0);
+        setHeroInspectedProject(rawProject);
+      }
+    },
+    [profile.githubUsername]
+  );
+
   const handleInspectRevio = () => {
     const revio = FEATURED_PROJECTS.find((p) => p.repoName.toLowerCase() === 'revio');
     if (revio) {
-      setHeroInspectedProject(revio);
+      inspectHeroProjectSafely(revio, 0);
     } else {
       handleNavigate('projects');
     }
@@ -560,7 +627,7 @@ export default function App() {
                   onOpenBooking={() => openBookingModal(null)}
                   onExploreProjects={() => handleNavigate('projects')}
                   onInspectRevio={handleInspectRevio}
-                  onInspectProject={(proj) => setHeroInspectedProject(proj)}
+                  onInspectProject={inspectHeroProjectSafely}
                   totalReposCount={liveRepoCount}
                 />
                 <AboutSection onExploreExperience={() => handleNavigate('experience')} />
@@ -703,8 +770,12 @@ export default function App() {
 
         <ProjectDetailsModal
           isOpen={Boolean(heroInspectedProject)}
-          onClose={() => setHeroInspectedProject(null)}
+          onClose={() => {
+            setHeroInspectedProject(null);
+            setHeroInspectedScreenIndex(0);
+          }}
           project={heroInspectedProject}
+          initialScreenIndex={heroInspectedScreenIndex}
         />
 
         {isTerminalOpen && (

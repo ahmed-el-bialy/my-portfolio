@@ -33,7 +33,7 @@ interface HeroSectionProps {
   onExploreProjects: () => void;
   onOpenBooking?: () => void;
   onInspectRevio?: () => void;
-  onInspectProject?: (project: Project) => void;
+  onInspectProject?: (project: Project, screenIndex?: number) => void;
   totalReposCount?: number;
 }
 

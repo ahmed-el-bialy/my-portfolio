@@ -32,6 +32,7 @@ export interface ProjectCardCoverProps {
   isCardHovered?: boolean;
   aspectClassName?: string;
   compactMode?: boolean;
+  onActiveScreenChange?: (index: number) => void;
 }
 
 export interface ProjectBlueprintSpec {
@@ -318,6 +319,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   isCardHovered = false,
   aspectClassName,
   compactMode = false,
+  onActiveScreenChange,
 }) => {
   const { dir, lang } = useLanguage();
   const [selectedScreenIdx, setSelectedScreenIdx] = useState<number>(0);
@@ -393,9 +395,14 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   useEffect(() => {
     setSelectedScreenIdx(0);
     setShowingCoverArt(false);
+    onActiveScreenChange?.(0);
   }, [repoName]);
 
   const totalScreens = verifiedScreenshots.length;
+
+  useEffect(() => {
+    onActiveScreenChange?.(selectedScreenIdx);
+  }, [selectedScreenIdx, onActiveScreenChange]);
 
   // Gentle auto-cycle across screens ONLY when not hovered and not manually clicked recently
   useEffect(() => {
@@ -414,6 +421,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     if (e) e.stopPropagation();
     setShowingCoverArt(false);
     setSelectedScreenIdx(idx);
+    onActiveScreenChange?.(idx);
     setManualPausedUntil(Date.now() + 9000);
   };
 
@@ -421,7 +429,9 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     e.stopPropagation();
     if (totalScreens <= 1) return;
     setShowingCoverArt(false);
-    setSelectedScreenIdx((prev) => (prev + 1) % totalScreens);
+    const nextIdx = (selectedScreenIdx + 1) % totalScreens;
+    setSelectedScreenIdx(nextIdx);
+    onActiveScreenChange?.(nextIdx);
     setManualPausedUntil(Date.now() + 9000);
   };
 
@@ -429,7 +439,9 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     e.stopPropagation();
     if (totalScreens <= 1) return;
     setShowingCoverArt(false);
-    setSelectedScreenIdx((prev) => (prev - 1 + totalScreens) % totalScreens);
+    const prevIdx = (selectedScreenIdx - 1 + totalScreens) % totalScreens;
+    setSelectedScreenIdx(prevIdx);
+    onActiveScreenChange?.(prevIdx);
     setManualPausedUntil(Date.now() + 9000);
   };
 

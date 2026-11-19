@@ -10,6 +10,7 @@ import { resolveSmartProjectLinks } from '../utils/projectLinks';
 import { SmartDemoButtons } from './SmartDemoButtons';
 import { ProjectCardCover } from './ProjectCardCover';
 import { ProjectDetailsModal } from './ProjectDetailsModal';
+import { VideoDemoModal } from './VideoDemoModal';
 import { RevealOnScroll } from './RevealOnScroll';
 import { TiltCard } from './MotionPrimitives';
 import { useLanguage } from '../context/LanguageContext';
@@ -25,7 +26,13 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
 }) => {
   const { lang, dir, t } = useLanguage();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedScreenIndex, setSelectedScreenIndex] = useState<number>(0);
+  const [cardScreenMap, setCardScreenMap] = useState<Record<string, number>>({});
   const [hoveredCardId, setHoveredCardId] = useState<number | null>(null);
+  const [videoModalState, setVideoModalState] = useState<{
+    projectName: string;
+    videoUrl: string;
+  } | null>(null);
 
   const { data: portfolioData } = useQuery<ConsolidatedGitHubPortfolio>({
     queryKey: ['github-consolidated', githubUsername],
@@ -93,7 +100,10 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                 maxTilt={4.5}
                 glareOpacity={0.12}
                 cursorLabel={lang === 'ar' ? 'استعراض' : 'Inspect'}
-                onClick={() => setSelectedProject(dynamicProject)}
+                onClick={() => {
+                  setSelectedScreenIndex(cardScreenMap[project.repoName] || 0);
+                  setSelectedProject(dynamicProject);
+                }}
                 onMouseEnter={() => setHoveredCardId(project.id)}
                 onMouseLeave={() => setHoveredCardId(null)}
                 className="card-shimmer w-full group rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:border-[#0284ff]/50 shadow-sm hover:shadow-xl"
@@ -107,6 +117,13 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                     description={project.description}
                     topics={project.technologies}
                     isCardHovered={hoveredCardId === project.id}
+                    onActiveScreenChange={(screenIdx) => {
+                      setCardScreenMap((prev) =>
+                        prev[project.repoName] === screenIdx
+                          ? prev
+                          : { ...prev, [project.repoName]: screenIdx }
+                      );
+                    }}
                   />
 
                   <div className="p-4 sm:p-6">
@@ -134,6 +151,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      setSelectedScreenIndex(cardScreenMap[project.repoName] || 0);
                       setSelectedProject(dynamicProject);
                     }}
                     className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-xs font-semibold text-[#0284ff] dark:text-[#00C7FF] border border-[#0284ff]/25 cursor-pointer whitespace-nowrap"
@@ -143,7 +161,13 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                   </button>
 
                   <div className="flex items-center gap-2 flex-wrap flex-1 sm:flex-initial justify-end">
-                    <SmartDemoButtons resolved={resolvedLinks} compact />
+                    <SmartDemoButtons
+                      resolved={resolvedLinks}
+                      compact
+                      onWatchDemo={(videoUrl) =>
+                        setVideoModalState({ projectName: project.name, videoUrl })
+                      }
+                    />
                     {resolvedLinks.mode === 'none' && project.links.github && (
                       <a
                         href={project.links.github}
@@ -166,8 +190,19 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
 
       <ProjectDetailsModal
         isOpen={Boolean(selectedProject)}
-        onClose={() => setSelectedProject(null)}
+        onClose={() => {
+          setSelectedProject(null);
+          setSelectedScreenIndex(0);
+        }}
         project={selectedProject}
+        initialScreenIndex={selectedScreenIndex}
+      />
+
+      <VideoDemoModal
+        isOpen={Boolean(videoModalState)}
+        onClose={() => setVideoModalState(null)}
+        projectName={videoModalState?.projectName || 'App Demo'}
+        videoUrl={videoModalState?.videoUrl}
       />
     </section>
   );

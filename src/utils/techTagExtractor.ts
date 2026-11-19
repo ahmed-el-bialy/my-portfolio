@@ -442,6 +442,7 @@ export const REPO_README_METADATA: Record<string, RepoReadmeSpecs> = {
 };
 
 export function getRepoReadmeSpecs(repoName: string): RepoReadmeSpecs | undefined {
+  if (typeof repoName !== 'string' || !repoName.trim()) return undefined;
   const key = repoName.toLowerCase().replace(/[\s_]/g, '-');
   return REPO_README_METADATA[key] || REPO_README_METADATA[key.replace(/-/g, '')];
 }
@@ -457,7 +458,15 @@ export function extractRepoTechTags(params: {
   description?: string | null;
   technologies?: string[];
 }): TechTag[] {
-  const { repoName, language, topics = [], description = '', technologies = [] } = params;
+  const safeRepoName = typeof params?.repoName === 'string' ? params.repoName : '';
+  const safeLanguage = typeof params?.language === 'string' ? params.language : null;
+  const safeTopics = Array.isArray(params?.topics)
+    ? params.topics.filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+    : [];
+  const safeDescription = typeof params?.description === 'string' ? params.description : '';
+  const safeTechnologies = Array.isArray(params?.technologies)
+    ? params.technologies.filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+    : [];
   const extractedMap = new Map<string, TechTag>();
 
   const addTag = (tag: TechTag) => {
@@ -472,7 +481,7 @@ export function extractRepoTechTags(params: {
   };
 
   // 1. Primary Language Extraction
-  const primaryLang = (language || 'Dart').trim();
+  const primaryLang = (safeLanguage || 'Dart').trim();
   const langKey = primaryLang.toLowerCase();
   if (KNOWN_TECH_MAP[langKey]) {
     addTag(KNOWN_TECH_MAP[langKey]);
@@ -493,12 +502,12 @@ export function extractRepoTechTags(params: {
 
   // 2. Framework Detection
   // If it uses Dart, default Framework is Flutter
-  if (primaryLang.toLowerCase() === 'dart' || (description && /flutter/i.test(description)) || topics.includes('flutter')) {
+  if (primaryLang.toLowerCase() === 'dart' || (safeDescription && /flutter/i.test(safeDescription)) || safeTopics.includes('flutter')) {
     addTag(KNOWN_TECH_MAP['flutter']);
   }
 
   // 3. Process explicit technologies array (if coming from portfolio data)
-  for (const tech of technologies) {
+  for (const tech of safeTechnologies) {
     const key = tech.toLowerCase().replace(/[\s_]/g, '-');
     const directKey = tech.toLowerCase().replace(/[\s_-]/g, '');
     const matched = KNOWN_TECH_MAP[key] || KNOWN_TECH_MAP[directKey];
@@ -521,7 +530,7 @@ export function extractRepoTechTags(params: {
   }
 
   // 4. Process GitHub Topics
-  for (const topic of topics) {
+  for (const topic of safeTopics) {
     const cleanTopic = topic.trim().toLowerCase();
     if (cleanTopic === 'dart' && hasTag('dart')) continue;
     if (cleanTopic === 'flutter' && hasTag('flutter')) continue;
@@ -551,7 +560,7 @@ export function extractRepoTechTags(params: {
   }
 
   // 5. Intelligent NLP & verified README specifications extraction
-  const cleanKey = repoName.toLowerCase().replace(/[\s_]/g, '-');
+  const cleanKey = safeRepoName.toLowerCase().replace(/[\s_]/g, '-');
   const readmeData = REPO_README_METADATA[cleanKey] || REPO_README_METADATA[cleanKey.replace(/-/g, '')];
 
   if (readmeData) {
@@ -596,14 +605,14 @@ export function extractRepoTechTags(params: {
     }
   }
 
-  const textCorpus = `${repoName} ${description || ''}`.toLowerCase();
+  const textCorpus = `${safeRepoName} ${safeDescription}`.toLowerCase();
 
   // Explicit check for Cubit
-  if ((textCorpus.includes('cubit') || repoName.toLowerCase().includes('movura') || repoName.toLowerCase().includes('revio')) && !hasTag('cubit')) {
+  if ((textCorpus.includes('cubit') || safeRepoName.toLowerCase().includes('movura') || safeRepoName.toLowerCase().includes('revio')) && !hasTag('cubit')) {
     addTag(KNOWN_TECH_MAP['cubit']);
   }
   // Explicit check for BLoC (both can coexist as reactive state management)
-  if ((textCorpus.includes('bloc') || textCorpus.includes('b-loc') || repoName.toLowerCase().includes('movura')) && !hasTag('bloc')) {
+  if ((textCorpus.includes('bloc') || textCorpus.includes('b-loc') || safeRepoName.toLowerCase().includes('movura')) && !hasTag('bloc')) {
     addTag(KNOWN_TECH_MAP['bloc']);
   }
   if ((textCorpus.includes('hive ce') || textCorpus.includes('hive')) && !hasTag('hive-ce') && !hasTag('hive')) {

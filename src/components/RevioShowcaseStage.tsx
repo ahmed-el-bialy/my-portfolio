@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, LayoutGroup, useReducedMotion } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   ExternalLink,
   Youtube,
@@ -9,16 +10,21 @@ import {
   Smartphone,
 } from 'lucide-react';
 import { FEATURED_PROJECTS, Project } from '../data/portfolioData';
-import { VERIFIED_REPO_SCREENSHOTS } from '../services/githubService';
+import {
+  VERIFIED_REPO_SCREENSHOTS,
+  ConsolidatedGitHubPortfolio,
+} from '../services/githubService';
+import { resolveSmartProjectLinks } from '../utils/projectLinks';
 import { ImageWithSkeleton, preloadImageUrls } from './ImageWithSkeleton';
 import { TiltCard } from './MotionPrimitives';
 import { usePlayStoreAppStats } from '../services/playStoreService';
 import { useLanguage } from '../context/LanguageContext';
+import { VideoDemoModal } from './VideoDemoModal';
 
 interface RevioShowcaseStageProps {
   isDark?: boolean;
   onInspectRevio?: () => void;
-  onInspectProject?: (project: Project) => void;
+  onInspectProject?: (project: Project, screenIndex?: number) => void;
 }
 
 const SHOWCASE_REPO_ORDER = ['Revio', 'Movura', 'Sky-Cast', 'Vibrant-store'];
@@ -43,10 +49,20 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
   onInspectProject,
 }) => {
   const { lang, dir, t } = useLanguage();
+  const queryClient = useQueryClient();
   const prefersReducedMotion = useReducedMotion();
   const [selectedRepoKey, setSelectedRepoKey] = useState<string>('Revio');
   const [[screenIndex, screenDirection], setScreenState] = useState<[number, number]>([0, 1]);
+  const [videoModalState, setVideoModalState] = useState<{
+    projectName: string;
+    videoUrl: string;
+  } | null>(null);
   const { data: revioPlayStats } = usePlayStoreAppStats('com.ahmed.revio');
+
+  const cachedConsolidated = queryClient.getQueryData<ConsolidatedGitHubPortfolio>([
+    'github-consolidated',
+    'ahmed-el-bialy',
+  ]);
 
   const showcaseApps = useMemo(() => {
     return SHOWCASE_REPO_ORDER.map((repoKey) =>
@@ -63,16 +79,21 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
 
   const activeScreens = useMemo(() => {
     if (!activeProject) return [];
-    const list =
+    const liveMedia =
+      cachedConsolidated?.liveMediaMap?.[activeProject.repoName] ||
+      cachedConsolidated?.liveMediaMap?.[activeProject.repoName.toLowerCase()];
+    const rawList =
+      (liveMedia?.discoveredScreenshots?.length ? liveMedia.discoveredScreenshots : null) ||
       VERIFIED_REPO_SCREENSHOTS[activeProject.repoName] ||
       VERIFIED_REPO_SCREENSHOTS[activeProject.repoName.toLowerCase()] ||
       [];
+    const list = rawList.filter((u): u is string => typeof u === 'string' && u.trim().length > 0);
     return list.slice(0, 4).map((src, idx) => ({
       id: `${activeProject.repoName}-${idx}`,
       label: formatHeroScreenLabel(src, idx),
       src,
     }));
-  }, [activeProject]);
+  }, [activeProject, cachedConsolidated]);
 
   // Preload active app screens & primary screens of showcase apps on mount/switch
   useEffect(() => {
@@ -86,9 +107,21 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
   if (!activeProject) return null;
 
   const isRevio = activeProject.repoName.toLowerCase() === 'revio';
-  const currentScreen = activeScreens[screenIndex % Math.max(1, activeScreens.length)] || activeScreens[0];
-  const demoVideoUrl = activeProject.links.liveDemoUrl || activeProject.links.demoVideoUrl;
-  const playUrl = activeProject.links.googlePlay;
+  const safeScreenCount = activeScreens.length;
+  const normalizedIdx = safeScreenCount > 0 ? ((screenIndex % safeScreenCount) + safeScreenCount) % safeScreenCount : 0;
+  const currentScreen = activeScreens[normalizedIdx] || activeScreens[0];
+
+  const liveMedia =
+    cachedConsolidated?.liveMediaMap?.[activeProject.repoName] ||
+    cachedConsolidated?.liveMediaMap?.[activeProject.name] ||
+    cachedConsolidated?.liveMediaMap?.[activeProject.repoName.toLowerCase()];
+  const liveRelease =
+    cachedConsolidated?.releasesMap?.[activeProject.repoName] ||
+    cachedConsolidated?.releasesMap?.[activeProject.repoName.toLowerCase()];
+  const resolvedLinks = resolveSmartProjectLinks(activeProject.links || {}, liveMedia);
+
+  const demoVideoUrl = resolvedLinks.demoVideoUrl || activeProject.links?.liveDemoUrl || activeProject.links?.demoVideoUrl;
+  const playUrl = resolvedLinks.googlePlayUrl || activeProject.links?.googlePlay;
 
   const handleSelectApp = (repoName: string) => {
     if (repoName.toLowerCase() === selectedRepoKey.toLowerCase()) return;
@@ -97,10 +130,38 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
   };
 
   const handleInspect = () => {
-    if (onInspectProject) {
-      onInspectProject(activeProject);
-    } else if (isRevio && onInspectRevio) {
-      onInspectRevio();
+    try {
+      const dynamicApkUrl = resolvedLinks.apkDownloadUrl || liveRelease?.apkDownloadUrl;
+      const dynamicReleaseUrl = resolvedLinks.releaseUrl || liveRelease?.releaseUrl;
+      const enrichedProject: Project = {
+        ...activeProject,
+        technologies: Array.isArray(activeProject.technologies) ? activeProject.technologies : [],
+        features: Array.isArray(activeProject.features) ? activeProject.features : [],
+        hasApk: Boolean(activeProject.hasApk || dynamicApkUrl || liveRelease?.hasRelease),
+        links: {
+          ...activeProject.links,
+          github: activeProject.links?.github || `https://github.com/ahmed-el-bialy/${activeProject.repoName}`,
+          demoVideoUrl: resolvedLinks.demoVideoUrl,
+          liveDemoUrl:
+            resolvedLinks.webLiveDemoUrl || liveMedia?.liveDemoUrl || activeProject.links?.liveDemoUrl,
+          playlistUrl: resolvedLinks.playlistUrl,
+          googlePlay: playUrl,
+          apkDownloadUrl: dynamicApkUrl,
+          releaseUrl: dynamicReleaseUrl,
+        },
+      };
+
+      if (onInspectProject) {
+        onInspectProject(enrichedProject, normalizedIdx);
+      } else if (isRevio && onInspectRevio) {
+        onInspectRevio();
+      }
+    } catch {
+      if (onInspectProject) {
+        onInspectProject(activeProject, 0);
+      } else if (isRevio && onInspectRevio) {
+        onInspectRevio();
+      }
     }
   };
 
@@ -328,7 +389,7 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
           </a>
         ) : (
           <a
-            href={activeProject.links.github}
+            href={activeProject.links?.github || `https://github.com/ahmed-el-bialy/${activeProject.repoName}`}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-slate-900 dark:bg-white/10 hover:bg-[#0284ff] text-white text-xs font-bold whitespace-nowrap shadow-xs"
@@ -341,17 +402,28 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
         )}
 
         {demoVideoUrl && (
-          <a
-            href={demoVideoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-red-500/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 border border-red-500/25 text-xs font-semibold whitespace-nowrap"
+          <button
+            type="button"
+            onClick={() =>
+              setVideoModalState({
+                projectName: activeProject.name,
+                videoUrl: demoVideoUrl,
+              })
+            }
+            className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-red-500/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 border border-red-500/25 text-xs font-semibold whitespace-nowrap cursor-pointer"
           >
             <Youtube size={13} />
             <span>{t.projects.actions.watchDemo}</span>
-          </a>
+          </button>
         )}
       </div>
+
+      <VideoDemoModal
+        isOpen={Boolean(videoModalState)}
+        onClose={() => setVideoModalState(null)}
+        projectName={videoModalState?.projectName || activeProject.name}
+        videoUrl={videoModalState?.videoUrl}
+      />
     </TiltCard>
   );
 };

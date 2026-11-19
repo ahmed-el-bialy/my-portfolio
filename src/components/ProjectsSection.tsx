@@ -33,6 +33,7 @@ import { extractRepoTechTags, getRepoReadmeSpecs } from '../utils/techTagExtract
 import { TechIconBadge } from './TechLogos';
 import { ProjectDetailsModal } from './ProjectDetailsModal';
 import { ApkDownloadModal } from './ApkDownloadModal';
+import { VideoDemoModal } from './VideoDemoModal';
 import { ProjectSkeletonCard } from './ProjectSkeletonCard';
 import { LeafAnimation } from './LeafAnimation';
 import { GitHubActivity } from './GitHubActivity';
@@ -58,7 +59,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'featured' | 'github'>('featured');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedScreenIndex, setSelectedScreenIndex] = useState<number>(0);
+  const [cardScreenMap, setCardScreenMap] = useState<Record<string, number>>({});
   const [apkModalProject, setApkModalProject] = useState<Project | null>(null);
+  const [videoModalState, setVideoModalState] = useState<{
+    projectName: string;
+    videoUrl: string;
+  } | null>(null);
 
   const [githubUser] = useState<string>(currentGithubUser || 'ahmed-el-bialy');
   const [repoSearch, setRepoSearch] = useState<string>('');
@@ -762,6 +769,9 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
               const revioProj = FEATURED_PROJECTS.find((p) => p.repoName === 'Revio');
               if (revioProj) setSelectedProject(revioProj);
             }}
+            onWatchDemo={(videoUrl) =>
+              setVideoModalState({ projectName: 'Revio', videoUrl })
+            }
           />
 
           {filteredFeaturedProjects.length === 0 ? (
@@ -850,7 +860,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     maxTilt={4.5}
                     glareOpacity={0.12}
                     cursorLabel={lang === 'ar' ? 'استعراض' : 'Inspect'}
-                    onClick={() => setSelectedProject(dynamicProject)}
+                    onClick={() => {
+                      setSelectedScreenIndex(cardScreenMap[project.repoName] || 0);
+                      setSelectedProject(dynamicProject);
+                    }}
                     onMouseEnter={() => setHoveredCardId(project.id)}
                     onMouseLeave={() => setHoveredCardId(null)}
                     className="card-shimmer group relative rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-colors duration-300 hover:border-[#0284ff]/50 shadow-sm hover:shadow-xl"
@@ -867,6 +880,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                         description={project.description}
                         topics={project.technologies}
                         isCardHovered={hoveredCardId === project.id}
+                        onActiveScreenChange={(screenIdx) => {
+                          setCardScreenMap((prev) =>
+                            prev[project.repoName] === screenIdx
+                              ? prev
+                              : { ...prev, [project.repoName]: screenIdx }
+                          );
+                        }}
                       />
 
                       <div className="p-4 sm:p-5">
@@ -930,6 +950,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setSelectedScreenIndex(cardScreenMap[project.repoName] || 0);
                             setSelectedProject(dynamicProject);
                           }}
                           className="btn-kinetic w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0284ff] dark:text-[#00C7FF] font-semibold text-xs border border-[#0284ff]/25 transition-colors cursor-pointer min-h-[44px] sm:min-h-[40px]"
@@ -954,7 +975,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 
                       {(resolvedLinks.mode !== 'none' || dynamicPlayUrl || hasApkFile) && (
                         <div className="flex flex-wrap items-center gap-2">
-                          <SmartDemoButtons resolved={resolvedLinks} fullWidthOnRow />
+                          <SmartDemoButtons
+                            resolved={resolvedLinks}
+                            fullWidthOnRow
+                            onWatchDemo={(videoUrl) =>
+                              setVideoModalState({ projectName: project.name, videoUrl })
+                            }
+                          />
 
                           {dynamicPlayUrl && (
                             <a
@@ -1082,7 +1109,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     maxTilt={4}
                     glareOpacity={0.12}
                     cursorLabel={lang === 'ar' ? 'استعراض' : 'Inspect'}
-                    onClick={() => setSelectedProject(dynamicRepoProject)}
+                    onClick={() => {
+                      setSelectedScreenIndex(cardScreenMap[repo.name] || 0);
+                      setSelectedProject(dynamicRepoProject);
+                    }}
                     onMouseEnter={() => setHoveredCardId(repo.id)}
                     onMouseLeave={() => setHoveredCardId(null)}
                     className="card-shimmer group relative rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between transition-all duration-300 cursor-pointer shadow-sm hover:border-[#0284ff]/50 hover:shadow-xl"
@@ -1102,6 +1132,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                         topics={repo.topics}
                         isCardHovered={hoveredCardId === repo.id}
                         compactMode
+                        onActiveScreenChange={(screenIdx) => {
+                          setCardScreenMap((prev) =>
+                            prev[repo.name] === screenIdx
+                              ? prev
+                              : { ...prev, [repo.name]: screenIdx }
+                          );
+                        }}
                       />
 
                       <div className="p-5 sm:p-6">
@@ -1173,6 +1210,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setSelectedScreenIndex(cardScreenMap[repo.name] || 0);
                             setSelectedProject(dynamicRepoProject);
                           }}
                           className="btn-kinetic w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0284ff] dark:text-[#00C7FF] font-semibold text-xs border border-[#0284ff]/25 transition-colors cursor-pointer min-h-[44px] sm:min-h-[40px]"
@@ -1234,7 +1272,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 
                         {hasSmartMedia && (
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <SmartDemoButtons resolved={resolvedRepoLinks} compact />
+                            <SmartDemoButtons
+                              resolved={resolvedRepoLinks}
+                              compact
+                              onWatchDemo={(videoUrl) =>
+                                setVideoModalState({ projectName: repo.name, videoUrl })
+                              }
+                            />
                           </div>
                         )}
                       </div>
@@ -1266,14 +1310,25 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 
       <ProjectDetailsModal
         isOpen={Boolean(selectedProject)}
-        onClose={() => setSelectedProject(null)}
+        onClose={() => {
+          setSelectedProject(null);
+          setSelectedScreenIndex(0);
+        }}
         project={selectedProject}
+        initialScreenIndex={selectedScreenIndex}
       />
 
       <ApkDownloadModal
         isOpen={Boolean(apkModalProject)}
         onClose={() => setApkModalProject(null)}
         project={apkModalProject}
+      />
+
+      <VideoDemoModal
+        isOpen={Boolean(videoModalState)}
+        onClose={() => setVideoModalState(null)}
+        projectName={videoModalState?.projectName || 'App Demo'}
+        videoUrl={videoModalState?.videoUrl}
       />
     </section>
   );
@@ -1284,6 +1339,7 @@ interface RevioSpotlightCardProps {
   t: any;
   liveMedia?: any;
   onInspectRevio: () => void;
+  onWatchDemo?: (videoUrl: string) => void;
 }
 
 const RevioSpotlightCard: React.FC<RevioSpotlightCardProps> = ({
@@ -1291,6 +1347,7 @@ const RevioSpotlightCard: React.FC<RevioSpotlightCardProps> = ({
   t,
   liveMedia,
   onInspectRevio,
+  onWatchDemo,
 }) => {
   const { data: playStats } = usePlayStoreAppStats('com.ahmed.revio');
   const [activeShot, setActiveShot] = useState(0);
@@ -1361,6 +1418,7 @@ const RevioSpotlightCard: React.FC<RevioSpotlightCardProps> = ({
               liveMedia
             )}
             stopPropagation={false}
+            onWatchDemo={onWatchDemo}
           />
 
           <button

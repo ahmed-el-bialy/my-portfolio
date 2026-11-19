@@ -74,23 +74,30 @@ export function extractStructuredReadmeTemplate(
   branch: string = 'main',
   owner: string = 'ahmed-el-bialy'
 ): StructuredReadmeTemplate {
-  if (!rawText) {
-    return {
-      features: [],
-      techPackages: [],
-      architectureNotes: [],
-      badges: [],
-      screenshots: [],
-    };
+  const emptyResult: StructuredReadmeTemplate = {
+    features: [],
+    techPackages: [],
+    architectureNotes: [],
+    badges: [],
+    screenshots: [],
+  };
+
+  if (typeof rawText !== 'string' || !rawText.trim()) {
+    return emptyResult;
   }
 
-  let normalized = rawText.replace(/\r\n/g, '\n');
-  normalized = normalized.replace(/<!--[\s\S]*?-->/g, '');
-  normalized = normalized.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (_, t) => `\n# ${stripInlineFormatting(t)}\n`);
-  normalized = normalized.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, (_, t) => `\n## ${stripInlineFormatting(t)}\n`);
-  normalized = normalized.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, (_, t) => `\n### ${stripInlineFormatting(t)}\n`);
-  normalized = normalized.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_, t) => `\n- ${stripInlineFormatting(t)}`);
-  normalized = normalized.replace(/<\/?(?:div|p|center|section|ul|ol|span|br|hr)[^>]*>/gi, '\n');
+  try {
+    const safeRepo = typeof repoName === 'string' && repoName.trim() ? repoName.trim() : 'project';
+    const safeBranch = typeof branch === 'string' && branch.trim() ? branch.trim() : 'main';
+    const safeOwner = typeof owner === 'string' && owner.trim() ? owner.trim() : 'ahmed-el-bialy';
+
+    let normalized = rawText.replace(/\r\n/g, '\n');
+    normalized = normalized.replace(/<!--[\s\S]*?-->/g, '');
+    normalized = normalized.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (_, t) => `\n# ${stripInlineFormatting(t)}\n`);
+    normalized = normalized.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, (_, t) => `\n## ${stripInlineFormatting(t)}\n`);
+    normalized = normalized.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, (_, t) => `\n### ${stripInlineFormatting(t)}\n`);
+    normalized = normalized.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_, t) => `\n- ${stripInlineFormatting(t)}`);
+    normalized = normalized.replace(/<\/?(?:div|p|center|section|ul|ol|span|br|hr)[^>]*>/gi, '\n');
 
   const lines = normalized.split('\n');
   const features: string[] = [];
@@ -142,7 +149,7 @@ export function extractStructuredReadmeTemplate(
     let m: RegExpExecArray | null;
     while ((m = linkedImgRegex.exec(trimmed)) !== null) {
       const alt = (m[1] || '').trim();
-      const url = resolveGitHubRawUrl(m[2], repoName, branch, owner);
+      const url = resolveGitHubRawUrl(m[2], safeRepo, safeBranch, safeOwner);
       const href = m[3].trim();
       if (isBadgeOrIconAsset(url)) {
         if (alt && !seenBadges.has(alt.toLowerCase()) && alt.length < 36) {
@@ -158,7 +165,7 @@ export function extractStructuredReadmeTemplate(
     const imgRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
     while ((m = imgRegex.exec(trimmed)) !== null) {
       const alt = (m[1] || '').trim();
-      const url = resolveGitHubRawUrl(m[2], repoName, branch, owner);
+      const url = resolveGitHubRawUrl(m[2], safeRepo, safeBranch, safeOwner);
       if (isBadgeOrIconAsset(url)) {
         if (alt && !seenBadges.has(alt.toLowerCase()) && alt.length < 36) {
           seenBadges.add(alt.toLowerCase());
@@ -239,19 +246,23 @@ export function extractStructuredReadmeTemplate(
     }
   }
 
-  return {
-    overviewText,
-    features: Array.from(new Set(features)).slice(0, 10),
-    techPackages: Array.from(new Set(techPackages)).slice(0, 14),
-    architectureNotes: Array.from(new Set(architectureNotes)).slice(0, 8),
-    folderTree,
-    badges: badges.slice(0, 8),
-    screenshots,
-  };
+    return {
+      overviewText,
+      features: Array.from(new Set(features)).slice(0, 10),
+      techPackages: Array.from(new Set(techPackages)).slice(0, 14),
+      architectureNotes: Array.from(new Set(architectureNotes)).slice(0, 8),
+      folderTree,
+      badges: badges.slice(0, 8),
+      screenshots,
+    };
+  } catch {
+    return emptyResult;
+  }
 }
 
 export function formatReadableScreenName(url: string, index: number): string {
   try {
+    if (typeof url !== 'string' || !url.trim()) return `Screen ${index + 1}`;
     const clean = url.split('?')[0].split('/').pop() || '';
     const base = clean.replace(/\.(png|jpe?g|webp|gif)$/i, '');
     if (!base) return `Screen ${index + 1}`;
@@ -273,80 +284,88 @@ export function groupScreenshotsByCategory(
   urls: string[],
   lang: 'en' | 'ar'
 ): ScreenshotCategoryGroup[] {
-  const defs: Array<{ id: string; labelEn: string; labelAr: string; regex: RegExp }> = [
-    {
-      id: 'home',
-      labelEn: 'Home & Explore',
-      labelAr: 'الرئيسية والاستكشاف',
-      regex: /(home|main|feed|dashboard|general|discover|start|category|categories|sunny|cloudy|rainy|snowy)/i,
-    },
-    {
-      id: 'interactive',
-      labelEn: 'Core Flows & Actions',
-      labelAr: 'العمليات والتفاعل',
-      regex: /(quiz|mcq|typing|score|cart|chat|sender|manage|add|edit|topic|result|family|colors|numbers|phrases)/i,
-    },
-    {
-      id: 'detail',
-      labelEn: 'Details & Media',
-      labelAr: 'التفاصيل والوسائط',
-      regex: /(detail|product|movie|tv|anime|trailer|player|review|article|webview|quote|business|sports|tech)/i,
-    },
-    {
-      id: 'auth',
-      labelEn: 'Onboarding & Search',
-      labelAr: 'البداية والبحث',
-      regex: /(login|auth|signup|register|password|splash|loading|search|filter|library|setting|profile|secure)/i,
-    },
-  ];
+  const safeUrls = Array.isArray(urls)
+    ? urls.filter((u): u is string => typeof u === 'string' && u.trim().length > 0)
+    : [];
 
-  const buckets: Record<string, Array<{ url: string; label: string; globalIndex: number }>> = {};
-  const otherItems: Array<{ url: string; label: string; globalIndex: number }> = [];
+  const fallbackAllGroup: ScreenshotCategoryGroup = {
+    id: 'all',
+    label: lang === 'ar' ? `الكل (${safeUrls.length})` : `All (${safeUrls.length})`,
+    items: safeUrls.map((url, idx) => ({
+      url,
+      label: formatReadableScreenName(url, idx),
+      globalIndex: idx,
+    })),
+  };
 
-  urls.forEach((url, idx) => {
-    const label = formatReadableScreenName(url, idx);
-    const filename = (url.split('?')[0].split('/').pop() || '').toLowerCase();
-    const matched = defs.find((d) => d.regex.test(filename));
-    if (matched) {
-      if (!buckets[matched.id]) buckets[matched.id] = [];
-      buckets[matched.id].push({ url, label, globalIndex: idx });
-    } else {
-      otherItems.push({ url, label, globalIndex: idx });
-    }
-  });
+  try {
+    const defs: Array<{ id: string; labelEn: string; labelAr: string; regex: RegExp }> = [
+      {
+        id: 'home',
+        labelEn: 'Home & Explore',
+        labelAr: 'الرئيسية والاستكشاف',
+        regex: /(home|main|feed|dashboard|general|discover|start|category|categories|sunny|cloudy|rainy|snowy)/i,
+      },
+      {
+        id: 'interactive',
+        labelEn: 'Core Flows & Actions',
+        labelAr: 'العمليات والتفاعل',
+        regex: /(quiz|mcq|typing|score|cart|chat|sender|manage|add|edit|topic|result|family|colors|numbers|phrases)/i,
+      },
+      {
+        id: 'detail',
+        labelEn: 'Details & Media',
+        labelAr: 'التفاصيل والوسائط',
+        regex: /(detail|product|movie|tv|anime|trailer|player|review|article|webview|quote|business|sports|tech)/i,
+      },
+      {
+        id: 'auth',
+        labelEn: 'Onboarding & Search',
+        labelAr: 'البداية والبحث',
+        regex: /(login|auth|signup|register|password|splash|loading|search|filter|library|setting|profile|secure)/i,
+      },
+    ];
 
-  const groups: ScreenshotCategoryGroup[] = [
-    {
-      id: 'all',
-      label: lang === 'ar' ? `الكل (${urls.length})` : `All (${urls.length})`,
-      items: urls.map((url, idx) => ({
-        url,
-        label: formatReadableScreenName(url, idx),
-        globalIndex: idx,
-      })),
-    },
-  ];
+    const buckets: Record<string, Array<{ url: string; label: string; globalIndex: number }>> = {};
+    const otherItems: Array<{ url: string; label: string; globalIndex: number }> = [];
 
-  // Only emit sub-category tabs if there are enough screenshots (e.g. >= 5 screens) AND > 1 non-empty category
-  const activeBuckets = defs.filter((d) => (buckets[d.id]?.length || 0) > 0);
-  if (urls.length >= 5 && activeBuckets.length >= 2) {
-    activeBuckets.forEach((d) => {
-      const items = buckets[d.id];
-      groups.push({
-        id: d.id,
-        label: `${lang === 'ar' ? d.labelAr : d.labelEn} (${items.length})`,
-        items,
-      });
+    safeUrls.forEach((url, idx) => {
+      const label = formatReadableScreenName(url, idx);
+      const filename = (url.split('?')[0].split('/').pop() || '').toLowerCase();
+      const matched = defs.find((d) => d.regex.test(filename));
+      if (matched) {
+        if (!buckets[matched.id]) buckets[matched.id] = [];
+        buckets[matched.id].push({ url, label, globalIndex: idx });
+      } else {
+        otherItems.push({ url, label, globalIndex: idx });
+      }
     });
 
-    if (otherItems.length > 0) {
-      groups.push({
-        id: 'other',
-        label: lang === 'ar' ? `أخرى (${otherItems.length})` : `More (${otherItems.length})`,
-        items: otherItems,
-      });
-    }
-  }
+    const groups: ScreenshotCategoryGroup[] = [fallbackAllGroup];
 
-  return groups;
+    // Only emit sub-category tabs if there are enough screenshots (e.g. >= 5 screens) AND > 1 non-empty category
+    const activeBuckets = defs.filter((d) => (buckets[d.id]?.length || 0) > 0);
+    if (safeUrls.length >= 5 && activeBuckets.length >= 2) {
+      activeBuckets.forEach((d) => {
+        const items = buckets[d.id];
+        groups.push({
+          id: d.id,
+          label: `${lang === 'ar' ? d.labelAr : d.labelEn} (${items.length})`,
+          items,
+        });
+      });
+
+      if (otherItems.length > 0) {
+        groups.push({
+          id: 'other',
+          label: lang === 'ar' ? `أخرى (${otherItems.length})` : `More (${otherItems.length})`,
+          items: otherItems,
+        });
+      }
+    }
+
+    return groups;
+  } catch {
+    return [fallbackAllGroup];
+  }
 }

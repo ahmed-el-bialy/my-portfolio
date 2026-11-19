@@ -36,6 +36,7 @@ import {
   ChevronDown,
   Briefcase,
   BookOpen,
+  AlertTriangle,
 } from 'lucide-react';
 import { Project, AHMED_PROFILE } from '../data/portfolioData';
 import { resolveSmartProjectLinks } from '../utils/projectLinks';
@@ -45,6 +46,7 @@ import { ImageWithSkeleton, preloadImageUrls, resolveProxiedImageUrl } from './I
 import { extractRepoTechTags } from '../utils/techTagExtractor';
 import { TechIconBadge } from './TechLogos';
 import { ReadmeDocumentView } from './ReadmeDocumentView';
+import { YouTubeEmbedPlayer } from './YouTubeEmbedPlayer';
 import {
   extractStructuredReadmeTemplate,
   formatReadableScreenName,
@@ -72,9 +74,170 @@ interface ProjectDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   project: Project | null;
+  initialScreenIndex?: number;
 }
 
 type WorkspaceSectionId = 'overview' | 'specs' | 'gallery' | 'architecture' | 'casestudy';
+
+function normalizeProjectInput(raw: Project | null | undefined): Project | null {
+  if (!raw || typeof raw !== 'object') return null;
+  try {
+    const safeRepoName =
+      typeof raw.repoName === 'string' && raw.repoName.trim()
+        ? raw.repoName.trim()
+        : typeof raw.name === 'string' && raw.name.trim()
+        ? raw.name.trim()
+        : 'Project';
+    const safeName =
+      typeof raw.name === 'string' && raw.name.trim() ? raw.name.trim() : safeRepoName;
+    const rawLinks = raw.links && typeof raw.links === 'object' ? raw.links : ({} as Project['links']);
+
+    return {
+      ...raw,
+      id: raw.id ?? safeRepoName,
+      name: safeName,
+      repoName: safeRepoName,
+      subtitle: typeof raw.subtitle === 'string' ? raw.subtitle : '',
+      description: typeof raw.description === 'string' ? raw.description : '',
+      image: typeof raw.image === 'string' ? raw.image : '',
+      technologies: Array.isArray(raw.technologies)
+        ? raw.technologies.filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+        : [],
+      features: Array.isArray(raw.features)
+        ? raw.features.filter((f): f is string => typeof f === 'string' && f.trim().length > 0)
+        : [],
+      links: {
+        github:
+          typeof rawLinks.github === 'string' && rawLinks.github.trim()
+            ? rawLinks.github
+            : `https://github.com/ahmed-el-bialy/${encodeURIComponent(safeRepoName)}`,
+        googlePlay: typeof rawLinks.googlePlay === 'string' ? rawLinks.googlePlay : undefined,
+        demoVideoUrl: typeof rawLinks.demoVideoUrl === 'string' ? rawLinks.demoVideoUrl : undefined,
+        liveDemoUrl: typeof rawLinks.liveDemoUrl === 'string' ? rawLinks.liveDemoUrl : undefined,
+        playlistUrl: typeof rawLinks.playlistUrl === 'string' ? rawLinks.playlistUrl : undefined,
+        releaseUrl: typeof rawLinks.releaseUrl === 'string' ? rawLinks.releaseUrl : undefined,
+        apkDownloadUrl:
+          typeof rawLinks.apkDownloadUrl === 'string' ? rawLinks.apkDownloadUrl : undefined,
+      },
+      architecture:
+        raw.architecture && typeof raw.architecture === 'object' ? raw.architecture : undefined,
+      metrics: raw.metrics && typeof raw.metrics === 'object' ? raw.metrics : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
+const ModalRecoveryView: React.FC<{
+  lang: 'en' | 'ar';
+  dir: 'ltr' | 'rtl';
+  projectName?: string;
+  onRetry: () => void;
+  onClose: () => void;
+}> = ({ lang, dir, projectName, onRetry, onClose }) => (
+  <div
+    dir={dir}
+    className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/78 backdrop-blur-md p-4"
+    onClick={onClose}
+  >
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={lang === 'ar' ? 'استرداد نافذة المشروع' : 'Project Workspace Recovery'}
+      onClick={(e) => e.stopPropagation()}
+      className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0b0e16] border border-slate-200/90 dark:border-white/10 shadow-2xl p-6 sm:p-8 text-center space-y-5"
+    >
+      <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/12 border border-amber-500/25 flex items-center justify-center text-amber-500">
+        <AlertTriangle size={26} />
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="font-display text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
+          {lang === 'ar'
+            ? 'تعذر عرض تفاصيل أو شاشات المشروع مؤقتاً'
+            : 'Unable to display project screens right now'}
+        </h3>
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+          {lang === 'ar'
+            ? `واجهنا نقصاً في بيانات ${projectName || 'هذا المشروع'} أو خطأ أثناء فتح المعاينة. يمكنك إعادة المحاولة بأمان دون التأثير على باقي الموقع.`
+            : `Some screen metadata for ${projectName || 'this project'} was incomplete or interrupted. You can safely retry without affecting the rest of the portfolio.`}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+        <button
+          type="button"
+          onClick={onRetry}
+          className="btn-kinetic inline-flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white text-xs sm:text-sm font-bold shadow-sm cursor-pointer"
+        >
+          <RefreshCw size={15} />
+          <span>{lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.12] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 text-xs sm:text-sm font-semibold cursor-pointer"
+        >
+          <X size={15} />
+          <span>{lang === 'ar' ? 'إغلاق' : 'Close'}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+interface ModalErrorBoundaryProps {
+  lang: 'en' | 'ar';
+  dir: 'ltr' | 'rtl';
+  projectName?: string;
+  resetKey: string | number;
+  onRetry: () => void;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+interface ModalErrorBoundaryState {
+  hasError: boolean;
+}
+
+class ModalErrorBoundary extends React.Component<
+  ModalErrorBoundaryProps,
+  ModalErrorBoundaryState
+> {
+  constructor(props: ModalErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): ModalErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidUpdate(prevProps: ModalErrorBoundaryProps) {
+    if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
+      this.setState({ hasError: false });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <ModalRecoveryView
+          lang={this.props.lang}
+          dir={this.props.dir}
+          projectName={this.props.projectName}
+          onRetry={() => {
+            this.setState({ hasError: false });
+            this.props.onRetry();
+          }}
+          onClose={this.props.onClose}
+        />
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const GALLERY_PAGE_SIZE = 12;
 
@@ -177,11 +340,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   isOpen,
   onClose,
   project,
+  initialScreenIndex = 0,
 }) => {
   useScrollLock(isOpen);
   const { lang, dir } = useLanguage();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+
+  const safeProject = useMemo(() => normalizeProjectInput(project), [project]);
 
   const [isFullPage, setIsFullPage] = useState(false);
   const [activeSection, setActiveSection] = useState<WorkspaceSectionId>('overview');
@@ -190,6 +356,12 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const [galleryCategory, setGalleryCategory] = useState<string>('all');
   const [visibleGalleryCount, setVisibleGalleryCount] = useState<number>(GALLERY_PAGE_SIZE);
   const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
+  const [adHocLightboxUrl, setAdHocLightboxUrl] = useState<string | null>(null);
+  const [lightboxImgState, setLightboxImgState] = useState<{
+    triedDirect: boolean;
+    failed: boolean;
+  }>({ triedDirect: false, failed: false });
+  const [recoveryEpoch, setRecoveryEpoch] = useState<number>(0);
 
   const [screenshots, setScreenshots] = useState<string[]>([]);
   const [loadingScreens, setLoadingScreens] = useState<boolean>(false);
@@ -209,7 +381,9 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const architectureRef = useRef<HTMLElement>(null);
   const casestudyRef = useRef<HTMLElement>(null);
 
-  const isRevio = project?.repoName.toLowerCase() === 'revio';
+  const safeRepoName = safeProject?.repoName || '';
+  const safeDisplayName = safeProject?.name || safeRepoName;
+  const isRevio = safeRepoName.toLowerCase() === 'revio';
   const { data: playStats } = usePlayStoreAppStats(isRevio ? 'com.ahmed.revio' : '');
 
   const cachedConsolidated = queryClient.getQueryData<ConsolidatedGitHubPortfolio>([
@@ -218,24 +392,31 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   ]);
 
   const matchedCachedRepo = useMemo(() => {
-    if (!project || !cachedConsolidated?.repos) return undefined;
+    if (!safeProject || !Array.isArray(cachedConsolidated?.repos)) return undefined;
     return cachedConsolidated.repos.find(
       (r) =>
-        r.name.toLowerCase() === project.repoName.toLowerCase() ||
-        r.name.toLowerCase() === project.name.toLowerCase()
+        r?.name?.toLowerCase() === safeRepoName.toLowerCase() ||
+        r?.name?.toLowerCase() === safeDisplayName.toLowerCase()
     );
-  }, [project, cachedConsolidated]);
+  }, [safeProject, safeRepoName, safeDisplayName, cachedConsolidated]);
 
   const cachedLiveMedia = useMemo(() => {
-    if (!project || !cachedConsolidated?.liveMediaMap) return undefined;
+    if (!safeProject || !cachedConsolidated?.liveMediaMap) return undefined;
     return (
-      cachedConsolidated.liveMediaMap[project.repoName] ||
-      cachedConsolidated.liveMediaMap[project.repoName.toLowerCase()]
+      cachedConsolidated.liveMediaMap[safeRepoName] ||
+      cachedConsolidated.liveMediaMap[safeDisplayName] ||
+      cachedConsolidated.liveMediaMap[safeRepoName.toLowerCase()]
     );
-  }, [project, cachedConsolidated]);
+  }, [safeProject, safeRepoName, safeDisplayName, cachedConsolidated]);
 
   const syncLiveProjectData = useCallback(
     async (targetProject: Project, forceRefresh: boolean, preferredBranch?: string) => {
+      if (!targetProject?.repoName) {
+        setLoadingScreens(false);
+        setStudyCaseLoading(false);
+        setIsSyncingLive(false);
+        return;
+      }
       if (forceRefresh) setIsSyncingLive(true);
       setStudyCaseLoading(true);
 
@@ -260,14 +441,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           setLiveMeta(meta);
         }
 
-        setCaseStudyData(csData);
+        setCaseStudyData(csData || { en: null, ar: null });
 
-        if (rel.hasRelease || meta?.hasRelease || meta?.apkDownloadUrl) {
+        if (rel?.hasRelease || meta?.hasRelease || meta?.apkDownloadUrl) {
           setReleaseInfo({
             ...rel,
-            hasRelease: Boolean(rel.hasRelease || meta?.hasRelease),
-            apkDownloadUrl: rel.apkDownloadUrl || meta?.apkDownloadUrl,
-            releaseUrl: rel.releaseUrl || meta?.releaseUrl,
+            hasRelease: Boolean(rel?.hasRelease || meta?.hasRelease),
+            apkDownloadUrl: rel?.apkDownloadUrl || meta?.apkDownloadUrl,
+            releaseUrl: rel?.releaseUrl || meta?.releaseUrl,
           });
         } else {
           setReleaseInfo({ hasRelease: false });
@@ -281,17 +462,21 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
         const mergedScreens = Array.from(
           new Set([
-            ...folderUrls,
-            ...(meta?.discoveredScreenshots || []),
-            ...(folderUrls.length === 0 ? verified : []),
+            ...(Array.isArray(folderUrls) ? folderUrls : []),
+            ...(Array.isArray(meta?.discoveredScreenshots) ? meta.discoveredScreenshots : []),
+            ...((!Array.isArray(folderUrls) || folderUrls.length === 0) && Array.isArray(verified)
+              ? verified
+              : []),
           ])
-        ).filter(Boolean);
+        ).filter((u): u is string => typeof u === 'string' && u.trim().length > 0);
 
         if (mergedScreens.length > 0) {
           setScreenshots(mergedScreens);
-        } else if (targetProject.image) {
-          setScreenshots([targetProject.image]);
+        } else if (typeof targetProject.image === 'string' && targetProject.image.trim()) {
+          setScreenshots([targetProject.image.trim()]);
         }
+      } catch {
+        // Silent recovery — retain verified local assets when network sync fails
       } finally {
         setLoadingScreens(false);
         setStudyCaseLoading(false);
@@ -302,51 +487,76 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   );
 
   useEffect(() => {
-    if (isOpen && project) {
-      setIsFullPage(false);
-      setActiveSection('overview');
-      setIsPlayingVideo(false);
-      setActiveScreenIndex(0);
-      setGalleryCategory('all');
-      setVisibleGalleryCount(GALLERY_PAGE_SIZE);
+    if (!isOpen) {
       setLightboxOpen(false);
-      setCaseStudyData({ en: null, ar: null });
-      setStudyCaseLang(lang === 'ar' ? 'ar' : 'en');
-      setLiveMeta(cachedLiveMedia || null);
-      setReleaseInfo({ hasRelease: false });
-
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = 0;
-      }
-
-      const verified =
-        VERIFIED_REPO_SCREENSHOTS[project.repoName] ||
-        VERIFIED_REPO_SCREENSHOTS[project.name] ||
-        VERIFIED_REPO_SCREENSHOTS[project.repoName.toLowerCase()] ||
-        [];
-
-      const initialScreens = Array.from(
-        new Set([
-          ...(matchedCachedRepo?.discoveredScreenshots || []),
-          ...(cachedLiveMedia?.discoveredScreenshots || []),
-          ...verified,
-        ])
-      ).filter(Boolean);
-
-      if (initialScreens.length > 0) {
-        setScreenshots(initialScreens);
-        preloadImageUrls(initialScreens.slice(0, 6));
-        setLoadingScreens(false);
-      } else {
-        setScreenshots([]);
-        setLoadingScreens(true);
-      }
-
-      const branchHint =
-        cachedLiveMedia?.defaultBranch || matchedCachedRepo?.default_branch || 'main';
-      syncLiveProjectData(project, false, branchHint);
+      setAdHocLightboxUrl(null);
+      setLightboxImgState({ triedDirect: false, failed: false });
+      return;
     }
-  }, [isOpen, project]);
+
+    if (isOpen && safeProject) {
+      try {
+        setIsFullPage(false);
+        setActiveSection('overview');
+        setIsPlayingVideo(false);
+        setActiveScreenIndex(
+          typeof initialScreenIndex === 'number' && Number.isFinite(initialScreenIndex) && initialScreenIndex >= 0
+            ? Math.trunc(initialScreenIndex)
+            : 0
+        );
+        setGalleryCategory('all');
+        setVisibleGalleryCount(GALLERY_PAGE_SIZE);
+        setLightboxOpen(false);
+        setAdHocLightboxUrl(null);
+        setLightboxImgState({ triedDirect: false, failed: false });
+        setCaseStudyData({ en: null, ar: null });
+        setStudyCaseLang(lang === 'ar' ? 'ar' : 'en');
+        setLiveMeta(cachedLiveMedia || null);
+        setReleaseInfo({ hasRelease: false });
+
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = 0;
+        }
+
+        const verified =
+          VERIFIED_REPO_SCREENSHOTS[safeRepoName] ||
+          VERIFIED_REPO_SCREENSHOTS[safeDisplayName] ||
+          VERIFIED_REPO_SCREENSHOTS[safeRepoName.toLowerCase()] ||
+          [];
+
+        const initialScreens = Array.from(
+          new Set([
+            ...(Array.isArray(matchedCachedRepo?.discoveredScreenshots)
+              ? matchedCachedRepo.discoveredScreenshots
+              : []),
+            ...(Array.isArray(cachedLiveMedia?.discoveredScreenshots)
+              ? cachedLiveMedia.discoveredScreenshots
+              : []),
+            ...(Array.isArray(verified) ? verified : []),
+          ])
+        ).filter((u): u is string => typeof u === 'string' && u.trim().length > 0);
+
+        if (initialScreens.length > 0) {
+          setScreenshots(initialScreens);
+          preloadImageUrls(initialScreens.slice(0, 6));
+          setLoadingScreens(false);
+        } else if (safeProject.image) {
+          setScreenshots([safeProject.image]);
+          setLoadingScreens(false);
+        } else {
+          setScreenshots([]);
+          setLoadingScreens(true);
+        }
+
+        const branchHint =
+          cachedLiveMedia?.defaultBranch || matchedCachedRepo?.default_branch || 'main';
+        syncLiveProjectData(safeProject, false, branchHint);
+      } catch {
+        setScreenshots([]);
+        setLoadingScreens(false);
+      }
+    }
+  }, [isOpen, safeProject, initialScreenIndex, recoveryEpoch]);
 
   // Keep preferred Case Study language aligned with available files
   useEffect(() => {
@@ -358,6 +568,25 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       setStudyCaseLang('ar');
     }
   }, [lang, caseStudyData.en, caseStudyData.ar]);
+
+  const safeScreenshots = useMemo(
+    () =>
+      Array.isArray(screenshots)
+        ? screenshots.filter((u): u is string => typeof u === 'string' && u.trim().length > 0)
+        : [],
+    [screenshots]
+  );
+
+  const safeScreenCount = safeScreenshots.length;
+  const safeScreenIndex =
+    safeScreenCount > 0 && Number.isFinite(activeScreenIndex)
+      ? ((Math.trunc(activeScreenIndex) % safeScreenCount) + safeScreenCount) % safeScreenCount
+      : 0;
+
+  // Reset image fallback state whenever active lightbox screen changes
+  useEffect(() => {
+    setLightboxImgState({ triedDirect: false, failed: false });
+  }, [safeScreenIndex, adHocLightboxUrl, lightboxOpen]);
 
   const scrollToSection = useCallback((sectionId: WorkspaceSectionId) => {
     setActiveSection(sectionId);
@@ -414,14 +643,23 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   }, []);
 
   const nextScreen = useCallback(() => {
-    if (screenshots.length === 0) return;
-    setActiveScreenIndex((prev) => (prev + 1) % screenshots.length);
-  }, [screenshots.length]);
+    if (safeScreenCount === 0) return;
+    setAdHocLightboxUrl(null);
+    setActiveScreenIndex((prev) =>
+      Number.isFinite(prev) ? (Math.trunc(prev) + 1) % safeScreenCount : 0
+    );
+  }, [safeScreenCount]);
 
   const prevScreen = useCallback(() => {
-    if (screenshots.length === 0) return;
-    setActiveScreenIndex((prev) => (prev === 0 ? screenshots.length - 1 : prev - 1));
-  }, [screenshots.length]);
+    if (safeScreenCount === 0) return;
+    setAdHocLightboxUrl(null);
+    setActiveScreenIndex((prev) => {
+      const normalized = Number.isFinite(prev)
+        ? ((Math.trunc(prev) % safeScreenCount) + safeScreenCount) % safeScreenCount
+        : 0;
+      return normalized === 0 ? safeScreenCount - 1 : normalized - 1;
+    });
+  }, [safeScreenCount]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -429,6 +667,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       if (e.key === 'Escape') {
         if (lightboxOpen) {
           setLightboxOpen(false);
+          setAdHocLightboxUrl(null);
         } else if (isFullPage) {
           setIsFullPage(false);
         } else {
@@ -447,190 +686,369 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const defaultBranch =
     liveMeta?.defaultBranch || matchedCachedRepo?.default_branch || 'main';
 
-  const parsedReadmeData = useMemo(
-    () =>
-      extractStructuredReadmeTemplate(
+  const parsedReadmeData = useMemo(() => {
+    try {
+      return extractStructuredReadmeTemplate(
         rawReadme,
-        project?.repoName || '',
+        safeRepoName,
         defaultBranch,
         'ahmed-el-bialy'
-      ),
-    [rawReadme, project?.repoName, defaultBranch]
-  );
+      );
+    } catch {
+      return {
+        features: [],
+        techPackages: [],
+        architectureNotes: [],
+        badges: [],
+        screenshots: [],
+      };
+    }
+  }, [rawReadme, safeRepoName, defaultBranch]);
 
-  const galleryGroups = useMemo(
-    () => groupScreenshotsByCategory(screenshots, lang),
-    [screenshots, lang]
-  );
+  const galleryGroups = useMemo(() => {
+    try {
+      return groupScreenshotsByCategory(safeScreenshots, lang);
+    } catch {
+      return [
+        {
+          id: 'all',
+          label: lang === 'ar' ? `الكل (${safeScreenshots.length})` : `All (${safeScreenshots.length})`,
+          items: [],
+        },
+      ];
+    }
+  }, [safeScreenshots, lang]);
 
   const activeGalleryGroup = useMemo(
-    () => galleryGroups.find((g) => g.id === galleryCategory) || galleryGroups[0],
+    () => galleryGroups.find((g) => g.id === galleryCategory) || galleryGroups[0] || { id: 'all', label: '', items: [] },
     [galleryGroups, galleryCategory]
   );
 
-  if (!isOpen || !project) return null;
+  const handleRetryModal = useCallback(() => {
+    setLightboxOpen(false);
+    setAdHocLightboxUrl(null);
+    setLightboxImgState({ triedDirect: false, failed: false });
+    setActiveScreenIndex(0);
+    setGalleryCategory('all');
+    setRecoveryEpoch((prev) => prev + 1);
+    if (safeProject) {
+      syncLiveProjectData(safeProject, true, defaultBranch);
+    }
+  }, [safeProject, defaultBranch, syncLiveProjectData]);
 
-  const currentLiveDemoUrl = liveMeta?.liveDemoUrl || project.links.liveDemoUrl;
-  const currentPlaylistUrl = liveMeta?.playlistUrl || project.links.playlistUrl;
-  const currentPlayUrl = liveMeta?.googlePlayUrl || project.links.googlePlay;
-  const resolvedModalLinks = resolveSmartProjectLinks(
-    {
-      ...project.links,
-      liveDemoUrl: currentLiveDemoUrl,
-      playlistUrl: currentPlaylistUrl,
-      googlePlay: currentPlayUrl,
-    },
-    null
-  );
+  if (!isOpen) return null;
 
-  const playerCandidateUrl =
-    resolvedModalLinks.demoVideoUrl || resolvedModalLinks.playlistUrl || currentLiveDemoUrl;
-  const parsedVideoId = extractYouTubeVideoId(playerCandidateUrl);
-  const youtubeIframeSrc = parsedVideoId
-    ? `https://www.youtube-nocookie.com/embed/${parsedVideoId}?autoplay=1&rel=0&modestbranding=1`
-    : null;
-  const youtubePosterUrl = parsedVideoId
-    ? `https://i.ytimg.com/vi/${parsedVideoId}/hqdefault.jpg`
-    : null;
+  if (!safeProject) {
+    return typeof document !== 'undefined'
+      ? createPortal(
+          <ModalRecoveryView
+            lang={lang}
+            dir={dir}
+            onRetry={handleRetryModal}
+            onClose={onClose}
+          />,
+          document.body
+        )
+      : null;
+  }
 
-  const hasPlayStore = Boolean(currentPlayUrl);
-  const hasApk = Boolean(
-    project.hasApk ||
-      project.links.apkDownloadUrl ||
+  let preparedData: {
+    currentLiveDemoUrl?: string;
+    currentPlaylistUrl?: string;
+    currentPlayUrl?: string;
+    resolvedModalLinks: ReturnType<typeof resolveSmartProjectLinks>;
+    playerCandidateUrl?: string;
+    parsedVideoId: string | null;
+    youtubeIframeSrc: string | null;
+    youtubePosterUrl: string | null;
+    hasPlayStore: boolean;
+    hasApk: boolean;
+    realApkSizeLabel: string | null;
+    realStarsCount: number | null;
+    realForksCount: number | null;
+    realLanguage: string | null;
+    realPushedLabel: string | null;
+    appBlueprint: ReturnType<typeof synthesizeProjectBlueprint>;
+    BlueprintIcon: ReturnType<typeof synthesizeProjectBlueprint>['badgeIcon'];
+    techTagObjects: ReturnType<typeof extractRepoTechTags>;
+    displayDescription: string;
+    displayFeatures: string[];
+    displayTechStack: string[];
+    apkHref: string;
+    githubRepoUrl: string;
+    hasEnglishStudyCase: boolean;
+    hasArabicStudyCase: boolean;
+    hasAnyStudyCase: boolean;
+    activeStudyCaseMarkdown: string;
+    distributionLabel: string;
+    navSections: Array<{ id: WorkspaceSectionId; label: string; count?: number }>;
+  } | null = null;
+
+  let prepFailed = false;
+
+  try {
+    const projectLinks = safeProject.links || { github: `https://github.com/ahmed-el-bialy/${safeRepoName}` };
+    const currentLiveDemoUrl = liveMeta?.liveDemoUrl || projectLinks.liveDemoUrl;
+    const currentPlaylistUrl = liveMeta?.playlistUrl || projectLinks.playlistUrl;
+    const currentPlayUrl = liveMeta?.googlePlayUrl || projectLinks.googlePlay;
+    const resolvedModalLinks = resolveSmartProjectLinks(
+      {
+        ...projectLinks,
+        liveDemoUrl: currentLiveDemoUrl,
+        playlistUrl: currentPlaylistUrl,
+        googlePlay: currentPlayUrl,
+      },
+      null
+    );
+
+    const playerCandidateUrl =
+      resolvedModalLinks.demoVideoUrl || resolvedModalLinks.playlistUrl || currentLiveDemoUrl;
+    const parsedVideoId = extractYouTubeVideoId(playerCandidateUrl);
+    const youtubeIframeSrc = parsedVideoId
+      ? `https://www.youtube-nocookie.com/embed/${parsedVideoId}?autoplay=1&rel=0&modestbranding=1`
+      : null;
+    const youtubePosterUrl = parsedVideoId
+      ? `https://i.ytimg.com/vi/${parsedVideoId}/hqdefault.jpg`
+      : null;
+
+    const hasPlayStore = Boolean(currentPlayUrl);
+    const hasApk = Boolean(
+      safeProject.hasApk ||
+        projectLinks.apkDownloadUrl ||
+        releaseInfo.apkDownloadUrl ||
+        liveMeta?.apkDownloadUrl ||
+        (releaseInfo.hasRelease && releaseInfo.releaseUrl)
+    );
+    const realApkSizeLabel = formatFileSize(releaseInfo.apkSize);
+
+    const realStarsCount =
+      typeof matchedCachedRepo?.stargazers_count === 'number'
+        ? matchedCachedRepo.stargazers_count
+        : typeof liveMeta?.starsCount === 'number'
+        ? liveMeta.starsCount
+        : null;
+    const realForksCount =
+      typeof matchedCachedRepo?.forks_count === 'number'
+        ? matchedCachedRepo.forks_count
+        : typeof liveMeta?.forksCount === 'number'
+        ? liveMeta.forksCount
+        : null;
+    const realLanguage = matchedCachedRepo?.language || liveMeta?.language || null;
+    const realPushedAt = matchedCachedRepo?.pushed_at || liveMeta?.pushedAt;
+    let realPushedLabel: string | null = null;
+    if (realPushedAt) {
+      const parsedDate = new Date(realPushedAt);
+      if (!Number.isNaN(parsedDate.getTime())) {
+        realPushedLabel = parsedDate.toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+      }
+    }
+
+    const appBlueprint = synthesizeProjectBlueprint(
+      safeRepoName,
+      realLanguage || 'Dart',
+      safeProject.description,
+      safeProject.technologies
+    );
+    const BlueprintIcon = appBlueprint.badgeIcon;
+
+    const techTagObjects = extractRepoTechTags({
+      repoName: safeRepoName,
+      language: realLanguage || 'Dart',
+      topics: matchedCachedRepo?.topics || liveMeta?.topics,
+      description: safeProject.description || liveMeta?.description,
+      technologies: safeProject.technologies,
+    });
+
+    const isGenericDescription =
+      !safeProject.description ||
+      safeProject.description.startsWith('Production-ready codebase implementing');
+    const displayDescription =
+      (isGenericDescription && (liveMeta?.description || parsedReadmeData.overviewText)) ||
+      safeProject.description ||
+      liveMeta?.description ||
+      parsedReadmeData.overviewText ||
+      '';
+
+    const safeFeatures = Array.isArray(safeProject.features) ? safeProject.features : [];
+    const isGenericFeatures =
+      safeFeatures.length > 0 &&
+      safeFeatures[0]?.startsWith('Clean architectural separation');
+    const displayFeatures =
+      parsedReadmeData.features.length > 0 && isGenericFeatures
+        ? parsedReadmeData.features
+        : Array.from(
+            new Set([
+              ...safeFeatures,
+              ...(parsedReadmeData.features.length > 0 ? parsedReadmeData.features : []),
+            ])
+          ).slice(0, 10);
+
+    const displayTechStack = Array.from(
+      new Set([
+        ...(Array.isArray(safeProject.technologies) ? safeProject.technologies : []),
+        ...(Array.isArray(matchedCachedRepo?.topics)
+          ? matchedCachedRepo.topics
+          : Array.isArray(liveMeta?.topics)
+          ? liveMeta.topics
+          : []),
+        ...(Array.isArray(parsedReadmeData.techPackages) ? parsedReadmeData.techPackages : []),
+      ])
+    ).slice(0, 16);
+
+    const apkHref =
+      projectLinks.apkDownloadUrl ||
       releaseInfo.apkDownloadUrl ||
       liveMeta?.apkDownloadUrl ||
-      (releaseInfo.hasRelease && releaseInfo.releaseUrl)
-  );
-  const realApkSizeLabel = formatFileSize(releaseInfo.apkSize);
+      releaseInfo.releaseUrl ||
+      `https://github.com/ahmed-el-bialy/${encodeURIComponent(safeRepoName)}/releases`;
 
-  // Strictly real GitHub telemetry only (zero fallback guesses)
-  const realStarsCount =
-    typeof matchedCachedRepo?.stargazers_count === 'number'
-      ? matchedCachedRepo.stargazers_count
-      : typeof liveMeta?.starsCount === 'number'
-      ? liveMeta.starsCount
+    const githubRepoUrl =
+      projectLinks.github || `https://github.com/ahmed-el-bialy/${encodeURIComponent(safeRepoName)}`;
+
+    const hasEnglishStudyCase = Boolean(caseStudyData.en);
+    const hasArabicStudyCase = Boolean(caseStudyData.ar);
+    const hasAnyStudyCase = hasEnglishStudyCase || hasArabicStudyCase;
+    const activeStudyCaseMarkdown =
+      studyCaseLang === 'ar'
+        ? caseStudyData.ar || caseStudyData.en || ''
+        : caseStudyData.en || caseStudyData.ar || '';
+
+    const distributionLabel = hasPlayStore
+      ? lang === 'ar'
+        ? 'منشور على Google Play'
+        : 'Google Play Production'
+      : hasApk
+      ? lang === 'ar'
+        ? 'إصدار APK موثق'
+        : 'Signed APK Release'
+      : lang === 'ar'
+      ? 'مستودع مفتوح المصدر'
+      : 'Open-Source Codebase';
+
+    const navSections: Array<{ id: WorkspaceSectionId; label: string; count?: number }> = [
+      { id: 'overview', label: lang === 'ar' ? 'نظرة عامة والوسائط' : 'Overview & Media' },
+      {
+        id: 'specs',
+        label: lang === 'ar' ? 'المميزات والتقنيات' : 'Features & Stack',
+        count: displayFeatures.length,
+      },
+      {
+        id: 'gallery',
+        label: lang === 'ar' ? 'معرض الشاشات' : 'Gallery',
+        count: safeScreenCount,
+      },
+      { id: 'architecture', label: lang === 'ar' ? 'المعمارية والأوامر' : 'Architecture & CLI' },
+      { id: 'casestudy', label: lang === 'ar' ? 'دراسة الحالة' : 'Study Case' },
+    ];
+
+    preparedData = {
+      currentLiveDemoUrl,
+      currentPlaylistUrl,
+      currentPlayUrl,
+      resolvedModalLinks,
+      playerCandidateUrl,
+      parsedVideoId,
+      youtubeIframeSrc,
+      youtubePosterUrl,
+      hasPlayStore,
+      hasApk,
+      realApkSizeLabel,
+      realStarsCount,
+      realForksCount,
+      realLanguage,
+      realPushedLabel,
+      appBlueprint,
+      BlueprintIcon,
+      techTagObjects,
+      displayDescription,
+      displayFeatures,
+      displayTechStack,
+      apkHref,
+      githubRepoUrl,
+      hasEnglishStudyCase,
+      hasArabicStudyCase,
+      hasAnyStudyCase,
+      activeStudyCaseMarkdown,
+      distributionLabel,
+      navSections,
+    };
+  } catch {
+    prepFailed = true;
+  }
+
+  if (prepFailed || !preparedData) {
+    return typeof document !== 'undefined'
+      ? createPortal(
+          <ModalRecoveryView
+            lang={lang}
+            dir={dir}
+            projectName={safeDisplayName}
+            onRetry={handleRetryModal}
+            onClose={onClose}
+          />,
+          document.body
+        )
       : null;
-  const realForksCount =
-    typeof matchedCachedRepo?.forks_count === 'number'
-      ? matchedCachedRepo.forks_count
-      : typeof liveMeta?.forksCount === 'number'
-      ? liveMeta.forksCount
-      : null;
-  const realLanguage = matchedCachedRepo?.language || liveMeta?.language || null;
-  const realPushedAt = matchedCachedRepo?.pushed_at || liveMeta?.pushedAt;
-  const realPushedLabel = realPushedAt
-    ? new Date(realPushedAt).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : null;
+  }
 
-  // Cohesive domain category & architecture parity with external project cards
-  const appBlueprint = synthesizeProjectBlueprint(
-    project.repoName,
-    realLanguage || 'Dart',
-    project.description,
-    project.technologies
-  );
-  const BlueprintIcon = appBlueprint.badgeIcon;
-
-  const techTagObjects = extractRepoTechTags({
-    repoName: project.repoName,
-    language: realLanguage || 'Dart',
-    topics: matchedCachedRepo?.topics || liveMeta?.topics,
-    description: project.description || liveMeta?.description,
-    technologies: project.technologies,
-  });
-
-  // Smart structured merging of curated data + live README template extraction
-  const isGenericDescription =
-    !project.description ||
-    project.description.startsWith('Production-ready codebase implementing');
-  const displayDescription =
-    (isGenericDescription && (liveMeta?.description || parsedReadmeData.overviewText)) ||
-    project.description ||
-    liveMeta?.description ||
-    parsedReadmeData.overviewText ||
-    '';
-
-  const isGenericFeatures =
-    project.features.length > 0 &&
-    project.features[0]?.startsWith('Clean architectural separation');
-  const displayFeatures =
-    parsedReadmeData.features.length > 0 && isGenericFeatures
-      ? parsedReadmeData.features
-      : Array.from(
-          new Set([
-            ...project.features,
-            ...(parsedReadmeData.features.length > 0 ? parsedReadmeData.features : []),
-          ])
-        ).slice(0, 10);
-
-  const displayTechStack = Array.from(
-    new Set([
-      ...project.technologies,
-      ...(matchedCachedRepo?.topics || liveMeta?.topics || []),
-      ...parsedReadmeData.techPackages,
-    ])
-  ).slice(0, 16);
-
-  const apkHref =
-    project.links.apkDownloadUrl ||
-    releaseInfo.apkDownloadUrl ||
-    liveMeta?.apkDownloadUrl ||
-    releaseInfo.releaseUrl ||
-    `https://github.com/ahmed-el-bialy/${project.repoName}/releases`;
-
-  const githubRepoUrl =
-    project.links.github || `https://github.com/ahmed-el-bialy/${project.repoName}`;
+  const {
+    currentPlaylistUrl,
+    currentPlayUrl,
+    resolvedModalLinks,
+    playerCandidateUrl,
+    parsedVideoId,
+    youtubeIframeSrc,
+    youtubePosterUrl,
+    hasPlayStore,
+    hasApk,
+    realApkSizeLabel,
+    realStarsCount,
+    realForksCount,
+    realLanguage,
+    realPushedLabel,
+    appBlueprint,
+    BlueprintIcon,
+    techTagObjects,
+    displayDescription,
+    displayFeatures,
+    displayTechStack,
+    apkHref,
+    githubRepoUrl,
+    hasEnglishStudyCase,
+    hasArabicStudyCase,
+    hasAnyStudyCase,
+    activeStudyCaseMarkdown,
+    distributionLabel,
+    navSections,
+  } = preparedData;
 
   const handleCopyClone = () => {
-    const cmd = `git clone ${githubRepoUrl}.git`;
-    navigator.clipboard.writeText(cmd);
-    setCopiedClone(true);
-    showToast({
-      message: lang === 'ar' ? 'تم نسخ أمر الاستنساخ' : 'Git clone command copied',
-      detail: cmd,
-    });
-    setTimeout(() => setCopiedClone(false), 1800);
+    try {
+      const cmd = `git clone ${githubRepoUrl}.git`;
+      navigator.clipboard.writeText(cmd);
+      setCopiedClone(true);
+      showToast({
+        message: lang === 'ar' ? 'تم نسخ أمر الاستنساخ' : 'Git clone command copied',
+        detail: cmd,
+      });
+      setTimeout(() => setCopiedClone(false), 1800);
+    } catch {
+      // Clipboard unavailable
+    }
   };
 
-  const hasEnglishStudyCase = Boolean(caseStudyData.en);
-  const hasArabicStudyCase = Boolean(caseStudyData.ar);
-  const hasAnyStudyCase = hasEnglishStudyCase || hasArabicStudyCase;
-  const activeStudyCaseMarkdown =
-    studyCaseLang === 'ar'
-      ? caseStudyData.ar || caseStudyData.en || ''
-      : caseStudyData.en || caseStudyData.ar || '';
-
-  const distributionLabel = hasPlayStore
-    ? lang === 'ar'
-      ? 'منشور على Google Play'
-      : 'Google Play Production'
-    : hasApk
-    ? lang === 'ar'
-      ? 'إصدار APK موثق'
-      : 'Signed APK Release'
-    : lang === 'ar'
-    ? 'مستودع مفتوح المصدر'
-    : 'Open-Source Codebase';
-
-  const navSections: Array<{ id: WorkspaceSectionId; label: string; count?: number }> = [
-    { id: 'overview', label: lang === 'ar' ? 'نظرة عامة والوسائط' : 'Overview & Media' },
-    {
-      id: 'specs',
-      label: lang === 'ar' ? 'المميزات والتقنيات' : 'Features & Stack',
-      count: displayFeatures.length,
-    },
-    {
-      id: 'gallery',
-      label: lang === 'ar' ? 'معرض الشاشات' : 'Gallery',
-      count: screenshots.length,
-    },
-    { id: 'architecture', label: lang === 'ar' ? 'المعمارية والأوامر' : 'Architecture & CLI' },
-    { id: 'casestudy', label: lang === 'ar' ? 'دراسة الحالة' : 'Study Case' },
-  ];
+  const activeStageScreenUrl = safeScreenCount > 0 ? safeScreenshots[safeScreenIndex] : '';
+  const activeLightboxRawUrl =
+    adHocLightboxUrl || (safeScreenCount > 0 ? safeScreenshots[safeScreenIndex] : '');
+  const activeLightboxSrc = activeLightboxRawUrl
+    ? lightboxImgState.triedDirect
+      ? activeLightboxRawUrl
+      : resolveProxiedImageUrl(activeLightboxRawUrl)
+    : '';
 
   const workspaceNode = (
     <div
@@ -645,7 +1063,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={project.name}
+        aria-label={safeDisplayName}
         className={`relative flex flex-col overflow-hidden bg-white dark:bg-[#0b0e16] border-slate-200/90 dark:border-white/10 shadow-2xl transition-all duration-200 ${
           isFullPage
             ? 'w-screen h-screen max-w-none max-h-none rounded-none border-0'
@@ -666,10 +1084,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             </div>
             <div className="min-w-0">
               <h2 className="font-display text-base sm:text-lg font-extrabold text-slate-950 dark:text-white truncate tracking-tight">
-                {project.name}
+                {safeDisplayName}
               </h2>
               <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate">
-                ahmed-el-bialy/{project.repoName}
+                ahmed-el-bialy/{safeRepoName}
               </p>
             </div>
           </div>
@@ -677,7 +1095,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
-              onClick={() => syncLiveProjectData(project, true, defaultBranch)}
+              onClick={() => syncLiveProjectData(safeProject, true, defaultBranch)}
               disabled={isSyncingLive}
               className="btn-kinetic inline-flex items-center gap-1.5 px-2.5 py-1.5 min-h-[40px] sm:min-h-0 rounded-lg bg-slate-100/80 dark:bg-white/[0.04] hover:bg-slate-200/80 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/10 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60 whitespace-nowrap"
               title={lang === 'ar' ? 'تحديث البيانات من GitHub' : 'Sync latest from GitHub'}
@@ -819,10 +1237,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       )}
                     </div>
                     <h3 className="font-display text-2xl sm:text-[32px] font-extrabold text-slate-950 dark:text-white tracking-tight leading-tight">
-                      {project.name}
+                      {safeDisplayName}
                     </h3>
                     <p className="font-display text-sm sm:text-[15px] font-semibold text-[#0284ff] dark:text-[#7DD3FC]">
-                      {project.subtitle}
+                      {safeProject.subtitle}
                     </p>
                   </div>
 
@@ -862,7 +1280,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   <div className="flex flex-wrap items-center gap-1.5">
                     {techTagObjects.map((tag, idx) => (
                       <TechIconBadge
-                        key={`${project.id}-modal-tag-${tag.id}-${idx}`}
+                        key={`${safeProject.id}-modal-tag-${tag.id}-${idx}`}
                         label={tag.label}
                         id={tag.id}
                         category={tag.category}
@@ -914,7 +1332,18 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     </a>
                   )}
 
-                  <SmartDemoButtons resolved={resolvedModalLinks} stopPropagation={false} />
+                  <SmartDemoButtons
+                    resolved={resolvedModalLinks}
+                    stopPropagation={false}
+                    onWatchDemo={
+                      parsedVideoId
+                        ? () => {
+                            setIsPlayingVideo(true);
+                            scrollToSection('overview');
+                          }
+                        : undefined
+                    }
+                  />
 
                   {hasApk && (
                     <a
@@ -925,7 +1354,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     >
                       <Download size={14} />
                       <span>
-                        {project.links.apkDownloadUrl || releaseInfo.apkDownloadUrl || liveMeta?.apkDownloadUrl
+                        {safeProject.links?.apkDownloadUrl || releaseInfo.apkDownloadUrl || liveMeta?.apkDownloadUrl
                           ? lang === 'ar'
                             ? 'تحميل APK'
                             : 'Download APK'
@@ -960,8 +1389,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     <ImageIcon size={14} />
                     <span>
                       {lang === 'ar'
-                        ? `معرض الشاشات (${screenshots.length})`
-                        : `Jump to Gallery (${screenshots.length})`}
+                        ? `معرض الشاشات (${safeScreenCount})`
+                        : `Jump to Gallery (${safeScreenCount})`}
                     </span>
                   </button>
                 </div>
@@ -997,15 +1426,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     )}
                   </div>
 
-                  {youtubeIframeSrc ? (
-                    <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 dark:border-white/10 shadow-md flex-1">
+                  {youtubeIframeSrc && parsedVideoId ? (
+                    <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-[#08090d] border border-slate-200 dark:border-white/10 shadow-md flex-1">
                       {isPlayingVideo ? (
-                        <iframe
-                          src={youtubeIframeSrc}
-                          title={`${project.name} Live Video Demo`}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="w-full h-full border-0"
+                        <YouTubeEmbedPlayer
+                          videoId={parsedVideoId}
+                          title={`${safeDisplayName} Live Video Demo`}
+                          youtubeUrl={playerCandidateUrl}
+                          autoplay={true}
                         />
                       ) : (
                         <button
@@ -1016,7 +1444,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                           {youtubePosterUrl && (
                             <img
                               src={youtubePosterUrl}
-                              alt={`${project.name} demo poster`}
+                              alt={`${safeDisplayName} demo poster`}
                               className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 group-hover:opacity-85 transition-all duration-300"
                             />
                           )}
@@ -1034,13 +1462,13 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     <div className="flex-1 flex flex-col justify-between gap-3">
                       <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10">
                         <ProjectCardCover
-                          repoName={project.repoName}
+                          repoName={safeRepoName}
                           language={realLanguage || 'Dart'}
-                          coverUrl={project.image}
-                          discoveredScreenshots={screenshots}
-                          isHighlight={project.highlight}
+                          coverUrl={safeProject.image}
+                          discoveredScreenshots={safeScreenshots}
+                          isHighlight={safeProject.highlight}
                           description={displayDescription}
-                          topics={project.technologies}
+                          topics={safeProject.technologies}
                         />
                       </div>
                       <a
@@ -1085,48 +1513,48 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     <span className="text-xs font-mono font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 truncate">
                       <Smartphone size={15} className="text-[#0284ff] dark:text-[#00C7FF] shrink-0" />
                       <span className="truncate capitalize">
-                        {screenshots.length > 0
-                          ? formatReadableScreenName(
-                              screenshots[activeScreenIndex % screenshots.length],
-                              activeScreenIndex
-                            )
+                        {safeScreenCount > 0 && activeStageScreenUrl
+                          ? formatReadableScreenName(activeStageScreenUrl, safeScreenIndex)
                           : lang === 'ar'
                           ? 'معاينة الشاشات'
                           : 'App Screens'}
                       </span>
                     </span>
-                    {screenshots.length > 0 && (
+                    {safeScreenCount > 0 && (
                       <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 tabular-nums shrink-0">
-                        {(activeScreenIndex % screenshots.length) + 1} / {screenshots.length}
+                        {safeScreenIndex + 1} / {safeScreenCount}
                       </span>
                     )}
                   </div>
 
-                  {loadingScreens && screenshots.length === 0 ? (
+                  {loadingScreens && safeScreenCount === 0 ? (
                     <div className="flex-1 min-h-[260px] rounded-2xl bg-[#161e31] skeleton-shimmer flex items-center justify-center">
                       <Loader2 size={22} className="animate-spin text-[#00C7FF]" />
                     </div>
-                  ) : screenshots.length > 0 ? (
+                  ) : safeScreenCount > 0 && activeStageScreenUrl ? (
                     <>
                       <div className="relative flex justify-center items-center py-1 flex-1">
                         <div className="relative w-[180px] sm:w-[195px] aspect-[9/17.8] rounded-[26px] p-1.5 bg-[#0f1628] border-2 border-slate-300/90 dark:border-white/25 shadow-2xl overflow-hidden group">
                           <button
                             type="button"
-                            onClick={() => setLightboxOpen(true)}
+                            onClick={() => {
+                              setAdHocLightboxUrl(null);
+                              setLightboxOpen(true);
+                            }}
                             className="w-full h-full rounded-[20px] overflow-hidden bg-[#161e31] block cursor-pointer"
                             aria-label="Open screen in fullscreen lightbox"
                           >
                             <ImageWithSkeleton
-                              key={screenshots[activeScreenIndex % screenshots.length]}
-                              src={screenshots[activeScreenIndex % screenshots.length]}
-                              alt={`${project.name} preview`}
+                              key={activeStageScreenUrl}
+                              src={activeStageScreenUrl}
+                              alt={`${safeDisplayName} preview`}
                               loading="eager"
                               variant="phone"
                               className="w-full h-full object-cover object-top crisp-screenshot group-hover:scale-[1.02] transition-transform duration-300"
                             />
                           </button>
 
-                          {screenshots.length > 1 && (
+                          {safeScreenCount > 1 && (
                             <>
                               <button
                                 type="button"
@@ -1157,13 +1585,16 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
                       {/* Thumbnail Filmstrip + Smooth Scroll Jump to Gallery */}
                       <div className="pt-2 border-t border-slate-200/80 dark:border-white/8 flex items-center gap-2 overflow-x-auto no-scrollbar">
-                        {screenshots.slice(0, 5).map((thumb, idx) => {
-                          const active = activeScreenIndex % screenshots.length === idx;
+                        {safeScreenshots.slice(0, 5).map((thumb, idx) => {
+                          const active = safeScreenIndex === idx;
                           return (
                             <button
                               key={`${thumb}-${idx}`}
                               type="button"
-                              onClick={() => setActiveScreenIndex(idx)}
+                              onClick={() => {
+                                setAdHocLightboxUrl(null);
+                                setActiveScreenIndex(idx);
+                              }}
                               className={`w-11 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer bg-[#161e31] ${
                                 active
                                   ? 'border-[#0284ff] scale-[1.03]'
@@ -1190,8 +1621,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                           <ImageIcon size={13} />
                           <span>
                             {lang === 'ar'
-                              ? `الكل (${screenshots.length})`
-                              : `All (${screenshots.length})`}
+                              ? `الكل (${safeScreenCount})`
+                              : `All (${safeScreenCount})`}
                           </span>
                         </button>
                       </div>
@@ -1302,8 +1733,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     <ImageIcon size={18} className="text-[#0284ff] dark:text-[#00C7FF]" />
                     <span>
                       {lang === 'ar'
-                        ? `معرض شاشات التطبيق (${screenshots.length})`
-                        : `Mobile Screenshots Gallery (${screenshots.length})`}
+                        ? `معرض شاشات التطبيق (${safeScreenCount})`
+                        : `Mobile Screenshots Gallery (${safeScreenCount})`}
                     </span>
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -1313,10 +1744,13 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   </p>
                 </div>
 
-                {screenshots.length > 0 && (
+                {safeScreenCount > 0 && (
                   <button
                     type="button"
-                    onClick={() => setLightboxOpen(true)}
+                    onClick={() => {
+                      setAdHocLightboxUrl(null);
+                      setLightboxOpen(true);
+                    }}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] sm:min-h-0 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-[#0284ff] hover:text-white text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
                   >
                     <ZoomIn size={13} />
@@ -1353,7 +1787,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 </div>
               )}
 
-              {loadingScreens && screenshots.length === 0 ? (
+              {loadingScreens && safeScreenCount === 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
                   {[1, 2, 3, 4].map((sk) => (
                     <div
@@ -1362,7 +1796,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     />
                   ))}
                 </div>
-              ) : screenshots.length === 0 ? (
+              ) : safeScreenCount === 0 ? (
                 <div className="py-12 text-center text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-white/[0.02] rounded-2xl border border-dashed border-slate-300 dark:border-white/10">
                   <ImageIcon size={32} className="mx-auto mb-2 opacity-50 text-[#0284ff]" />
                   <p className="font-semibold text-xs sm:text-sm">
@@ -1380,26 +1814,36 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
                     }`}
                   >
-                    {activeGalleryGroup.items
+                    {(activeGalleryGroup?.items || [])
                       .slice(0, visibleGalleryCount)
-                      .map((item) => (
-                        <GalleryCard
-                          key={`${item.url}-${item.globalIndex}`}
-                          url={item.url}
-                          label={item.label}
-                          index={item.globalIndex}
-                          projectName={project.name}
-                          isActive={activeScreenIndex === item.globalIndex}
-                          onSelect={() => setActiveScreenIndex(item.globalIndex)}
-                          onInspect={() => {
-                            setActiveScreenIndex(item.globalIndex);
-                            setLightboxOpen(true);
-                          }}
-                        />
-                      ))}
+                      .map((item) => {
+                        const targetIndex =
+                          typeof item.globalIndex === 'number' && Number.isFinite(item.globalIndex)
+                            ? item.globalIndex
+                            : 0;
+                        return (
+                          <GalleryCard
+                            key={`${item.url}-${targetIndex}`}
+                            url={item.url}
+                            label={item.label}
+                            index={targetIndex}
+                            projectName={safeDisplayName}
+                            isActive={safeScreenIndex === targetIndex}
+                            onSelect={() => {
+                              setAdHocLightboxUrl(null);
+                              setActiveScreenIndex(targetIndex);
+                            }}
+                            onInspect={() => {
+                              setAdHocLightboxUrl(null);
+                              setActiveScreenIndex(targetIndex);
+                              setLightboxOpen(true);
+                            }}
+                          />
+                        );
+                      })}
                   </div>
 
-                  {activeGalleryGroup.items.length > visibleGalleryCount && (
+                  {(activeGalleryGroup?.items?.length || 0) > visibleGalleryCount && (
                     <div className="flex justify-center pt-2">
                       <button
                         type="button"
@@ -1410,10 +1854,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         <span>
                           {lang === 'ar'
                             ? `عرض المزيد (${
-                                activeGalleryGroup.items.length - visibleGalleryCount
+                                (activeGalleryGroup?.items?.length || 0) - visibleGalleryCount
                               } متبقية)`
                             : `Show More (${
-                                activeGalleryGroup.items.length - visibleGalleryCount
+                                (activeGalleryGroup?.items?.length || 0) - visibleGalleryCount
                               } remaining)`}
                         </span>
                       </button>
@@ -1454,7 +1898,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       </span>
                     </div>
                     <p className="text-slate-600 dark:text-gray-300 text-xs leading-relaxed">
-                      {project.architecture?.presentationLayer ||
+                      {safeProject.architecture?.presentationLayer ||
                         (lang === 'ar'
                           ? 'واجهات فلاتر المتجاوبة، الشاشات، ومستمعو الحالة (Cubit / BlocBuilder).'
                           : 'Responsive Flutter UI views, reusable widgets, and Cubit/BLoC state listeners.')}
@@ -1471,7 +1915,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       </span>
                     </div>
                     <p className="text-slate-600 dark:text-gray-300 text-xs leading-relaxed">
-                      {project.architecture?.domainLayer ||
+                      {safeProject.architecture?.domainLayer ||
                         (lang === 'ar'
                           ? 'منطق الأعمال النقي (Pure Dart)، الكيانات، وعقود المستودعات.'
                           : 'Pure Dart business logic, entities, use cases, and repository contracts.')}
@@ -1488,7 +1932,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       </span>
                     </div>
                     <p className="text-slate-600 dark:text-gray-300 text-xs leading-relaxed">
-                      {project.architecture?.dataLayer ||
+                      {safeProject.architecture?.dataLayer ||
                         (lang === 'ar'
                           ? 'موفرو البيانات المحليين والشبكيين (Hive / REST APIs / Firebase).'
                           : 'DTO models, local caching storage (Hive), and REST API / Firebase datasources.')}
@@ -1532,28 +1976,28 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               )}
 
               {/* Strictly Verified Telemetry Only (Hairline Editorial Summary Row) */}
-              {(project.metrics?.offlineSupport ||
-                project.metrics?.liveStatus ||
+              {(safeProject.metrics?.offlineSupport ||
+                safeProject.metrics?.liveStatus ||
                 realApkSizeLabel ||
                 releaseInfo?.tagName) && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-3.5 border-y border-slate-200/75 dark:border-white/8">
-                  {project.metrics?.offlineSupport && (
+                  {safeProject.metrics?.offlineSupport && (
                     <div>
                       <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                         Offline Mode
                       </div>
                       <div className="text-sm sm:text-base font-extrabold text-purple-600 dark:text-purple-400 mt-0.5">
-                        {project.metrics.offlineSupport}
+                        {safeProject.metrics.offlineSupport}
                       </div>
                     </div>
                   )}
-                  {project.metrics?.liveStatus && (
+                  {safeProject.metrics?.liveStatus && (
                     <div>
                       <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                         Distribution
                       </div>
                       <div className="text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">
-                        {project.metrics.liveStatus}
+                        {safeProject.metrics.liveStatus}
                       </div>
                     </div>
                   )}
@@ -1592,7 +2036,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   </div>
                   <CopyChip
                     label="Copy All"
-                    value={`git clone ${githubRepoUrl}.git\ncd ${project.repoName}\nflutter pub get\nflutter run`}
+                    value={`git clone ${githubRepoUrl}.git\ncd ${safeRepoName}\nflutter pub get\nflutter run`}
                   />
                 </div>
                 <div className="space-y-1.5 text-[11px] sm:text-xs text-gray-300 bg-black/40 p-3.5 rounded-xl border border-white/5 overflow-x-auto">
@@ -1668,8 +2112,19 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 >
                   <ReadmeDocumentView
                     rawMarkdown={activeStudyCaseMarkdown}
-                    repoName={project.repoName}
+                    repoName={safeRepoName}
                     branch={defaultBranch}
+                    onImageClick={(clickedUrl) => {
+                      if (!clickedUrl || typeof clickedUrl !== 'string') return;
+                      const matchedIdx = safeScreenshots.indexOf(clickedUrl);
+                      if (matchedIdx >= 0) {
+                        setAdHocLightboxUrl(null);
+                        setActiveScreenIndex(matchedIdx);
+                      } else {
+                        setAdHocLightboxUrl(clickedUrl);
+                      }
+                      setLightboxOpen(true);
+                    }}
                   />
                 </div>
               ) : (
@@ -1693,28 +2148,29 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       </div>
 
       {/* Fullscreen Keyboard-Navigable Gallery Lightbox */}
-      {lightboxOpen && screenshots.length > 0 && (
+      {lightboxOpen && activeLightboxRawUrl && (
         <div
           className="fixed inset-0 z-[120] bg-black/95 flex flex-col items-center justify-center p-4"
           onClick={(e) => {
             e.stopPropagation();
             setLightboxOpen(false);
+            setAdHocLightboxUrl(null);
           }}
         >
           <div className="absolute top-4 inset-x-4 flex items-center justify-between pointer-events-none z-20">
             <span className="px-3.5 py-1.5 rounded-full bg-white/12 text-white font-mono text-xs border border-white/15 capitalize">
-              {project.name} ·{' '}
-              {formatReadableScreenName(
-                screenshots[activeScreenIndex % screenshots.length],
-                activeScreenIndex
-              )}{' '}
-              ({(activeScreenIndex % screenshots.length) + 1} / {screenshots.length})
+              {safeDisplayName} ·{' '}
+              {formatReadableScreenName(activeLightboxRawUrl, safeScreenIndex)}
+              {!adHocLightboxUrl && safeScreenCount > 0
+                ? ` (${safeScreenIndex + 1} / ${safeScreenCount})`
+                : ''}
             </span>
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setLightboxOpen(false);
+                setAdHocLightboxUrl(null);
               }}
               className="pointer-events-auto text-white hover:text-rose-400 p-2.5 rounded-full bg-white/10 hover:bg-white/20 cursor-pointer transition-colors"
               aria-label="Close Lightbox"
@@ -1723,56 +2179,114 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              prevScreen();
-            }}
-            className="absolute start-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white cursor-pointer z-20 transition-all hover:scale-110 flex items-center justify-center"
-            aria-label="Previous Screenshot"
-          >
-            <ChevronLeft size={24} className={dir === 'rtl' ? 'rotate-180' : ''} />
-          </button>
+          {!adHocLightboxUrl && safeScreenCount > 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                prevScreen();
+              }}
+              className="absolute start-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white cursor-pointer z-20 transition-all hover:scale-110 flex items-center justify-center"
+              aria-label="Previous Screenshot"
+            >
+              <ChevronLeft size={24} className={dir === 'rtl' ? 'rotate-180' : ''} />
+            </button>
+          )}
 
-          <img
-            src={resolveProxiedImageUrl(screenshots[activeScreenIndex % screenshots.length])}
-            alt={`Screenshot ${(activeScreenIndex % screenshots.length) + 1}`}
-            className="max-h-[75vh] max-w-[90vw] object-contain rounded-2xl shadow-2xl border border-white/10"
-            onClick={(e) => e.stopPropagation()}
-          />
+          {lightboxImgState.failed || !activeLightboxSrc ? (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="max-w-sm w-full rounded-2xl bg-[#0e1424] border border-white/15 p-6 text-center space-y-4 text-slate-200 shadow-2xl"
+            >
+              <div className="w-12 h-12 mx-auto rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <AlertTriangle size={22} />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-white">
+                  {lang === 'ar'
+                    ? 'تعذر تحميل هذه الشاشة حالياً'
+                    : 'Could not load this screenshot right now'}
+                </p>
+                <p className="text-xs text-slate-400">
+                  {lang === 'ar'
+                    ? 'يمكنك إعادة المحاولة أو التنقل لبقية الشاشات.'
+                    : 'You can retry loading or switch to another screen.'}
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLightboxImgState({ triedDirect: false, failed: false })}
+                  className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white text-xs font-bold cursor-pointer"
+                >
+                  <RefreshCw size={13} />
+                  <span>{lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLightboxOpen(false);
+                    setAdHocLightboxUrl(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold cursor-pointer"
+                >
+                  {lang === 'ar' ? 'إغلاق' : 'Close'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <img
+              key={activeLightboxSrc}
+              src={activeLightboxSrc}
+              alt={`Screenshot ${safeScreenIndex + 1}`}
+              referrerPolicy="no-referrer"
+              onError={() => {
+                if (!lightboxImgState.triedDirect && activeLightboxSrc !== activeLightboxRawUrl) {
+                  setLightboxImgState({ triedDirect: true, failed: false });
+                } else {
+                  setLightboxImgState({ triedDirect: true, failed: true });
+                }
+              }}
+              className="max-h-[75vh] max-w-[90vw] object-contain rounded-2xl shadow-2xl border border-white/10"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              nextScreen();
-            }}
-            className="absolute end-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white cursor-pointer z-20 transition-all hover:scale-110 flex items-center justify-center"
-            aria-label="Next Screenshot"
-          >
-            <ChevronRight size={24} className={dir === 'rtl' ? 'rotate-180' : ''} />
-          </button>
+          {!adHocLightboxUrl && safeScreenCount > 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                nextScreen();
+              }}
+              className="absolute end-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white cursor-pointer z-20 transition-all hover:scale-110 flex items-center justify-center"
+              aria-label="Next Screenshot"
+            >
+              <ChevronRight size={24} className={dir === 'rtl' ? 'rotate-180' : ''} />
+            </button>
+          )}
 
-          {screenshots.length > 1 && (
+          {!adHocLightboxUrl && safeScreenCount > 1 && (
             <div
               className="mt-5 flex items-center gap-2 max-w-[90vw] overflow-x-auto px-3 py-2 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md no-scrollbar"
               onClick={(e) => e.stopPropagation()}
             >
-              {screenshots.map((imgUrl, idx) => (
+              {safeScreenshots.map((imgUrl, idx) => (
                 <button
                   key={`${imgUrl}-lb-${idx}`}
                   type="button"
                   onClick={() => setActiveScreenIndex(idx)}
                   className={`w-10 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${
-                    activeScreenIndex % screenshots.length === idx
+                    safeScreenIndex === idx
                       ? 'border-[#00C7FF] scale-110 opacity-100'
                       : 'border-white/15 opacity-70 hover:opacity-100'
                   }`}
                 >
-                  <img
-                    src={resolveProxiedImageUrl(imgUrl)}
+                  <ImageWithSkeleton
+                    src={imgUrl}
                     alt={`Thumb ${idx + 1}`}
+                    loading="eager"
+                    variant="phone"
                     className="w-full h-full object-cover object-top"
                   />
                 </button>
@@ -1784,5 +2298,19 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     </div>
   );
 
-  return typeof document !== 'undefined' ? createPortal(workspaceNode, document.body) : null;
+  return typeof document !== 'undefined'
+    ? createPortal(
+        <ModalErrorBoundary
+          lang={lang}
+          dir={dir}
+          projectName={safeDisplayName}
+          resetKey={`${safeProject.id}-${recoveryEpoch}-${safeScreenCount}`}
+          onRetry={handleRetryModal}
+          onClose={onClose}
+        >
+          {workspaceNode}
+        </ModalErrorBoundary>,
+        document.body
+      )
+    : null;
 };
