@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import { copyToClipboard } from '../utils/clipboard';
 
 export interface ReadmeSectionAnchor {
   id: string;
@@ -449,14 +450,15 @@ const CodeSnippetCard: React.FC<{ language: string; code: string }> = ({ languag
   const { lang } = useLanguage();
   const { showToast } = useToast();
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code);
+  const handleCopy = async () => {
+    const ok = await copyToClipboard(code);
+    if (!ok) return;
     setCopied(true);
     showToast({
       message: lang === 'ar' ? 'تم نسخ الكود' : 'Code snippet copied',
       detail: language || 'code',
     });
-    setTimeout(() => setCopied(false), 1800);
+    window.setTimeout(() => setCopied(false), 1800);
   };
 
   return (

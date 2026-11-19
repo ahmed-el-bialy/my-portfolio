@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { GraduationCap, Globe, Sparkles, ArrowRight, Compass, HeartHandshake, Lightbulb } from 'lucide-react';
 import { AHMED_CONFIG } from '../data/config';
@@ -17,6 +17,15 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
   const { lang, dir } = useLanguage();
   const [tapCount, setTapCount] = useState(0);
   const [eggTriggered, setEggTriggered] = useState(false);
+  const eggTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (eggTimerRef.current) {
+        window.clearTimeout(eggTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleAvatarEasterEgg = () => {
     const next = tapCount + 1;
@@ -30,7 +39,10 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
         origin: { y: 0.65 },
         colors: ['#0284ff', '#00C7FF', '#10B981'],
       });
-      setTimeout(() => setEggTriggered(false), 3500);
+      if (eggTimerRef.current) {
+        window.clearTimeout(eggTimerRef.current);
+      }
+      eggTimerRef.current = window.setTimeout(() => setEggTriggered(false), 3500);
     }
   };
 

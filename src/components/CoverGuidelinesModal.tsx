@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Image as ImageIcon, Check, Copy, Folder, FileImage, ShieldCheck } from 'lucide-react';
-import { COVER_IMAGE_SPECS } from '../services/githubService';
+import { useScrollLock } from '../hooks/useScrollLock';
+import { useLanguage } from '../context/LanguageContext';
+import { copyToClipboard } from '../utils/clipboard';
 
 interface CoverGuidelinesModalProps {
   isOpen: boolean;
@@ -8,30 +11,55 @@ interface CoverGuidelinesModalProps {
 }
 
 export const CoverGuidelinesModal: React.FC<CoverGuidelinesModalProps> = ({ isOpen, onClose }) => {
+  useScrollLock(isOpen);
+  const { dir } = useLanguage();
   const [copiedPath, setCopiedPath] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  const handleCopyPath = () => {
-    navigator.clipboard.writeText("screenshots/cover.png");
+  const handleCopyPath = async () => {
+    const ok = await copyToClipboard('screenshots/cover.png');
+    if (!ok) return;
     setCopiedPath(true);
-    setTimeout(() => setCopiedPath(false), 2000);
+    window.setTimeout(() => setCopiedPath(false), 2000);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-white dark:bg-[#14151f] border border-black/10 dark:border-white/15 rounded-3xl overflow-hidden shadow-2xl p-6 sm:p-8 max-h-[92vh] overflow-y-auto">
+  const modalNode = (
+    <div
+      dir={dir}
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-2xl my-auto bg-white dark:bg-[#14151f] border border-black/10 dark:border-white/15 rounded-3xl overflow-hidden shadow-2xl p-6 sm:p-8 max-h-[92vh] overflow-y-auto"
+      >
         
         {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-5 end-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white flex items-center justify-center cursor-pointer transition-colors"
+          aria-label="Close modal"
+          className="absolute top-4 end-4 sm:top-5 sm:end-5 w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-gray-300 hover:text-black dark:hover:text-white flex items-center justify-center cursor-pointer transition-colors"
         >
           <X size={16} />
         </button>
 
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-6 pe-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-2">
             <ImageIcon size={14} />
             <span>Project Cover Specification</span>
@@ -76,6 +104,7 @@ export const CoverGuidelinesModal: React.FC<CoverGuidelinesModalProps> = ({ isOp
           <div className="flex items-center justify-between mb-3 text-xs text-slate-600 dark:text-gray-400">
             <span className="font-semibold text-slate-900 dark:text-gray-200">مسار الملف داخل المستودع (Repository Root):</span>
             <button
+              type="button"
               onClick={handleCopyPath}
               className="flex items-center gap-1 text-cyan-600 dark:text-cyan-400 hover:underline transition-colors cursor-pointer font-medium"
             >
@@ -117,4 +146,6 @@ export const CoverGuidelinesModal: React.FC<CoverGuidelinesModalProps> = ({ isOp
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalNode, document.body) : null;
 };

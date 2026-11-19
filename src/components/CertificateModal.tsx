@@ -20,6 +20,7 @@ import { CertificateItem } from '../data/portfolioData';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import { copyToClipboard } from '../utils/clipboard';
 
 interface CertificateModalProps {
   isOpen: boolean;
@@ -71,15 +72,16 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
 
   if (!isOpen || !certificate) return null;
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     if (!certificate.credentialUrl) return;
-    navigator.clipboard.writeText(certificate.credentialUrl);
+    const ok = await copyToClipboard(certificate.credentialUrl);
+    if (!ok) return;
     setCopiedLink(true);
     showToast({
       message: lang === 'ar' ? 'تم نسخ رابط الشهادة' : 'Certificate link copied',
       detail: certificate.issuer,
     });
-    setTimeout(() => setCopiedLink(false), 2200);
+    window.setTimeout(() => setCopiedLink(false), 2200);
   };
 
   // Convert Google Drive view URL to preview URL for embedding in webview mode if applicable
@@ -89,7 +91,7 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md overflow-y-auto"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -131,8 +133,9 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({
 
           {/* Close Button */}
           <button
+            type="button"
             onClick={onClose}
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-200/70 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-gray-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+            className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-slate-200/70 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-gray-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
             aria-label="Close"
           >
             <X size={17} />

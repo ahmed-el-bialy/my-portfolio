@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   X,
@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { Project, AHMED_PROFILE } from '../data/portfolioData';
 import { resolveSmartProjectLinks } from '../utils/projectLinks';
+import { copyToClipboard } from '../utils/clipboard';
 import { SmartDemoButtons } from './SmartDemoButtons';
 import { ProjectCardCover, synthesizeProjectBlueprint } from './ProjectCardCover';
 import { ImageWithSkeleton, preloadImageUrls, resolveProxiedImageUrl } from './ImageWithSkeleton';
@@ -57,6 +58,7 @@ import {
   checkRepoRelease,
   fetchRepoLiveMetadata,
   fetchRepoCaseStudies,
+  fetchConsolidatedGitHubPortfolio,
   extractYouTubeVideoId,
   VERIFIED_REPO_SCREENSHOTS,
   RepoReleaseInfo,
@@ -248,14 +250,15 @@ const CopyChip: React.FC<{ value: string; label?: string }> = ({ value, label })
   return (
     <button
       type="button"
-      onClick={() => {
-        navigator.clipboard.writeText(value);
+      onClick={async () => {
+        const ok = await copyToClipboard(value);
+        if (!ok) return;
         setCopied(true);
         showToast({
           message: lang === 'ar' ? 'تم نسخ الأمر' : 'Command copied to clipboard',
           detail: value,
         });
-        setTimeout(() => setCopied(false), 1800);
+        window.setTimeout(() => setCopied(false), 1800);
       }}
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors cursor-pointer text-[11px] font-mono shrink-0"
       title={`Copy ${label || 'command'}`}
@@ -345,7 +348,6 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   useScrollLock(isOpen);
   const { lang, dir } = useLanguage();
   const { showToast } = useToast();
-  const queryClient = useQueryClient();
 
   const safeProject = useMemo(() => normalizeProjectInput(project), [project]);
 
@@ -386,10 +388,12 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const isRevio = safeRepoName.toLowerCase() === 'revio';
   const { data: playStats } = usePlayStoreAppStats(isRevio ? 'com.ahmed.revio' : '');
 
-  const cachedConsolidated = queryClient.getQueryData<ConsolidatedGitHubPortfolio>([
-    'github-consolidated',
-    'ahmed-el-bialy',
-  ]);
+  const { data: cachedConsolidated } = useQuery<ConsolidatedGitHubPortfolio>({
+    queryKey: ['github-consolidated', 'ahmed-el-bialy'],
+    queryFn: () => fetchConsolidatedGitHubPortfolio('ahmed-el-bialy'),
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  });
 
   const matchedCachedRepo = useMemo(() => {
     if (!safeProject || !Array.isArray(cachedConsolidated?.repos)) return undefined;
@@ -1026,19 +1030,16 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     navSections,
   } = preparedData;
 
-  const handleCopyClone = () => {
-    try {
-      const cmd = `git clone ${githubRepoUrl}.git`;
-      navigator.clipboard.writeText(cmd);
-      setCopiedClone(true);
-      showToast({
-        message: lang === 'ar' ? 'تم نسخ أمر الاستنساخ' : 'Git clone command copied',
-        detail: cmd,
-      });
-      setTimeout(() => setCopiedClone(false), 1800);
-    } catch {
-      // Clipboard unavailable
-    }
+  const handleCopyClone = async () => {
+    const cmd = `git clone ${githubRepoUrl}.git`;
+    const ok = await copyToClipboard(cmd);
+    if (!ok) return;
+    setCopiedClone(true);
+    showToast({
+      message: lang === 'ar' ? 'تم نسخ أمر الاستنساخ' : 'Git clone command copied',
+      detail: cmd,
+    });
+    window.setTimeout(() => setCopiedClone(false), 1800);
   };
 
   const activeStageScreenUrl = safeScreenCount > 0 ? safeScreenshots[safeScreenIndex] : '';

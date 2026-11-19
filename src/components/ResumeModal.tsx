@@ -42,6 +42,7 @@ import { BrandLogoMark } from './BrandLogoMark';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import { copyToClipboard } from '../utils/clipboard';
 import { usePlayStoreAppStats } from '../services/playStoreService';
 import type { ParsedProfileData } from '../services/cvParserService';
 import type { GitHubRepo } from '../services/githubService';
@@ -83,7 +84,10 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.classList.remove('printing-resume');
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -117,15 +121,16 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
     });
   };
 
-  const handleCopyLink = () => {
+  const handleCopyLink = async () => {
     const url = profile.cvDriveUrl || window.location.href;
-    navigator.clipboard.writeText(url);
+    const ok = await copyToClipboard(url);
+    if (!ok) return;
     setCopiedLink(true);
     showToast({
       message: lang === 'ar' ? 'تم نسخ رابط السيرة الذاتية' : 'Resume link copied',
       detail: 'CV PDF',
     });
-    setTimeout(() => setCopiedLink(false), 2000);
+    window.setTimeout(() => setCopiedLink(false), 2000);
   };
 
   const handlePrintResume = () => {

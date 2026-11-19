@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Check, Copy, FileCode2 } from 'lucide-react';
 import { DART_ARCHITECTURE_SNIPPETS, DartSnippetSpec } from '../data/config';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import { copyToClipboard } from '../utils/clipboard';
 
 interface DartCodeShowcaseProps {
   isDark?: boolean;
@@ -17,6 +18,7 @@ export const DartCodeShowcase: React.FC<DartCodeShowcaseProps> = ({
   const { showToast } = useToast();
   const [activeId, setActiveId] = useState<string>(DART_ARCHITECTURE_SNIPPETS[0].id);
   const [highlightedMap, setHighlightedMap] = useState<Record<string, string>>({});
+  const highlightedKeysRef = useRef<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const activeSnippet: DartSnippetSpec =
@@ -27,7 +29,7 @@ export const DartCodeShowcase: React.FC<DartCodeShowcaseProps> = ({
 
   useEffect(() => {
     let cancelled = false;
-    if (highlightedMap[cacheKey]) return;
+    if (highlightedKeysRef.current.has(cacheKey)) return;
 
     import('shiki')
       .then(async ({ codeToHtml }) => {
@@ -36,6 +38,7 @@ export const DartCodeShowcase: React.FC<DartCodeShowcaseProps> = ({
           theme: isDark ? 'github-dark-default' : 'github-light-default',
         });
         if (!cancelled) {
+          highlightedKeysRef.current.add(cacheKey);
           setHighlightedMap((prev) => ({ ...prev, [cacheKey]: html }));
         }
       })
@@ -46,16 +49,17 @@ export const DartCodeShowcase: React.FC<DartCodeShowcaseProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [activeSnippet.code, cacheKey, isDark, highlightedMap]);
+  }, [activeSnippet.code, cacheKey, isDark]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(activeSnippet.code);
+  const handleCopy = async () => {
+    const ok = await copyToClipboard(activeSnippet.code);
+    if (!ok) return;
     setCopiedId(activeSnippet.id);
     showToast({
       message: lang === 'ar' ? 'تم نسخ كود Dart' : 'Dart snippet copied',
       detail: activeSnippet.fileName,
     });
-    setTimeout(() => setCopiedId(null), 1800);
+    window.setTimeout(() => setCopiedId(null), 1800);
   };
 
   return (

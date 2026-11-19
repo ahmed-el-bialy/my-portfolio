@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence, LayoutGroup, useReducedMotion } from 'framer-motion';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   ExternalLink,
   Youtube,
@@ -13,6 +13,7 @@ import { FEATURED_PROJECTS, Project } from '../data/portfolioData';
 import {
   VERIFIED_REPO_SCREENSHOTS,
   ConsolidatedGitHubPortfolio,
+  fetchConsolidatedGitHubPortfolio,
 } from '../services/githubService';
 import { resolveSmartProjectLinks } from '../utils/projectLinks';
 import { ImageWithSkeleton, preloadImageUrls } from './ImageWithSkeleton';
@@ -49,7 +50,6 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
   onInspectProject,
 }) => {
   const { lang, dir, t } = useLanguage();
-  const queryClient = useQueryClient();
   const prefersReducedMotion = useReducedMotion();
   const [selectedRepoKey, setSelectedRepoKey] = useState<string>('Revio');
   const [[screenIndex, screenDirection], setScreenState] = useState<[number, number]>([0, 1]);
@@ -59,10 +59,12 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
   } | null>(null);
   const { data: revioPlayStats } = usePlayStoreAppStats('com.ahmed.revio');
 
-  const cachedConsolidated = queryClient.getQueryData<ConsolidatedGitHubPortfolio>([
-    'github-consolidated',
-    'ahmed-el-bialy',
-  ]);
+  const { data: cachedConsolidated } = useQuery<ConsolidatedGitHubPortfolio>({
+    queryKey: ['github-consolidated', 'ahmed-el-bialy'],
+    queryFn: () => fetchConsolidatedGitHubPortfolio('ahmed-el-bialy'),
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  });
 
   const showcaseApps = useMemo(() => {
     return SHOWCASE_REPO_ORDER.map((repoKey) =>
@@ -176,8 +178,8 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
   };
 
   const handleJumpScreen = (targetIdx: number) => {
-    if (targetIdx === screenIndex) return;
-    setScreenState([targetIdx, targetIdx > screenIndex ? 1 : -1]);
+    if (targetIdx === normalizedIdx) return;
+    setScreenState([targetIdx, targetIdx > normalizedIdx ? 1 : -1]);
   };
 
   const slideSign = dir === 'rtl' ? -1 : 1;
@@ -225,7 +227,7 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
           </div>
 
           <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 tabular-nums">
-            0{(screenIndex % Math.max(1, activeScreens.length)) + 1} / 0{activeScreens.length}
+            0{safeScreenCount > 0 ? normalizedIdx + 1 : 0} / 0{activeScreens.length}
           </span>
         </div>
 
@@ -330,7 +332,7 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
                     type="button"
                     onClick={() => handleJumpScreen(idx)}
                     className={`px-2.5 py-2 rounded-xl text-[11px] font-mono font-semibold text-start border transition-all cursor-pointer truncate capitalize min-h-[44px] sm:min-h-[38px] ${
-                      screenIndex === idx
+                      normalizedIdx === idx
                         ? 'bg-[#0284ff]/12 border-[#0284ff]/60 text-[#0284ff] dark:text-[#00C7FF] shadow-2xs'
                         : 'bg-slate-50 dark:bg-[#161b27] border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/25'
                     }`}
@@ -385,7 +387,11 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
             className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold whitespace-nowrap shadow-xs"
           >
             <ExternalLink size={13} />
-            <span>{lang === 'ar' ? 'تطبيق Revio على Google Play' : 'Get Revio on Google Play'}</span>
+            <span>
+              {lang === 'ar'
+                ? `تطبيق ${activeProject.name} على Google Play`
+                : `Get ${activeProject.name} on Google Play`}
+            </span>
           </a>
         ) : (
           <a

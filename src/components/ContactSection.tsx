@@ -22,6 +22,7 @@ import { AHMED_CONFIG, getEgyptLocalTime } from '../data/config';
 import { WhatsAppLogo } from './TechLogos';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import { copyToClipboard } from '../utils/clipboard';
 import { MagneticButton } from './MagneticButton';
 import { MeetingType } from './BookingMeetingModal';
 
@@ -65,8 +66,9 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
     return regex.test(trimmed);
   };
 
-  const handleCopy = (key: 'email' | 'phone' | 'github' | 'linkedin', value: string) => {
-    navigator.clipboard.writeText(value);
+  const handleCopy = async (key: 'email' | 'phone' | 'github' | 'linkedin', value: string) => {
+    const ok = await copyToClipboard(value);
+    if (!ok) return;
     setCopiedKey(key);
     const labelMap = {
       email: lang === 'ar' ? 'تم نسخ البريد الإلكتروني' : 'Email copied to clipboard',
@@ -75,7 +77,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
       linkedin: lang === 'ar' ? 'تم نسخ رابط LinkedIn' : 'LinkedIn link copied',
     };
     showToast({ message: labelMap[key], detail: value });
-    setTimeout(() => {
+    window.setTimeout(() => {
       setCopiedKey((prev) => (prev === key ? null : prev));
     }, 2000);
   };

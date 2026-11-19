@@ -65,11 +65,32 @@ async function startServer() {
     return h;
   };
 
+  async function fetchWithTimeout(
+    url: string,
+    init: RequestInit = {},
+    timeoutMs: number = 10000
+  ): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, {
+        ...init,
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   async function fetchRawReadmeTextServer(username: string, repoName: string, defaultBranch: string): Promise<string | null> {
     const branches = Array.from(new Set([defaultBranch || 'main', 'main', 'master']));
     for (const branch of branches) {
       try {
-        const res = await fetch(`https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/${branch}/README.md`);
+        const res = await fetchWithTimeout(
+          `https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/${encodeURIComponent(branch)}/README.md`,
+          {},
+          8000
+        );
         if (res.ok) {
           const text = await res.text();
           if (text && text.trim().length > 10) {
@@ -83,9 +104,10 @@ async function startServer() {
 
   async function fetchSingleRepoReleaseServer(username: string, repoName: string): Promise<any> {
     try {
-      const listRes = await fetch(
+      const listRes = await fetchWithTimeout(
         `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/releases?per_page=1`,
-        { headers: githubHeaders() }
+        { headers: githubHeaders() },
+        8000
       );
       if (!listRes.ok) return { hasRelease: false };
       const listData = await listRes.json();
@@ -120,9 +142,10 @@ async function startServer() {
     defaultBranch: string
   ): Promise<{ coverUrl?: string; screens: string[] }> {
     try {
-      const res = await fetch(
+      const res = await fetchWithTimeout(
         `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/contents/screenshots`,
-        { headers: githubHeaders() }
+        { headers: githubHeaders() },
+        8000
       );
       if (!res.ok) return { screens: [] };
       const files = await res.json();
@@ -177,9 +200,10 @@ async function startServer() {
     }
 
     const isAllowedOrigin =
-      (parsedUrl.hostname === 'raw.githubusercontent.com' &&
+      parsedUrl.protocol === 'https:' &&
+      ((parsedUrl.hostname === 'raw.githubusercontent.com' &&
         parsedUrl.pathname.toLowerCase().startsWith('/ahmed-el-bialy/')) ||
-      parsedUrl.hostname === 'avatars.githubusercontent.com';
+        parsedUrl.hostname === 'avatars.githubusercontent.com');
 
     if (!isAllowedOrigin) {
       return res.status(403).send('Forbidden media origin');
@@ -194,13 +218,11 @@ async function startServer() {
     }
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
-      const upstream = await fetch(rawUrl, {
-        headers: { 'User-Agent': 'ahmed-el-bialy-portfolio-media' },
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
+      const upstream = await fetchWithTimeout(
+        rawUrl,
+        { headers: { 'User-Agent': 'ahmed-el-bialy-portfolio-media' } },
+        12000
+      );
 
       if (!upstream.ok) {
         return res.status(upstream.status).send('Upstream media error');
@@ -233,7 +255,11 @@ async function startServer() {
 
   // Consolidated GitHub Portfolio Proxy (reduces 60-100 client requests down to 1 cached call)
   app.get('/api/github/portfolio', async (req, res) => {
-    const username = String(req.query.username || 'ahmed-el-bialy').trim() || 'ahmed-el-bialy';
+    const rawUsername = typeof req.query.username === 'string' ? req.query.username.trim() : 'ahmed-el-bialy';
+    const username = rawUsername || 'ahmed-el-bialy';
+    if (!/^[a-zA-Z0-9-]+$/.test(username)) {
+      return res.status(400).json({ success: false, error: 'Invalid GitHub username' });
+    }
     const forceRefresh = req.query.refresh === '1';
     const cacheKey = username.toLowerCase();
     const cached = portfolioServerCache.get(cacheKey);
@@ -249,10 +275,10 @@ async function startServer() {
 
     try {
       const [userRes, reposRes] = await Promise.all([
-        fetch(`https://api.github.com/users/${encodeURIComponent(username)}`, { headers: githubHeaders() }),
-        fetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100&sort=pushed`, {
+        fetchWithTimeout(`https://api.github.com/users/${encodeURIComponent(username)}`, { headers: githubHeaders() }, 10000),
+        fetchWithTimeout(`https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100&sort=pushed`, {
           headers: githubHeaders(),
-        }),
+        }, 10000),
       ]);
 
       if (!userRes.ok || !reposRes.ok) {
@@ -406,12 +432,16 @@ async function startServer() {
 
       try {
         if (downloadUrl) {
-          const pdfRes = await fetch(downloadUrl, {
-            redirect: 'follow',
-            headers: {
-              'User-Agent': 'ahmed-el-bialy-portfolio-server',
+          const pdfRes = await fetchWithTimeout(
+            downloadUrl,
+            {
+              redirect: 'follow',
+              headers: {
+                'User-Agent': 'ahmed-el-bialy-portfolio-server',
+              },
             },
-          });
+            12000
+          );
           if (pdfRes.ok) {
             const contentType = (pdfRes.headers.get('content-type') || '').toLowerCase();
             const lastMod = pdfRes.headers.get('last-modified');
@@ -598,9 +628,10 @@ Strict verified facts only:
   // Endpoint to fetch Study Case markdown with smart multi-filename checking from GitHub
   app.get('/api/study-case', async (req, res) => {
     try {
-      const { repo, lang = 'en' } = req.query;
-      if (!repo) {
-        return res.status(400).json({ success: false, error: 'Repository name required' });
+      const rawRepo = typeof req.query.repo === 'string' ? req.query.repo.trim() : '';
+      const lang = req.query.lang === 'ar' ? 'ar' : 'en';
+      if (!rawRepo || !/^[a-zA-Z0-9._-]+$/.test(rawRepo)) {
+        return res.status(400).json({ success: false, error: 'Valid repository name required' });
       }
 
       const enFiles = ['CASE_STUDY.md', 'case-study.md', 'STUDY_CASE.md'];
@@ -610,16 +641,16 @@ Strict verified facts only:
       async function fetchFirstValid(filenames: string[]) {
         for (const branch of branches) {
           for (const filename of filenames) {
-            const url = `https://raw.githubusercontent.com/ahmed-el-bialy/${repo}/${branch}/${filename}`;
+            const url = `https://raw.githubusercontent.com/ahmed-el-bialy/${encodeURIComponent(rawRepo)}/${branch}/${filename}`;
             try {
-              const r = await fetch(url);
+              const r = await fetchWithTimeout(url, {}, 7000);
               if (r.ok) {
                 const text = await r.text();
                 if (text && text.trim().length > 0) {
                   return { content: text, filename };
                 }
               }
-            } catch (e) {}
+            } catch {}
           }
         }
         return null;
@@ -660,8 +691,10 @@ Strict verified facts only:
   const playStoreCache = new Map<string, { timestamp: number; data: any }>();
 
   app.get('/api/playstore/app', async (req, res) => {
-    const appId = String(req.query.id || 'com.ahmed.revio').trim() || 'com.ahmed.revio';
-    if (!/^[a-zA-Z0-9._-]+$/.test(appId)) {
+    const hasIdParam = req.query.id !== undefined;
+    const rawId = typeof req.query.id === 'string' ? req.query.id.trim() : '';
+    const appId = hasIdParam ? rawId : 'com.ahmed.revio';
+    if (!appId || !/^[a-zA-Z0-9._-]+$/.test(appId)) {
       return res.status(400).json({ success: false, error: 'Invalid Google Play package id' });
     }
 
@@ -679,14 +712,18 @@ Strict verified facts only:
     const storeUrl = `https://play.google.com/store/apps/details?id=${encodeURIComponent(appId)}&hl=en&gl=US`;
 
     try {
-      const response = await fetch(storeUrl, {
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept-Language': 'en-US,en;q=0.9',
-          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      const response = await fetchWithTimeout(
+        storeUrl,
+        {
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          },
         },
-      });
+        9000
+      );
 
       if (!response.ok) {
         if (cached) {
@@ -695,8 +732,9 @@ Strict verified facts only:
         return res.json({
           success: true,
           appId,
+          title: appId === 'com.ahmed.revio' ? 'Revio' : appId,
           storeUrl,
-          isLive: true,
+          isLive: false,
           downloads: null,
           rating: null,
           reviewsCount: null,
@@ -710,7 +748,9 @@ Strict verified facts only:
 
       // Extract structured fields safely from Google Play public HTML
       const titleMatch = html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i);
-      const title = titleMatch?.[1]?.replace(/\s*-\s*Apps on Google Play$/i, '').trim() || 'Revio';
+      const title =
+        titleMatch?.[1]?.replace(/\s*-\s*Apps on Google Play$/i, '').trim() ||
+        (appId === 'com.ahmed.revio' ? 'Revio' : appId);
 
       // Star rating from aria-label or aggregateRating JSON
       const ratingAriaMatch = html.match(/aria-label="Rated\s+([0-9]+(?:\.[0-9]+)?)\s+stars\s+out\s+of\s+five/i);
@@ -766,8 +806,9 @@ Strict verified facts only:
       return res.json({
         success: true,
         appId,
+        title: appId === 'com.ahmed.revio' ? 'Revio' : appId,
         storeUrl,
-        isLive: true,
+        isLive: false,
         downloads: null,
         rating: null,
         reviewsCount: null,

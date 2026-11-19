@@ -61,7 +61,10 @@ export function convertCairoSlotToLocal(cairoDateStr: string, cairoSlotTime: str
 
     // Format in client's local timezone
     const localTimeStr = utcDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-    const localDateStr = utcDate.toISOString().split('T')[0];
+    const localYear = utcDate.getFullYear();
+    const localMonth = String(utcDate.getMonth() + 1).padStart(2, '0');
+    const localDay = String(utcDate.getDate()).padStart(2, '0');
+    const localDateStr = `${localYear}-${localMonth}-${localDay}`;
     const isDifferentDay = localDateStr !== cairoDateStr;
 
     return { localTimeStr, localDateStr, isDifferentDay };

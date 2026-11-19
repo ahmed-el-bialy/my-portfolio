@@ -697,10 +697,13 @@ export async function fetchRepoScreenshots(repoName: string, username: string = 
     )?.[1];
 
   try {
-    const res = await fetch(`https://api.github.com/repos/${username}/${cleanName}/contents/screenshots`, {
-      headers: { Accept: "application/vnd.github+json" },
-      cache: 'no-store'
-    });
+    const res = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(cleanName)}/contents/screenshots`,
+      {
+        headers: { Accept: "application/vnd.github+json" },
+        cache: 'no-store'
+      }
+    );
     if (res.ok) {
       const files = await res.json();
       if (Array.isArray(files)) {
@@ -1078,12 +1081,15 @@ export async function fetchRawRepoReadme(repoName: string, username: string = 'a
 
   try {
     // 1. Try GitHub REST API first with timestamp cache-busting (no CORS-blocked Cache-Control headers)
-    const apiRes = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/readme?t=${timestamp}`, {
-      headers: {
-        Accept: "application/vnd.github.raw+json"
-      },
-      cache: 'no-store'
-    });
+    const apiRes = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(cleanRepo)}/readme?t=${timestamp}`,
+      {
+        headers: {
+          Accept: "application/vnd.github.raw+json"
+        },
+        cache: 'no-store'
+      }
+    );
     if (apiRes.ok) {
       const text = await apiRes.text();
       if (text && text.length > 10) {
@@ -1097,7 +1103,7 @@ export async function fetchRawRepoReadme(repoName: string, username: string = 'a
     // 2. Fallback to raw branches with timestamp cache-busting (simple CORS-safe GET)
     const branches = ['main', 'master'];
     for (const branch of branches) {
-      const url = `https://raw.githubusercontent.com/${username}/${cleanRepo}/${branch}/README.md?t=${timestamp}`;
+      const url = `https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(cleanRepo)}/${branch}/README.md?t=${timestamp}`;
       const res = await fetch(url, {
         cache: 'no-store'
       });
@@ -1227,12 +1233,15 @@ export async function fetchRepositoryReleaseData(
 
   try {
     // 1. Query latest published release live from GitHub (CORS-safe simple GET + no-store)
-    let res = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/releases/latest?t=${timestamp}`, {
-      headers: {
-        Accept: "application/vnd.github+json"
-      },
-      cache: 'no-store'
-    });
+    let res = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(cleanRepo)}/releases/latest?t=${timestamp}`,
+      {
+        headers: {
+          Accept: "application/vnd.github+json"
+        },
+        cache: 'no-store'
+      }
+    );
 
     let releaseData: any = null;
 
@@ -1240,9 +1249,11 @@ export async function fetchRepositoryReleaseData(
       releaseData = await res.json();
     } else {
       // 2. Query release list for pre-releases or recent tags
-      const listRes = await fetch(`https://api.github.com/repos/${username}/${cleanRepo}/releases?per_page=1&t=${timestamp}`, {
-        headers: {
-          Accept: "application/vnd.github+json"
+      const listRes = await fetch(
+        `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(cleanRepo)}/releases?per_page=1&t=${timestamp}`,
+        {
+          headers: {
+            Accept: "application/vnd.github+json"
         },
         cache: 'no-store'
       });
@@ -1492,7 +1503,13 @@ function mapRawReposAndStats(
     .filter((r) => r?.name && r.name.toLowerCase() !== cleanUsername.toLowerCase())
     .map((r) => {
       const branch = r.default_branch || 'main';
-      const primaryCover = `https://raw.githubusercontent.com/${cleanUsername}/${r.name}/${branch}/screenshots/cover.png`;
+      const verifiedShot =
+        VERIFIED_REPO_SCREENSHOTS[r.name]?.[0] ||
+        VERIFIED_REPO_SCREENSHOTS[r.name.toLowerCase()]?.[0];
+      const primaryCover =
+        r.name.toLowerCase() === 'revio'
+          ? `https://raw.githubusercontent.com/${encodeURIComponent(cleanUsername)}/${encodeURIComponent(r.name)}/${encodeURIComponent(branch)}/screenshots/cover.png`
+          : verifiedShot || undefined;
       const known = KNOWN_REPO_MEDIA[r.name] || KNOWN_REPO_MEDIA[r.name.toLowerCase()] || {};
 
       return {

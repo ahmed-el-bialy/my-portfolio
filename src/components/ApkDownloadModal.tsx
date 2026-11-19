@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Download, ShieldAlert, ArrowUpRight, Smartphone, CheckCircle, ExternalLink } from 'lucide-react';
 import { Project } from '../data/portfolioData';
@@ -19,12 +19,24 @@ export const ApkDownloadModal: React.FC<ApkDownloadModalProps> = ({
   useScrollLock(isOpen);
   const { lang, dir } = useLanguage();
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !project) return null;
 
   const downloadUrl = project.links.apkDownloadUrl || (project.repoName ? `https://github.com/ahmed-el-bialy/${project.repoName}/releases/latest` : project.links.github);
 
   const node = (
     <div
+      dir={dir}
+      role="dialog"
+      aria-modal="true"
       className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-xs overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -51,8 +63,9 @@ export const ApkDownloadModal: React.FC<ApkDownloadModalProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-200/80 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-700 dark:text-gray-300 flex items-center justify-center transition-colors cursor-pointer"
+            className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-slate-200/80 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-700 dark:text-gray-300 flex items-center justify-center transition-colors cursor-pointer shrink-0"
             aria-label="Close dialog"
           >
             <X size={16} />

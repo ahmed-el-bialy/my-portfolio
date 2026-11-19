@@ -177,11 +177,21 @@ export const calculateMeetingDateTimes = (date: string, timeSlot: string, durati
   const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
   const startIso = `${date}T${pad(hours)}:${pad(minutes)}:00+02:00`;
 
-  // Calculate end time
-  const totalMinutes = minutes + durationMinutes;
-  const endHours = hours + Math.floor(totalMinutes / 60);
-  const endMinutes = totalMinutes % 60;
-  const endIso = `${date}T${pad(endHours)}:${pad(endMinutes)}:00+02:00`;
+  // Calculate end time with midnight rollover guard
+  const totalStartMinutes = hours * 60 + minutes;
+  const totalEndMinutes = totalStartMinutes + durationMinutes;
+  const dayOffset = Math.floor(totalEndMinutes / 1440);
+  const endHours = Math.floor((totalEndMinutes % 1440) / 60);
+  const endMinutes = totalEndMinutes % 60;
+
+  let endDate = date;
+  if (dayOffset > 0) {
+    const [y, m, d] = date.split('-').map(Number);
+    const rolled = new Date(Date.UTC(y, m - 1, d + dayOffset));
+    endDate = rolled.toISOString().split('T')[0];
+  }
+
+  const endIso = `${endDate}T${pad(endHours)}:${pad(endMinutes)}:00+02:00`;
 
   return { startIso, endIso };
 };
