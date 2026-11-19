@@ -62,22 +62,16 @@ Engineered as a bilingual (**English LTR / Arabic RTL**) full-stack React 19 + E
 
 Ready-to-use brand assets engineered to match the portfolio's `#08090d` dark-studio theme, electric-blue rim lighting (`#0284ff` / `#00c7ff`), and signature white-brush Leaf emblem:
 
-<table>
+
   <tr>
-    <td width="34%" align="center" valign="top">
-      <img src="./public/profile-avatar.jpg" width="220" alt="Ahmed El-Bialy Studio Profile Avatar" />
-      <br/>
-      <strong>1:1 Studio Profile Avatar</strong><br/>
-      <sub><code>./public/profile-avatar.jpg</code><br/>Optimized for LinkedIn, GitHub & WhatsApp profile circles</sub>
-    </td>
     <td width="66%" align="center" valign="top">
       <img src="./public/profile-banner.jpg" width="100%" alt="Ahmed El-Bialy LinkedIn & GitHub Cover Banner" />
       <br/>
       <strong>Wide Profile Cover Banner</strong><br/>
       <sub><code>./public/profile-banner.jpg</code><br/>Designed with bottom-left avatar safe zone for LinkedIn & GitHub headers</sub>
-    </td>
+ 
   </tr>
-</table>
+
 
 ### 🔗 OpenGraph & WhatsApp / LinkedIn Link Preview Card (`1200×630`)
 
