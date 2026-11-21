@@ -1,7 +1,6 @@
 import React from 'react';
 import { ArrowRight, Compass, Layers, Cpu, Rocket } from 'lucide-react';
 import { RevealOnScroll } from './RevealOnScroll';
-import { TiltCard } from './MotionPrimitives';
 import { useLanguage } from '../context/LanguageContext';
 
 interface HowIWorkSectionProps {
@@ -81,10 +80,10 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
     <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full">
       <RevealOnScroll className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 sm:mb-10">
         <div className="max-w-2xl">
-          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0284ff] dark:text-[#00C7FF] mb-2">
+          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0369a1] dark:text-[#38bdf8] mb-2">
             <span>{lang === 'ar' ? 'منهجية العمل الهندسي' : 'Engineering Process'}</span>
             <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-            <span className="text-slate-500 dark:text-slate-400 font-sans">
+            <span className="text-slate-600 dark:text-slate-400 font-sans">
               {lang === 'ar' ? 'من الفكرة إلى المتجر' : 'Concept to Play Store'}
             </span>
           </div>
@@ -120,17 +119,14 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
         {steps.map((step, idx) => {
           const StepIcon = step.icon;
           return (
-            <RevealOnScroll key={step.num} delay={idx * 0.06} className="h-full">
-              <TiltCard
-                maxTilt={6}
-                className="card-shimmer overflow-hidden h-full p-5 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between transition-colors duration-200 hover:border-[#0284ff]/45 shadow-sm hover:shadow-lg"
-              >
+            <RevealOnScroll key={step.num} delay={idx * 0.04} className="h-full">
+              <div className="surface-card card-shimmer overflow-hidden h-full p-5 rounded-2xl flex flex-col justify-between shadow-sm hover:shadow-lg">
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <span className="font-mono tabular-nums text-xs font-bold text-[#0284ff] dark:text-[#00C7FF]">
+                    <span className="font-mono tabular-nums text-xs font-bold text-[#0369a1] dark:text-[#38bdf8]">
                       {step.num}.
                     </span>
-                    <div className="w-9 h-9 rounded-xl bg-[#0284ff]/10 border border-[#0284ff]/20 text-[#0284ff] dark:text-[#00C7FF] flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-xl bg-[#0284ff]/10 border border-[#0284ff]/20 text-[#0369a1] dark:text-[#38bdf8] flex items-center justify-center">
                       <StepIcon size={16} />
                     </div>
                   </div>
@@ -141,10 +137,10 @@ export const HowIWorkSection: React.FC<HowIWorkSectionProps> = ({
                     {step.desc}
                   </p>
                 </div>
-                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/8 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/8 text-[11px] font-medium text-slate-600 dark:text-slate-400">
                   {step.outcome}
                 </div>
-              </TiltCard>
+              </div>
             </RevealOnScroll>
           );
         })}

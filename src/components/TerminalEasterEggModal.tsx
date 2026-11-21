@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Terminal, Sparkles, Send, Trash2, Copy, Check } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { X, Terminal, Sparkles, Send, Trash2, Copy, Check, Loader2 } from 'lucide-react';
 import { AHMED_CONFIG } from '../data/config';
 import { FEATURED_PROJECTS, CERTIFICATES } from '../data/portfolioData';
-import { useScrollLock } from '../hooks/useScrollLock';
+import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 
@@ -167,7 +168,6 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
   onClose,
   onNavigateTab,
 }) => {
-  useScrollLock(isOpen);
   const { lang, dir, t } = useLanguage();
   const { showToast } = useToast();
   const copy = CLI_COPY[lang];
@@ -192,8 +192,11 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
     },
   ]);
 
+  const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useAccessibleDialog(isOpen, onClose, dialogRef, { initialFocusRef: inputRef });
 
   // Sync welcome lines cleanly if language changes while unopened/fresh
   useEffect(() => {
@@ -209,27 +212,12 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
   }, [lang]);
 
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 70);
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
     }
   }, [lines, isAiLoading]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const onEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onEsc);
-    return () => window.removeEventListener('keydown', onEsc);
-  }, [isOpen, onClose]);
-
-  if (!isOpen || typeof document === 'undefined') return null;
+  if (typeof document === 'undefined') return null;
 
   const appendLines = (...newItems: Omit<TerminalLine, 'id'>[]) => {
     setLines((prev) => [
@@ -514,80 +502,92 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
   ];
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[90] bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Developer CLI Inspector"
-    >
-      <div
-        dir={dir}
-        className={`w-full max-w-2xl h-[85dvh] sm:h-auto sm:max-h-[82vh] flex flex-col rounded-t-2xl sm:rounded-2xl bg-[#07090e] border border-white/15 shadow-2xl shadow-[#0284ff]/15 overflow-hidden ${
-          lang === 'ar' ? 'text-right font-sans' : 'text-left font-mono'
-        }`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Top Terminal Bar */}
-        <div className="flex items-center justify-between gap-2 px-4 py-3 bg-[#0f131d] border-b border-white/10 shrink-0">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="hidden sm:flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.16, ease: 'easeOut' }}
+          className="fixed inset-0 z-[90] bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            ref={dialogRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Developer CLI Inspector"
+            dir={dir}
+            initial={{ opacity: 0, y: 14, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.985 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className={`w-full max-w-2xl h-[85dvh] sm:h-auto sm:max-h-[82vh] flex flex-col rounded-t-2xl sm:rounded-2xl bg-[#07090e] border border-white/15 shadow-2xl shadow-[#0284ff]/15 overflow-hidden outline-none ${
+              lang === 'ar' ? 'text-right font-sans' : 'text-left font-mono'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Terminal Bar */}
+            <div className="flex items-center justify-between gap-2 px-4 py-3 bg-[#0f131d] border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="hidden sm:flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
+                </div>
+                <Terminal size={14} className="text-[#00C7FF] shrink-0" />
+                <span className="text-xs font-semibold text-slate-100 truncate">
+                  <span dir="ltr" className="font-mono text-[#7DD3FC] me-1.5">{AHMED_CONFIG.monogram}</span>
+                  <span>{copy.studioTitle}</span>
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setAiMode((v) => !v)}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 min-h-[40px] sm:min-h-[32px] rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
+                    aiMode
+                      ? 'bg-[#0284ff]/20 text-[#7DD3FC] border-[#00C7FF]/50'
+                      : 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/10'
+                  }`}
+                  title={lang === 'ar' ? 'تفعيل أو إيقاف وضع الذكاء الاصطناعي' : 'Toggle direct AI Q&A mode'}
+                >
+                  <Sparkles size={12} className={aiMode ? 'text-[#00C7FF]' : 'text-slate-400'} />
+                  <span>{aiMode ? copy.aiModeOn : copy.aiModeOff}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={copyEmailQuick}
+                  className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[32px] rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-[11px] cursor-pointer"
+                  title="ah.elbialy.dev@gmail.com"
+                >
+                  {copiedEmail ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                  <span>{copiedEmail ? copy.copiedEmail : copy.copyEmail}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => runCommand('clear')}
+                  className="w-10 h-10 sm:w-8 sm:h-8 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+                  aria-label={copy.clearTitle}
+                  title={copy.clearTitle}
+                >
+                  <Trash2 size={13} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-10 h-10 sm:w-8 sm:h-8 rounded-lg bg-white/5 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 flex items-center justify-center cursor-pointer"
+                  aria-label={copy.closeTitle}
+                >
+                  <X size={14} />
+                </button>
+              </div>
             </div>
-            <Terminal size={14} className="text-[#00C7FF] shrink-0" />
-            <span className="text-xs font-semibold text-slate-100 truncate">
-              <span dir="ltr" className="font-mono text-[#7DD3FC] me-1.5">{AHMED_CONFIG.monogram}</span>
-              <span>{copy.studioTitle}</span>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              onClick={() => setAiMode((v) => !v)}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
-                aiMode
-                  ? 'bg-[#0284ff]/20 text-[#7DD3FC] border-[#00C7FF]/50'
-                  : 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/10'
-              }`}
-              title={lang === 'ar' ? 'تفعيل أو إيقاف وضع الذكاء الاصطناعي' : 'Toggle direct AI Q&A mode'}
-            >
-              <Sparkles size={12} className={aiMode ? 'text-[#00C7FF]' : 'text-slate-400'} />
-              <span>{aiMode ? copy.aiModeOn : copy.aiModeOff}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={copyEmailQuick}
-              className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 text-[11px] cursor-pointer"
-              title="ah.elbialy.dev@gmail.com"
-            >
-              {copiedEmail ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-              <span>{copiedEmail ? copy.copiedEmail : copy.copyEmail}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => runCommand('clear')}
-              className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
-              aria-label={copy.clearTitle}
-              title={copy.clearTitle}
-            >
-              <Trash2 size={13} />
-            </button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-7 h-7 rounded-lg bg-white/5 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 flex items-center justify-center cursor-pointer"
-              aria-label={copy.closeTitle}
-            >
-              <X size={14} />
-            </button>
-          </div>
-        </div>
 
         {/* Scrollable Output Feed */}
         <div
@@ -641,7 +641,7 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
 
           {isAiLoading && (
             <div className="rounded-xl px-3.5 py-2.5 border border-[#00C7FF]/30 bg-[#0284ff]/[0.08] text-[#7DD3FC] flex items-center gap-2">
-              <Sparkles size={13} className="animate-pulse shrink-0" />
+              <Loader2 size={13} className="animate-spin shrink-0" />
               <span>{copy.thinking}</span>
             </div>
           )}
@@ -654,7 +654,7 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
               key={chip.cmd}
               type="button"
               onClick={() => runCommand(chip.cmd)}
-              className={`shrink-0 px-2.5 py-1.5 rounded-lg text-[11px] font-medium border transition-colors cursor-pointer whitespace-nowrap ${
+              className={`shrink-0 px-2.5 py-1.5 min-h-[36px] sm:min-h-0 rounded-lg text-[11px] font-medium border transition-colors cursor-pointer whitespace-nowrap ${
                 chip.isAi
                   ? 'bg-[#0284ff]/15 hover:bg-[#0284ff]/25 text-[#7DD3FC] border-[#00C7FF]/40 inline-flex items-center gap-1'
                   : 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/10'
@@ -690,15 +690,17 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
           <button
             type="submit"
             disabled={!input.trim() || isAiLoading}
-            className="px-3 py-1.5 rounded-lg bg-[#0284ff] hover:bg-[#026ae0] disabled:opacity-40 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors"
+            className="px-3.5 py-2 min-h-[40px] sm:min-h-0 rounded-lg bg-[#0284ff] hover:bg-[#026ae0] disabled:opacity-40 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors"
             aria-label={copy.runLabel}
           >
             <Send size={12} className={dir === 'rtl' ? 'rotate-180' : ''} />
             <span className="hidden sm:inline">{copy.runLabel}</span>
           </button>
         </form>
-      </div>
-    </div>,
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
     document.body
   );
 };

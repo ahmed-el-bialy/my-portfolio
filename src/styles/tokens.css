@@ -1,29 +1,48 @@
 :root {
   --accent: #0284ff;
   --accent-hover: #0070e0;
-  --accent-glow: rgba(2, 132, 255, 0.25);
+  --accent-text: #38bdf8;
+  --accent-glow: rgba(2, 132, 255, 0.24);
   --accent-subtle: rgba(2, 132, 255, 0.08);
 
   --bg-dark: #08090d;
   --bg-dark-2: #0f1117;
   --bg-glass: rgba(15, 17, 23, 0.72);
 
-  --text-primary: #f1f5f9;
-  --text-muted: #94a3b8;
-  --text-subtle: #64748b;
+  --text-subtle: #94a3b8;
 
-  --border: rgba(255, 255, 255, 0.06);
-  --border-hover: rgba(2, 132, 255, 0.2);
+  --border: rgba(255, 255, 255, 0.08);
 
   --radius-card: 16px;
+  --radius-cta: 12px;
   --radius-pill: 9999px;
 
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.2);
   --shadow-hover:
     0 4px 6px rgba(0, 0, 0, 0.3),
     0 20px 40px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(2, 132, 255, 0.15);
+    0 0 0 1px rgba(2, 132, 255, 0.16);
   --shadow-glow: 0 0 40px var(--accent-glow);
+
+  --cta-highlight-primary: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  --cta-shadow-primary:
+    0 1px 2px rgba(2, 132, 255, 0.32),
+    0 8px 20px -4px rgba(2, 132, 255, 0.36),
+    var(--cta-highlight-primary);
+  --cta-shadow-primary-hover:
+    0 2px 4px rgba(2, 132, 255, 0.38),
+    0 12px 26px -4px rgba(2, 132, 255, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+
+  --cta-highlight-secondary: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --cta-shadow-secondary:
+    0 1px 2px rgba(0, 0, 0, 0.42),
+    0 4px 12px -2px rgba(0, 0, 0, 0.28),
+    var(--cta-highlight-secondary);
+  --cta-shadow-secondary-hover:
+    0 2px 4px rgba(0, 0, 0, 0.48),
+    0 10px 22px -4px rgba(2, 132, 255, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
 
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
@@ -36,26 +55,33 @@
 
 html.light,
 [data-theme="light"] {
+  --accent-text: #0369a1;
   --bg-dark-2: #ffffff;
-  --bg-glass: rgba(255, 255, 255, 0.85);
-  --text-primary: #0f172a;
-  --text-muted: #475569;
-  --text-subtle: #64748b;
-  --border: rgba(15, 23, 42, 0.08);
-  --border-hover: rgba(2, 132, 255, 0.28);
-  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.08), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --bg-glass: rgba(255, 255, 255, 0.88);
+  --text-subtle: #475569;
+  --border: rgba(15, 23, 42, 0.09);
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.07), 0 8px 24px rgba(15, 23, 42, 0.05);
   --shadow-hover:
     0 4px 6px rgba(15, 23, 42, 0.08),
     0 20px 40px rgba(15, 23, 42, 0.1),
-    0 0 0 1px rgba(2, 132, 255, 0.2);
+    0 0 0 1px rgba(2, 132, 255, 0.22);
+  --cta-highlight-secondary: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  --cta-shadow-secondary:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 4px 10px -2px rgba(15, 23, 42, 0.04),
+    var(--cta-highlight-secondary);
+  --cta-shadow-secondary-hover:
+    0 2px 4px rgba(15, 23, 42, 0.08),
+    0 10px 22px -4px rgba(2, 132, 255, 0.14),
+    var(--cta-highlight-secondary);
 }
 
 @layer components {
-  /* Scroll reveal — base (GPU-composited transform & opacity) */
+  /* Scroll reveal — crisp <= 240ms */
   .reveal {
     opacity: 0;
-    transform: translateY(28px);
-    transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+    transform: translateY(14px);
+    transition: opacity 0.24s var(--ease-spring), transform 0.24s var(--ease-spring);
   }
   .reveal.in-view {
     opacity: 1;
@@ -65,15 +91,32 @@ html.light,
   /* Stagger children */
   .stagger-reveal > * {
     opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+    transform: translateY(12px);
+    transition: opacity 0.22s var(--ease-spring), transform 0.22s var(--ease-spring);
   }
   .stagger-reveal.in-view > *:nth-child(1) { transition-delay: 0ms; opacity: 1; transform: none; }
-  .stagger-reveal.in-view > *:nth-child(2) { transition-delay: 80ms; opacity: 1; transform: none; }
-  .stagger-reveal.in-view > *:nth-child(3) { transition-delay: 160ms; opacity: 1; transform: none; }
-  .stagger-reveal.in-view > *:nth-child(4) { transition-delay: 240ms; opacity: 1; transform: none; }
-  .stagger-reveal.in-view > *:nth-child(5) { transition-delay: 320ms; opacity: 1; transform: none; }
-  .stagger-reveal.in-view > *:nth-child(6) { transition-delay: 400ms; opacity: 1; transform: none; }
+  .stagger-reveal.in-view > *:nth-child(2) { transition-delay: 45ms; opacity: 1; transform: none; }
+  .stagger-reveal.in-view > *:nth-child(3) { transition-delay: 90ms; opacity: 1; transform: none; }
+  .stagger-reveal.in-view > *:nth-child(4) { transition-delay: 135ms; opacity: 1; transform: none; }
+  .stagger-reveal.in-view > *:nth-child(5) { transition-delay: 180ms; opacity: 1; transform: none; }
+  .stagger-reveal.in-view > *:nth-child(6) { transition-delay: 225ms; opacity: 1; transform: none; }
+
+  /* Crisp CSS Grid Accordion (avoids JS height:auto measurement thrash on compact drawers) */
+  .grid-accordion {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-rows 220ms var(--ease-spring),
+      opacity 180ms var(--ease-out);
+  }
+  .grid-accordion[data-open="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+  .grid-accordion-inner {
+    overflow: hidden;
+  }
 
   /* Glassmorphism */
   .glass {
@@ -83,14 +126,21 @@ html.light,
     border: 1px solid var(--border);
   }
 
-  /* Gradient text */
+  /* Accessible Light/Dark Brand Gradient Text */
   .gradient-text {
     background: linear-gradient(135deg, #0284ff, #38bdf8, #00c7ff, #0284ff);
-    background-size: 220% auto;
+    background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: gradient-move 5s linear infinite;
+  }
+
+  html.light .gradient-text,
+  [data-theme="light"] .gradient-text {
+    background: linear-gradient(135deg, #0369a1, #0284ff, #0369a1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   /* Card base & top shimmer motif */
@@ -100,7 +150,7 @@ html.light,
     border: 1px solid var(--border);
     background: var(--bg-dark-2);
     box-shadow: var(--shadow-card);
-    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    transition: border-color 0.2s var(--ease-spring), box-shadow 0.2s var(--ease-spring);
   }
   .card:hover {
     border-color: var(--border-hover);
@@ -119,9 +169,9 @@ html.light,
     left: 12%;
     right: 12%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent), #00c7ff, transparent);
+    background: linear-gradient(90deg, transparent, var(--accent), #38bdf8, transparent);
     opacity: 0;
-    transition: opacity 0.28s var(--ease-spring);
+    transition: opacity 0.2s var(--ease-spring);
     pointer-events: none;
     z-index: 30;
   }
@@ -131,12 +181,47 @@ html.light,
   .card-shimmer:focus-within::before {
     opacity: 1;
   }
+
+  /* Architectural Hero CTA Surfaces */
+  .cta-primary {
+    border-radius: var(--radius-cta);
+    box-shadow: var(--cta-shadow-primary);
+    transition:
+      transform 160ms var(--ease-spring),
+      box-shadow 160ms var(--ease-spring),
+      background-color 160ms ease,
+      border-color 160ms ease;
+  }
+  .cta-primary:hover {
+    transform: translateY(-1.5px);
+    box-shadow: var(--cta-shadow-primary-hover);
+  }
+  .cta-primary:active {
+    transform: translateY(0) scale(0.985);
+  }
+
+  .cta-secondary {
+    border-radius: var(--radius-cta);
+    box-shadow: var(--cta-shadow-secondary);
+    transition:
+      transform 160ms var(--ease-spring),
+      box-shadow 160ms var(--ease-spring),
+      background-color 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+  .cta-secondary:hover {
+    transform: translateY(-1.5px);
+    box-shadow: var(--cta-shadow-secondary-hover);
+  }
+  .cta-secondary:active {
+    transform: translateY(0) scale(0.985);
+  }
 }
 
-@keyframes gradient-move {
-  to {
-    background-position: 220% center;
-  }
+/* Numeric telemetry alignment */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
 /* RTL override */
@@ -150,12 +235,23 @@ html.light,
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .reveal,
-  .stagger-reveal > * {
+  .stagger-reveal > *,
+  .grid-accordion {
     transition: none !important;
+  }
+  .reveal,
+  .stagger-reveal > * {
     opacity: 1 !important;
     transform: none !important;
   }
-  .gradient-text {
-    animation: none;
+  .cta-primary,
+  .cta-secondary {
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease !important;
+  }
+  .cta-primary:hover,
+  .cta-primary:active,
+  .cta-secondary:hover,
+  .cta-secondary:active {
+    transform: none !important;
   }
 }

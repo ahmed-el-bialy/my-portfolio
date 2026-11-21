@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   Download,
@@ -39,7 +40,7 @@ import {
 import { AHMED_CONFIG } from '../data/config';
 import { WhatsAppLogo } from './TechLogos';
 import { BrandLogoMark } from './BrandLogoMark';
-import { useScrollLock } from '../hooks/useScrollLock';
+import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import { copyToClipboard } from '../utils/clipboard';
@@ -66,10 +67,10 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
   onRefreshCv,
   isRefreshingCv = false,
 }) => {
-  useScrollLock(isOpen);
   const { lang, dir, t } = useLanguage();
   const { showToast } = useToast();
   const { data: playStats } = usePlayStoreAppStats('com.ahmed.revio');
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const [copiedLink, setCopiedLink] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
@@ -77,20 +78,15 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
   const [isPdfLoading, setIsPdfLoading] = useState(true);
   const [pdfRefreshNonce, setPdfRefreshNonce] = useState<number>(0);
 
+  useAccessibleDialog(isOpen, onClose, dialogRef);
+
   React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
       document.body.classList.remove('printing-resume');
     };
-  }, [isOpen, onClose]);
+  }, []);
 
-  if (!isOpen) return null;
+  if (typeof document === 'undefined') return null;
 
   const basePdfPreviewUrl = (profile.cvDriveUrl || '')
     .replace('/view?usp=drive_link', '/preview')
@@ -191,24 +187,38 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
 
   const resumeProjects = [...FEATURED_PROJECTS, ...syncedExtraProjects];
 
-  const modalContent = (
-    <div
-      className="resume-printable-overlay fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-black/80 backdrop-blur-xs overflow-hidden"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="resume-modal-title"
-    >
-      <div
-        className={`resume-printable-sheet relative w-full ${
-          isMaximized
-            ? 'max-w-[98vw] h-[96dvh]'
-            : 'max-w-5xl lg:max-w-6xl h-[93dvh] sm:h-[92vh]'
-        } bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/15 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-200`}
-        onClick={(e) => e.stopPropagation()}
-      >
+  return createPortal(
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          key="resume-modal-backdrop"
+          dir={dir}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.16 }}
+          className="resume-printable-overlay fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 bg-black/80 backdrop-blur-xs overflow-hidden"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) onClose();
+          }}
+        >
+          <motion.div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="resume-modal-title"
+            tabIndex={-1}
+            initial={{ opacity: 0, scale: 0.97, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 10 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className={`resume-printable-sheet relative w-full ${
+              isMaximized
+                ? 'max-w-[98vw] h-[96dvh]'
+                : 'max-w-5xl lg:max-w-6xl h-[93dvh] sm:h-[92vh]'
+            } bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/15 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-[max-width,height] duration-200 focus:outline-none`}
+            onClick={(e) => e.stopPropagation()}
+          >
         {/* Top Action Bar */}
         <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-50 dark:bg-[#141722] border-b border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between shrink-0 no-print gap-2.5">
           <div className="flex items-center gap-3 min-w-0">
@@ -233,7 +243,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
               className={`btn-kinetic flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border min-h-[42px] sm:min-h-[36px] ${
                 viewMode === 'pdf'
                   ? 'bg-[#0284ff] text-white border-[#0284ff] shadow-sm'
-                  : 'bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-[#0284ff] dark:text-[#00C7FF] border-slate-200 dark:border-white/10'
+                  : 'bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-[#0369a1] dark:text-[#38bdf8] border-slate-200 dark:border-white/10'
               }`}
             >
               {viewMode === 'pdf' ? (
@@ -255,7 +265,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
               className="btn-kinetic hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-xs text-slate-700 dark:text-gray-200 border border-slate-200 dark:border-white/10 font-semibold transition-colors cursor-pointer min-h-[36px]"
               title={t.resume.print}
             >
-              <Printer size={13} className="text-[#0284ff] dark:text-[#00C7FF]" />
+              <Printer size={13} className="text-[#0369a1] dark:text-[#38bdf8]" />
               <span>{lang === 'ar' ? 'طباعة' : 'Print'}</span>
             </button>
 
@@ -316,7 +326,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
           <div className="flex-1 min-h-0 flex flex-col w-full h-full bg-slate-100 dark:bg-[#0c0d14] relative">
             <div className="px-4 py-2.5 bg-slate-200/70 dark:bg-white/[0.04] border-b border-slate-300 dark:border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-700 dark:text-gray-300 shrink-0">
               <div className="flex items-center gap-2 min-w-0">
-                <FileText size={15} className="text-[#0284ff] dark:text-[#00C7FF] shrink-0" />
+                <FileText size={15} className="text-[#0369a1] dark:text-[#38bdf8] shrink-0" />
                 <span className="font-semibold text-xs sm:text-sm truncate">
                   {lang === 'ar' ? 'مستند السيرة الذاتية (PDF المعتمد)' : 'Official PDF Resume Document'}
                 </span>
@@ -344,7 +354,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                     href={profile.cvDriveUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-white/10 text-[#0284ff] dark:text-[#00C7FF] font-semibold text-xs border border-slate-200 dark:border-white/10"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-white/10 text-[#0369a1] dark:text-[#38bdf8] font-semibold text-xs border border-slate-200 dark:border-white/10"
                   >
                     <span>{lang === 'ar' ? 'فتح في نافذة جديدة' : 'Open External'}</span>
                     <ExternalLink size={12} />
@@ -356,7 +366,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
             <div className="flex-1 min-h-0 w-full h-full relative overflow-hidden">
               {isPdfLoading && (
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-slate-100/95 dark:bg-[#0c0d14]/95 backdrop-blur-sm">
-                  <div className="w-12 h-12 rounded-2xl bg-[#0284ff]/10 border border-[#0284ff]/25 flex items-center justify-center mb-4 text-[#0284ff] dark:text-[#00C7FF]">
+                  <div className="w-12 h-12 rounded-2xl bg-[#0284ff]/10 border border-[#0284ff]/25 flex items-center justify-center mb-4 text-[#0369a1] dark:text-[#38bdf8]">
                     <Loader2 size={24} className="animate-spin" />
                   </div>
                   <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-1.5 text-center">
@@ -416,7 +426,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                         · {lang === 'ar' ? 'متاح للعمل والمشاريع' : 'Available for Hire'}
                       </span>
                     </div>
-                    <p className="font-display text-base sm:text-lg font-bold text-[#0284ff] dark:text-[#00C7FF] mt-0.5 tracking-[-0.01em]">
+                    <p className="font-display text-base sm:text-lg font-bold text-[#0369a1] dark:text-[#38bdf8] mt-0.5 tracking-[-0.01em]">
                       {AHMED_CONFIG.title[lang]}
                     </p>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
@@ -436,7 +446,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                     </div>
                   </div>
                   <div className="px-3.5 py-2 rounded-xl bg-white dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 text-center">
-                    <div className="font-display text-base font-extrabold tabular-nums text-[#0284ff] dark:text-[#00C7FF]">
+                    <div className="font-display text-base font-extrabold tabular-nums text-[#0369a1] dark:text-[#38bdf8]">
                       {resumeProjects.length}+ Apps
                     </div>
                     <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
@@ -453,7 +463,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                   {/* Direct Contact */}
                   <div className="p-5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.025] border border-slate-200/85 dark:border-white/10 space-y-3">
                     <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                      <Mail size={14} className="text-[#0284ff] dark:text-[#00C7FF]" />
+                      <Mail size={14} className="text-[#0369a1] dark:text-[#38bdf8]" />
                       <span>{lang === 'ar' ? 'قنوات التواصل' : 'Contact & Profiles'}</span>
                     </h2>
 
@@ -462,9 +472,9 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                         href={getGmailComposeUrl(profile.email)}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#0284ff] dark:hover:text-[#00C7FF] font-medium break-all"
+                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] font-medium break-all"
                       >
-                        <Mail size={14} className="text-[#0284ff] dark:text-[#00C7FF] shrink-0" />
+                        <Mail size={14} className="text-[#0369a1] dark:text-[#38bdf8] shrink-0" />
                         <span>{profile.email}</span>
                       </a>
 
@@ -482,7 +492,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                         href={profile.githubUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#0284ff] dark:hover:text-[#00C7FF] font-medium"
+                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] font-medium"
                       >
                         <Github size={14} className="shrink-0" />
                         <span>github.com/{profile.githubUsername}</span>
@@ -492,7 +502,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                         href={profile.linkedinUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#0284ff] dark:hover:text-[#00C7FF] font-medium"
+                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] font-medium"
                       >
                         <Linkedin size={14} className="text-blue-600 dark:text-blue-400 shrink-0" />
                         <span>LinkedIn · ahmedel-bialy</span>
@@ -508,7 +518,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                   {/* Categorized Technical Stack */}
                   <div className="p-5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.025] border border-slate-200/85 dark:border-white/10 space-y-4">
                     <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                      <Cpu size={14} className="text-[#0284ff] dark:text-[#00C7FF]" />
+                      <Cpu size={14} className="text-[#0369a1] dark:text-[#38bdf8]" />
                       <span>{t.resume.skillsTitle}</span>
                     </h2>
 
@@ -536,7 +546,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                   {/* Languages */}
                   <div className="p-5 rounded-2xl bg-slate-50/90 dark:bg-white/[0.025] border border-slate-200/85 dark:border-white/10 space-y-3">
                     <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                      <Globe size={14} className="text-[#0284ff] dark:text-[#00C7FF]" />
+                      <Globe size={14} className="text-[#0369a1] dark:text-[#38bdf8]" />
                       <span>{lang === 'ar' ? 'اللغات' : 'Languages'}</span>
                     </h2>
                     <div className="space-y-2 text-xs">
@@ -589,7 +599,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                   {/* Experience Timeline */}
                   <div className="space-y-3">
                     <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                      <Briefcase size={15} className="text-[#0284ff] dark:text-[#00C7FF]" />
+                      <Briefcase size={15} className="text-[#0369a1] dark:text-[#38bdf8]" />
                       <span>{t.resume.experienceTitle}</span>
                     </h2>
 
@@ -604,7 +614,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                               <h3 className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">
                                 {exp.role}
                               </h3>
-                              <div className="text-xs font-semibold text-[#0284ff] dark:text-[#00C7FF]">
+                              <div className="text-xs font-semibold text-[#0369a1] dark:text-[#38bdf8]">
                                 {exp.organization} · {exp.location}
                               </div>
                             </div>
@@ -634,7 +644,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                   {/* Production Projects */}
                   <div className="space-y-3">
                     <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                      <FolderGit2 size={15} className="text-[#0284ff] dark:text-[#00C7FF]" />
+                      <FolderGit2 size={15} className="text-[#0369a1] dark:text-[#38bdf8]" />
                       <span>{t.resume.projectsTitle}</span>
                     </h2>
 
@@ -681,7 +691,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                                 href={proj.links.github}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-[#0284ff] dark:text-[#00C7FF] font-bold hover:underline inline-flex items-center gap-1"
+                                className="text-[#0369a1] dark:text-[#38bdf8] font-bold hover:underline inline-flex items-center gap-1"
                               >
                                 <span>Source</span>
                                 <ArrowUpRight size={11} />
@@ -696,7 +706,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                   {/* Academic Degree */}
                   <div className="space-y-3">
                     <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                      <GraduationCap size={15} className="text-[#0284ff] dark:text-[#00C7FF]" />
+                      <GraduationCap size={15} className="text-[#0369a1] dark:text-[#38bdf8]" />
                       <span>{t.resume.educationTitle}</span>
                     </h2>
 
@@ -705,7 +715,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                         <h3 className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">
                           {t.experience.degreeTitle}
                         </h3>
-                        <div className="text-xs text-[#0284ff] dark:text-[#00C7FF] font-bold mt-0.5">
+                        <div className="text-xs text-[#0369a1] dark:text-[#38bdf8] font-bold mt-0.5">
                           {t.experience.faculty} · {t.experience.university}
                         </div>
                         <div className="text-[11px] font-mono text-slate-600 dark:text-slate-400 mt-2">
@@ -727,9 +737,10 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
             </div>
           </div>
         )}
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
   );
-
-  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : null;
 };

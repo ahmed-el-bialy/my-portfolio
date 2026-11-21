@@ -24,8 +24,8 @@ interface TiltCardProps {
 export const TiltCard: React.FC<TiltCardProps> = ({
   children,
   className = '',
-  maxTilt = 6,
-  glareOpacity = 0.12,
+  maxTilt = 4,
+  glareOpacity = 0.08,
   cursorLabel,
   onClick,
   onMouseEnter,
@@ -37,7 +37,7 @@ export const TiltCard: React.FC<TiltCardProps> = ({
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
 
-  const springConfig = { stiffness: 280, damping: 24, mass: 0.4 };
+  const springConfig = { stiffness: 360, damping: 28, mass: 0.4 };
   const smoothX = useSpring(mouseX, springConfig);
   const smoothY = useSpring(mouseY, springConfig);
 
@@ -48,7 +48,7 @@ export const TiltCard: React.FC<TiltCardProps> = ({
   const glareBackground = useTransform(
     [glareX, glareY],
     ([gx, gy]) =>
-      `radial-gradient(360px circle at ${gx} ${gy}, rgba(255,255,255,0.34), transparent 65%)`
+      `radial-gradient(360px circle at ${gx} ${gy}, rgba(255,255,255,0.28), transparent 65%)`
   );
 
   const [isHovered, setIsHovered] = React.useState(false);
@@ -97,8 +97,8 @@ export const TiltCard: React.FC<TiltCardProps> = ({
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
       onClick={onClick}
-      whileHover={{ y: -3, scale: 1.008 }}
-      transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
       style={{
         transformPerspective: 1100,
         rotateX,
@@ -108,7 +108,7 @@ export const TiltCard: React.FC<TiltCardProps> = ({
     >
       <motion.div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 rounded-[inherit] z-20 transition-opacity duration-300"
+        className="pointer-events-none absolute inset-0 rounded-[inherit] z-20 transition-opacity duration-200"
         style={{
           opacity: isHovered ? glareOpacity : 0,
           background: glareBackground,
@@ -125,7 +125,7 @@ interface FloatingPortraitProps {
 }
 
 /**
- * Lively pointer-reactive portrait frame with gentle ambient float and radial halo pulse.
+ * Pointer-reactive portrait frame without distracting continuous idle loops.
  */
 export const FloatingPortrait: React.FC<FloatingPortraitProps> = ({
   children,
@@ -136,11 +136,11 @@ export const FloatingPortrait: React.FC<FloatingPortraitProps> = ({
 
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
-  const smoothX = useSpring(mouseX, { stiffness: 180, damping: 20 });
-  const smoothY = useSpring(mouseY, { stiffness: 180, damping: 20 });
+  const smoothX = useSpring(mouseX, { stiffness: 280, damping: 26 });
+  const smoothY = useSpring(mouseY, { stiffness: 280, damping: 26 });
 
-  const rotateX = useTransform(smoothY, [0, 1], [8, -8]);
-  const rotateY = useTransform(smoothX, [0, 1], [-8, 8]);
+  const rotateX = useTransform(smoothY, [0, 1], [6, -6]);
+  const rotateY = useTransform(smoothX, [0, 1], [-6, 6]);
 
   const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (prefersReducedMotion || !ref.current) return;
@@ -167,14 +167,6 @@ export const FloatingPortrait: React.FC<FloatingPortraitProps> = ({
       style={{ perspective: 900 }}
     >
       <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute -inset-3 rounded-3xl bg-gradient-to-br from-[#0284ff]/22 via-[#00C7FF]/14 to-emerald-400/20"
-        animate={{ scale: [0.97, 1.04, 0.97], opacity: [0.55, 0.9, 0.55] }}
-        transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.div
-        animate={{ y: [-4, 4, -4] }}
-        transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut' }}
         style={{
           transformPerspective: 900,
           rotateX,

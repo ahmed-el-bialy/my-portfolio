@@ -46,7 +46,7 @@ export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
         <div className="absolute top-5 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center gap-3 bg-zinc-900 px-4 py-1.5 rounded-full border border-zinc-800/80 shadow-inner">
           <div className="w-12 h-1.5 rounded-full bg-zinc-700" />
           <div className="w-2.5 h-2.5 rounded-full bg-zinc-900 border border-zinc-700/50 relative flex items-center justify-center">
-            <div className="w-1 h-1 rounded-full bg-cyan-500/60 animate-pulse" />
+            <div className="w-1 h-1 rounded-full bg-cyan-400/75" />
           </div>
         </div>
 

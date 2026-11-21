@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   FolderGit2,
@@ -31,18 +31,24 @@ import { SmartDemoButtons } from './SmartDemoButtons';
 import { ProjectCardCover, synthesizeProjectBlueprint } from './ProjectCardCover';
 import { extractRepoTechTags, getRepoReadmeSpecs } from '../utils/techTagExtractor';
 import { TechIconBadge } from './TechLogos';
-import { ProjectDetailsModal } from './ProjectDetailsModal';
-import { ApkDownloadModal } from './ApkDownloadModal';
-import { VideoDemoModal } from './VideoDemoModal';
 import { ProjectSkeletonCard } from './ProjectSkeletonCard';
 import { LeafAnimation } from './LeafAnimation';
 import { GitHubActivity } from './GitHubActivity';
 import { TechDistributionChart } from './TechDistributionChart';
 import { GitHubFallbackNotice } from './GitHubFallbackNotice';
 import { ImageWithSkeleton, preloadImageUrls } from './ImageWithSkeleton';
-import { TiltCard } from './MotionPrimitives';
 import { usePlayStoreAppStats } from '../services/playStoreService';
 import { useLanguage } from '../context/LanguageContext';
+
+const LazyProjectDetailsModal = lazy(() =>
+  import('./ProjectDetailsModal').then((m) => ({ default: m.ProjectDetailsModal }))
+);
+const LazyApkDownloadModal = lazy(() =>
+  import('./ApkDownloadModal').then((m) => ({ default: m.ApkDownloadModal }))
+);
+const LazyVideoDemoModal = lazy(() =>
+  import('./VideoDemoModal').then((m) => ({ default: m.VideoDemoModal }))
+);
 
 interface ProjectsSectionProps {
   currentGithubUser: string;
@@ -66,6 +72,27 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
     projectName: string;
     videoUrl: string;
   } | null>(null);
+  const [mountedModals, setMountedModals] = useState({
+    details: false,
+    apk: false,
+    video: false,
+  });
+
+  const openProjectDetails = (proj: Project, screenIdx: number) => {
+    setMountedModals((prev) => (prev.details ? prev : { ...prev, details: true }));
+    setSelectedScreenIndex(screenIdx);
+    setSelectedProject(proj);
+  };
+
+  const openApkModal = (proj: Project) => {
+    setMountedModals((prev) => (prev.apk ? prev : { ...prev, apk: true }));
+    setApkModalProject(proj);
+  };
+
+  const openVideoModal = (projectName: string, videoUrl: string) => {
+    setMountedModals((prev) => (prev.video ? prev : { ...prev, video: true }));
+    setVideoModalState({ projectName, videoUrl });
+  };
 
   const [githubUser] = useState<string>(currentGithubUser || 'ahmed-el-bialy');
   const [repoSearch, setRepoSearch] = useState<string>('');
@@ -455,10 +482,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
       {/* Clean Page Header & Tab Switcher */}
       <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-8 w-full">
         <div className="flex flex-col items-start text-start max-w-2xl">
-          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0284ff] dark:text-[#00C7FF] mb-2">
+          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0369a1] dark:text-[#38bdf8] mb-2">
             <span>{t.projects.badge}</span>
             <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-            <span className="text-slate-500 dark:text-slate-400">
+            <span className="text-slate-600 dark:text-slate-400">
               github.com/{githubUser}
             </span>
           </div>
@@ -482,7 +509,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                   : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <span>
+              <span className="tabular-nums">
                 {t.projects.tabs.featured} ({mergedFeaturedProjects.length})
               </span>
             </button>
@@ -496,7 +523,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
               }`}
             >
               <Github size={15} className="shrink-0" />
-              <span>
+              <span className="tabular-nums">
                 {t.projects.tabs.github} ({githubRepos.length})
               </span>
             </button>
@@ -520,7 +547,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
           {/* Left Profile Identity + Live Status + Actions */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-1 min-w-0">
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="relative w-12 h-12 sm:w-13 sm:h-13 rounded-2xl p-[2px] bg-gradient-to-br from-[#0284ff] via-[#00C7FF] to-emerald-400 shrink-0 shadow-sm">
+              <div className="relative w-12 h-12 sm:w-13 sm:h-13 rounded-2xl p-[2px] bg-gradient-to-br from-[#0284ff] via-[#38bdf8] to-emerald-400 shrink-0 shadow-sm">
                 <div className="w-full h-full rounded-[14px] overflow-hidden bg-slate-950">
                   <ImageWithSkeleton
                     src={githubStats.avatar_url || 'https://avatars.githubusercontent.com/u/245139141?v=4'}
@@ -537,17 +564,17 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     href={`https://github.com/${githubUser}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white hover:text-[#0284ff] dark:hover:text-[#00C7FF] transition-colors truncate inline-flex items-center gap-1.5"
+                    className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors truncate inline-flex items-center gap-1.5"
                   >
                     <Github size={15} className="shrink-0 text-slate-700 dark:text-slate-300" />
                     <span>{githubStats.name || 'Ahmed El-Bialy'}</span>
                   </a>
                   <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-                  <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
+                  <span className="text-xs font-mono text-slate-600 dark:text-slate-400">
                     @{githubUser}
                   </span>
                   <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-                  <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                  <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-semibold">
                     {githubStats.isFromCache ? t.projects.hud.syncedCached : t.projects.hud.liveConnected}
                   </span>
                 </div>
@@ -584,7 +611,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                 href={`https://github.com/${githubUser}`}
                 target="_blank"
                 rel="noreferrer"
-                className="btn-kinetic inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] text-[#0284ff] dark:text-[#00C7FF] hover:text-white border border-[#0284ff]/25 text-xs font-bold transition-colors"
+                className="btn-kinetic inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] text-[#0369a1] dark:text-[#38bdf8] hover:text-white border border-[#0284ff]/25 text-xs font-bold transition-colors"
               >
                 <span>GitHub</span>
                 <ArrowUpRight size={13} />
@@ -595,11 +622,11 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
           {/* Right 4 Tabular Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full xl:w-auto shrink-0">
             <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/8">
-              <div className="w-8 h-8 rounded-lg bg-[#0284ff]/12 text-[#0284ff] dark:text-[#00C7FF] flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-[#0284ff]/12 text-[#0369a1] dark:text-[#38bdf8] flex items-center justify-center shrink-0">
                 <FolderGit2 size={15} />
               </div>
               <div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                <div className="text-[10px] text-slate-600 dark:text-slate-400">
                   {t.projects.hud.publicRepos}
                 </div>
                 <div className="font-extrabold font-mono tabular-nums text-xs sm:text-sm text-slate-900 dark:text-white">
@@ -609,11 +636,11 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
             </div>
 
             <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/8">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/12 text-amber-500 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/12 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                 <Star size={15} />
               </div>
               <div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                <div className="text-[10px] text-slate-600 dark:text-slate-400">
                   {t.projects.hud.totalStars}
                 </div>
                 <div className="font-extrabold font-mono tabular-nums text-xs sm:text-sm text-slate-900 dark:text-white">
@@ -623,11 +650,11 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
             </div>
 
             <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/8">
-              <div className="w-8 h-8 rounded-lg bg-cyan-500/12 text-cyan-500 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/12 text-[#0369a1] dark:text-[#38bdf8] flex items-center justify-center shrink-0">
                 <GitFork size={15} />
               </div>
               <div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                <div className="text-[10px] text-slate-600 dark:text-slate-400">
                   {t.projects.hud.totalForks}
                 </div>
                 <div className="font-extrabold font-mono tabular-nums text-xs sm:text-sm text-slate-900 dark:text-white">
@@ -637,14 +664,14 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
             </div>
 
             <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/8">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/12 text-emerald-500 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/12 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <GitCommit size={15} />
               </div>
               <div className="min-w-0">
-                <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                <div className="text-[10px] text-slate-600 dark:text-slate-400">
                   {t.projects.hud.latestCommit}
                 </div>
-                <div className="font-extrabold font-mono text-xs sm:text-sm text-[#0284ff] dark:text-[#00C7FF] truncate">
+                <div className="font-extrabold font-mono text-xs sm:text-sm text-[#0369a1] dark:text-[#38bdf8] truncate">
                   {mostRecentRepo?.name || 'Revio'}
                 </div>
               </div>
@@ -760,18 +787,16 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
       {/* TAB 1: FEATURED PRODUCTION APPS */}
       {activeTab === 'featured' && (
         <>
-          {/* Flagship Google Play Spotlight: Revio (Hero-First Preview + Live Store Telemetry) */}
+          {/* Flagship Google Play Spotlight: Revio */}
           <RevioSpotlightCard
             lang={lang}
             t={t}
             liveMedia={liveMediaMap['Revio'] || liveMediaMap['revio']}
             onInspectRevio={() => {
               const revioProj = FEATURED_PROJECTS.find((p) => p.repoName === 'Revio');
-              if (revioProj) setSelectedProject(revioProj);
+              if (revioProj) openProjectDetails(revioProj, 0);
             }}
-            onWatchDemo={(videoUrl) =>
-              setVideoModalState({ projectName: 'Revio', videoUrl })
-            }
+            onWatchDemo={(videoUrl) => openVideoModal('Revio', videoUrl)}
           />
 
           {filteredFeaturedProjects.length === 0 ? (
@@ -854,19 +879,15 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                   technologies: project.technologies,
                 });
 
+                const openThisProject = () =>
+                  openProjectDetails(dynamicProject, cardScreenMap[project.repoName] || 0);
+
                 return (
-                  <TiltCard
+                  <article
                     key={project.id}
-                    maxTilt={4.5}
-                    glareOpacity={0.12}
-                    cursorLabel={lang === 'ar' ? 'استعراض' : 'Inspect'}
-                    onClick={() => {
-                      setSelectedScreenIndex(cardScreenMap[project.repoName] || 0);
-                      setSelectedProject(dynamicProject);
-                    }}
                     onMouseEnter={() => setHoveredCardId(project.id)}
                     onMouseLeave={() => setHoveredCardId(null)}
-                    className="card-shimmer group relative rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-colors duration-300 hover:border-[#0284ff]/50 shadow-sm hover:shadow-xl"
+                    className="card-shimmer group relative rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between transition-colors duration-200 hover:border-[#0284ff]/50 shadow-sm hover:shadow-lg"
                   >
                     <div>
                       <ProjectCardCover
@@ -880,6 +901,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                         description={project.description}
                         topics={project.technologies}
                         isCardHovered={hoveredCardId === project.id}
+                        onInspect={openThisProject}
+                        inspectAriaLabel={lang === 'ar' ? `معاينة ${project.name}` : `Preview ${project.name}`}
                         onActiveScreenChange={(screenIdx) => {
                           setCardScreenMap((prev) =>
                             prev[project.repoName] === screenIdx
@@ -892,12 +915,18 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                       <div className="p-4 sm:p-5">
                         {/* Unboxed Single-Line Title & Metrics Row */}
                         <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <h3 className="font-display text-xl sm:text-[22px] font-extrabold text-slate-900 dark:text-white truncate tracking-tight">
-                            {project.name}
-                          </h3>
-                          <div className="flex items-center gap-2 text-xs font-mono shrink-0 text-slate-500 dark:text-slate-400">
+                          <button
+                            type="button"
+                            onClick={openThisProject}
+                            className="text-start min-w-0 cursor-pointer rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
+                          >
+                            <h3 className="font-display text-xl sm:text-[22px] font-extrabold text-slate-900 dark:text-white group-hover:text-[#0369a1] dark:group-hover:text-[#38bdf8] transition-colors truncate tracking-tight">
+                              {project.name}
+                            </h3>
+                          </button>
+                          <div className="flex items-center gap-2 text-xs font-mono shrink-0 text-slate-600 dark:text-slate-400">
                             {starCount !== null && starCount > 0 && (
-                              <span className="inline-flex items-center gap-1 text-amber-500 font-semibold tabular-nums">
+                              <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold tabular-nums">
                                 <Star size={12} fill="currentColor" />
                                 {starCount}
                               </span>
@@ -905,7 +934,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                             {dynamicPlayUrl && (
                               <>
                                 {starCount !== null && starCount > 0 && <span aria-hidden="true">·</span>}
-                                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                <span className="font-semibold text-emerald-700 dark:text-emerald-400">
                                   Play Store
                                 </span>
                               </>
@@ -915,7 +944,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
 
                         <p
                           className="text-xs font-semibold line-clamp-1 mb-2"
-                          style={{ color: cardAccent }}
+                          style={{ color: isDark ? cardAccent : '#0369a1' }}
                         >
                           {project.subtitle}
                         </p>
@@ -935,7 +964,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                             />
                           ))}
                           {techTags.length > 3 && (
-                            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-[10px] text-slate-600 dark:text-slate-300 font-mono font-semibold border border-slate-200 dark:border-white/10">
+                            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-[10px] text-slate-600 dark:text-slate-300 font-mono font-semibold border border-slate-200 dark:border-white/10 tabular-nums">
                               +{techTags.length - 3}
                             </span>
                           )}
@@ -948,12 +977,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedScreenIndex(cardScreenMap[project.repoName] || 0);
-                            setSelectedProject(dynamicProject);
-                          }}
-                          className="btn-kinetic w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0284ff] dark:text-[#00C7FF] font-semibold text-xs border border-[#0284ff]/25 transition-colors cursor-pointer min-h-[44px] sm:min-h-[40px]"
+                          onClick={openThisProject}
+                          className="btn-kinetic w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0369a1] dark:text-[#38bdf8] font-semibold text-xs border border-[#0284ff]/25 transition-colors cursor-pointer min-h-[44px] sm:min-h-[40px]"
                         >
                           <Eye size={14} className="shrink-0" />
                           <span>{t.projects.actions.viewSpecs}</span>
@@ -964,7 +989,6 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                             href={project.links.github}
                             target="_blank"
                             rel="noreferrer"
-                            onClick={(e) => e.stopPropagation()}
                             className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/10 transition-colors text-xs font-semibold min-h-[44px] sm:min-h-[40px]"
                           >
                             <Github size={14} className="shrink-0" />
@@ -978,9 +1002,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                           <SmartDemoButtons
                             resolved={resolvedLinks}
                             fullWidthOnRow
-                            onWatchDemo={(videoUrl) =>
-                              setVideoModalState({ projectName: project.name, videoUrl })
-                            }
+                            onWatchDemo={(videoUrl) => openVideoModal(project.name, videoUrl)}
                           />
 
                           {dynamicPlayUrl && (
@@ -988,7 +1010,6 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                               href={dynamicPlayUrl}
                               target="_blank"
                               rel="noreferrer"
-                              onClick={(e) => e.stopPropagation()}
                               className="flex-1 min-w-[115px] flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 transition-colors text-xs font-bold min-h-[44px] sm:min-h-[38px]"
                             >
                               <ArrowUpRight size={14} className="shrink-0" />
@@ -999,16 +1020,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                           {hasApkFile && (
                             <button
                               type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setApkModalProject(dynamicProject);
-                              }}
+                              onClick={() => openApkModal(dynamicProject)}
                               className="btn-kinetic flex-1 min-w-[115px] flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 border border-purple-500/20 text-xs font-bold min-h-[44px] sm:min-h-[38px] cursor-pointer"
                             >
                               <Download size={13} className="shrink-0" />
                               <span>{t.projects.actions.downloadApk}</span>
                               {liveRelease?.apkSize ? (
-                                <span className="text-[10px] font-mono opacity-80">
+                                <span className="text-[10px] font-mono opacity-80 tabular-nums">
                                   ({formatFileSize(liveRelease.apkSize)})
                                 </span>
                               ) : null}
@@ -1017,7 +1035,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                         </div>
                       )}
                     </div>
-                  </TiltCard>
+                  </article>
                 );
               })}
             </div>
@@ -1103,19 +1121,15 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     })
                   : null;
 
+                const openThisRepo = () =>
+                  openProjectDetails(dynamicRepoProject, cardScreenMap[repo.name] || 0);
+
                 return (
-                  <TiltCard
+                  <article
                     key={repo.id}
-                    maxTilt={4}
-                    glareOpacity={0.12}
-                    cursorLabel={lang === 'ar' ? 'استعراض' : 'Inspect'}
-                    onClick={() => {
-                      setSelectedScreenIndex(cardScreenMap[repo.name] || 0);
-                      setSelectedProject(dynamicRepoProject);
-                    }}
                     onMouseEnter={() => setHoveredCardId(repo.id)}
                     onMouseLeave={() => setHoveredCardId(null)}
-                    className="card-shimmer group relative rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between transition-all duration-300 cursor-pointer shadow-sm hover:border-[#0284ff]/50 hover:shadow-xl"
+                    className="card-shimmer group relative rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200/90 dark:border-white/10 flex flex-col justify-between transition-colors duration-200 shadow-sm hover:border-[#0284ff]/50 hover:shadow-lg"
                   >
                     <div>
                       <ProjectCardCover
@@ -1132,6 +1146,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                         topics={repo.topics}
                         isCardHovered={hoveredCardId === repo.id}
                         compactMode
+                        onInspect={openThisRepo}
+                        inspectAriaLabel={lang === 'ar' ? `معاينة ${repo.name}` : `Preview ${repo.name}`}
                         onActiveScreenChange={(screenIdx) => {
                           setCardScreenMap((prev) =>
                             prev[repo.name] === screenIdx
@@ -1155,26 +1171,32 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                               <FolderGit2 size={15} />
                             </span>
                             <div className="min-w-0">
-                              <h3 className="font-display text-lg sm:text-[19px] font-extrabold tracking-tight text-slate-900 dark:text-white group-hover:text-[#0284ff] dark:group-hover:text-[#00C7FF] transition-colors truncate">
-                                {repo.name}
-                              </h3>
+                              <button
+                                type="button"
+                                onClick={openThisRepo}
+                                className="text-start w-full cursor-pointer rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
+                              >
+                                <h3 className="font-display text-lg sm:text-[19px] font-extrabold tracking-tight text-slate-900 dark:text-white group-hover:text-[#0369a1] dark:group-hover:text-[#38bdf8] transition-colors truncate">
+                                  {repo.name}
+                                </h3>
+                              </button>
                               {pushedLabel && (
-                                <div className="text-[10.5px] font-mono text-slate-500 dark:text-slate-400">
+                                <div className="text-[10.5px] font-mono text-slate-600 dark:text-slate-400">
                                   {lang === 'ar' ? `آخر تحديث: ${pushedLabel}` : `Updated ${pushedLabel}`}
                                 </div>
                               )}
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 text-xs font-mono shrink-0 text-slate-500 dark:text-slate-400 pt-0.5">
-                            <span className="inline-flex items-center gap-1 text-amber-500 font-bold tabular-nums">
+                          <div className="flex items-center gap-2 text-xs font-mono shrink-0 text-slate-600 dark:text-slate-400 pt-0.5">
+                            <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold tabular-nums">
                               <Star size={12} fill="currentColor" />
                               {repo.stargazers_count}
                             </span>
                             {hasReleaseOrApk && (
                               <>
                                 <span aria-hidden="true">·</span>
-                                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                <span className="font-semibold text-emerald-700 dark:text-emerald-400">
                                   APK
                                 </span>
                               </>
@@ -1196,7 +1218,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                             />
                           ))}
                           {repoTechTags.length > 3 && (
-                            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-[10px] text-slate-600 dark:text-slate-300 font-mono font-semibold border border-slate-200 dark:border-white/10">
+                            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-[10px] text-slate-600 dark:text-slate-300 font-mono font-semibold border border-slate-200 dark:border-white/10 tabular-nums">
                               +{repoTechTags.length - 3}
                             </span>
                           )}
@@ -1208,12 +1230,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedScreenIndex(cardScreenMap[repo.name] || 0);
-                            setSelectedProject(dynamicRepoProject);
-                          }}
-                          className="btn-kinetic w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0284ff] dark:text-[#00C7FF] font-semibold text-xs border border-[#0284ff]/25 transition-colors cursor-pointer min-h-[44px] sm:min-h-[40px]"
+                          onClick={openThisRepo}
+                          className="btn-kinetic w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0369a1] dark:text-[#38bdf8] font-semibold text-xs border border-[#0284ff]/25 transition-colors cursor-pointer min-h-[44px] sm:min-h-[40px]"
                         >
                           <Eye size={14} />
                           <span>{lang === 'ar' ? 'التفاصيل' : 'Details'}</span>
@@ -1223,7 +1241,6 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                           href={repo.html_url}
                           target="_blank"
                           rel="noreferrer"
-                          onClick={(e) => e.stopPropagation()}
                           className="btn-kinetic w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/15 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/10 transition-colors text-xs font-semibold min-h-[44px] sm:min-h-[40px]"
                         >
                           <Github size={14} />
@@ -1235,23 +1252,20 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                       {hasReleaseOrApk && (
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setApkModalProject(dynamicRepoProject);
-                          }}
+                          onClick={() => openApkModal(dynamicRepoProject)}
                           className="btn-kinetic w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-purple-500/10 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 border border-purple-500/20 transition-colors text-xs font-bold min-h-[44px] sm:min-h-[38px] cursor-pointer"
                         >
                           <Download size={13} />
                           <span>{t.projects.actions.downloadApk}</span>
                           {repoRelease?.apkSize ? (
-                            <span className="text-[10px] font-mono opacity-80">
+                            <span className="text-[10px] font-mono opacity-80 tabular-nums">
                               ({formatFileSize(repoRelease.apkSize)})
                             </span>
                           ) : null}
                         </button>
                       )}
 
-                      <div className="pt-2 border-t border-slate-200/70 dark:border-white/8 flex items-center justify-between flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-400">
+                      <div className="pt-2 border-t border-slate-200/70 dark:border-white/8 flex items-center justify-between flex-wrap gap-2 text-xs text-slate-600 dark:text-slate-400">
                         <div className="flex items-center gap-3">
                           {repo.language && (
                             <span className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -1263,8 +1277,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                             </span>
                           )}
                           {repo.forks_count > 0 && (
-                            <span className="inline-flex items-center gap-1 text-xs font-mono">
-                              <GitFork size={12} className="text-cyan-500" />
+                            <span className="inline-flex items-center gap-1 text-xs font-mono tabular-nums">
+                              <GitFork size={12} className="text-[#0369a1] dark:text-[#38bdf8]" />
                               <span>{repo.forks_count}</span>
                             </span>
                           )}
@@ -1275,15 +1289,13 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                             <SmartDemoButtons
                               resolved={resolvedRepoLinks}
                               compact
-                              onWatchDemo={(videoUrl) =>
-                                setVideoModalState({ projectName: repo.name, videoUrl })
-                              }
+                              onWatchDemo={(videoUrl) => openVideoModal(repo.name, videoUrl)}
                             />
                           </div>
                         )}
                       </div>
                     </div>
-                  </TiltCard>
+                  </article>
                 );
               })}
             </div>
@@ -1297,7 +1309,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                 className="btn-kinetic inline-flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-semibold text-xs sm:text-sm shadow-sm shadow-[#0284ff]/25 transition-colors cursor-pointer"
               >
                 <ChevronDown size={15} />
-                <span>
+                <span className="tabular-nums">
                   {lang === 'ar'
                     ? `عرض المزيد (${filteredRepos.length - visibleRepoCount} متبقية)`
                     : `Show More Repositories (${filteredRepos.length - visibleRepoCount} remaining)`}
@@ -1308,28 +1320,40 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
         </div>
       )}
 
-      <ProjectDetailsModal
-        isOpen={Boolean(selectedProject)}
-        onClose={() => {
-          setSelectedProject(null);
-          setSelectedScreenIndex(0);
-        }}
-        project={selectedProject}
-        initialScreenIndex={selectedScreenIndex}
-      />
+      {mountedModals.details && (
+        <Suspense fallback={null}>
+          <LazyProjectDetailsModal
+            isOpen={Boolean(selectedProject)}
+            onClose={() => {
+              setSelectedProject(null);
+              setSelectedScreenIndex(0);
+            }}
+            project={selectedProject}
+            initialScreenIndex={selectedScreenIndex}
+          />
+        </Suspense>
+      )}
 
-      <ApkDownloadModal
-        isOpen={Boolean(apkModalProject)}
-        onClose={() => setApkModalProject(null)}
-        project={apkModalProject}
-      />
+      {mountedModals.apk && (
+        <Suspense fallback={null}>
+          <LazyApkDownloadModal
+            isOpen={Boolean(apkModalProject)}
+            onClose={() => setApkModalProject(null)}
+            project={apkModalProject}
+          />
+        </Suspense>
+      )}
 
-      <VideoDemoModal
-        isOpen={Boolean(videoModalState)}
-        onClose={() => setVideoModalState(null)}
-        projectName={videoModalState?.projectName || 'App Demo'}
-        videoUrl={videoModalState?.videoUrl}
-      />
+      {mountedModals.video && (
+        <Suspense fallback={null}>
+          <LazyVideoDemoModal
+            isOpen={Boolean(videoModalState)}
+            onClose={() => setVideoModalState(null)}
+            projectName={videoModalState?.projectName || 'App Demo'}
+            videoUrl={videoModalState?.videoUrl}
+          />
+        </Suspense>
+      )}
     </section>
   );
 };
@@ -1358,10 +1382,7 @@ const RevioSpotlightCard: React.FC<RevioSpotlightCardProps> = ({
   }, [screens]);
 
   return (
-    <TiltCard
-      maxTilt={3}
-      glareOpacity={0.1}
-      cursorLabel={lang === 'ar' ? 'معاينة Revio' : 'Inspect Revio'}
+    <article
       className="card-shimmer overflow-hidden mb-8 p-5 sm:p-7 rounded-3xl bg-white dark:bg-[#0f1117] border border-emerald-500/35 shadow-lg grid grid-cols-1 lg:grid-cols-12 gap-6 items-center"
     >
       <div className="lg:col-span-7 space-y-3.5">
@@ -1478,7 +1499,7 @@ const RevioSpotlightCard: React.FC<RevioSpotlightCardProps> = ({
           ))}
         </div>
       </div>
-    </TiltCard>
+    </article>
   );
 };
 

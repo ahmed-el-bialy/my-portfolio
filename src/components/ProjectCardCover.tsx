@@ -33,6 +33,9 @@ export interface ProjectCardCoverProps {
   aspectClassName?: string;
   compactMode?: boolean;
   onActiveScreenChange?: (index: number) => void;
+  onInspect?: () => void;
+  inspectAriaLabel?: string;
+  cursorLabel?: string;
 }
 
 export interface ProjectBlueprintSpec {
@@ -320,6 +323,9 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   aspectClassName,
   compactMode = false,
   onActiveScreenChange,
+  onInspect,
+  inspectAriaLabel,
+  cursorLabel,
 }) => {
   const { dir, lang } = useLanguage();
   const [selectedScreenIdx, setSelectedScreenIdx] = useState<number>(0);
@@ -469,9 +475,20 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
         }}
       />
 
+      {/* Full-card Stretched Semantic Button Trigger (sibling to internal controls — zero nested buttons) */}
+      {onInspect && (
+        <button
+          type="button"
+          onClick={onInspect}
+          aria-label={inspectAriaLabel || `Inspect ${blueprint.appTitle}`}
+          data-cursor-label={cursorLabel}
+          className="absolute inset-0 z-10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0284ff]"
+        />
+      )}
+
       {/* MODE 1: REPOSITORY BANNER COVER IMAGE (Optional toggle when available) */}
       {showingCoverArt && coverImageUrl ? (
-        <div className="relative w-full h-full bg-slate-950">
+        <div className="relative z-20 w-full h-full bg-slate-950 pointer-events-none">
           <ImageWithSkeleton
             src={coverImageUrl}
             alt={`${blueprint.appTitle} Cover`}
@@ -490,7 +507,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                   e.stopPropagation();
                   setShowingCoverArt(false);
                 }}
-                className="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white text-[11px] font-semibold backdrop-blur-xs cursor-pointer border border-white/15"
+                className="pointer-events-auto px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white text-[11px] font-semibold backdrop-blur-xs cursor-pointer border border-white/15"
               >
                 {lang === 'ar' ? 'عرض الشاشات' : 'Show App Screens'}
               </button>
@@ -499,7 +516,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
         </div>
       ) : activeScreenUrl ? (
         /* MODE 2: HERO-FIRST LARGE PHONE SCREEN + INTERACTIVE THUMBNAILS */
-        <div className="relative z-10 w-full h-full flex flex-col p-3 sm:p-4">
+        <div className="relative z-20 w-full h-full flex flex-col p-3 sm:p-4 pointer-events-none">
           {/* Clean Micro Header */}
           <div className="flex items-center justify-between gap-2 pb-2 shrink-0">
             <div className="flex items-center gap-1.5 min-w-0">
@@ -524,7 +541,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                     e.stopPropagation();
                     setShowingCoverArt(true);
                   }}
-                  className="text-[10px] font-mono font-semibold text-slate-500 dark:text-slate-400 hover:text-[#0284ff] dark:hover:text-[#00C7FF] cursor-pointer px-1.5 py-0.5 rounded bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10"
+                  className="pointer-events-auto text-[10px] font-mono font-semibold text-slate-500 dark:text-slate-400 hover:text-[#0284ff] dark:hover:text-[#00C7FF] cursor-pointer px-1.5 py-0.5 rounded bg-white/70 dark:bg-white/5 border border-slate-200 dark:border-white/10"
                 >
                   {lang === 'ar' ? 'الغلاف' : 'Cover'}
                 </button>
@@ -573,7 +590,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                     type="button"
                     onClick={handlePrev}
                     aria-label="Previous app screen"
-                    className="opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute start-0 sm:start-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
+                    className="pointer-events-auto opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute start-0 sm:start-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
                   >
                     {dir === 'rtl' ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
                   </button>
@@ -581,7 +598,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                     type="button"
                     onClick={handleNext}
                     aria-label="Next app screen"
-                    className="opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute end-0 sm:end-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
+                    className="pointer-events-auto opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute end-0 sm:end-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
                   >
                     {dir === 'rtl' ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
                   </button>
@@ -626,7 +643,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                     {lang === 'ar' ? 'تبديل الشاشات:' : 'Tap screen to preview:'}
                   </div>
                   <div
-                    className="grid grid-cols-2 gap-1.5"
+                    className="grid grid-cols-2 gap-1.5 pointer-events-auto"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {verifiedScreenshots.slice(0, 4).map((thumbUrl, tIdx) => {
@@ -676,7 +693,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
           </div>
         </div>
       ) : coverImageUrl ? (
-        <div className="relative w-full h-full bg-slate-900">
+        <div className="relative z-20 w-full h-full bg-slate-900 pointer-events-none">
           <ImageWithSkeleton
             src={coverImageUrl}
             alt={`${blueprint.appTitle} Store Cover`}
@@ -691,7 +708,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
         </div>
       ) : (
         /* MODE 3: ARCHITECTURAL FALLBACK CARD (When no screenshots or cover exist) */
-        <div className="relative w-full h-full flex flex-col justify-between">
+        <div className="relative z-20 w-full h-full flex flex-col justify-between pointer-events-none">
           <div
             className="relative z-10 flex items-center justify-between gap-2 px-4 sm:px-5 pt-4 text-[11px] font-medium"
           >

@@ -6,7 +6,7 @@ interface ScrollProgressBarProps {
 }
 
 export const ScrollProgressBar: React.FC<ScrollProgressBarProps> = ({ activeTab }) => {
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const [scrollRatio, setScrollRatio] = useState(0);
 
   useEffect(() => {
     let ticking = false;
@@ -14,10 +14,10 @@ export const ScrollProgressBar: React.FC<ScrollProgressBarProps> = ({ activeTab 
     const updateScrollProgress = () => {
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       if (scrollHeight > 10) {
-        const progress = (window.scrollY / scrollHeight) * 100;
-        setScrollProgress(Math.min(Math.max(progress, 0), 100));
+        const ratio = window.scrollY / scrollHeight;
+        setScrollRatio(Math.min(Math.max(ratio, 0), 1));
       } else {
-        setScrollProgress(0);
+        setScrollRatio(0);
       }
       ticking = false;
     };
@@ -45,8 +45,8 @@ export const ScrollProgressBar: React.FC<ScrollProgressBarProps> = ({ activeTab 
       aria-hidden="true"
     >
       <div
-        className="h-full bg-gradient-to-r from-[#0284ff] via-[#00C7FF] to-[#38bdf8] transition-[width] duration-100 ease-out"
-        style={{ width: `${scrollProgress}%` }}
+        className="h-full w-full origin-left rtl:origin-right bg-gradient-to-r from-[#0284ff] via-[#38bdf8] to-[#00c7ff] will-change-transform transition-transform duration-100 ease-out"
+        style={{ transform: `scaleX(${scrollRatio})` }}
       />
     </div>
   );

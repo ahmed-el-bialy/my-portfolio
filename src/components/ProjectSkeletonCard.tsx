@@ -3,7 +3,7 @@ import React from 'react';
 export const ProjectSkeletonCard: React.FC = () => {
   return (
     <div
-      className="rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between animate-pulse"
+      className="rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between"
       aria-label="Loading project..."
     >
       <div>
@@ -14,21 +14,21 @@ export const ProjectSkeletonCard: React.FC = () => {
         <div className="p-5 space-y-3">
           {/* Title & Star Pill */}
           <div className="flex items-center justify-between gap-3">
-            <div className="h-5 w-3/5 bg-slate-200 dark:bg-white/10 rounded-md" />
-            <div className="h-4 w-10 bg-slate-200 dark:bg-white/5 rounded-full" />
+            <div className="h-5 w-3/5 skeleton-shimmer rounded-md" />
+            <div className="h-4 w-10 skeleton-shimmer rounded-full" />
           </div>
 
           {/* Description Lines */}
           <div className="space-y-2 pt-1">
-            <div className="h-3.5 w-full bg-slate-200 dark:bg-white/5 rounded" />
-            <div className="h-3.5 w-4/5 bg-slate-200 dark:bg-white/5 rounded" />
+            <div className="h-3.5 w-full skeleton-shimmer rounded" />
+            <div className="h-3.5 w-4/5 skeleton-shimmer rounded" />
           </div>
 
           {/* Topic Tags */}
           <div className="flex flex-wrap gap-1.5 pt-2">
-            <div className="h-4 w-12 bg-slate-200 dark:bg-white/5 rounded" />
-            <div className="h-4 w-16 bg-slate-200 dark:bg-white/5 rounded" />
-            <div className="h-4 w-14 bg-slate-200 dark:bg-white/5 rounded" />
+            <div className="h-4 w-12 skeleton-shimmer rounded" />
+            <div className="h-4 w-16 skeleton-shimmer rounded" />
+            <div className="h-4 w-14 skeleton-shimmer rounded" />
           </div>
         </div>
       </div>

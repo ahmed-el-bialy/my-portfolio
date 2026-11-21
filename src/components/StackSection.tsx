@@ -1,8 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Layers, Info } from 'lucide-react';
 import { RevealOnScroll } from './RevealOnScroll';
-import { TiltCard } from './MotionPrimitives';
 import { useLanguage } from '../context/LanguageContext';
 import {
   FlutterLogo,
@@ -361,10 +359,10 @@ export const StackSection: React.FC = () => {
       {/* Header & Search */}
       <RevealOnScroll className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div className="max-w-2xl">
-          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0284ff] dark:text-[#00C7FF] mb-2">
+          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0369a1] dark:text-[#38bdf8] mb-2">
             <span>{t.stack.badge}</span>
             <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-            <span className="text-slate-500 dark:text-[#94a3b8] font-sans">
+            <span className="text-slate-600 dark:text-[#94a3b8] font-sans">
               {lang === 'ar' ? 'مهارات وأدوات هندسية موثقة' : 'Verified Production Stack'}
             </span>
           </div>
@@ -418,9 +416,9 @@ export const StackSection: React.FC = () => {
         })}
       </div>
 
-      {/* Independent-Height Brand-Illuminated Skill Cards Grid (items-start prevents stretching siblings) */}
+      {/* Independent-Height Accessible Skill Cards Grid */}
       {filteredTechs.length === 0 ? (
-        <div className="text-center py-10 text-slate-500 dark:text-[#94a3b8] rounded-2xl p-6 bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10">
+        <div className="text-center py-10 text-slate-600 dark:text-[#94a3b8] rounded-2xl p-6 bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10">
           <Layers size={28} className="mx-auto mb-2 opacity-50" />
           <p className="text-xs font-medium">{t.stack.noTechFound}</p>
         </div>
@@ -429,39 +427,43 @@ export const StackSection: React.FC = () => {
           {filteredTechs.map((tech, idx) => {
             const Logo = tech.LogoComponent;
             const isExpanded = expandedTechId === tech.id;
+            const panelId = `stack-panel-${tech.id}`;
 
             return (
               <RevealOnScroll
                 key={tech.id}
-                delay={Math.min(idx * 0.03, 0.24)}
+                delay={Math.min(idx * 0.025, 0.16)}
               >
-                <TiltCard
-                  maxTilt={5}
-                  glareOpacity={0.1}
-                  onClick={() => setExpandedTechId(isExpanded ? null : tech.id)}
-                  className={`card-shimmer skill-shimmer-card w-full group p-5 rounded-2xl bg-white dark:bg-[#0f1117] border transition-colors duration-200 flex flex-col cursor-pointer shadow-2xs hover:shadow-lg ${
+                <article
+                  className={`card-shimmer skill-shimmer-card w-full group rounded-2xl bg-white dark:bg-[#0f1117] border transition-colors duration-200 shadow-2xs hover:shadow-md ${
                     isExpanded
                       ? 'border-[#0284ff]/65 ring-1 ring-[#0284ff]/20'
-                      : 'border-slate-200 dark:border-white/10 hover:border-[#0284ff]/50'
+                      : 'border-slate-200 dark:border-white/10 hover:border-[#0284ff]/45'
                   }`}
                 >
-                  <div>
-                    <div className="flex items-start justify-between gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedTechId(isExpanded ? null : tech.id)}
+                    aria-expanded={isExpanded}
+                    aria-controls={panelId}
+                    className="w-full text-start p-5 flex flex-col cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-3 w-full">
                       <div className="flex items-center gap-3 min-w-0">
                         <div
-                          className="w-11 h-11 rounded-xl flex items-center justify-center border border-slate-200 dark:border-white/10 shrink-0 transition-transform duration-300 group-hover:scale-110"
+                          className="w-11 h-11 rounded-xl flex items-center justify-center border border-slate-200 dark:border-white/10 shrink-0 transition-transform duration-200 group-hover:scale-105"
                           style={{
                             backgroundColor: `rgba(${tech.glowRgb}, 0.12)`,
-                            boxShadow: `0 0 18px rgba(${tech.glowRgb}, 0.14)`,
+                            boxShadow: `0 0 18px rgba(${tech.glowRgb}, 0.12)`,
                           }}
                         >
                           <Logo size={23} />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="text-sm font-bold text-slate-900 dark:text-[#f1f5f9] truncate group-hover:text-[#0284ff] dark:group-hover:text-[#00C7FF] transition-colors">
+                          <span className="block text-sm font-bold text-slate-900 dark:text-[#f1f5f9] truncate group-hover:text-[#0369a1] dark:group-hover:text-[#38bdf8] transition-colors">
                             {tech.name}
-                          </h3>
-                          <span className="text-[11px] font-medium text-slate-500 dark:text-[#94a3b8]">
+                          </span>
+                          <span className="block text-[11px] font-medium text-slate-600 dark:text-[#94a3b8]">
                             {lang === 'ar' ? tech.categoryLabelAr : tech.categoryLabel}
                           </span>
                         </div>
@@ -469,10 +471,11 @@ export const StackSection: React.FC = () => {
 
                       <Info
                         size={14}
-                        className={`shrink-0 transition-colors ${
+                        aria-hidden="true"
+                        className={`shrink-0 transition-colors mt-0.5 ${
                           isExpanded
-                            ? 'text-[#0284ff] dark:text-[#00C7FF]'
-                            : 'text-slate-400 group-hover:text-[#0284ff] dark:group-hover:text-[#00C7FF]'
+                            ? 'text-[#0369a1] dark:text-[#38bdf8]'
+                            : 'text-slate-400 group-hover:text-[#0369a1] dark:group-hover:text-[#38bdf8]'
                         }`}
                       />
                     </div>
@@ -481,46 +484,38 @@ export const StackSection: React.FC = () => {
                       {lang === 'ar' ? tech.descriptionAr : tech.description}
                     </p>
 
-                    <AnimatePresence initial={false}>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden"
-                        >
-                          <ul className="mt-3 pt-3 border-t border-slate-100 dark:border-white/8 space-y-1.5">
-                            {tech.subSkills.map((sub) => (
-                              <li
-                                key={sub}
-                                className="text-[11px] font-mono text-slate-700 dark:text-slate-300 flex items-center gap-1.5"
-                              >
-                                <span style={{ color: tech.accentColor }}>·</span>
-                                <span dir="ltr">{sub}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                    <div id={panelId} className={`grid-accordion w-full ${isExpanded ? 'is-open' : ''}`}>
+                      <div className="grid-accordion-inner">
+                        <ul className="mt-3 pt-3 border-t border-slate-100 dark:border-white/8 space-y-1.5">
+                          {tech.subSkills.map((sub) => (
+                            <li
+                              key={sub}
+                              className="text-[11px] font-mono text-slate-700 dark:text-slate-300 flex items-center gap-1.5"
+                            >
+                              <span style={{ color: tech.accentColor }} aria-hidden="true">·</span>
+                              <span dir="ltr">{sub}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/8 flex items-center justify-between gap-2 text-[11px]">
-                    <span className="text-[#0284ff] dark:text-[#00C7FF] font-semibold truncate" dir="ltr">
-                      {tech.highlightInApp}
-                    </span>
-                    <span className="text-slate-400 font-mono shrink-0">
-                      {isExpanded
-                        ? lang === 'ar'
-                          ? 'إخفاء'
-                          : 'Less'
-                        : lang === 'ar'
-                        ? 'التفاصيل'
-                        : 'Capabilities'}
-                    </span>
-                  </div>
-                </TiltCard>
+                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/8 flex items-center justify-between gap-2 text-[11px] w-full">
+                      <span className="text-[#0369a1] dark:text-[#38bdf8] font-semibold truncate" dir="ltr">
+                        {tech.highlightInApp}
+                      </span>
+                      <span className="text-slate-600 dark:text-slate-400 font-mono shrink-0">
+                        {isExpanded
+                          ? lang === 'ar'
+                            ? 'إخفاء'
+                            : 'Less'
+                          : lang === 'ar'
+                          ? 'التفاصيل'
+                          : 'Capabilities'}
+                      </span>
+                    </div>
+                  </button>
+                </article>
               </RevealOnScroll>
             );
           })}

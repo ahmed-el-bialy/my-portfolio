@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence, LayoutGroup, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -20,7 +20,10 @@ import { ImageWithSkeleton, preloadImageUrls } from './ImageWithSkeleton';
 import { TiltCard } from './MotionPrimitives';
 import { usePlayStoreAppStats } from '../services/playStoreService';
 import { useLanguage } from '../context/LanguageContext';
-import { VideoDemoModal } from './VideoDemoModal';
+
+const LazyVideoDemoModal = lazy(() =>
+  import('./VideoDemoModal').then((m) => ({ default: m.VideoDemoModal }))
+);
 
 interface RevioShowcaseStageProps {
   isDark?: boolean;
@@ -57,6 +60,7 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
     projectName: string;
     videoUrl: string;
   } | null>(null);
+  const [hasOpenedVideoModal, setHasOpenedVideoModal] = useState(false);
   const { data: revioPlayStats } = usePlayStoreAppStats('com.ahmed.revio');
 
   const { data: cachedConsolidated } = useQuery<ConsolidatedGitHubPortfolio>({
@@ -198,35 +202,35 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
   return (
     <TiltCard
       maxTilt={2.5}
-      glareOpacity={0.08}
+      glareOpacity={0.07}
       className="card-shimmer overflow-hidden w-full h-full flex flex-col justify-between rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-4 sm:p-5 shadow-xl"
     >
       {/* Interactive Multi-App Switcher Header */}
       <div className="space-y-3 pb-3.5 border-b border-slate-200/80 dark:border-white/8">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <Smartphone size={16} className="text-[#0284ff] dark:text-[#00C7FF] shrink-0" />
+            <Smartphone size={16} className="text-[#0369a1] dark:text-[#38bdf8] shrink-0" />
             <span className="font-display text-base sm:text-lg font-extrabold text-slate-900 dark:text-white truncate tracking-tight">
               {activeProject.name}
             </span>
             {isRevio && revioPlayStats?.downloads && (
-              <span className="font-display text-xs sm:text-[13px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap tabular-nums">
+              <span className="font-display text-xs sm:text-[13px] font-bold text-emerald-700 dark:text-emerald-400 whitespace-nowrap tabular-nums">
                 · {revioPlayStats.downloads} {lang === 'ar' ? 'تحميل' : 'Downloads'}
               </span>
             )}
             {isRevio && revioPlayStats?.rating && (
-              <span className="font-display text-xs sm:text-[13px] font-bold text-amber-500 whitespace-nowrap tabular-nums">
+              <span className="font-display text-xs sm:text-[13px] font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap tabular-nums">
                 · ★ {revioPlayStats.rating}
               </span>
             )}
             {!isRevio && (
-              <span className="font-display text-xs font-semibold text-slate-500 dark:text-slate-400">
-                · Flutter App
+              <span className="font-display text-xs font-semibold text-slate-600 dark:text-slate-400">
+                {lang === 'ar' ? '· تطبيق Flutter' : '· Flutter App'}
               </span>
             )}
           </div>
 
-          <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 tabular-nums">
+          <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400 tabular-nums">
             0{safeScreenCount > 0 ? normalizedIdx + 1 : 0} / 0{activeScreens.length}
           </span>
         </div>
@@ -292,7 +296,7 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
                       initial="enter"
                       animate="center"
                       exit="exit"
-                      transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                       className="w-full h-full"
                     >
                       <ImageWithSkeleton
@@ -315,7 +319,7 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
               <h3 className="font-display text-xl sm:text-[22px] font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
                 {activeProject.name}
               </h3>
-              <p className="text-xs sm:text-[13px] font-semibold text-[#0284ff] dark:text-[#00C7FF] mt-1 line-clamp-1">
+              <p className="text-xs sm:text-[13px] font-semibold text-[#0369a1] dark:text-[#38bdf8] mt-1 line-clamp-1">
                 {activeProject.subtitle}
               </p>
               <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed line-clamp-3">
@@ -331,9 +335,9 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
                     key={scr.id}
                     type="button"
                     onClick={() => handleJumpScreen(idx)}
-                    className={`px-2.5 py-2 rounded-xl text-[11px] font-mono font-semibold text-start border transition-all cursor-pointer truncate capitalize min-h-[44px] sm:min-h-[38px] ${
+                    className={`px-2.5 py-2 rounded-xl text-[11px] font-mono font-semibold text-start border transition-colors cursor-pointer truncate capitalize min-h-[44px] sm:min-h-[38px] ${
                       normalizedIdx === idx
-                        ? 'bg-[#0284ff]/12 border-[#0284ff]/60 text-[#0284ff] dark:text-[#00C7FF] shadow-2xs'
+                        ? 'bg-[#0284ff]/12 border-[#0284ff]/60 text-[#0369a1] dark:text-[#38bdf8] shadow-2xs'
                         : 'bg-slate-50 dark:bg-[#161b27] border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/25'
                     }`}
                   >
@@ -367,7 +371,7 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
               <button
                 type="button"
                 onClick={handleInspect}
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] text-xs font-bold text-[#0284ff] dark:text-[#00C7FF] hover:text-white border border-[#0284ff]/25 transition-colors cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] text-xs font-bold text-[#0369a1] dark:text-[#38bdf8] hover:text-white border border-[#0284ff]/25 transition-colors cursor-pointer whitespace-nowrap"
               >
                 <Layers size={13} />
                 <span>{lang === 'ar' ? 'فتح التفاصيل الكاملة' : 'Open Workspace'}</span>
@@ -410,12 +414,13 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
         {demoVideoUrl && (
           <button
             type="button"
-            onClick={() =>
+            onClick={() => {
+              setHasOpenedVideoModal(true);
               setVideoModalState({
                 projectName: activeProject.name,
                 videoUrl: demoVideoUrl,
-              })
-            }
+              });
+            }}
             className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-red-500/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 border border-red-500/25 text-xs font-semibold whitespace-nowrap cursor-pointer"
           >
             <Youtube size={13} />
@@ -424,12 +429,16 @@ export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = ({
         )}
       </div>
 
-      <VideoDemoModal
-        isOpen={Boolean(videoModalState)}
-        onClose={() => setVideoModalState(null)}
-        projectName={videoModalState?.projectName || activeProject.name}
-        videoUrl={videoModalState?.videoUrl}
-      />
+      {hasOpenedVideoModal && (
+        <Suspense fallback={null}>
+          <LazyVideoDemoModal
+            isOpen={Boolean(videoModalState)}
+            onClose={() => setVideoModalState(null)}
+            projectName={videoModalState?.projectName || activeProject.name}
+            videoUrl={videoModalState?.videoUrl}
+          />
+        </Suspense>
+      )}
     </TiltCard>
   );
 };

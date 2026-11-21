@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { ArrowRight, ExternalLink, Eye } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { FEATURED_PROJECTS, Project } from '../data/portfolioData';
@@ -9,11 +9,15 @@ import {
 import { resolveSmartProjectLinks } from '../utils/projectLinks';
 import { SmartDemoButtons } from './SmartDemoButtons';
 import { ProjectCardCover } from './ProjectCardCover';
-import { ProjectDetailsModal } from './ProjectDetailsModal';
-import { VideoDemoModal } from './VideoDemoModal';
 import { RevealOnScroll } from './RevealOnScroll';
-import { TiltCard } from './MotionPrimitives';
 import { useLanguage } from '../context/LanguageContext';
+
+const ProjectDetailsModal = lazy(() =>
+  import('./ProjectDetailsModal').then((m) => ({ default: m.ProjectDetailsModal }))
+);
+const VideoDemoModal = lazy(() =>
+  import('./VideoDemoModal').then((m) => ({ default: m.VideoDemoModal }))
+);
 
 interface OverviewProjectsPreviewProps {
   githubUsername: string;
@@ -33,6 +37,19 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
     projectName: string;
     videoUrl: string;
   } | null>(null);
+  const [mountedModals, setMountedModals] = useState({ details: false, video: false });
+
+  useEffect(() => {
+    if (selectedProject && !mountedModals.details) {
+      setMountedModals((m) => ({ ...m, details: true }));
+    }
+  }, [selectedProject, mountedModals.details]);
+
+  useEffect(() => {
+    if (videoModalState && !mountedModals.video) {
+      setMountedModals((m) => ({ ...m, video: true }));
+    }
+  }, [videoModalState, mountedModals.video]);
 
   const { data: portfolioData } = useQuery<ConsolidatedGitHubPortfolio>({
     queryKey: ['github-consolidated', githubUsername],
@@ -48,10 +65,10 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
     <section className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full">
       <RevealOnScroll className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 sm:mb-10">
         <div className="max-w-2xl">
-          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0284ff] dark:text-[#00C7FF] mb-2">
+          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0369a1] dark:text-[#38bdf8] mb-2">
             <span>{lang === 'ar' ? 'أبرز التطبيقات المختارة' : 'Selected Mobile Builds'}</span>
             <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-            <span className="text-slate-500 dark:text-slate-400 font-sans">
+            <span className="text-slate-600 dark:text-slate-400 font-sans">
               {lang === 'ar' ? 'منشورة ومفتوحة المصدر' : 'Play Store & Production Apps'}
             </span>
           </div>
@@ -94,19 +111,17 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
             },
           };
 
+          const openProjectDetails = () => {
+            setSelectedScreenIndex(cardScreenMap[project.repoName] || 0);
+            setSelectedProject(dynamicProject);
+          };
+
           return (
-            <RevealOnScroll key={project.id} delay={idx * 0.07} className="flex">
-              <TiltCard
-                maxTilt={4.5}
-                glareOpacity={0.12}
-                cursorLabel={lang === 'ar' ? 'استعراض' : 'Inspect'}
-                onClick={() => {
-                  setSelectedScreenIndex(cardScreenMap[project.repoName] || 0);
-                  setSelectedProject(dynamicProject);
-                }}
+            <RevealOnScroll key={project.id} delay={idx * 0.04} className="flex">
+              <article
                 onMouseEnter={() => setHoveredCardId(project.id)}
                 onMouseLeave={() => setHoveredCardId(null)}
-                className="card-shimmer w-full group rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:border-[#0284ff]/50 shadow-sm hover:shadow-xl"
+                className="surface-card card-shimmer w-full group rounded-2xl overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-xl"
               >
                 <div>
                   <ProjectCardCover
@@ -117,6 +132,9 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                     description={project.description}
                     topics={project.technologies}
                     isCardHovered={hoveredCardId === project.id}
+                    onInspect={openProjectDetails}
+                    inspectAriaLabel={`${t.projects.actions.viewSpecs} — ${project.name}`}
+                    cursorLabel={lang === 'ar' ? 'استعراض' : 'Inspect'}
                     onActiveScreenChange={(screenIdx) => {
                       setCardScreenMap((prev) =>
                         prev[project.repoName] === screenIdx
@@ -128,16 +146,22 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
 
                   <div className="p-4 sm:p-6">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <h3 className="font-display text-lg sm:text-[22px] font-extrabold text-slate-900 dark:text-white truncate tracking-tight">
-                        {project.name}
-                      </h3>
+                      <button
+                        type="button"
+                        onClick={openProjectDetails}
+                        className="text-start min-w-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded"
+                      >
+                        <h3 className="font-display text-lg sm:text-[22px] font-extrabold text-slate-900 dark:text-white truncate tracking-tight group-hover:text-[#0369a1] dark:group-hover:text-[#38bdf8] transition-colors">
+                          {project.name}
+                        </h3>
+                      </button>
                       {dynamicPlayUrl && (
-                        <span className="font-display text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                        <span className="font-display text-xs font-bold text-emerald-700 dark:text-emerald-400 shrink-0">
                           Google Play
                         </span>
                       )}
                     </div>
-                    <p className="text-xs sm:text-sm font-medium text-[#0284ff] dark:text-[#00C7FF] line-clamp-1 mb-1.5">
+                    <p className="text-xs sm:text-sm font-medium text-[#0369a1] dark:text-[#38bdf8] line-clamp-1 mb-1.5">
                       {project.subtitle}
                     </p>
                     <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
@@ -149,12 +173,8 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                 <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-slate-100 dark:border-white/8 flex flex-wrap items-center justify-between gap-2.5">
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedScreenIndex(cardScreenMap[project.repoName] || 0);
-                      setSelectedProject(dynamicProject);
-                    }}
-                    className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-xs font-semibold text-[#0284ff] dark:text-[#00C7FF] border border-[#0284ff]/25 cursor-pointer whitespace-nowrap"
+                    onClick={openProjectDetails}
+                    className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-xs font-semibold text-[#0369a1] dark:text-[#38bdf8] border border-[#0284ff]/25 cursor-pointer whitespace-nowrap"
                   >
                     <Eye size={13} />
                     <span>{t.projects.actions.viewSpecs}</span>
@@ -173,7 +193,6 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                         href={project.links.github}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
                         className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white whitespace-nowrap"
                       >
                         <span>GitHub</span>
@@ -182,28 +201,34 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                     )}
                   </div>
                 </div>
-              </TiltCard>
+              </article>
             </RevealOnScroll>
           );
         })}
       </div>
 
-      <ProjectDetailsModal
-        isOpen={Boolean(selectedProject)}
-        onClose={() => {
-          setSelectedProject(null);
-          setSelectedScreenIndex(0);
-        }}
-        project={selectedProject}
-        initialScreenIndex={selectedScreenIndex}
-      />
+      <Suspense fallback={null}>
+        {mountedModals.details && (
+          <ProjectDetailsModal
+            isOpen={Boolean(selectedProject)}
+            onClose={() => {
+              setSelectedProject(null);
+              setSelectedScreenIndex(0);
+            }}
+            project={selectedProject}
+            initialScreenIndex={selectedScreenIndex}
+          />
+        )}
 
-      <VideoDemoModal
-        isOpen={Boolean(videoModalState)}
-        onClose={() => setVideoModalState(null)}
-        projectName={videoModalState?.projectName || 'App Demo'}
-        videoUrl={videoModalState?.videoUrl}
-      />
+        {mountedModals.video && (
+          <VideoDemoModal
+            isOpen={Boolean(videoModalState)}
+            onClose={() => setVideoModalState(null)}
+            projectName={videoModalState?.projectName || 'App Demo'}
+            videoUrl={videoModalState?.videoUrl}
+          />
+        )}
+      </Suspense>
     </section>
   );
 };

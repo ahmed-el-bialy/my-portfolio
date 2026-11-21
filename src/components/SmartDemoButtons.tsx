@@ -119,7 +119,7 @@ export const SmartDemoButtons: React.FC<SmartDemoButtonsProps> = ({
           onClick={handleStop}
           className={webLiveBtnClass}
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse shrink-0" />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 shrink-0" />
           <ExternalLink size={compact ? 12 : 14} className="shrink-0" />
           <span>{t.projects.actions.liveDemo}</span>
         </a>

@@ -172,7 +172,7 @@ export const GitHubActivity: React.FC<GitHubActivityProps> = ({
                 · {isFetching ? (lang === 'ar' ? 'جارٍ التزامن...' : 'Syncing...') : (lang === 'ar' ? 'تحديث مباشر' : 'Live Synced')}
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
               {lang === 'ar'
                 ? `آخر ${weeksToShow} أسبوعاً من الالتزامات البرمجية والتحديثات`
                 : `Last ${weeksToShow} weeks of open-source commits & releases`}
@@ -184,68 +184,68 @@ export const GitHubActivity: React.FC<GitHubActivityProps> = ({
           href={`https://github.com/${username}`}
           target="_blank"
           rel="noreferrer"
-          className="btn-kinetic self-start sm:self-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-gray-200 border border-slate-200 dark:border-white/10 text-xs font-bold transition-colors shrink-0"
+          className="btn-kinetic self-start sm:self-auto inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-gray-200 border border-slate-200 dark:border-white/10 text-xs font-bold transition-colors shrink-0"
           title={`View @${username} on GitHub`}
         >
           <Github size={14} />
           <span>@{username}</span>
-          <ExternalLink size={11} className="text-slate-400" />
+          <ExternalLink size={11} className="text-slate-500 dark:text-slate-400" />
         </a>
       </div>
 
       {/* Middle Row: 4 Clean Bento Summary Tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4">
         <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/8 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/12 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-emerald-500/12 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
             <GitCommit size={15} />
           </div>
           <div>
             <div className="text-sm sm:text-base font-extrabold font-mono tabular-nums text-slate-900 dark:text-white leading-none">
               {stats.totalCommits}
             </div>
-            <div className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
               {lang === 'ar' ? 'مساهمة' : 'Commits'}
             </div>
           </div>
         </div>
 
         <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/8 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#0284ff]/12 text-[#0284ff] dark:text-[#00C7FF] flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-[#0284ff]/12 text-[#0369a1] dark:text-[#38bdf8] flex items-center justify-center shrink-0">
             <CalendarDays size={15} />
           </div>
           <div>
             <div className="text-sm sm:text-base font-extrabold font-mono tabular-nums text-slate-900 dark:text-white leading-none">
               {stats.activeDays}
             </div>
-            <div className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
               {lang === 'ar' ? 'أيام نشطة' : 'Active Days'}
             </div>
           </div>
         </div>
 
         <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/8 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-500/12 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-amber-500/12 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
             <Flame size={15} />
           </div>
           <div>
-            <div className="text-sm sm:text-base font-extrabold font-mono tabular-nums text-amber-600 dark:text-amber-400 leading-none">
+            <div className="text-sm sm:text-base font-extrabold font-mono tabular-nums text-amber-700 dark:text-amber-400 leading-none">
               {stats.currentStreak}d
             </div>
-            <div className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
               {lang === 'ar' ? 'سلسلة متصلة' : 'Current Streak'}
             </div>
           </div>
         </div>
 
         <div className="p-3 rounded-xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/8 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-violet-500/12 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-violet-500/12 text-violet-700 dark:text-violet-400 flex items-center justify-center shrink-0">
             <Zap size={15} />
           </div>
           <div>
             <div className="text-sm sm:text-base font-extrabold font-mono tabular-nums text-slate-900 dark:text-white leading-none">
               {stats.velocityPercentage}%
             </div>
-            <div className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1">
+            <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
               {lang === 'ar' ? 'معدل الاستمرارية' : 'Active Cadence'}
             </div>
           </div>

@@ -16,7 +16,6 @@ import {
   Mail,
   Phone,
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import { DeveloperProfile } from '../data/portfolioData';
 import { AHMED_CONFIG, getEgyptLocalTime } from '../data/config';
 import { WhatsAppLogo } from './TechLogos';
@@ -133,12 +132,17 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
       setLastSubmittedName(name.trim());
       setIsSubmitting(false);
       setSubmitStatus('success');
-      confetti({
-        particleCount: 65,
-        spread: 55,
-        origin: { y: 0.75 },
-        colors: ['#0284ff', '#00C7FF', '#10B981'],
-      });
+      try {
+        const confettiModule = await import('canvas-confetti');
+        confettiModule.default({
+          particleCount: 65,
+          spread: 55,
+          origin: { y: 0.75 },
+          colors: ['#0284ff', '#38bdf8', '#10B981'],
+        });
+      } catch {
+        // Non-blocking celebration
+      }
     } catch {
       setIsSubmitting(false);
       setSubmitStatus('error');
@@ -174,7 +178,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
     >
       {/* Editorial Section Header */}
       <div className="flex flex-col items-center text-center max-w-2xl mx-auto mb-10 sm:mb-12">
-        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0284ff] dark:text-[#00C7FF] mb-2">
+        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0369a1] dark:text-[#38bdf8] mb-2">
           <span>{t.contact.badge}</span>
           <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
             ·
@@ -197,16 +201,16 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
         <div className="card-shimmer overflow-hidden lg:col-span-6 p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 shadow-sm">
           {submitStatus === 'success' ? (
             <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 10 }}
+              initial={{ opacity: 0, scale: 0.96, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.28, ease: 'easeOut' }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               className="py-6 sm:py-8 text-center space-y-5"
             >
               <motion.div
-                initial={{ x: -18, y: 18, rotate: -15, opacity: 0 }}
-                animate={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
-                transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-                className="w-14 h-14 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30"
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="w-14 h-14 rounded-2xl bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30"
               >
                 <Send size={26} />
               </motion.div>
@@ -233,7 +237,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm transition-colors shadow-sm"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs sm:text-sm transition-colors shadow-sm"
                 >
                   <WhatsAppLogo size={15} />
                   <span>{lang === 'ar' ? 'متابعة فورية على واتساب' : 'Quick WhatsApp Follow-Up'}</span>
@@ -242,7 +246,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 <button
                   type="button"
                   onClick={handleResetForm}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#161b27] hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-[#f1f5f9] font-semibold text-xs sm:text-sm border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-slate-100 dark:bg-[#161b27] hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-[#f1f5f9] font-semibold text-xs sm:text-sm border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
                 >
                   <RotateCcw size={14} />
                   <span>{lang === 'ar' ? 'إرسال رسالة أخرى' : 'Send Another Message'}</span>
@@ -255,7 +259,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-[#f1f5f9]">
                   {t.contact.sendMessageTitle}
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-[#94a3b8] mt-1">
+                <p className="text-xs text-slate-600 dark:text-[#94a3b8] mt-1">
                   {lang === 'ar'
                     ? '3 خطوات سريعة فقط — يرد أحمد عادةً خلال أقل من 24 ساعة.'
                     : 'Just 3 quick fields — replies typically arrive within 24 hours.'}
@@ -330,6 +334,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     }}
                     placeholder="name@company.com"
                     aria-invalid={Boolean(emailError)}
+                    aria-describedby={emailError ? 'contact-email-error' : undefined}
                     className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus-visible:ring-2 transition-colors min-h-[44px] ${
                       emailError
                         ? 'border-red-500 focus:border-red-500 focus-visible:ring-red-500/30'
@@ -337,7 +342,11 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     }`}
                   />
                   {emailError && (
-                    <p className="text-xs text-red-500 dark:text-red-400 mt-1 flex items-center gap-1">
+                    <p
+                      id="contact-email-error"
+                      role="alert"
+                      className="text-xs text-red-600 dark:text-red-400 mt-1 flex items-center gap-1"
+                    >
                       <AlertCircle size={12} className="shrink-0" />
                       <span>{emailError}</span>
                     </p>
@@ -386,7 +395,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
           {/* Elevated Cal.com Consultation Spotlight Card */}
           <div className="card-shimmer overflow-hidden p-6 sm:p-7 rounded-2xl bg-white dark:bg-[#0f1117] border-2 border-[#0284ff]/35 shadow-lg">
             <div className="mb-4">
-              <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#0284ff] dark:text-[#00C7FF]">
+              <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#0369a1] dark:text-[#38bdf8]">
                 <Calendar size={13} />
                 <span>Cal.com Scheduling</span>
               </span>
@@ -405,13 +414,13 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     key={slot.type}
                     type="button"
                     onClick={() => onOpenBooking(slot.type)}
-                    className="p-3.5 min-h-[54px] rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 hover:border-[#0284ff]/60 text-start transition-all cursor-pointer group flex sm:block items-center justify-between gap-2"
+                    className="p-3.5 min-h-[54px] rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/10 hover:border-[#0284ff]/60 text-start transition-colors cursor-pointer group flex sm:block items-center justify-between gap-2"
                   >
-                    <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#0284ff] dark:text-[#00C7FF] tabular-nums">
+                    <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#0369a1] dark:text-[#38bdf8] tabular-nums">
                       <Clock size={12} />
                       <span>{slot.duration}</span>
                     </div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-[#f1f5f9] sm:mt-1 group-hover:text-[#0284ff] dark:group-hover:text-[#00C7FF]">
+                    <div className="text-xs font-bold text-slate-900 dark:text-[#f1f5f9] sm:mt-1 group-hover:text-[#0369a1] dark:group-hover:text-[#38bdf8]">
                       {slot.title}
                     </div>
                   </button>
@@ -439,7 +448,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 {t.contact.directChannels}
               </h3>
               {copiedKey && (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                   <Check size={13} />
                   <span>{lang === 'ar' ? 'تم النسخ!' : 'Copied!'}</span>
                 </span>
@@ -449,7 +458,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Email Copy Card */}
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/8">
-                <div className="text-[11px] text-slate-500 dark:text-[#94a3b8]">
+                <div className="text-[11px] text-slate-600 dark:text-[#94a3b8]">
                   {t.contact.emailLabel}
                 </div>
                 <div className="font-mono text-xs text-slate-900 dark:text-[#f1f5f9] font-semibold truncate mt-0.5">
@@ -460,7 +469,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     href={`mailto:${AHMED_CONFIG.email}?subject=${encodeURIComponent(
                       'Mobile App Project Inquiry - Flutter Developer'
                     )}`}
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0284ff] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0369a1] dark:text-[#38bdf8] font-semibold text-[11px] transition-colors"
                   >
                     <Mail size={12} />
                     <span>{lang === 'ar' ? 'مراسلة' : 'Compose'}</span>
@@ -471,7 +480,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
                   >
                     {copiedKey === 'email' ? (
-                      <Check size={12} className="text-emerald-500" />
+                      <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
                     ) : (
                       <Copy size={12} />
                     )}
@@ -482,7 +491,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 
               {/* Phone / WhatsApp Copy Card */}
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/8">
-                <div className="text-[11px] text-slate-500 dark:text-[#94a3b8]">
+                <div className="text-[11px] text-slate-600 dark:text-[#94a3b8]">
                   {t.contact.phoneLabel}
                 </div>
                 <div className="font-mono text-xs text-slate-900 dark:text-[#f1f5f9] font-semibold truncate mt-0.5 tabular-nums">
@@ -493,14 +502,14 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     href={AHMED_CONFIG.socials.whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-emerald-600/10 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-emerald-600/12 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] transition-colors"
                   >
                     <WhatsAppLogo size={12} />
                     <span>WhatsApp</span>
                   </a>
                   <a
                     href={`tel:${AHMED_CONFIG.phone}`}
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0284ff] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0369a1] dark:text-[#38bdf8] font-semibold text-[11px] transition-colors"
                   >
                     <Phone size={12} />
                     <span>{lang === 'ar' ? 'اتصال' : 'Call'}</span>
@@ -511,7 +520,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
                   >
                     {copiedKey === 'phone' ? (
-                      <Check size={12} className="text-emerald-500" />
+                      <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
                     ) : (
                       <Copy size={12} />
                     )}
@@ -522,7 +531,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 
               {/* GitHub Copy Card */}
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/8">
-                <div className="text-[11px] text-slate-500 dark:text-[#94a3b8]">GitHub</div>
+                <div className="text-[11px] text-slate-600 dark:text-[#94a3b8]">GitHub</div>
                 <div className="font-mono text-xs text-slate-900 dark:text-[#f1f5f9] font-semibold truncate mt-0.5">
                   @{AHMED_CONFIG.githubUsername}
                 </div>
@@ -542,7 +551,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
                   >
                     {copiedKey === 'github' ? (
-                      <Check size={12} className="text-emerald-500" />
+                      <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
                     ) : (
                       <Copy size={12} />
                     )}
@@ -553,7 +562,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 
               {/* LinkedIn Copy Card */}
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/8">
-                <div className="text-[11px] text-slate-500 dark:text-[#94a3b8]">LinkedIn</div>
+                <div className="text-[11px] text-slate-600 dark:text-[#94a3b8]">LinkedIn</div>
                 <div className="font-mono text-xs text-slate-900 dark:text-[#f1f5f9] font-semibold truncate mt-0.5">
                   in/ahmedel-bialy
                 </div>
@@ -562,7 +571,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     href={AHMED_CONFIG.socials.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0284ff] dark:text-[#00C7FF] font-semibold text-[11px] transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0369a1] dark:text-[#38bdf8] font-semibold text-[11px] transition-colors"
                   >
                     <Linkedin size={12} />
                     <span>{lang === 'ar' ? 'فتح' : 'Open'}</span>
@@ -573,7 +582,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
                   >
                     {copiedKey === 'linkedin' ? (
-                      <Check size={12} className="text-emerald-500" />
+                      <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
                     ) : (
                       <Copy size={12} />
                     )}
@@ -601,7 +610,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 rel="noopener noreferrer"
                 className="btn-kinetic flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 min-h-[44px] rounded-xl bg-slate-100 dark:bg-[#161b27] hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-[#f1f5f9] font-semibold text-xs border border-slate-200 dark:border-white/10 transition-colors"
               >
-                <ExternalLink size={13} className="text-[#0284ff] dark:text-[#00C7FF]" />
+                <ExternalLink size={13} className="text-[#0369a1] dark:text-[#38bdf8]" />
                 <span>{lang === 'ar' ? 'تحميل PDF الرسمي' : 'Download PDF CV'}</span>
               </a>
             </div>

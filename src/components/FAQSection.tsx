@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { RevealOnScroll } from './RevealOnScroll';
 import { usePlayStoreAppStats } from '../services/playStoreService';
 
@@ -78,7 +77,7 @@ export const FAQSection: React.FC = () => {
       className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full"
     >
       <RevealOnScroll className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
-        <div className="text-xs font-mono font-semibold text-[#0284ff] dark:text-[#00C7FF] mb-2">
+        <div className="text-xs font-mono font-semibold text-[#0369a1] dark:text-[#38bdf8] mb-2">
           {lang === 'ar' ? 'الأسئلة الشائعة' : 'Frequently Asked Questions'}
         </div>
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
@@ -89,49 +88,52 @@ export const FAQSection: React.FC = () => {
       <div className="space-y-3">
         {faqs.map((faq, idx) => {
           const isOpen = openIndex === idx;
+          const panelId = `faq-panel-${idx}`;
+          const btnId = `faq-btn-${idx}`;
           return (
-            <RevealOnScroll key={idx} delay={idx * 0.04}>
+            <RevealOnScroll key={idx} delay={idx * 0.03}>
               <div
-                className={`card-shimmer rounded-2xl bg-white dark:bg-[#0f1117] border overflow-hidden transition-all duration-200 hover:shadow-sm ${
+                className={`card-shimmer rounded-2xl bg-white dark:bg-[#0f1117] border overflow-hidden transition-[border-color,box-shadow] duration-200 hover:shadow-sm ${
                   isOpen
                     ? 'border-[#0284ff]/45'
                     : 'border-slate-200 dark:border-white/10 hover:border-[#0284ff]/40'
                 }`}
               >
                 <button
+                  id={btnId}
                   type="button"
                   onClick={() => setOpenIndex(isOpen ? null : idx)}
                   className="w-full min-h-[52px] flex items-center justify-between gap-3 p-4 sm:p-5 text-start font-bold text-slate-900 dark:text-white text-sm sm:text-base cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]/40 rounded-2xl"
                   aria-expanded={isOpen}
+                  aria-controls={panelId}
                 >
                   <span className="flex items-center gap-3 min-w-0">
-                    <span className="font-mono tabular-nums text-xs font-bold text-[#0284ff] dark:text-[#00C7FF] shrink-0">
+                    <span className="font-mono tabular-nums text-xs font-bold text-[#0369a1] dark:text-[#38bdf8] shrink-0">
                       0{idx + 1}.
                     </span>
                     <span>{faq.q}</span>
                   </span>
                   <ChevronDown
                     size={17}
-                    className={`text-slate-500 dark:text-slate-400 transition-transform duration-200 shrink-0 ${
-                      isOpen ? 'rotate-180 text-[#0284ff] dark:text-[#00C7FF]' : ''
+                    className={`text-slate-600 dark:text-slate-400 transition-transform duration-200 shrink-0 ${
+                      isOpen ? 'rotate-180 text-[#0369a1] dark:text-[#38bdf8]' : ''
                     }`}
                   />
                 </button>
 
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.22, ease: 'easeInOut' }}
-                    >
-                      <div className="px-4 pb-5 sm:px-5 sm:pb-5 pt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-white/8">
-                        {faq.a}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <div
+                  id={panelId}
+                  role="region"
+                  aria-labelledby={btnId}
+                  data-open={isOpen ? 'true' : 'false'}
+                  className="grid-accordion"
+                >
+                  <div className="grid-accordion-inner">
+                    <div className="px-4 pb-5 sm:px-5 sm:pb-5 pt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-white/8">
+                      {faq.a}
+                    </div>
+                  </div>
+                </div>
               </div>
             </RevealOnScroll>
           );

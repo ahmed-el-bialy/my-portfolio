@@ -20,10 +20,7 @@ import { HeroSection } from './components/HeroSection';
 import { OverviewProjectsPreview } from './components/OverviewProjectsPreview';
 import { AboutSection } from './components/AboutSection';
 import { HowIWorkSection } from './components/HowIWorkSection';
-import { ContactModal } from './components/ContactModal';
-import { ResumeModal } from './components/ResumeModal';
-import { BookingMeetingModal, MeetingType } from './components/BookingMeetingModal';
-import { ProjectDetailsModal } from './components/ProjectDetailsModal';
+import type { MeetingType } from './components/BookingMeetingModal';
 import { ThemeRevealOverlay } from './components/ThemeRevealOverlay';
 import { BrandLogoMark } from './components/BrandLogoMark';
 import { PageSkeletonLoader } from './components/PageSkeletonLoader';
@@ -48,14 +45,26 @@ const loadFAQSection = () =>
   import('./components/FAQSection').then((m) => ({ default: m.FAQSection }));
 const loadTerminalModal = () =>
   import('./components/TerminalEasterEggModal').then((m) => ({ default: m.TerminalEasterEggModal }));
+const loadContactModal = () =>
+  import('./components/ContactModal').then((m) => ({ default: m.ContactModal }));
+const loadResumeModal = () =>
+  import('./components/ResumeModal').then((m) => ({ default: m.ResumeModal }));
+const loadBookingModal = () =>
+  import('./components/BookingMeetingModal').then((m) => ({ default: m.BookingMeetingModal }));
+const loadProjectDetailsModal = () =>
+  import('./components/ProjectDetailsModal').then((m) => ({ default: m.ProjectDetailsModal }));
 
-// Lazy-load secondary views & terminal modal for clean code splitting
+// Lazy-load secondary views & modals for faster first-paint loading
 const ProjectsSection = lazy(loadProjectsSection);
 const ExperienceSection = lazy(loadExperienceSection);
 const StackSection = lazy(loadStackSection);
 const ContactSection = lazy(loadContactSection);
 const FAQSection = lazy(loadFAQSection);
 const TerminalEasterEggModal = lazy(loadTerminalModal);
+const ContactModal = lazy(loadContactModal);
+const ResumeModal = lazy(loadResumeModal);
+const BookingMeetingModal = lazy(loadBookingModal);
+const ProjectDetailsModal = lazy(loadProjectDetailsModal);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -88,6 +97,31 @@ export default function App() {
   const [bookingInitialType, setBookingInitialType] = useState<MeetingType | null>(null);
   const [heroInspectedProject, setHeroInspectedProject] = useState<Project | null>(null);
   const [heroInspectedScreenIndex, setHeroInspectedScreenIndex] = useState<number>(0);
+  const [mountedModals, setMountedModals] = useState({
+    contact: false,
+    resume: false,
+    booking: false,
+    project: false,
+    terminal: false,
+  });
+
+  useEffect(() => {
+    if (isContactOpen && !mountedModals.contact) setMountedModals((m) => ({ ...m, contact: true }));
+  }, [isContactOpen, mountedModals.contact]);
+  useEffect(() => {
+    if (isResumeOpen && !mountedModals.resume) setMountedModals((m) => ({ ...m, resume: true }));
+  }, [isResumeOpen, mountedModals.resume]);
+  useEffect(() => {
+    if (isBookingOpen && !mountedModals.booking) setMountedModals((m) => ({ ...m, booking: true }));
+  }, [isBookingOpen, mountedModals.booking]);
+  useEffect(() => {
+    if (heroInspectedProject && !mountedModals.project)
+      setMountedModals((m) => ({ ...m, project: true }));
+  }, [heroInspectedProject, mountedModals.project]);
+  useEffect(() => {
+    if (isTerminalOpen && !mountedModals.terminal)
+      setMountedModals((m) => ({ ...m, terminal: true }));
+  }, [isTerminalOpen, mountedModals.terminal]);
   const [liveRepoCount, setLiveRepoCount] = useState<number>(13);
   const [liveRepos, setLiveRepos] = useState<GitHubRepo[]>([]);
   const [liveCvData, setLiveCvData] = useState<ParsedProfileData | null>(null);
@@ -527,7 +561,7 @@ export default function App() {
     }
   }, []);
 
-  // Preload secondary route bundles silently during idle time so navigating to Experience/Projects/Contact is instant
+  // Preload secondary views & global modals silently during idle time
   useEffect(() => {
     const timer = setTimeout(() => {
       loadExperienceSection().catch(() => {});
@@ -535,7 +569,11 @@ export default function App() {
       loadProjectsSection().catch(() => {});
       loadContactSection().catch(() => {});
       loadFAQSection().catch(() => {});
-    }, 450);
+      loadContactModal().catch(() => {});
+      loadResumeModal().catch(() => {});
+      loadBookingModal().catch(() => {});
+      loadProjectDetailsModal().catch(() => {});
+    }, 650);
     return () => clearTimeout(timer);
   }, []);
 
@@ -740,53 +778,61 @@ export default function App() {
           />
         )}
 
-        {/* Global Modals */}
-        <ContactModal
-          isOpen={isContactOpen}
-          onClose={() => setIsContactOpen(false)}
-          profile={profile}
-          onOpenBooking={() => {
-            setIsContactOpen(false);
-            openBookingModal(null);
-          }}
-        />
+        {/* Global Lazy-Loaded Modals (mounted once opened so exit AnimatePresence stays intact) */}
+        <Suspense fallback={null}>
+          {mountedModals.contact && (
+            <ContactModal
+              isOpen={isContactOpen}
+              onClose={() => setIsContactOpen(false)}
+              profile={profile}
+              onOpenBooking={() => {
+                setIsContactOpen(false);
+                openBookingModal(null);
+              }}
+            />
+          )}
 
-        <ResumeModal
-          isOpen={isResumeOpen}
-          onClose={() => setIsResumeOpen(false)}
-          profile={profile}
-          liveCvData={liveCvData}
-          liveRepos={liveRepos}
-          onRefreshCv={handleRefreshCvOnly}
-          isRefreshingCv={isRefreshingCv}
-        />
+          {mountedModals.resume && (
+            <ResumeModal
+              isOpen={isResumeOpen}
+              onClose={() => setIsResumeOpen(false)}
+              profile={profile}
+              liveCvData={liveCvData}
+              liveRepos={liveRepos}
+              onRefreshCv={handleRefreshCvOnly}
+              isRefreshingCv={isRefreshingCv}
+            />
+          )}
 
-        <BookingMeetingModal
-          isOpen={isBookingOpen}
-          onClose={() => setIsBookingOpen(false)}
-          profile={profile}
-          initialType={bookingInitialType}
-        />
+          {mountedModals.booking && (
+            <BookingMeetingModal
+              isOpen={isBookingOpen}
+              onClose={() => setIsBookingOpen(false)}
+              profile={profile}
+              initialType={bookingInitialType}
+            />
+          )}
 
-        <ProjectDetailsModal
-          isOpen={Boolean(heroInspectedProject)}
-          onClose={() => {
-            setHeroInspectedProject(null);
-            setHeroInspectedScreenIndex(0);
-          }}
-          project={heroInspectedProject}
-          initialScreenIndex={heroInspectedScreenIndex}
-        />
+          {mountedModals.project && (
+            <ProjectDetailsModal
+              isOpen={Boolean(heroInspectedProject)}
+              onClose={() => {
+                setHeroInspectedProject(null);
+                setHeroInspectedScreenIndex(0);
+              }}
+              project={heroInspectedProject}
+              initialScreenIndex={heroInspectedScreenIndex}
+            />
+          )}
 
-        {isTerminalOpen && (
-          <Suspense fallback={null}>
+          {mountedModals.terminal && (
             <TerminalEasterEggModal
               isOpen={isTerminalOpen}
               onClose={() => setIsTerminalOpen(false)}
               onNavigateTab={handleNavigate}
             />
-          </Suspense>
-        )}
+          )}
+        </Suspense>
 
         {/* Back to Top */}
         {showBackToTop && (
@@ -814,16 +860,16 @@ export default function App() {
                       {AHMED_CONFIG.name[lang]}
                     </span>
                     <span className="text-slate-300 dark:text-slate-700" aria-hidden="true">·</span>
-                    <span className="text-[#0284ff] dark:text-[#00C7FF] font-mono text-xs font-semibold">
+                    <span className="text-[#0369a1] dark:text-[#38bdf8] font-mono text-xs font-semibold">
                       {AHMED_CONFIG.title[lang]}
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-2.5 gap-y-1 mt-1.5 font-mono text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-2.5 gap-y-1 mt-1.5 font-mono text-[11px] tabular-nums text-slate-600 dark:text-slate-400">
                     <span className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold">
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${
-                          isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                          isOnline ? 'bg-emerald-500' : 'bg-amber-500'
                         }`}
                       />
                       {isOnline
@@ -871,13 +917,13 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsTerminalOpen(true)}
-                  className="btn-kinetic flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#0284ff]/10 dark:bg-[#0284ff]/15 hover:bg-[#0284ff]/18 dark:hover:bg-[#0284ff]/25 text-[#0284ff] dark:text-[#7DD3FC] border border-[#0284ff]/35 dark:border-[#00C7FF]/35 hover:border-[#00C7FF]/70 text-xs font-mono font-bold transition-all cursor-pointer min-h-[44px] sm:min-h-[38px] shadow-xs"
+                  className="btn-kinetic flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#0284ff]/10 dark:bg-[#0284ff]/15 hover:bg-[#0284ff]/18 dark:hover:bg-[#0284ff]/25 text-[#0369a1] dark:text-[#7DD3FC] border border-[#0284ff]/35 dark:border-[#38bdf8]/35 hover:border-[#0284ff]/70 text-xs font-mono font-bold transition-all cursor-pointer min-h-[44px] sm:min-h-[38px] shadow-xs"
                   title="Open AI-Powered Developer CLI Inspector"
                   aria-label="Open Developer AI CLI"
                 >
-                  <Terminal size={13} className="text-[#0284ff] dark:text-[#00C7FF]" />
+                  <Terminal size={13} className="text-[#0369a1] dark:text-[#38bdf8]" />
                   <span>{lang === 'ar' ? 'الطرفية AI CLI' : 'AI CLI'}</span>
-                  <Sparkles size={11} className="text-[#0284ff] dark:text-[#00C7FF]" />
+                  <Sparkles size={11} className="text-[#0369a1] dark:text-[#38bdf8]" />
                 </button>
               </div>
 
@@ -945,9 +991,9 @@ export default function App() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-200/80 dark:border-white/8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 dark:text-[#94a3b8] gap-2 text-center sm:text-start">
+            <div className="pt-4 border-t border-slate-200/80 dark:border-white/8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-600 dark:text-[#94a3b8] gap-2 text-center sm:text-start">
               <span>© {new Date().getFullYear()} {AHMED_CONFIG.name[lang]} · {t.footer.rights}</span>
-              <span className="font-mono text-[11px] text-slate-400 dark:text-slate-500">
+              <span className="font-mono text-[11px] text-slate-600 dark:text-slate-400">
                 {AHMED_CONFIG.location[lang]} · {t.footer.builtWith}
               </span>
             </div>
