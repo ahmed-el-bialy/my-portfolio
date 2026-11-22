@@ -66,6 +66,7 @@ import {
   RepoCaseStudyData,
   ConsolidatedGitHubPortfolio,
   formatFileSize,
+  sanitizeDiscoveredScreenshots,
 } from '../services/githubService';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import { useLanguage } from '../context/LanguageContext';
@@ -458,13 +459,13 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           VERIFIED_REPO_SCREENSHOTS[targetProject.repoName.toLowerCase()] ||
           [];
 
+        const cleanFolderUrls = sanitizeDiscoveredScreenshots(folderUrls);
+        const cleanMetaScreens = sanitizeDiscoveredScreenshots(meta?.discoveredScreenshots);
         const mergedScreens = Array.from(
           new Set([
-            ...(Array.isArray(folderUrls) ? folderUrls : []),
-            ...(Array.isArray(meta?.discoveredScreenshots) ? meta.discoveredScreenshots : []),
-            ...((!Array.isArray(folderUrls) || folderUrls.length === 0) && Array.isArray(verified)
-              ? verified
-              : []),
+            ...cleanFolderUrls,
+            ...cleanMetaScreens,
+            ...(Array.isArray(verified) ? verified : []),
           ])
         ).filter((u): u is string => typeof u === 'string' && u.trim().length > 0);
 
@@ -524,12 +525,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
         const initialScreens = Array.from(
           new Set([
-            ...(Array.isArray(matchedCachedRepo?.discoveredScreenshots)
-              ? matchedCachedRepo.discoveredScreenshots
-              : []),
-            ...(Array.isArray(cachedLiveMedia?.discoveredScreenshots)
-              ? cachedLiveMedia.discoveredScreenshots
-              : []),
+            ...sanitizeDiscoveredScreenshots(matchedCachedRepo?.discoveredScreenshots),
+            ...sanitizeDiscoveredScreenshots(cachedLiveMedia?.discoveredScreenshots),
             ...(Array.isArray(verified) ? verified : []),
           ])
         ).filter((u): u is string => typeof u === 'string' && u.trim().length > 0);

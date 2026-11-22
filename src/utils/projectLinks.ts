@@ -37,15 +37,21 @@ export function isYouTubePlaylistOnlyUrl(url?: string | null): boolean {
  * - Case D: webLiveDemoUrl (non-YouTube) -> 'webLiveDemo' (Live Demo)
  * - Case E: none exist -> 'none' (render nothing)
  */
+const safeTrimmedUrl = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
 export function resolveSmartProjectLinks(
   projectLinks?: Partial<Project['links']> | null,
   liveMedia?: Partial<RepoLiveMetadata> | null
 ): SmartProjectLinksResolution {
-  const rawDemoVideo = projectLinks?.demoVideoUrl?.trim() || undefined;
+  const rawDemoVideo = safeTrimmedUrl(projectLinks?.demoVideoUrl);
   const rawLiveCandidate =
-    liveMedia?.liveDemoUrl?.trim() || projectLinks?.liveDemoUrl?.trim() || undefined;
+    safeTrimmedUrl(liveMedia?.liveDemoUrl) || safeTrimmedUrl(projectLinks?.liveDemoUrl);
   const rawPlaylistCandidate =
-    liveMedia?.playlistUrl?.trim() || projectLinks?.playlistUrl?.trim() || undefined;
+    safeTrimmedUrl(liveMedia?.playlistUrl) || safeTrimmedUrl(projectLinks?.playlistUrl);
 
   let demoVideoUrl = rawDemoVideo;
   let playlistUrl = rawPlaylistCandidate;

@@ -253,10 +253,12 @@ html.light .ambient-glow-top {
    ========================================================= */
 .bg-architectural-grid {
   background-image:
-    radial-gradient(circle at 1px 1px, rgba(0, 199, 255, 0.065) 1px, transparent 0),
-    linear-gradient(to right, rgba(255, 255, 255, 0.032) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.032) 1px, transparent 1px);
+    radial-gradient(circle at 1px 1px, rgba(56, 189, 248, 0.15) 1px, transparent 0),
+    linear-gradient(to right, rgba(148, 163, 184, 0.075) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.075) 1px, transparent 1px);
   background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 85% at 50% 35%, #000 58%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 85% at 50% 35%, #000 58%, transparent 100%);
   contain: strict;
   transform: translateZ(0);
   pointer-events: none;
@@ -264,9 +266,9 @@ html.light .ambient-glow-top {
 
 html.light .bg-architectural-grid {
   background-image:
-    radial-gradient(circle at 1px 1px, rgba(2, 132, 255, 0.06) 1px, transparent 0),
-    linear-gradient(to right, rgba(15, 23, 42, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+    radial-gradient(circle at 1px 1px, rgba(2, 132, 255, 0.14) 1px, transparent 0),
+    linear-gradient(to right, rgba(15, 23, 42, 0.065) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.065) 1px, transparent 1px);
 }
 
 /* Subtle Scrollbar */

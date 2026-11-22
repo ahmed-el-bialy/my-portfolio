@@ -6,6 +6,7 @@ import { DEFAULT_PROFILE, openEmailClient, FEATURED_PROJECTS, Project } from './
 import { AHMED_CONFIG, getEgyptLocalTime } from './data/config';
 import {
   fetchConsolidatedGitHubPortfolio,
+  sanitizeDiscoveredScreenshots,
   clearAllGitHubLocalCache,
   type GitHubRepo,
 } from './services/githubService';
@@ -86,6 +87,60 @@ function resolveInitialTab(): NavTab {
   return 'overview';
 }
 
+interface MappedStorePortfolio {
+  repos: GitHubRepo[];
+  repoCount: number;
+  hasFallback: boolean;
+}
+
+function mapStorePortfolioPayload(raw: unknown): MappedStorePortfolio {
+  try {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      return { repos: [], repoCount: FEATURED_PROJECTS.length, hasFallback: true };
+    }
+    const payload = raw as {
+      repos?: unknown;
+      stats?: { isFromCache?: boolean } | null;
+      liveMediaMap?: unknown;
+    };
+
+    const rawRepos = Array.isArray(payload.repos) ? payload.repos : [];
+    const safeRepos: GitHubRepo[] = rawRepos
+      .filter(
+        (repo): repo is GitHubRepo =>
+          Boolean(repo) && typeof repo === 'object' && typeof (repo as GitHubRepo).name === 'string'
+      )
+      .map((repo) => ({
+        ...repo,
+        discoveredScreenshots: sanitizeDiscoveredScreenshots(repo.discoveredScreenshots),
+      }));
+
+    if (
+      payload.liveMediaMap &&
+      typeof payload.liveMediaMap === 'object' &&
+      !Array.isArray(payload.liveMediaMap)
+    ) {
+      Object.values(payload.liveMediaMap as Record<string, any>).forEach((entry) => {
+        if (entry && typeof entry === 'object' && Array.isArray(entry.discoveredScreenshots)) {
+          entry.discoveredScreenshots = sanitizeDiscoveredScreenshots(entry.discoveredScreenshots);
+        }
+      });
+    }
+
+    if (safeRepos.length === 0) {
+      return { repos: [], repoCount: FEATURED_PROJECTS.length, hasFallback: true };
+    }
+
+    return {
+      repos: safeRepos,
+      repoCount: safeRepos.length,
+      hasFallback: Boolean(payload.stats?.isFromCache),
+    };
+  } catch {
+    return { repos: [], repoCount: FEATURED_PROJECTS.length, hasFallback: true };
+  }
+}
+
 export default function App() {
   const { lang, dir, t, isSwitchingLang, switchingTargetLang, completeLanguageSwitch } = useLanguage();
   const prefersReducedMotion = useReducedMotion();
@@ -124,6 +179,7 @@ export default function App() {
   }, [isTerminalOpen, mountedModals.terminal]);
   const [liveRepoCount, setLiveRepoCount] = useState<number>(13);
   const [liveRepos, setLiveRepos] = useState<GitHubRepo[]>([]);
+  const [storeDataFallback, setStoreDataFallback] = useState<boolean>(false);
   const [liveCvData, setLiveCvData] = useState<ParsedProfileData | null>(null);
   const [isRefreshingCv, setIsRefreshingCv] = useState<boolean>(false);
   const lastWebhookPushRef = useRef<string | null>(null);
@@ -154,13 +210,25 @@ export default function App() {
           profile.githubUsername,
         ]);
         const safeRepo = (rawProject.repoName || rawProject.name || 'Revio').trim();
+        const mediaMap =
+          cached?.liveMediaMap &&
+          typeof cached.liveMediaMap === 'object' &&
+          !Array.isArray(cached.liveMediaMap)
+            ? cached.liveMediaMap
+            : undefined;
+        const releaseMap =
+          cached?.releasesMap &&
+          typeof cached.releasesMap === 'object' &&
+          !Array.isArray(cached.releasesMap)
+            ? cached.releasesMap
+            : undefined;
         const liveMedia =
-          cached?.liveMediaMap?.[safeRepo] ||
-          cached?.liveMediaMap?.[rawProject.name || ''] ||
-          cached?.liveMediaMap?.[safeRepo.toLowerCase()];
+          mediaMap?.[safeRepo] ||
+          mediaMap?.[rawProject.name || ''] ||
+          mediaMap?.[safeRepo.toLowerCase()];
         const liveRelease =
-          cached?.releasesMap?.[safeRepo] ||
-          cached?.releasesMap?.[safeRepo.toLowerCase()];
+          releaseMap?.[safeRepo] ||
+          releaseMap?.[safeRepo.toLowerCase()];
 
         const normalizedProject: Project = {
           ...rawProject,
@@ -245,16 +313,18 @@ export default function App() {
         parseCvAndLinkedinProfile(profile.cvDriveUrl, profile.linkedinUrl, true).catch(() => null),
       ]);
       queryClient.setQueryData(['github-consolidated', profile.githubUsername], fresh);
-      if (fresh.repos?.length) {
-        setLiveRepos(fresh.repos);
-        setLiveRepoCount(fresh.repos.length);
+      const mapped = mapStorePortfolioPayload(fresh);
+      if (mapped.repos.length > 0) {
+        setLiveRepos(mapped.repos);
+        setLiveRepoCount(mapped.repoCount);
       }
+      setStoreDataFallback(mapped.hasFallback);
       if (parsedCv) {
         setLiveCvData(parsedCv);
       }
       setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     } catch {
-      // ignore offline
+      setStoreDataFallback(true);
     } finally {
       setTimeout(() => setIsSyncing(false), 400);
     }
@@ -484,20 +554,34 @@ export default function App() {
     queryClient
       .prefetchQuery({
         queryKey: ['github-consolidated', profile.githubUsername],
-        queryFn: () => fetchConsolidatedGitHubPortfolio(profile.githubUsername),
+        queryFn: async () => {
+          try {
+            return await fetchConsolidatedGitHubPortfolio(profile.githubUsername);
+          } catch {
+            return null;
+          }
+        },
         staleTime: 1000 * 60 * 5,
       })
       .then(() => {
-        const cached = queryClient.getQueryData<any>([
-          'github-consolidated',
-          profile.githubUsername,
-        ]);
-        if (cached?.repos?.length) {
-          setLiveRepos(cached.repos);
-          setLiveRepoCount(cached.repos.length);
+        try {
+          const cached = queryClient.getQueryData<any>([
+            'github-consolidated',
+            profile.githubUsername,
+          ]);
+          const mapped = mapStorePortfolioPayload(cached);
+          if (mapped.repos.length > 0) {
+            setLiveRepos(mapped.repos);
+            setLiveRepoCount(mapped.repoCount);
+          }
+          setStoreDataFallback(mapped.hasFallback);
+        } catch {
+          setStoreDataFallback(true);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setStoreDataFallback(true);
+      });
 
     preloadImageUrls(FEATURED_PROJECTS.slice(0, 4).map((proj) => proj.image).filter(Boolean));
   }, [profile.githubUsername, profile.cvDriveUrl, profile.linkedinUrl]);
@@ -667,6 +751,8 @@ export default function App() {
                   onInspectRevio={handleInspectRevio}
                   onInspectProject={inspectHeroProjectSafely}
                   totalReposCount={liveRepoCount}
+                  isStoreFallback={storeDataFallback}
+                  onRetryStoreSync={handleManualRefresh}
                 />
                 <AboutSection onExploreExperience={() => handleNavigate('experience')} />
                 <OverviewProjectsPreview

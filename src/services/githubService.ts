@@ -547,23 +547,58 @@ export async function fetchContributionCalendar(username: string = 'ahmed-el-bia
   return days;
 }
 
+const NON_SCREENSHOT_HOST_PATTERNS = [
+  'img.shields.io',
+  'camo.githubusercontent.com',
+  'capsule-render',
+  'readme-typing-svg',
+  'komarev.com',
+  'skillicons.dev',
+  'cdn.dummyjson.com',
+  'dummyjson.com',
+  'via.placeholder.com',
+  'placeholder.com',
+  'example.com',
+];
+
+export function sanitizeDiscoveredScreenshots(urls?: string[] | null): string[] {
+  if (!Array.isArray(urls)) return [];
+  return urls.filter((url) => {
+    if (typeof url !== 'string') return false;
+    const trimmed = url.trim();
+    if (!trimmed) return false;
+    const lower = trimmed.toLowerCase();
+    if (NON_SCREENSHOT_HOST_PATTERNS.some((pattern) => lower.includes(pattern))) {
+      return false;
+    }
+    if (lower.includes('badge') || lower.endsWith('.gif') || lower.endsWith('.svg')) {
+      return false;
+    }
+    return true;
+  });
+}
+
 /**
  * Parses image URLs from repository description (supports markdown ![alt](url) and raw http(s) image URLs)
+ * Ignores fenced and inline code blocks so sample JSON API payloads are never mistaken for screenshots.
  */
 export function parseImagesFromDescription(description: string | null): string[] {
   if (!description) return [];
+  const cleanedDescription = description
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`\n]*`/g, ' ');
   const urls: string[] = [];
-  
+
   // Markdown images: ![alt](url)
   const markdownRegex = /!\[.*?\]\((https?:\/\/[^\s)]+\.(?:png|jpg|jpeg|webp|gif)(?:\?[^\s)]*)?)\)/gi;
   let match;
-  while ((match = markdownRegex.exec(description)) !== null) {
+  while ((match = markdownRegex.exec(cleanedDescription)) !== null) {
     if (match[1]) urls.push(match[1]);
   }
 
   // Raw URLs ending in image extensions
   const rawUrlRegex = /(https?:\/\/[^\s<>"')]+?\.(?:png|jpg|jpeg|webp)(?:\?[^\s<>"')]*)?)/gi;
-  while ((match = rawUrlRegex.exec(description)) !== null) {
+  while ((match = rawUrlRegex.exec(cleanedDescription)) !== null) {
     if (match[1] && !urls.includes(match[1])) {
       urls.push(match[1]);
     }
@@ -573,28 +608,12 @@ export function parseImagesFromDescription(description: string | null): string[]
 }
 
 /**
- * Extracts genuine app screenshots embedded inside a repository README (excluding shields.io, camo, badges, and small icons).
+ * Extracts genuine app screenshots embedded inside a repository README (excluding shields.io, camo, badges, and API example URLs).
  */
 export function extractEmbeddedReadmeScreenshots(readmeText?: string | null): string[] {
   if (!readmeText) return [];
   const raw = parseImagesFromDescription(readmeText);
-  return raw.filter((url) => {
-    const lower = url.toLowerCase();
-    if (
-      lower.includes('img.shields.io') ||
-      lower.includes('camo.githubusercontent.com') ||
-      lower.includes('capsule-render') ||
-      lower.includes('readme-typing-svg') ||
-      lower.includes('komarev.com') ||
-      lower.includes('skillicons.dev') ||
-      lower.includes('badge') ||
-      lower.endsWith('.gif') ||
-      lower.endsWith('.svg')
-    ) {
-      return false;
-    }
-    return true;
-  });
+  return sanitizeDiscoveredScreenshots(raw);
 }
 
 // Verified screenshot URLs across Ahmed El-Bialy's repositories
@@ -1395,7 +1414,7 @@ export async function fetchRepoLiveMetadata(
   forceRefresh: boolean = false
 ): Promise<RepoLiveMetadata> {
   const cleanName = repoName.trim();
-  const cacheKey = `live_media_v3_${username}_${cleanName}`;
+  const cacheKey = `live_media_v4_${username}_${cleanName}`;
 
   if (!forceRefresh && typeof window !== 'undefined') {
     try {
@@ -1581,7 +1600,7 @@ export async function fetchConsolidatedGitHubPortfolio(
   forceRefresh: boolean = false
 ): Promise<ConsolidatedGitHubPortfolio> {
   const cleanUsername = username.trim() || 'ahmed-el-bialy';
-  const cacheKey = `ahmed_consolidated_gh_v2_${cleanUsername}`;
+  const cacheKey = `ahmed_consolidated_gh_v3_${cleanUsername}`;
 
   if (!forceRefresh && typeof window !== 'undefined') {
     try {

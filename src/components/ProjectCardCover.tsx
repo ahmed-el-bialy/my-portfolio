@@ -17,7 +17,11 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { getVerifiedProjectScreenshots, fetchRepoScreenshots } from '../services/githubService';
+import {
+  getVerifiedProjectScreenshots,
+  fetchRepoScreenshots,
+  sanitizeDiscoveredScreenshots,
+} from '../services/githubService';
 import { ImageWithSkeleton, preloadImageUrls } from './ImageWithSkeleton';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -342,19 +346,24 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   );
 
   const curatedScreens = useMemo(() => getVerifiedProjectScreenshots(repoName), [repoName]);
+  const sanitizedDiscovered = useMemo(
+    () => sanitizeDiscoveredScreenshots(discoveredScreenshots),
+    [discoveredScreenshots]
+  );
 
   // Automatic client-side fallback discovery when a brand-new GitHub repo isn't in static VERIFIED_REPO_SCREENSHOTS yet
   useEffect(() => {
     let isCancelled = false;
-    if (curatedScreens.length > 0 || (discoveredScreenshots && discoveredScreenshots.length > 0)) {
+    if (curatedScreens.length > 0 || sanitizedDiscovered.length > 0) {
       setAutoDiscoveredScreens([]);
       return;
     }
 
     fetchRepoScreenshots(repoName)
       .then((urls) => {
-        if (!isCancelled && Array.isArray(urls) && urls.length > 0) {
-          setAutoDiscoveredScreens(urls);
+        const cleanUrls = sanitizeDiscoveredScreenshots(urls);
+        if (!isCancelled && cleanUrls.length > 0) {
+          setAutoDiscoveredScreens(cleanUrls);
         }
       })
       .catch(() => {});
@@ -362,12 +371,12 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [repoName, curatedScreens.length, discoveredScreenshots]);
+  }, [repoName, curatedScreens.length, sanitizedDiscovered.length]);
 
   const verifiedScreenshots = useMemo(() => {
     if (curatedScreens.length > 0) return curatedScreens.slice(0, 5);
-    if (discoveredScreenshots && discoveredScreenshots.length > 0) {
-      return discoveredScreenshots.slice(0, 5);
+    if (sanitizedDiscovered.length > 0) {
+      return sanitizedDiscovered.slice(0, 5);
     }
     if (autoDiscoveredScreens.length > 0) {
       return autoDiscoveredScreens.slice(0, 5);
@@ -376,7 +385,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
       return [coverUrl];
     }
     return [];
-  }, [curatedScreens, discoveredScreenshots, autoDiscoveredScreens, coverUrl]);
+  }, [curatedScreens, sanitizedDiscovered, autoDiscoveredScreens, coverUrl]);
 
   // Preload up to 4 screens in background so screen swaps never flash black
   useEffect(() => {
