@@ -477,8 +477,14 @@ html.light .skeleton-shimmer {
   .skill-shimmer-card::after,
   .stack-logo-tile:hover .stack-logo-glyph,
   .stack-logo-tile:focus-visible .stack-logo-glyph,
+  .stack-logo-tile[data-selected="true"] .stack-logo-glyph,
   .stack-logo-tile:hover .stack-logo-halo,
   .stack-logo-tile:focus-visible .stack-logo-halo,
+  .stack-logo-tile[data-selected="true"] .stack-logo-halo,
+  .stack-inspector-card:hover .stack-inspector-emblem .stack-logo-glyph,
+  .stack-inspector-emblem .stack-logo-glyph,
+  .stack-inspector-emblem .stack-logo-halo,
+  .stack-inspector-swap,
   .group:hover .stack-logo-glyph,
   .group:focus-visible .stack-logo-glyph,
   .group:hover .stack-logo-halo,
@@ -488,13 +494,22 @@ html.light .skeleton-shimmer {
   }
 }
 
-/* Gentle GPU-Composited Tech Logo Hover Pulsation */
+/* Gentle GPU-Composited Tech Logo Hover & Selection Pulsation */
 @keyframes techLogoPulsate {
   0%, 100% {
     transform: scale3d(1, 1, 1);
   }
   50% {
-    transform: scale3d(1.14, 1.14, 1);
+    transform: scale3d(1.13, 1.13, 1);
+  }
+}
+
+@keyframes techLogoPulsateSoft {
+  0%, 100% {
+    transform: scale3d(1, 1, 1);
+  }
+  50% {
+    transform: scale3d(1.07, 1.07, 1);
   }
 }
 
@@ -504,33 +519,60 @@ html.light .skeleton-shimmer {
     opacity: 0.45;
   }
   50% {
-    transform: scale3d(1.24, 1.24, 1);
-    opacity: 0.9;
+    transform: scale3d(1.22, 1.22, 1);
+    opacity: 0.92;
+  }
+}
+
+@keyframes stackInspectorReveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
   }
 }
 
 .stack-logo-glyph {
-  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform;
 }
 
 .stack-logo-halo {
-  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1), opacity 240ms ease;
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease;
   will-change: transform, opacity;
+}
+
+.stack-logo-tile[data-selected="true"] .stack-logo-glyph,
+.stack-inspector-emblem .stack-logo-glyph {
+  animation: techLogoPulsateSoft 2.4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+}
+
+.stack-logo-tile[data-selected="true"] .stack-logo-halo,
+.stack-inspector-emblem .stack-logo-halo {
+  animation: techLogoHaloPulse 2.4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
 }
 
 .stack-logo-tile:hover .stack-logo-glyph,
 .stack-logo-tile:focus-visible .stack-logo-glyph,
+.stack-inspector-card:hover .stack-inspector-emblem .stack-logo-glyph,
 .group:hover .stack-logo-glyph,
 .group:focus-visible .stack-logo-glyph {
-  animation: techLogoPulsate 1.45s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  animation: techLogoPulsate 1.4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
 }
 
 .stack-logo-tile:hover .stack-logo-halo,
 .stack-logo-tile:focus-visible .stack-logo-halo,
+.stack-inspector-card:hover .stack-inspector-emblem .stack-logo-halo,
 .group:hover .stack-logo-halo,
 .group:focus-visible .stack-logo-halo {
-  animation: techLogoHaloPulse 1.45s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  animation: techLogoHaloPulse 1.4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+}
+
+.stack-inspector-swap {
+  animation: stackInspectorReveal 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Tier 1 GPU-Composited Skill Card Hover Shimmer */

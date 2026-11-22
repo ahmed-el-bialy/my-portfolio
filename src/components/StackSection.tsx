@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Layers, Info } from 'lucide-react';
+import { Search, Layers, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { RevealOnScroll } from './RevealOnScroll';
 import { useLanguage } from '../context/LanguageContext';
 import {
@@ -309,39 +309,47 @@ export const StackSection: React.FC<StackSectionProps> = ({
   const { lang, dir, t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeCategory, setActiveCategory] = useState<StackFilter>('all');
-  const [expandedTechId, setExpandedTechId] = useState<string | null>(null);
   const [selectedToolId, setSelectedToolId] = useState<string>(DEDICATED_TECHS[0].id);
+  const [hoveredToolId, setHoveredToolId] = useState<string | null>(null);
 
-  const filterTabs: Array<{ id: StackFilter; label: string; count: number }> = [
-    { id: 'all', label: lang === 'ar' ? 'الكل' : 'All', count: DEDICATED_TECHS.length },
-    {
-      id: 'mobile',
-      label: t.stack.categories.mobile,
-      count: DEDICATED_TECHS.filter((i) => i.category === 'mobile').length,
-    },
-    {
-      id: 'state-storage',
-      label: t.stack.categories.stateStorage,
-      count: DEDICATED_TECHS.filter((i) => i.category === 'state-storage').length,
-    },
-    {
-      id: 'network-backend',
-      label: t.stack.categories.networkBackend,
-      count: DEDICATED_TECHS.filter((i) => i.category === 'network-backend').length,
-    },
-    {
-      id: 'ai-cs',
-      label: t.stack.categories.aiCs,
-      count: DEDICATED_TECHS.filter((i) => i.category === 'ai-cs').length,
-    },
-    {
-      id: 'tools',
-      label: t.stack.categories.tools,
-      count: DEDICATED_TECHS.filter((i) => i.category === 'tools').length,
-    },
-  ];
+  const isFull = variant === 'full';
+  const isRtl = dir === 'rtl';
+
+  const filterTabs: Array<{ id: StackFilter; label: string; count: number }> = useMemo(
+    () => [
+      { id: 'all', label: lang === 'ar' ? 'الكل' : 'All', count: DEDICATED_TECHS.length },
+      {
+        id: 'mobile',
+        label: t.stack.categories.mobile,
+        count: DEDICATED_TECHS.filter((i) => i.category === 'mobile').length,
+      },
+      {
+        id: 'state-storage',
+        label: t.stack.categories.stateStorage,
+        count: DEDICATED_TECHS.filter((i) => i.category === 'state-storage').length,
+      },
+      {
+        id: 'network-backend',
+        label: t.stack.categories.networkBackend,
+        count: DEDICATED_TECHS.filter((i) => i.category === 'network-backend').length,
+      },
+      {
+        id: 'ai-cs',
+        label: t.stack.categories.aiCs,
+        count: DEDICATED_TECHS.filter((i) => i.category === 'ai-cs').length,
+      },
+      {
+        id: 'tools',
+        label: t.stack.categories.tools,
+        count: DEDICATED_TECHS.filter((i) => i.category === 'tools').length,
+      },
+    ],
+    [lang, t]
+  );
 
   const filteredTechs = useMemo(() => {
+    if (!isFull) return DEDICATED_TECHS;
+
     return DEDICATED_TECHS.filter((item) => {
       if (activeCategory !== 'all' && item.category !== activeCategory) {
         return false;
@@ -358,396 +366,432 @@ export const StackSection: React.FC<StackSectionProps> = ({
         item.subSkills.some((s) => s.toLowerCase().includes(q))
       );
     });
-  }, [activeCategory, searchQuery]);
+  }, [isFull, activeCategory, searchQuery]);
 
-  const activeShowcaseTech = useMemo(
-    () => DEDICATED_TECHS.find((item) => item.id === selectedToolId) || DEDICATED_TECHS[0],
-    [selectedToolId]
-  );
+  const activeLockedTech = useMemo(() => {
+    if (filteredTechs.length === 0) return null;
+    return filteredTechs.find((item) => item.id === selectedToolId) ?? filteredTechs[0];
+  }, [filteredTechs, selectedToolId]);
 
-  const handleSelectLogoTile = (tech: TechItem) => {
-    setSelectedToolId(tech.id);
-    if (variant === 'full') {
-      setActiveCategory('all');
-      setSearchQuery('');
-      setExpandedTechId(tech.id);
+  const inspectedTech = useMemo(() => {
+    if (filteredTechs.length === 0) return null;
+    if (hoveredToolId) {
+      const hoveredMatch = filteredTechs.find((item) => item.id === hoveredToolId);
+      if (hoveredMatch) return hoveredMatch;
     }
+    return activeLockedTech;
+  }, [filteredTechs, hoveredToolId, activeLockedTech]);
+
+  const inspectedIndex = useMemo(() => {
+    if (!inspectedTech) return -1;
+    return filteredTechs.findIndex((item) => item.id === inspectedTech.id);
+  }, [filteredTechs, inspectedTech]);
+
+  const handleCycleTech = (direction: -1 | 1) => {
+    if (filteredTechs.length <= 1) return;
+    const baseIndex = inspectedIndex >= 0 ? inspectedIndex : 0;
+    const nextIndex = (baseIndex + direction + filteredTechs.length) % filteredTechs.length;
+    setHoveredToolId(null);
+    setSelectedToolId(filteredTechs[nextIndex].id);
   };
 
-  if (variant === 'overview') {
-    const ActiveLogo = activeShowcaseTech.LogoComponent;
+  const handleResetFilters = () => {
+    setActiveCategory('all');
+    setSearchQuery('');
+    setHoveredToolId(null);
+  };
 
-    return (
-      <section
-        id="stack"
-        className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full"
-      >
-        <RevealOnScroll className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8">
-          <div className="max-w-2xl">
-            <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0369a1] dark:text-[#38bdf8] mb-1.5">
-              <span>{t.stack.badge}</span>
-              <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
-                ·
-              </span>
-              <span className="text-slate-600 dark:text-[#94a3b8] font-sans">
-                {lang === 'ar' ? 'أدوات وتقنيات الإنتاج' : 'Animated Engineering Toolkit'}
-              </span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#f1f5f9] tracking-tight [text-wrap:balance]">
-              {t.stack.title}
-            </h2>
-            <p className="text-sm text-slate-600 dark:text-[#94a3b8] mt-1.5">
-              {t.stack.subtitle}
-            </p>
-          </div>
-
-          {onExploreFullStack && (
-            <button
-              type="button"
-              onClick={onExploreFullStack}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[42px] rounded-xl border border-slate-300/85 dark:border-white/15 bg-white/85 dark:bg-white/[0.035] hover:border-[#0284ff]/50 hover:text-[#0369a1] dark:hover:text-[#38bdf8] text-xs sm:text-[13px] font-semibold text-slate-800 dark:text-slate-200 cursor-pointer whitespace-nowrap shrink-0 transition-colors"
-            >
-              <span>{lang === 'ar' ? 'استكشاف تفاصيل المهارات والخبرة' : 'Explore Full Stack & Timeline'}</span>
-              <span aria-hidden="true" className={dir === 'rtl' ? 'inline-block rotate-180' : ''}>
-                →
-              </span>
-            </button>
-          )}
-        </RevealOnScroll>
-
-        {/* Animated Tech Logos Interactive Showcase Grid */}
-        <RevealOnScroll delay={0.04} className="space-y-4">
-          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 sm:gap-3">
-            {DEDICATED_TECHS.map((tech) => {
-              const Logo = tech.LogoComponent;
-              const isSelected = activeShowcaseTech.id === tech.id;
-
-              return (
-                <button
-                  key={tech.id}
-                  type="button"
-                  onClick={() => handleSelectLogoTile(tech)}
-                  onMouseEnter={() => setSelectedToolId(tech.id)}
-                  aria-pressed={isSelected}
-                  className={`stack-logo-tile group relative flex flex-col items-center justify-center gap-2.5 p-3.5 sm:p-4 rounded-2xl border text-center cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] ${
-                    isSelected
-                      ? 'bg-white dark:bg-[#131824] border-[#0284ff]/55 shadow-md'
-                      : 'bg-white/85 dark:bg-[#0f1117] border-slate-200/90 dark:border-white/10 hover:border-[#0284ff]/40 hover:bg-white dark:hover:bg-[#131722] shadow-2xs hover:shadow-md'
-                  }`}
-                >
-                  <div className="relative w-12 h-12 rounded-xl flex items-center justify-center">
-                    <span
-                      aria-hidden="true"
-                      className="stack-logo-halo absolute inset-0 rounded-xl pointer-events-none"
-                      style={{
-                        background: `radial-gradient(circle, rgba(${tech.glowRgb}, 0.28) 0%, rgba(${tech.glowRgb}, 0.06) 65%, transparent 100%)`,
-                        boxShadow: `0 0 22px rgba(${tech.glowRgb}, ${isSelected ? 0.34 : 0.16})`,
-                      }}
-                    />
-                    <span className="stack-logo-glyph relative z-10 flex items-center justify-center">
-                      <Logo size={26} />
-                    </span>
-                  </div>
-
-                  <div className="min-w-0 w-full">
-                    <span
-                      dir="ltr"
-                      className={`block text-xs font-bold truncate transition-colors ${
-                        isSelected
-                          ? 'text-[#0369a1] dark:text-[#38bdf8]'
-                          : 'text-slate-800 dark:text-slate-100 group-hover:text-[#0369a1] dark:group-hover:text-[#38bdf8]'
-                      }`}
-                    >
-                      {tech.name}
-                    </span>
-                    <span className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                      {lang === 'ar' ? tech.categoryLabelAr : tech.categoryLabel}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Selected Tool Live Readout Strip */}
-          <div className="card-shimmer overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs">
-            <div className="flex items-start sm:items-center gap-3.5 min-w-0">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center border border-slate-200 dark:border-white/10 shrink-0"
-                style={{
-                  backgroundColor: `rgba(${activeShowcaseTech.glowRgb}, 0.12)`,
-                  boxShadow: `0 0 22px rgba(${activeShowcaseTech.glowRgb}, 0.2)`,
-                }}
-              >
-                <ActiveLogo size={26} />
-              </div>
-
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                  <span
-                    dir="ltr"
-                    className="font-display text-sm sm:text-base font-extrabold text-slate-900 dark:text-white"
-                  >
-                    {activeShowcaseTech.name}
-                  </span>
-                  <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
-                    ·
-                  </span>
-                  <span className="text-xs font-mono font-semibold text-[#0369a1] dark:text-[#38bdf8]">
-                    {lang === 'ar'
-                      ? activeShowcaseTech.categoryLabelAr
-                      : activeShowcaseTech.categoryLabel}
-                  </span>
-                  <span aria-hidden="true" className="text-slate-300 dark:text-slate-700 hidden sm:inline">
-                    ·
-                  </span>
-                  <span dir="ltr" className="text-xs font-mono text-slate-600 dark:text-slate-400 hidden sm:inline">
-                    {activeShowcaseTech.highlightInApp}
-                  </span>
-                </div>
-                <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                  {lang === 'ar'
-                    ? activeShowcaseTech.descriptionAr
-                    : activeShowcaseTech.description}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] font-mono text-slate-600 dark:text-slate-400 shrink-0">
-              {activeShowcaseTech.subSkills.slice(0, 3).map((sub, i) => (
-                <React.Fragment key={sub}>
-                  {i > 0 && (
-                    <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
-                      ·
-                    </span>
-                  )}
-                  <span dir="ltr">{sub}</span>
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-        </RevealOnScroll>
-      </section>
-    );
-  }
+  const InspectedLogo = inspectedTech?.LogoComponent;
+  const formattedIndex =
+    inspectedIndex >= 0 ? String(inspectedIndex + 1).padStart(2, '0') : '00';
+  const formattedTotal = String(filteredTechs.length).padStart(2, '0');
 
   return (
     <section
       id="stack"
       className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full"
     >
-      {/* Header & Search */}
-      <RevealOnScroll className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+      {/* Header Zone */}
+      <RevealOnScroll className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8">
         <div className="max-w-2xl">
-          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0369a1] dark:text-[#38bdf8] mb-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-mono font-semibold text-[#0369a1] dark:text-[#38bdf8] mb-1.5">
             <span>{t.stack.badge}</span>
-            <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-            <span className="text-slate-600 dark:text-[#94a3b8] font-sans">
-              {lang === 'ar' ? 'مهارات وأدوات هندسية موثقة' : 'Verified Production Stack'}
+            <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
+              ·
+            </span>
+            <span className="text-slate-600 dark:text-[#94a3b8] font-sans font-medium">
+              {isFull
+                ? lang === 'ar'
+                  ? 'بيئة هندسية متكاملة وموثقة'
+                  : 'Interactive Skill Inspector'
+                : lang === 'ar'
+                ? 'معاينة حية لأدوات وتقنيات الإنتاج'
+                : 'Interactive Stack Inspector'}
             </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#f1f5f9] tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#f1f5f9] tracking-tight [text-wrap:balance]">
             {t.stack.title}
           </h2>
-          <p className="text-sm text-slate-600 dark:text-[#94a3b8] mt-1.5">
+          <p className="text-sm text-slate-600 dark:text-[#94a3b8] mt-1.5 leading-relaxed">
             {t.stack.subtitle}
           </p>
         </div>
 
-        <div className="relative w-full md:w-72 shrink-0">
-          <Search size={14} className="absolute top-1/2 -translate-y-1/2 text-slate-400 start-3.5" />
-          <input
-            type="text"
-            placeholder={t.stack.searchPlaceholder}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full py-2.5 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#0284ff] transition-colors ps-9 pe-3.5 min-h-[44px]"
-          />
-        </div>
-      </RevealOnScroll>
-
-      {/* Interactive Pulsating Development Tools Logo Strip */}
-      <RevealOnScroll delay={0.03} className="mb-6">
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1.5">
-          {DEDICATED_TECHS.map((tech) => {
-            const Logo = tech.LogoComponent;
-            const isSelected = expandedTechId === tech.id;
-            return (
+        {/* Contextual Action: Explore CTA (overview) or Search Input (full) */}
+        {isFull ? (
+          <div className="relative w-full md:w-80 shrink-0">
+            <Search
+              size={15}
+              aria-hidden="true"
+              className="absolute top-1/2 -translate-y-1/2 text-slate-400 start-3.5 pointer-events-none"
+            />
+            <input
+              type="text"
+              placeholder={t.stack.searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label={t.stack.searchPlaceholder}
+              className="w-full py-2.5 rounded-xl bg-white/95 dark:bg-[#0f1117]/85 dark:backdrop-blur-md border border-slate-200/90 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-[#f1f5f9] placeholder-slate-400 focus:outline-none focus:border-[#0284ff] focus-visible:ring-2 focus-visible:ring-[#0284ff]/40 transition-colors ps-10 pe-9 min-h-[44px]"
+            />
+            {searchQuery.trim().length > 0 && (
               <button
-                key={`quick-${tech.id}`}
                 type="button"
-                onClick={() => handleSelectLogoTile(tech)}
-                title={tech.name}
-                aria-label={tech.name}
-                className={`stack-logo-tile group inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] ${
-                  isSelected
-                    ? 'bg-[#0284ff]/10 border-[#0284ff]/55 text-[#0369a1] dark:text-[#38bdf8]'
-                    : 'bg-white dark:bg-[#0f1117] border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:border-[#0284ff]/45'
-                }`}
+                onClick={() => setSearchQuery('')}
+                aria-label={lang === 'ar' ? 'مسح البحث' : 'Clear search'}
+                className="absolute top-1/2 -translate-y-1/2 end-2.5 p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer transition-colors"
               >
-                <span className="relative w-6 h-6 rounded-lg flex items-center justify-center shrink-0">
-                  <span
-                    aria-hidden="true"
-                    className="stack-logo-halo absolute inset-0 rounded-lg pointer-events-none"
-                    style={{
-                      background: `radial-gradient(circle, rgba(${tech.glowRgb}, 0.25) 0%, transparent 72%)`,
-                    }}
-                  />
-                  <span className="stack-logo-glyph relative z-10 flex items-center justify-center">
-                    <Logo size={17} />
-                  </span>
-                </span>
-                <span dir="ltr">{tech.name}</span>
+                <X size={14} />
               </button>
-            );
-          })}
-        </div>
-      </RevealOnScroll>
-
-      {/* Category Filter Bar with Counts */}
-      <div className="flex flex-wrap items-center gap-1.5 mb-7 p-1.5 rounded-2xl bg-slate-100 dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 w-full">
-        {filterTabs.map((tab) => {
-          const isActive = activeCategory === tab.id;
-          return (
+            )}
+          </div>
+        ) : (
+          onExploreFullStack && (
             <button
-              key={tab.id}
               type="button"
-              onClick={() => setActiveCategory(tab.id)}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                isActive
-                  ? 'bg-[#0284ff] text-white shadow-xs shadow-[#0284ff]/25'
-                  : 'text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-[#f1f5f9]'
-              }`}
+              onClick={onExploreFullStack}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-xl border border-slate-300/85 dark:border-white/12 bg-white/95 dark:bg-[#0f1117]/85 dark:backdrop-blur-md hover:border-[#0284ff]/50 hover:text-[#0369a1] dark:hover:text-[#38bdf8] text-xs sm:text-[13px] font-semibold text-slate-800 dark:text-slate-200 cursor-pointer whitespace-nowrap shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
             >
-              <span>{tab.label}</span>
-              <span
-                className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded-md ${
-                  isActive
-                    ? 'bg-white/20 text-white'
-                    : 'bg-slate-200/80 dark:bg-white/5 text-slate-500 dark:text-slate-400'
-                }`}
-              >
-                {tab.count}
+              <span>
+                {lang === 'ar' ? 'استكشاف تفاصيل المهارات والخبرة' : 'Explore Full Stack & Timeline'}
+              </span>
+              <span aria-hidden="true" className={isRtl ? 'inline-block rotate-180' : ''}>
+                →
               </span>
             </button>
-          );
-        })}
-      </div>
+          )
+        )}
+      </RevealOnScroll>
 
-      {/* Independent-Height Accessible Skill Cards Grid */}
-      {filteredTechs.length === 0 ? (
-        <div className="text-center py-10 text-slate-600 dark:text-[#94a3b8] rounded-2xl p-6 bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10">
-          <Layers size={28} className="mx-auto mb-2 opacity-50" />
-          <p className="text-xs font-medium">{t.stack.noTechFound}</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
-          {filteredTechs.map((tech, idx) => {
-            const Logo = tech.LogoComponent;
-            const isExpanded = expandedTechId === tech.id;
-            const panelId = `stack-panel-${tech.id}`;
-
-            return (
-              <RevealOnScroll
-                key={tech.id}
-                delay={Math.min(idx * 0.025, 0.16)}
-              >
-                <article
-                  className={`card-shimmer skill-shimmer-card w-full group rounded-2xl bg-white dark:bg-[#0f1117] border transition-colors duration-200 shadow-2xs hover:shadow-md ${
-                    isExpanded
-                      ? 'border-[#0284ff]/65 ring-1 ring-[#0284ff]/20'
-                      : 'border-slate-200 dark:border-white/10 hover:border-[#0284ff]/45'
+      {/* Segmented Category Filter Strip (Full View Only) */}
+      {isFull && (
+        <RevealOnScroll delay={0.02} className="mb-6">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar p-1.5 rounded-2xl bg-slate-100/90 dark:bg-[#0f1117]/85 dark:backdrop-blur-md border border-slate-200/90 dark:border-white/10 w-full">
+            {filterTabs.map((tab) => {
+              const isActive = activeCategory === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveCategory(tab.id);
+                    setHoveredToolId(null);
+                  }}
+                  aria-pressed={isActive}
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 min-h-[40px] rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] ${
+                    isActive
+                      ? 'bg-[#0284ff] text-white shadow-xs shadow-[#0284ff]/25'
+                      : 'text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-[#f1f5f9] hover:bg-white/60 dark:hover:bg-white/[0.04]'
                   }`}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setExpandedTechId(isExpanded ? null : tech.id)}
-                    aria-expanded={isExpanded}
-                    aria-controls={panelId}
-                    className="w-full text-start p-5 flex flex-col cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
+                  <span>{tab.label}</span>
+                  <span
+                    className={`text-[11px] font-mono tabular-nums ${
+                      isActive
+                        ? 'text-white/90'
+                        : 'text-slate-500 dark:text-slate-400'
+                    }`}
                   >
-                    <div className="flex items-start justify-between gap-2 mb-3 w-full">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className="relative w-11 h-11 rounded-xl flex items-center justify-center border border-slate-200 dark:border-white/10 shrink-0"
-                          style={{
-                            backgroundColor: `rgba(${tech.glowRgb}, 0.12)`,
-                            boxShadow: `0 0 18px rgba(${tech.glowRgb}, 0.12)`,
-                          }}
-                        >
-                          <span
-                            aria-hidden="true"
-                            className="stack-logo-halo absolute inset-0 rounded-xl pointer-events-none"
-                            style={{
-                              background: `radial-gradient(circle, rgba(${tech.glowRgb}, 0.28) 0%, transparent 72%)`,
-                            }}
-                          />
-                          <span className="stack-logo-glyph relative z-10 flex items-center justify-center">
-                            <Logo size={23} />
-                          </span>
-                        </div>
-                        <div className="min-w-0">
-                          <span className="block text-sm font-bold text-slate-900 dark:text-[#f1f5f9] truncate group-hover:text-[#0369a1] dark:group-hover:text-[#38bdf8] transition-colors">
-                            {tech.name}
-                          </span>
-                          <span className="block text-[11px] font-medium text-slate-600 dark:text-[#94a3b8]">
-                            {lang === 'ar' ? tech.categoryLabelAr : tech.categoryLabel}
-                          </span>
-                        </div>
-                      </div>
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </RevealOnScroll>
+      )}
 
-                      <Info
-                        size={14}
+      {/* Split Inspector Workstation */}
+      <RevealOnScroll
+        delay={0.04}
+        className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start"
+      >
+        {/* Left / Start Track: Interactive Animated 4x4 Logo Grid */}
+        <div
+          className="lg:col-span-7 w-full"
+          onMouseLeave={() => setHoveredToolId(null)}
+        >
+          {filteredTechs.length === 0 ? (
+            <div className="rounded-2xl p-8 sm:p-10 text-center bg-white/95 dark:bg-[#0f1117]/85 dark:backdrop-blur-md border border-slate-200/90 dark:border-white/10">
+              <Layers size={28} aria-hidden="true" className="mx-auto mb-3 text-slate-400" />
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
+                {t.stack.noTechFound}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
+                {lang === 'ar'
+                  ? 'جرّب مسح نص البحث أو العودة إلى كافة التقنيات.'
+                  : 'Try clearing the search query or returning to all engineering layers.'}
+              </p>
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="inline-flex items-center justify-center px-4 py-2 min-h-[40px] rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
+              >
+                {lang === 'ar' ? 'إعادة ضبط الفلتر' : 'Clear Filters'}
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-3">
+              {filteredTechs.map((tech) => {
+                const Logo = tech.LogoComponent;
+                const isLocked = activeLockedTech?.id === tech.id;
+                const isInspected = inspectedTech?.id === tech.id;
+
+                return (
+                  <button
+                    key={tech.id}
+                    type="button"
+                    data-selected={isInspected ? 'true' : 'false'}
+                    aria-pressed={isLocked}
+                    onMouseEnter={() => setHoveredToolId(tech.id)}
+                    onFocus={() => setHoveredToolId(tech.id)}
+                    onClick={() => {
+                      setHoveredToolId(null);
+                      setSelectedToolId(tech.id);
+                    }}
+                    style={
+                      isInspected
+                        ? {
+                            borderColor: `rgba(${tech.glowRgb}, 0.52)`,
+                            boxShadow: `0 8px 28px -8px rgba(${tech.glowRgb}, 0.24), inset 0 1px 0 rgba(255,255,255,0.06)`,
+                          }
+                        : undefined
+                    }
+                    className={`stack-logo-tile group relative flex flex-col items-center justify-center gap-3 p-4 rounded-2xl border text-center cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] min-h-[120px] ${
+                      isInspected
+                        ? 'bg-white dark:bg-[#121622]/95 dark:backdrop-blur-md'
+                        : 'bg-white/95 dark:bg-[#0f1117]/80 dark:backdrop-blur-md border-slate-200/90 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/22 hover:bg-white dark:hover:bg-[#121620]/90'
+                    }`}
+                  >
+                    {/* Animated Logo Well */}
+                    <div className="relative w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+                      <span
                         aria-hidden="true"
-                        className={`shrink-0 transition-colors mt-0.5 ${
-                          isExpanded
-                            ? 'text-[#0369a1] dark:text-[#38bdf8]'
-                            : 'text-slate-400 group-hover:text-[#0369a1] dark:group-hover:text-[#38bdf8]'
-                        }`}
+                        className="stack-logo-halo absolute inset-0 rounded-xl pointer-events-none"
+                        style={{
+                          background: `radial-gradient(circle, rgba(${tech.glowRgb}, ${
+                            isInspected ? 0.34 : 0.2
+                          }) 0%, rgba(${tech.glowRgb}, 0.05) 68%, transparent 100%)`,
+                          boxShadow: `0 0 22px rgba(${tech.glowRgb}, ${isInspected ? 0.32 : 0.14})`,
+                        }}
                       />
-                    </div>
-
-                    <p className="text-xs text-slate-600 dark:text-[#94a3b8] leading-relaxed min-h-[3.25rem]">
-                      {lang === 'ar' ? tech.descriptionAr : tech.description}
-                    </p>
-
-                    <div id={panelId} className={`grid-accordion w-full ${isExpanded ? 'is-open' : ''}`}>
-                      <div className="grid-accordion-inner">
-                        <ul className="mt-3 pt-3 border-t border-slate-100 dark:border-white/8 space-y-1.5">
-                          {tech.subSkills.map((sub) => (
-                            <li
-                              key={sub}
-                              className="text-[11px] font-mono text-slate-700 dark:text-slate-300 flex items-center gap-1.5"
-                            >
-                              <span style={{ color: tech.accentColor }} aria-hidden="true">·</span>
-                              <span dir="ltr">{sub}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/8 flex items-center justify-between gap-2 text-[11px] w-full">
-                      <span className="text-[#0369a1] dark:text-[#38bdf8] font-semibold truncate" dir="ltr">
-                        {tech.highlightInApp}
+                      <span className="stack-logo-glyph relative z-10 flex items-center justify-center">
+                        <Logo size={28} />
                       </span>
-                      <span className="text-slate-600 dark:text-slate-400 font-mono shrink-0">
-                        {isExpanded
-                          ? lang === 'ar'
-                            ? 'إخفاء'
-                            : 'Less'
-                          : lang === 'ar'
-                          ? 'التفاصيل'
-                          : 'Capabilities'}
+                    </div>
+
+                    {/* Tool Title & Layer */}
+                    <div className="min-w-0 w-full">
+                      <span
+                        dir="ltr"
+                        className={`block text-[13px] font-bold truncate transition-colors ${
+                          isInspected
+                            ? 'text-[#0369a1] dark:text-[#38bdf8]'
+                            : 'text-slate-900 dark:text-slate-100 group-hover:text-[#0369a1] dark:group-hover:text-[#38bdf8]'
+                        }`}
+                      >
+                        {tech.name}
+                      </span>
+                      <span className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                        {lang === 'ar' ? tech.categoryLabelAr : tech.categoryLabel}
                       </span>
                     </div>
                   </button>
-                </article>
-              </RevealOnScroll>
-            );
-          })}
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Right / End Track: Sticky Live Detail Inspector */}
+        <aside
+          aria-live="polite"
+          className="lg:col-span-5 lg:sticky lg:top-24 w-full"
+        >
+          {inspectedTech && InspectedLogo ? (
+            <div
+              className="stack-inspector-card relative overflow-hidden rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white/95 dark:bg-[#0f1117]/88 dark:backdrop-blur-xl p-6 sm:p-7 transition-colors duration-200"
+              style={{
+                boxShadow: `0 18px 44px -22px rgba(${inspectedTech.glowRgb}, 0.28)`,
+              }}
+            >
+              {/* Subtle Ambient Radial Highlight */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-24 -end-24 w-64 h-64 rounded-full opacity-55 dark:opacity-45 transition-opacity duration-300"
+                style={{
+                  background: `radial-gradient(circle, rgba(${inspectedTech.glowRgb}, 0.18) 0%, transparent 70%)`,
+                }}
+              />
+
+              {/* Inspector Top Bar: Index & Prev/Next Controls */}
+              <div className="relative z-10 flex items-center justify-between gap-3 pb-5 border-b border-slate-200/80 dark:border-white/8">
+                <div className="flex items-center gap-2 text-xs font-mono text-slate-500 dark:text-slate-400">
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">
+                    {formattedIndex} / {formattedTotal}
+                  </span>
+                  <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
+                    ·
+                  </span>
+                  <span className="truncate">
+                    {lang === 'ar' ? inspectedTech.categoryLabelAr : inspectedTech.categoryLabel}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleCycleTech(-1)}
+                    disabled={filteredTechs.length <= 1}
+                    aria-label={lang === 'ar' ? 'التقنية السابقة' : 'Previous technology'}
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200/90 dark:border-white/10 bg-slate-50/80 dark:bg-white/[0.03] text-slate-600 dark:text-slate-300 hover:border-[#0284ff]/45 hover:text-[#0369a1] dark:hover:text-[#38bdf8] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
+                  >
+                    {isRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleCycleTech(1)}
+                    disabled={filteredTechs.length <= 1}
+                    aria-label={lang === 'ar' ? 'التقنية التالية' : 'Next technology'}
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200/90 dark:border-white/10 bg-slate-50/80 dark:bg-white/[0.03] text-slate-600 dark:text-slate-300 hover:border-[#0284ff]/45 hover:text-[#0369a1] dark:hover:text-[#38bdf8] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
+                  >
+                    {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Animated Active Tool Body */}
+              <div key={inspectedTech.id} className="stack-inspector-swap relative z-10 pt-5 space-y-5">
+                {/* Emblem + Identity */}
+                <div className="flex items-center gap-4">
+                  <div
+                    className="stack-inspector-emblem relative w-16 h-16 rounded-2xl flex items-center justify-center border border-slate-200/90 dark:border-white/12 shrink-0"
+                    style={{
+                      backgroundColor: `rgba(${inspectedTech.glowRgb}, 0.12)`,
+                    }}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="stack-logo-halo absolute inset-0 rounded-2xl pointer-events-none"
+                      style={{
+                        background: `radial-gradient(circle, rgba(${inspectedTech.glowRgb}, 0.34) 0%, transparent 72%)`,
+                        boxShadow: `0 0 28px rgba(${inspectedTech.glowRgb}, 0.25)`,
+                      }}
+                    />
+                    <span className="stack-logo-glyph relative z-10 flex items-center justify-center">
+                      <InspectedLogo size={34} />
+                    </span>
+                  </div>
+
+                  <div className="min-w-0">
+                    <h3
+                      dir="ltr"
+                      className="font-display text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate"
+                    >
+                      {inspectedTech.name}
+                    </h3>
+                    <p className="text-xs font-mono text-[#0369a1] dark:text-[#38bdf8] mt-1 truncate">
+                      {lang === 'ar' ? inspectedTech.categoryLabelAr : inspectedTech.categoryLabel}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Engineering Summary */}
+                <p className="text-sm sm:text-[15px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {lang === 'ar' ? inspectedTech.descriptionAr : inspectedTech.description}
+                </p>
+
+                {/* Shipped App Proof */}
+                <div className="pt-4 border-t border-slate-200/80 dark:border-white/8">
+                  <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    {lang === 'ar' ? 'التطبيق الفعلي في المشاريع' : 'Applied in Production'}
+                  </div>
+                  <div
+                    dir="ltr"
+                    className="text-[13px] font-mono font-semibold text-slate-900 dark:text-slate-100"
+                  >
+                    {inspectedTech.highlightInApp}
+                  </div>
+                </div>
+
+                {/* Core Capabilities Unboxed Typographic Grid */}
+                <div className="pt-4 border-t border-slate-200/80 dark:border-white/8">
+                  <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-2.5">
+                    {lang === 'ar' ? 'القدرات الهندسية الأساسية' : 'Core Capabilities'}
+                  </div>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                    {inspectedTech.subSkills.map((skill) => (
+                      <li
+                        key={skill}
+                        className="flex items-center gap-2 text-xs font-mono text-slate-700 dark:text-slate-300 min-w-0"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="shrink-0 font-bold"
+                          style={{ color: inspectedTech.accentColor }}
+                        >
+                          ·
+                        </span>
+                        <span dir="ltr" className="truncate">
+                          {skill}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Footer Guidance / Quick Jump */}
+                <div className="pt-4 border-t border-slate-200/80 dark:border-white/8 flex items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+                  <span>
+                    {lang === 'ar'
+                      ? 'مرر أو اضغط على أي شعار لاستعراض التفاصيل'
+                      : 'Hover or select any logo to inspect'}
+                  </span>
+                  {!isFull && onExploreFullStack && (
+                    <button
+                      type="button"
+                      onClick={onExploreFullStack}
+                      className="font-semibold text-[#0369a1] dark:text-[#38bdf8] hover:underline cursor-pointer whitespace-nowrap shrink-0"
+                    >
+                      {lang === 'ar' ? 'بحث وتصفية ←' : 'Filter & Search →'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white/95 dark:bg-[#0f1117]/85 dark:backdrop-blur-xl p-6 sm:p-7 text-center">
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                {lang === 'ar' ? 'لا توجد أداة محددة حالياً' : 'No technology selected'}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {lang === 'ar'
+                  ? 'أعد ضبط الفلتر لعرض تفاصيل المهارات.'
+                  : 'Reset active filters to inspect stack capabilities.'}
+              </p>
+            </div>
+          )}
+        </aside>
+      </RevealOnScroll>
     </section>
   );
 };
