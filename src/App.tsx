@@ -759,6 +759,12 @@ export default function App() {
                   githubUsername={profile.githubUsername}
                   onExploreAllProjects={() => handleNavigate('projects')}
                 />
+                <Suspense fallback={null}>
+                  <StackSection
+                    variant="overview"
+                    onExploreFullStack={() => handleNavigate('experience')}
+                  />
+                </Suspense>
                 <HowIWorkSection
                   onOpenBooking={() => openBookingModal('discovery-cal')}
                   onExploreProjects={() => handleNavigate('projects')}

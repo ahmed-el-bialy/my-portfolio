@@ -442,17 +442,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             {t.hero.bio}
           </motion.p>
 
-          {/* Clean Natural-Fit Action Hierarchy: Magnetic Primary Pair + Sleek Secondary Utilities */}
+          {/* Compact Tiered Action Hierarchy: Row 1 (Primary) + Row 2 (Secondary) */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-col items-start gap-2.5 pt-1 w-full"
+            className="flex flex-col items-start gap-2.5 pt-1.5 w-full"
           >
-            {/* Primary Row: Focal Solid CTA + Quiet Outline Hire Me */}
+            {/* Primary Row: View Projects (Focal Solid) + Hire Me (Quiet Outline) */}
             <div className="flex flex-wrap items-center gap-2.5">
               <MagneticButton
                 onClick={onExploreProjects}
-                strength={0.2}
-                className="cta-primary group px-5 py-2.5 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-bold text-[13px] sm:text-sm border border-[#38bdf8]/40 border-t border-t-white/25 hover:border-[#93c5fd]/60 cursor-pointer min-h-[42px] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
+                strength={0.09}
+                className="cta-primary group px-4 sm:px-5 py-2 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-bold text-[13px] sm:text-sm border border-[#38bdf8]/40 border-t border-t-white/25 hover:border-[#93c5fd]/60 cursor-pointer min-h-[40px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
               >
                 <span>{t.hero.exploreApps}</span>
                 <ArrowRight
@@ -467,8 +467,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
               <MagneticButton
                 onClick={() => (onOpenContact ? onOpenContact() : onOpenResume())}
-                strength={0.2}
-                className="cta-secondary group px-4 sm:px-5 py-2.5 rounded-xl bg-white/80 dark:bg-white/[0.03] hover:bg-[#0284ff]/[0.07] dark:hover:bg-[#0284ff]/[0.11] text-slate-900 dark:text-slate-100 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-300/85 dark:border-white/15 border-t border-t-white dark:border-t-white/20 hover:border-[#0284ff]/45 font-semibold text-[13px] sm:text-sm cursor-pointer min-h-[42px] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
+                strength={0.09}
+                className="cta-secondary group px-4 py-2 rounded-xl bg-white/85 dark:bg-white/[0.035] hover:bg-[#0284ff]/[0.07] dark:hover:bg-[#0284ff]/[0.11] text-slate-900 dark:text-slate-100 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-300/85 dark:border-white/15 border-t border-t-white dark:border-t-white/20 hover:border-[#0284ff]/45 font-semibold text-[13px] sm:text-sm cursor-pointer min-h-[40px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
               >
                 <Briefcase
                   size={15}
@@ -478,14 +478,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </MagneticButton>
             </div>
 
-            {/* Secondary Row: Compact Quiet Utilities */}
+            {/* Secondary Row: Start a Project + Resume / CV */}
             <div className="flex flex-wrap items-center gap-2">
               <MagneticButton
                 onClick={() =>
                   onOpenBooking ? onOpenBooking() : onOpenContact ? onOpenContact() : undefined
                 }
-                strength={0.16}
-                className="cta-secondary group px-3.5 py-2 rounded-xl bg-white/75 dark:bg-white/[0.025] hover:bg-[#0284ff]/[0.07] dark:hover:bg-[#0284ff]/[0.1] text-slate-700 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-300/80 dark:border-white/12 border-t border-t-white dark:border-t-white/15 hover:border-[#0284ff]/40 font-medium text-xs sm:text-[13px] cursor-pointer min-h-[38px] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
+                strength={0.07}
+                className="cta-secondary group px-3.5 py-1.5 rounded-xl bg-white/75 dark:bg-white/[0.025] hover:bg-[#0284ff]/[0.07] dark:hover:bg-[#0284ff]/[0.1] text-slate-700 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-300/80 dark:border-white/12 border-t border-t-white dark:border-t-white/15 hover:border-[#0284ff]/40 font-medium text-xs sm:text-[13px] cursor-pointer min-h-[36px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
               >
                 <Rocket
                   size={14}
@@ -498,8 +498,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={onOpenResume}
                 title={t.hero.downloadCv}
                 aria-label={t.hero.downloadCv}
-                strength={0.16}
-                className="cta-secondary group px-3.5 py-2 rounded-xl bg-white/75 dark:bg-white/[0.025] hover:bg-emerald-500/[0.07] dark:hover:bg-emerald-500/[0.1] text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-300 border border-slate-300/80 dark:border-white/12 border-t border-t-white dark:border-t-white/15 hover:border-emerald-500/40 font-medium text-xs sm:text-[13px] cursor-pointer min-h-[38px] whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
+                strength={0.07}
+                className="cta-secondary group px-3.5 py-1.5 rounded-xl bg-white/75 dark:bg-white/[0.025] hover:bg-emerald-500/[0.07] dark:hover:bg-emerald-500/[0.1] text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-300 border border-slate-300/80 dark:border-white/12 border-t border-t-white dark:border-t-white/15 hover:border-emerald-500/40 font-medium text-xs sm:text-[13px] cursor-pointer min-h-[36px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
               >
                 <Download
                   size={14}

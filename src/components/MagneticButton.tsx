@@ -11,7 +11,7 @@ interface MagneticButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEleme
 export const MagneticButton: React.FC<MagneticButtonProps> = ({
   children,
   className = '',
-  strength = 0.25,
+  strength = 0.09,
   textParallax = true,
   onClick,
   ...props
@@ -27,12 +27,12 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
     }
   }, []);
 
-  const springConfig = { damping: 18, stiffness: 260, mass: 0.12 };
+  const springConfig = { damping: 24, stiffness: 340, mass: 0.1 };
   const x = useSpring(0, springConfig);
   const y = useSpring(0, springConfig);
 
-  const textX = useSpring(0, { damping: 16, stiffness: 300, mass: 0.1 });
-  const textY = useSpring(0, { damping: 16, stiffness: 300, mass: 0.1 });
+  const textX = useSpring(0, { damping: 22, stiffness: 360, mass: 0.08 });
+  const textY = useSpring(0, { damping: 22, stiffness: 360, mass: 0.08 });
 
   const handleMouseEnter = () => {
     if (isTouchDevice || prefersReducedMotion) return;
@@ -48,12 +48,17 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
     const middleX = clientX - (left + width / 2);
     const middleY = clientY - (top + height / 2);
 
-    x.set(middleX * strength);
-    y.set(-1.5 + middleY * strength);
+    const clampedX = Math.max(-4.5, Math.min(4.5, middleX * strength));
+    const clampedY = Math.max(-3.5, Math.min(3.5, middleY * strength));
+
+    x.set(clampedX);
+    y.set(-1.5 + clampedY);
 
     if (textParallax) {
-      textX.set(middleX * (strength * 0.38));
-      textY.set(middleY * (strength * 0.38));
+      const innerX = Math.max(-2, Math.min(2, middleX * (strength * 0.28)));
+      const innerY = Math.max(-1.5, Math.min(1.5, middleY * (strength * 0.28)));
+      textX.set(innerX);
+      textY.set(innerY);
     }
   };
 
