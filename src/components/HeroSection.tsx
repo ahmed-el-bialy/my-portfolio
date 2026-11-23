@@ -131,7 +131,7 @@ const CountUpMetric: React.FC<{
     }
 
     let rafId = 0;
-    const duration = 260;
+    const duration = 780;
     const startTime = performance.now();
 
     const tick = (now: number) => {
@@ -309,18 +309,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     hidden: {},
     visible: {
       transition: {
-        staggerChildren: 0.045,
-        delayChildren: 0.02,
+        staggerChildren: 0.075,
+        delayChildren: 0.04,
       },
     },
   };
 
   const itemVariants = {
-    hidden: prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 },
+    hidden: prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.24, ease: EASE_EDITORIAL },
+      transition: { duration: 0.44, ease: EASE_EDITORIAL },
     },
   };
 
@@ -567,9 +567,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
         {/* Right Column: Interactive Revio & Multi-App Device Mockup */}
         <motion.div
-          initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
-          animate={entryReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
-          transition={{ duration: 0.24, delay: 0.06, ease: EASE_EDITORIAL }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 20, scale: 0.965 }}
+          animate={
+            entryReady
+              ? { opacity: 1, y: 0, scale: 1 }
+              : { opacity: 0, y: 20, scale: 0.965 }
+          }
+          transition={{ duration: 0.48, delay: 0.14, ease: EASE_EDITORIAL }}
           className="lg:col-span-6 flex"
         >
           <HeroShowcaseErrorBoundary
@@ -593,10 +597,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         {kpis.map((kpi, idx) => {
           const KpiIcon = kpi.icon;
           const cardBody = (
-            <div className="surface-card card-shimmer overflow-hidden w-full h-full p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md flex flex-col justify-between gap-3">
+            <div className="surface-card card-shimmer group overflow-hidden w-full h-full p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 active:scale-[0.985] flex flex-col justify-between gap-3 transition-all duration-200">
               <div className="flex items-center justify-between gap-2">
                 <div
-                  className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${kpi.iconClass}`}
+                  className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 ${kpi.iconClass}`}
                 >
                   <KpiIcon size={16} />
                 </div>
@@ -630,11 +634,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           return (
             <motion.div
               key={kpi.id}
-              initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
-              animate={entryReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
+              animate={entryReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
               transition={{
-                duration: 0.24,
-                delay: prefersReducedMotion ? 0 : 0.1 + idx * 0.04,
+                duration: 0.42,
+                delay: prefersReducedMotion ? 0 : 0.22 + idx * 0.06,
                 ease: EASE_EDITORIAL,
               }}
               className="flex"

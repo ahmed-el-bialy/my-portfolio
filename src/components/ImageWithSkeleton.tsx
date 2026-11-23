@@ -180,8 +180,8 @@ export const ImageWithSkeleton: React.FC<ImageWithSkeletonProps> = ({
           referrerPolicy={referrerPolicy}
           onLoad={handleLoad}
           onError={handleError}
-          className={`transition-opacity duration-300 ease-out ${
-            loaded ? 'opacity-100' : 'opacity-0'
+          className={`transition-[opacity,transform] duration-300 ease-out ${
+            loaded ? 'opacity-100 scale-100' : 'opacity-0 scale-[1.015]'
           } ${className}`}
         />
       )}

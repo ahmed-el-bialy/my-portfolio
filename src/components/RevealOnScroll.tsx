@@ -14,12 +14,12 @@ export const RevealOnScroll: React.FC<RevealOnScrollProps> = ({
   children,
   className = '',
   delay = 0,
-  duration = 0.24,
+  duration = 0.42,
   direction = 'up',
-  distance = 14,
+  distance = 22,
 }) => {
   const ref = useRef<HTMLDivElement | null>(null);
-  const isInView = useInView(ref, { once: true, margin: '-20px' });
+  const isInView = useInView(ref, { once: true, margin: '-36px' });
   const prefersReducedMotion = useReducedMotion();
 
   if (prefersReducedMotion) {
@@ -50,9 +50,9 @@ export const StaggerGroup: React.FC<{
   children: React.ReactNode;
   className?: string;
   staggerDelay?: number;
-}> = ({ children, className = '', staggerDelay = 0.045 }) => {
+}> = ({ children, className = '', staggerDelay = 0.065 }) => {
   const ref = useRef<HTMLDivElement | null>(null);
-  const isInView = useInView(ref, { once: true, margin: '-20px' });
+  const isInView = useInView(ref, { once: true, margin: '-36px' });
   const prefersReducedMotion = useReducedMotion();
 
   if (prefersReducedMotion) {
@@ -85,11 +85,11 @@ export const StaggerItem: React.FC<{
 }> = ({ children, className = '' }) => (
   <motion.div
     variants={{
-      hidden: { opacity: 0, y: 12 },
+      hidden: { opacity: 0, y: 18 },
       visible: {
         opacity: 1,
         y: 0,
-        transition: { duration: 0.24, ease: [0.16, 1, 0.3, 1] },
+        transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
       },
     }}
     className={className}

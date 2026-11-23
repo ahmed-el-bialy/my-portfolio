@@ -1,5 +1,5 @@
 import React from 'react';
-import { Youtube, ListVideo, ExternalLink } from 'lucide-react';
+import { Play, ListVideo, ExternalLink } from 'lucide-react';
 import { SmartProjectLinksResolution } from '../utils/projectLinks';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -25,28 +25,34 @@ export const SmartDemoButtons: React.FC<SmartDemoButtonsProps> = ({
   }
 
   const youtubeWatchBtnClass = compact
-    ? 'btn-kinetic inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[34px] rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white shadow-sm shadow-rose-600/25 font-bold text-[11px] whitespace-nowrap transition-all cursor-pointer'
+    ? 'btn-kinetic group/demo inline-flex items-center justify-center gap-2 px-3.5 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border border-rose-400/40 shadow-md shadow-rose-600/30 hover:shadow-lg hover:shadow-rose-500/40 font-bold text-xs whitespace-nowrap transition-all cursor-pointer active:scale-[0.97]'
     : `${
-        fullWidthOnRow ? 'flex-1 min-w-[128px]' : ''
-      } btn-kinetic inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white shadow-md shadow-rose-600/25 font-bold text-xs min-h-[40px] whitespace-nowrap transition-all cursor-pointer`;
+        fullWidthOnRow ? 'flex-1 min-w-[132px]' : ''
+      } btn-kinetic group/demo inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border border-rose-400/40 shadow-md shadow-rose-600/30 hover:shadow-lg hover:shadow-rose-500/40 font-bold text-xs min-h-[42px] sm:min-h-[40px] whitespace-nowrap transition-all cursor-pointer active:scale-[0.97]`;
 
   const youtubePlaylistBtnClass = compact
-    ? 'btn-kinetic inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 min-h-[34px] rounded-xl bg-amber-500/15 hover:bg-amber-600 hover:text-white text-amber-700 dark:text-amber-300 border border-amber-500/35 font-bold text-[11px] whitespace-nowrap transition-all'
-    : `${
-        fullWidthOnRow ? 'flex-1 min-w-[120px]' : ''
-      } btn-kinetic inline-flex items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl bg-amber-500/15 hover:bg-amber-600 hover:text-white text-amber-700 dark:text-amber-300 border border-amber-500/35 font-bold text-xs min-h-[40px] whitespace-nowrap transition-all`;
-
-  const webLiveBtnClass = compact
-    ? 'btn-kinetic inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[34px] rounded-xl bg-gradient-to-r from-[#0284ff] to-[#0099FF] hover:from-[#026ae0] hover:to-[#0284ff] text-white shadow-sm shadow-[#0284ff]/30 font-bold text-[11px] whitespace-nowrap transition-all'
+    ? 'btn-kinetic group/demo inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border border-amber-300/40 shadow-md shadow-amber-500/25 hover:shadow-lg hover:shadow-amber-500/35 font-bold text-xs whitespace-nowrap transition-all cursor-pointer active:scale-[0.97]'
     : `${
         fullWidthOnRow ? 'flex-1 min-w-[128px]' : ''
-      } btn-kinetic inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#0284ff] to-[#0099FF] hover:from-[#026ae0] hover:to-[#0284ff] text-white shadow-md shadow-[#0284ff]/30 font-bold text-xs min-h-[40px] whitespace-nowrap transition-all`;
+      } btn-kinetic group/demo inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border border-amber-300/40 shadow-md shadow-amber-500/25 hover:shadow-lg hover:shadow-amber-500/35 font-bold text-xs min-h-[42px] sm:min-h-[40px] whitespace-nowrap transition-all cursor-pointer active:scale-[0.97]`;
+
+  const webLiveBtnClass = compact
+    ? 'btn-kinetic group/demo inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-gradient-to-r from-[#0284ff] to-[#0099FF] hover:from-[#026ae0] hover:to-[#0284ff] text-white border border-sky-400/40 shadow-md shadow-[#0284ff]/30 hover:shadow-lg hover:shadow-[#0284ff]/40 font-bold text-xs whitespace-nowrap transition-all active:scale-[0.97]'
+    : `${
+        fullWidthOnRow ? 'flex-1 min-w-[132px]' : ''
+      } btn-kinetic group/demo inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#0284ff] to-[#0099FF] hover:from-[#026ae0] hover:to-[#0284ff] text-white border border-sky-400/40 shadow-md shadow-[#0284ff]/30 hover:shadow-lg hover:shadow-[#0284ff]/40 font-bold text-xs min-h-[42px] sm:min-h-[40px] whitespace-nowrap transition-all active:scale-[0.97]`;
 
   const handleStop = (e: React.MouseEvent) => {
     if (stopPropagation) {
       e.stopPropagation();
     }
   };
+
+  const playBadge = (
+    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20 shrink-0 transition-transform duration-200 group-hover/demo:scale-110">
+      <Play size={10} fill="currentColor" className="ms-0.5" />
+    </span>
+  );
 
   const renderWatchButton = (videoUrl: string) =>
     onWatchDemo ? (
@@ -58,7 +64,7 @@ export const SmartDemoButtons: React.FC<SmartDemoButtonsProps> = ({
         }}
         className={youtubeWatchBtnClass}
       >
-        <Youtube size={compact ? 12 : 14} className="shrink-0" />
+        {playBadge}
         <span>{t.projects.actions.watchDemo}</span>
       </button>
     ) : (
@@ -69,7 +75,7 @@ export const SmartDemoButtons: React.FC<SmartDemoButtonsProps> = ({
         onClick={handleStop}
         className={youtubeWatchBtnClass}
       >
-        <Youtube size={compact ? 12 : 14} className="shrink-0" />
+        {playBadge}
         <span>{t.projects.actions.watchDemo}</span>
       </a>
     );
@@ -87,14 +93,19 @@ export const SmartDemoButtons: React.FC<SmartDemoButtonsProps> = ({
             onClick={handleStop}
             className={youtubePlaylistBtnClass}
           >
-            <ListVideo size={compact ? 12 : 14} className="shrink-0" />
+            <ListVideo
+              size={14}
+              className="shrink-0 transition-transform duration-200 group-hover/demo:scale-110"
+            />
             <span>{t.projects.actions.fullDemo}</span>
           </a>
         </>
       )}
 
       {/* Case B: Only demoVideoUrl (latest update video) -> Watch Demo */}
-      {resolved.mode === 'watchDemo' && resolved.demoVideoUrl && renderWatchButton(resolved.demoVideoUrl)}
+      {resolved.mode === 'watchDemo' &&
+        resolved.demoVideoUrl &&
+        renderWatchButton(resolved.demoVideoUrl)}
 
       {/* Case C: Only playlistUrl (full playlist walkthrough) -> Full Demo */}
       {resolved.mode === 'playlistOnly' && resolved.playlistUrl && (
@@ -105,7 +116,10 @@ export const SmartDemoButtons: React.FC<SmartDemoButtonsProps> = ({
           onClick={handleStop}
           className={youtubePlaylistBtnClass}
         >
-          <ListVideo size={compact ? 12 : 14} className="shrink-0" />
+          <ListVideo
+            size={14}
+            className="shrink-0 transition-transform duration-200 group-hover/demo:scale-110"
+          />
           <span>{t.projects.actions.fullDemo}</span>
         </a>
       )}
@@ -119,8 +133,10 @@ export const SmartDemoButtons: React.FC<SmartDemoButtonsProps> = ({
           onClick={handleStop}
           className={webLiveBtnClass}
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 shrink-0" />
-          <ExternalLink size={compact ? 12 : 14} className="shrink-0" />
+          <ExternalLink
+            size={13}
+            className="shrink-0 transition-transform duration-200 group-hover/demo:scale-110"
+          />
           <span>{t.projects.actions.liveDemo}</span>
         </a>
       )}

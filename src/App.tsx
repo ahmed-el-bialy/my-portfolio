@@ -32,6 +32,7 @@ import { VERIFIED_REPO_SCREENSHOTS } from './services/githubService';
 import { Github, Linkedin, Youtube, Mail, RefreshCw, ArrowUp, Terminal, Sparkles } from 'lucide-react';
 import { WhatsAppLogo, TikTokLogo } from './components/TechLogos';
 import { useLanguage } from './context/LanguageContext';
+import { ModalLoadingFallback } from './components/ModalLoadingFallback';
 
 // Shared module loaders so both React.lazy and idle/hover prefetch reuse exact promises
 const loadProjectsSection = () =>
@@ -762,6 +763,8 @@ export default function App() {
                 <Suspense fallback={null}>
                   <StackSection
                     variant="overview"
+                    isDark={isDark}
+                    onInspectProject={inspectHeroProjectSafely}
                     onExploreFullStack={() => handleNavigate('experience')}
                   />
                 </Suspense>
@@ -816,7 +819,10 @@ export default function App() {
                   }
                 >
                   <ExperienceSection onOpenResume={() => setIsResumeOpen(true)} />
-                  <StackSection />
+                  <StackSection
+                    isDark={isDark}
+                    onInspectProject={inspectHeroProjectSafely}
+                  />
                 </Suspense>
               </motion.div>
             )}
@@ -871,7 +877,19 @@ export default function App() {
         )}
 
         {/* Global Lazy-Loaded Modals (mounted once opened so exit AnimatePresence stays intact) */}
-        <Suspense fallback={null}>
+        <Suspense
+          fallback={
+            <ModalLoadingFallback
+              show={
+                isContactOpen ||
+                isResumeOpen ||
+                isBookingOpen ||
+                Boolean(heroInspectedProject) ||
+                isTerminalOpen
+              }
+            />
+          }
+        >
           {mountedModals.contact && (
             <ContactModal
               isOpen={isContactOpen}

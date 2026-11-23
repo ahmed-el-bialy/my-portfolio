@@ -3,12 +3,12 @@ import { motion, AnimatePresence, LayoutGroup, useReducedMotion } from 'framer-m
 import { useQuery } from '@tanstack/react-query';
 import {
   ExternalLink,
-  Youtube,
   ChevronLeft,
   ChevronRight,
   Layers,
   Smartphone,
   RotateCcw,
+  Play,
 } from 'lucide-react';
 import { FEATURED_PROJECTS, Project } from '../data/portfolioData';
 import {
@@ -22,6 +22,7 @@ import { ImageWithSkeleton, preloadImageUrls } from './ImageWithSkeleton';
 import { TiltCard } from './MotionPrimitives';
 import { usePlayStoreAppStats } from '../services/playStoreService';
 import { useLanguage } from '../context/LanguageContext';
+import { ModalLoadingFallback } from './ModalLoadingFallback';
 
 const LazyVideoDemoModal = lazy(() =>
   import('./VideoDemoModal').then((m) => ({ default: m.VideoDemoModal }))
@@ -615,16 +616,18 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
                 videoUrl: demoVideoUrl,
               });
             }}
-            className="btn-kinetic flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-red-500/10 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 border border-red-500/25 text-xs font-semibold whitespace-nowrap cursor-pointer"
+            className="btn-kinetic group/demo flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border border-rose-400/40 shadow-md shadow-rose-600/30 hover:shadow-lg hover:shadow-rose-500/40 text-xs font-bold whitespace-nowrap cursor-pointer active:scale-[0.97]"
           >
-            <Youtube size={13} />
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20 shrink-0 transition-transform duration-200 group-hover/demo:scale-110">
+              <Play size={10} fill="currentColor" className="ms-0.5" />
+            </span>
             <span>{t.projects.actions.watchDemo}</span>
           </button>
         )}
       </div>
 
       {hasOpenedVideoModal && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<ModalLoadingFallback show={Boolean(videoModalState)} />}>
           <LazyVideoDemoModal
             isOpen={Boolean(videoModalState)}
             onClose={() => setVideoModalState(null)}

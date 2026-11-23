@@ -11,6 +11,7 @@ import { SmartDemoButtons } from './SmartDemoButtons';
 import { ProjectCardCover } from './ProjectCardCover';
 import { RevealOnScroll } from './RevealOnScroll';
 import { useLanguage } from '../context/LanguageContext';
+import { ModalLoadingFallback } from './ModalLoadingFallback';
 
 const ProjectDetailsModal = lazy(() =>
   import('./ProjectDetailsModal').then((m) => ({ default: m.ProjectDetailsModal }))
@@ -117,11 +118,11 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
           };
 
           return (
-            <RevealOnScroll key={project.id} delay={idx * 0.04} className="flex">
+            <RevealOnScroll key={project.id} delay={idx * 0.08} className="flex">
               <article
                 onMouseEnter={() => setHoveredCardId(project.id)}
                 onMouseLeave={() => setHoveredCardId(null)}
-                className="surface-card card-shimmer w-full group rounded-2xl overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-xl"
+                className="surface-card card-shimmer w-full group rounded-2xl overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
               >
                 <div>
                   <ProjectCardCover
@@ -221,7 +222,11 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
         })}
       </div>
 
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          <ModalLoadingFallback show={Boolean(selectedProject || videoModalState)} />
+        }
+      >
         {mountedModals.details && (
           <ProjectDetailsModal
             isOpen={Boolean(selectedProject)}

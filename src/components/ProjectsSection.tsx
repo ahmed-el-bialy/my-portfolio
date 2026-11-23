@@ -39,6 +39,7 @@ import { GitHubFallbackNotice } from './GitHubFallbackNotice';
 import { ImageWithSkeleton, preloadImageUrls } from './ImageWithSkeleton';
 import { usePlayStoreAppStats } from '../services/playStoreService';
 import { useLanguage } from '../context/LanguageContext';
+import { ModalLoadingFallback } from './ModalLoadingFallback';
 
 const LazyProjectDetailsModal = lazy(() =>
   import('./ProjectDetailsModal').then((m) => ({ default: m.ProjectDetailsModal }))
@@ -1321,7 +1322,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
       )}
 
       {mountedModals.details && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<ModalLoadingFallback show={Boolean(selectedProject)} />}>
           <LazyProjectDetailsModal
             isOpen={Boolean(selectedProject)}
             onClose={() => {
@@ -1335,7 +1336,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
       )}
 
       {mountedModals.apk && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<ModalLoadingFallback show={Boolean(apkModalProject)} />}>
           <LazyApkDownloadModal
             isOpen={Boolean(apkModalProject)}
             onClose={() => setApkModalProject(null)}
@@ -1345,7 +1346,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
       )}
 
       {mountedModals.video && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<ModalLoadingFallback show={Boolean(videoModalState)} />}>
           <LazyVideoDemoModal
             isOpen={Boolean(videoModalState)}
             onClose={() => setVideoModalState(null)}
