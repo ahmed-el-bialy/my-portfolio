@@ -474,6 +474,13 @@ html.light .skeleton-shimmer {
 @media (prefers-reduced-motion: reduce) {
   .animate-float-gentle,
   .animate-float-sway,
+  .brand-orbital-ring,
+  .brand-liquid-aura,
+  .brand-orbit-ring-a,
+  .brand-orbit-ring-b,
+  .brand-aperture-outer,
+  .brand-aperture-inner,
+  .brand-shockwave-ring,
   .skill-shimmer-card::after,
   .stack-logo-tile:hover .stack-logo-glyph,
   .stack-logo-tile:focus-visible .stack-logo-glyph,
@@ -492,6 +499,118 @@ html.light .skeleton-shimmer {
     animation: none !important;
     transform: none !important;
   }
+}
+
+/* =========================================================
+   3 SIGNATURE BRAND SEAL PRESETS (LIQUID / ORBIT / APERTURE)
+   ========================================================= */
+@keyframes brandOrbitalSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes brandOrbitalReverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes liquidAuraMorph {
+  0%, 100% {
+    border-radius: 56% 44% 52% 48% / 48% 55% 45% 52%;
+    transform: rotate(0deg) scale3d(1, 1, 1);
+  }
+  33% {
+    border-radius: 44% 56% 47% 53% / 57% 43% 56% 44%;
+    transform: rotate(120deg) scale3d(1.06, 0.96, 1);
+  }
+  66% {
+    border-radius: 53% 47% 58% 42% / 44% 58% 42% 56%;
+    transform: rotate(240deg) scale3d(0.96, 1.06, 1);
+  }
+}
+
+@keyframes sealShockwave {
+  0% {
+    transform: scale3d(0.92, 0.92, 1);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale3d(1.95, 1.95, 1);
+    opacity: 0;
+  }
+}
+
+.brand-orbital-ring {
+  animation: brandOrbitalSpin 9s linear infinite;
+  will-change: transform, opacity;
+}
+
+.brand-liquid-aura {
+  animation: liquidAuraMorph 5.5s ease-in-out infinite;
+  will-change: transform, border-radius;
+}
+
+.brand-gyro-zone:hover .brand-liquid-aura {
+  animation-duration: 2.2s;
+}
+
+.brand-orbit-ring-a {
+  animation: brandOrbitalSpin 5.4s linear infinite;
+  will-change: transform;
+}
+
+.brand-orbit-ring-b {
+  animation: brandOrbitalReverse 7.2s linear infinite;
+  will-change: transform;
+}
+
+.brand-gyro-zone:hover .brand-orbit-ring-a {
+  animation-duration: 1.9s;
+}
+
+.brand-gyro-zone:hover .brand-orbit-ring-b {
+  animation-duration: 2.6s;
+}
+
+.brand-aperture-outer {
+  animation: brandOrbitalSpin 12s linear infinite;
+  will-change: transform;
+}
+
+.brand-aperture-inner {
+  animation: brandOrbitalReverse 9s linear infinite;
+  will-change: transform;
+}
+
+.brand-gyro-zone:hover .brand-aperture-outer {
+  animation-duration: 3.4s;
+}
+
+.brand-gyro-zone:hover .brand-aperture-inner {
+  animation-duration: 2.4s;
+}
+
+.brand-shockwave-ring {
+  animation: sealShockwave 720ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.brand-gyro-zone:hover .brand-orbital-ring,
+.brand-gyro-zone:focus-within .brand-orbital-ring {
+  animation-duration: 3.2s;
+}
+
+.brand-gyro-zone:hover .animate-float-gentle,
+.brand-gyro-zone:hover .animate-float-sway {
+  animation-play-state: paused;
 }
 
 /* Gentle GPU-Composited Tech Logo Hover & Selection Pulsation */
@@ -538,6 +657,49 @@ html.light .skeleton-shimmer {
 .stack-logo-glyph {
   transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform;
+}
+
+.stack-muted-glyph {
+  filter: grayscale(1) saturate(0.12) brightness(0.86);
+  opacity: 0.4;
+  transition:
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stack-logo-tile:hover .stack-muted-glyph,
+.stack-logo-tile:focus-visible .stack-muted-glyph,
+.stack-logo-tile[data-selected="true"] .stack-muted-glyph {
+  filter: grayscale(0) saturate(1.14) brightness(1.06);
+  opacity: 1;
+}
+
+.stack-tile-well {
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.stack-logo-tile:hover .stack-tile-well,
+.stack-logo-tile:focus-visible .stack-tile-well,
+.stack-logo-tile[data-selected="true"] .stack-tile-well {
+  transform: translate3d(0, -10px, 0);
+}
+
+.stack-tile-name {
+  opacity: 0;
+  transform: translate3d(0, 6px, 0);
+  transition:
+    opacity 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.stack-logo-tile:hover .stack-tile-name,
+.stack-logo-tile:focus-visible .stack-tile-name,
+.stack-logo-tile[data-selected="true"] .stack-tile-name {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
 }
 
 .stack-logo-halo {

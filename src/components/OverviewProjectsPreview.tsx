@@ -167,6 +167,20 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                     <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                       {project.description}
                     </p>
+                    {Array.isArray(project.technologies) && project.technologies.length > 0 && (
+                      <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                        {project.technologies.slice(0, 3).map((tech, techIdx) => (
+                          <React.Fragment key={tech}>
+                            {techIdx > 0 && (
+                              <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
+                                ·
+                              </span>
+                            )}
+                            <span>{tech}</span>
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

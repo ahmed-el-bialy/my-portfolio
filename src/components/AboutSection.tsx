@@ -13,6 +13,7 @@ interface AboutSectionProps {
 
 export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience }) => {
   const { lang, dir } = useLanguage();
+  const aboutFieldRef = useRef<HTMLElement>(null);
   const [tapCount, setTapCount] = useState(0);
   const [eggTriggered, setEggTriggered] = useState(false);
   const eggTimerRef = useRef<number | null>(null);
@@ -88,6 +89,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
 
   return (
     <section
+      ref={aboutFieldRef}
       id="about"
       className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 border-t border-slate-200/80 dark:border-white/8 w-full"
     >
@@ -108,7 +110,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
       {/* Redesigned Compact Full-Width Profile Strip */}
       <RevealOnScroll
         delay={0}
-        className="card-shimmer overflow-hidden mb-4 sm:mb-6 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-4 sm:p-6 shadow-sm hover:border-[#0284ff]/35 transition-colors"
+        className="card-shimmer overflow-visible mb-4 sm:mb-6 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-4 sm:p-6 shadow-sm hover:border-[#0284ff]/35 transition-colors"
       >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-5 lg:gap-7 items-center">
           {/* 1. Headshot + Side-by-Side Brand Logo & Display Name */}
@@ -136,16 +138,16 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onExploreExperience 
             </div>
 
             <div className="min-w-0 flex-1 space-y-0.5 sm:space-y-1">
-              <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 ps-1">
-                <BrandLogoMark
-                  floatEffect={true}
-                  floatMode="sway"
-                  sizeClassName="w-7 h-7 sm:w-9 sm:h-9"
-                  alt="Ahmed El-Bialy Personal Brand Logo"
-                />
-                <h3 className="font-display text-[17.5px] sm:text-2xl font-extrabold text-slate-900 dark:text-white leading-tight">
+              <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 py-1">
+                <h3 className="font-display text-[17.5px] sm:text-2xl font-extrabold text-slate-900 dark:text-white leading-tight truncate">
                   {AHMED_CONFIG.name[lang]}
                 </h3>
+                <BrandLogoMark
+                  floatingInk={true}
+                  fieldRef={aboutFieldRef}
+                  sizeClassName="w-9 h-9 sm:w-11 sm:h-11"
+                  alt="Ahmed El-Bialy Personal Brand Logo"
+                />
               </div>
               <p className="font-display text-[13px] sm:text-[15px] font-bold text-[#0369a1] dark:text-[#38bdf8] leading-snug">
                 {AHMED_CONFIG.title[lang]}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Component } from 'react';
+import React, { useState, useEffect, useRef, Component } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   Github,
@@ -7,7 +7,7 @@ import {
   Phone,
   ArrowRight,
   Briefcase,
-  Rocket,
+  Video,
   Youtube,
   Download,
   Star,
@@ -64,8 +64,8 @@ class HeroShowcaseErrorBoundary extends Component<
     if (this.state.hasError) {
       const isAr = this.props.lang === 'ar';
       return (
-        <div className="w-full h-full min-h-[360px] rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-6 shadow-xl flex flex-col items-center justify-center text-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#0284ff]/10 border border-[#0284ff]/25 flex items-center justify-center text-[#0369a1] dark:text-[#38bdf8]">
+        <div className="w-full h-full min-h-[360px] rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-6 shadow-lg flex flex-col items-center justify-center text-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-[#0284ff]/10 border border-[#0284ff]/25 flex items-center justify-center text-[#0369a1] dark:text-[#38bdf8]">
             <Smartphone size={22} />
           </div>
           <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">
@@ -83,7 +83,7 @@ class HeroShowcaseErrorBoundary extends Component<
                 this.setState({ hasError: false });
                 this.props.onRetry?.();
               }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white text-xs font-bold cursor-pointer transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white text-xs font-bold cursor-pointer transition-colors whitespace-nowrap"
             >
               <RotateCcw size={13} />
               <span>{isAr ? 'إعادة المحاولة' : 'Retry'}</span>
@@ -91,7 +91,7 @@ class HeroShowcaseErrorBoundary extends Component<
             <button
               type="button"
               onClick={this.props.onExploreProjects}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 dark:border-white/12 text-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer hover:border-[#0284ff]/45 transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 dark:border-white/12 text-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer hover:border-[#0284ff]/45 transition-colors whitespace-nowrap"
             >
               <span>{isAr ? 'عرض التطبيقات' : 'View Projects'}</span>
             </button>
@@ -171,6 +171,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const { lang, dir, t } = useLanguage();
   const prefersReducedMotion = useReducedMotion();
   const [rotatingWordIndex, setRotatingWordIndex] = useState(0);
+  const heroFieldRef = useRef<HTMLElement>(null);
   const { data: playStats, isError: isPlayStatsError } = usePlayStoreAppStats('com.ahmed.revio');
 
   const rotatingWords =
@@ -211,57 +212,57 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         {
           id: 'play-rating',
           icon: Star,
-          badge: 'Google Play',
+          sourceLabel: 'Google Play',
           value: playRatingDisplay,
           suffix: lang === 'ar' ? 'تقييم Revio' : 'Revio Rating',
           label: safePlayStats?.reviewsCount
             ? lang === 'ar'
-              ? `تطبيق Revio على Google Play (${safePlayStats.reviewsCount} مراجعة)`
+              ? `تطبيق Revio على المتجر (${safePlayStats.reviewsCount} مراجعة)`
               : `Revio verified on Google Play (${safePlayStats.reviewsCount} reviews)`
             : lang === 'ar'
-            ? 'تطبيق Revio منشور رسمياً ومباشر على Google Play'
-            : 'Revio published & verified live on Google Play',
+            ? 'تطبيق Revio منشور رسمياً على Google Play'
+            : 'Revio published & live on Google Play',
           accentClass: 'text-emerald-700 dark:text-emerald-400',
-          iconBg: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+          iconClass: 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
           href: AHMED_CONFIG.socials.playstore,
         },
         {
           id: 'play-downloads',
           icon: Download,
-          badge: lang === 'ar' ? 'تحديث تلقائي' : 'Auto-Synced',
+          sourceLabel: lang === 'ar' ? 'إحصائيات مباشرة' : 'Store Sync',
           value: playDownloadsDisplay,
           suffix: lang === 'ar' ? 'تحميل' : 'Downloads',
           label: lang === 'ar'
-            ? 'إجمالي تحميلات Revio مباشرة من صفحة المتجر'
+            ? 'إجمالي تثبيتات Revio من متجر Google Play'
             : 'Revio installs synced from Google Play listing',
           accentClass: 'text-[#0369a1] dark:text-[#38bdf8]',
-          iconBg: 'bg-[#0284ff]/10 text-[#0369a1] dark:text-[#38bdf8] border-[#0284ff]/20',
+          iconClass: 'text-[#0369a1] dark:text-[#38bdf8] bg-[#0284ff]/10 border-[#0284ff]/20',
           href: AHMED_CONFIG.socials.playstore,
         },
         {
           id: 'github-repos',
           icon: FolderGit2,
-          badge: 'GitHub',
+          sourceLabel: 'GitHub',
           value: reposDisplay,
           suffix: lang === 'ar' ? 'مستودع' : 'Repositories',
           label: lang === 'ar'
-            ? 'مشاريع وتطبيقات موبايل مفتوحة المصدر على GitHub'
-            : 'Public Flutter & architecture codebases on GitHub',
+            ? 'مشاريع وتطبيقات موبايل مفتوحة المصدر'
+            : 'Public Flutter & architecture codebases',
           accentClass: 'text-slate-900 dark:text-white',
-          iconBg: 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/10',
+          iconClass: 'text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.06] border-slate-200 dark:border-white/10',
           onClick: onExploreProjects,
         },
         {
           id: 'featured-apps',
           icon: Smartphone,
-          badge: 'Clean Arch',
+          sourceLabel: 'Clean Arch',
           value: productionAppsCount,
           suffix: lang === 'ar' ? 'تطبيقات إنتاج' : 'Shipped Apps',
           label: lang === 'ar'
-            ? 'تطبيقات Flutter متكاملة بـ BLoC/Cubit و REST APIs و Hive'
-            : 'Production Flutter apps built with BLoC/Cubit & Hive',
+            ? 'تطبيقات بـ BLoC/Cubit و REST APIs و Hive'
+            : 'Production apps with BLoC/Cubit & Hive',
           accentClass: 'text-[#0369a1] dark:text-[#38bdf8]',
-          iconBg: 'bg-[#0284ff]/10 text-[#0369a1] dark:text-[#38bdf8] border-[#0284ff]/20',
+          iconClass: 'text-[#0369a1] dark:text-[#38bdf8] bg-[#0284ff]/10 border-[#0284ff]/20',
           onClick: onExploreProjects,
         },
       ];
@@ -270,27 +271,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         {
           id: 'play-rating',
           icon: Star,
-          badge: 'Google Play',
+          sourceLabel: 'Google Play',
           value: lang === 'ar' ? 'منشور' : 'Live',
           suffix: lang === 'ar' ? 'تقييم Revio' : 'Revio Rating',
           label: lang === 'ar'
-            ? 'تطبيق Revio منشور رسمياً ومباشر على Google Play'
-            : 'Revio published & verified live on Google Play',
+            ? 'تطبيق Revio منشور رسمياً على Google Play'
+            : 'Revio published & live on Google Play',
           accentClass: 'text-emerald-700 dark:text-emerald-400',
-          iconBg: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+          iconClass: 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
           href: AHMED_CONFIG.socials.playstore,
         },
         {
           id: 'featured-apps',
           icon: Smartphone,
-          badge: 'Clean Arch',
+          sourceLabel: 'Clean Arch',
           value: `${FEATURED_PROJECTS.length}+`,
           suffix: lang === 'ar' ? 'تطبيقات إنتاج' : 'Shipped Apps',
           label: lang === 'ar'
-            ? 'تطبيقات Flutter متكاملة بـ BLoC/Cubit و REST APIs و Hive'
-            : 'Production Flutter apps built with BLoC/Cubit & Hive',
+            ? 'تطبيقات بـ BLoC/Cubit و REST APIs و Hive'
+            : 'Production apps with BLoC/Cubit & Hive',
           accentClass: 'text-[#0369a1] dark:text-[#38bdf8]',
-          iconBg: 'bg-[#0284ff]/10 text-[#0369a1] dark:text-[#38bdf8] border-[#0284ff]/20',
+          iconClass: 'text-[#0369a1] dark:text-[#38bdf8] bg-[#0284ff]/10 border-[#0284ff]/20',
           onClick: onExploreProjects,
         },
       ];
@@ -328,131 +329,139 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     'Flutter Mobile Developer Opportunity'
   )}`;
 
+  const channelLinks = [
+    { label: lang === 'ar' ? 'البريد' : 'Email', href: emailHref, icon: Mail, external: false },
+    {
+      label: lang === 'ar' ? 'اتصال' : 'Call',
+      href: `tel:${profile.phone}`,
+      icon: Phone,
+      external: false,
+    },
+    { label: 'GitHub', href: profile.githubUrl, icon: Github, external: true },
+    { label: 'LinkedIn', href: profile.linkedinUrl, icon: Linkedin, external: true },
+    { label: 'YouTube', href: profile.youtubeUrl, icon: Youtube, external: true },
+  ];
+
   return (
     <section
+      ref={heroFieldRef}
       id="overview"
-      className="relative px-4 sm:px-6 lg:px-8 pt-[68px] pb-6 sm:pt-24 sm:pb-12 overflow-x-clip w-full"
+      className="relative px-4 sm:px-6 lg:px-8 pt-[76px] pb-8 sm:pt-28 sm:pb-14 overflow-x-clip w-full"
     >
       <div className="ambient-glow-top absolute inset-0 pointer-events-none" />
 
       {/* Editorial Split Hero (Equal-stretch alignment) */}
-      <div className="max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-10 items-stretch relative z-10">
-        {/* Left Column: Staggered Editorial Typography, Specialty Strip & Dual HR/Freelance CTAs */}
+      <div className="max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-12 items-stretch relative z-10">
+        {/* Left Column: Calm Editorial Typography, Medium Emblem & Focused Action Hierarchy */}
         <motion.div
           variants={containerVariants}
           initial={prefersReducedMotion ? false : 'hidden'}
           animate={entryReady ? 'visible' : 'hidden'}
-          className="lg:col-span-6 flex flex-col justify-center items-start gap-3 sm:gap-4"
+          className="lg:col-span-6 flex flex-col justify-center items-start gap-4 sm:gap-5"
         >
-          {/* 1. Availability & Discipline Strip */}
+          {/* 1. Unboxed Editorial Availability & Discipline Strip */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] sm:text-[13px] font-medium text-slate-600 dark:text-[#94a3b8]"
+            className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs sm:text-[13px] font-medium text-slate-600 dark:text-[#94a3b8]"
           >
-            <span className="inline-flex items-center gap-2 font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 rounded-lg px-2.5 py-1">
-              <span className="inline-flex rounded-full h-2 w-2 bg-emerald-500 shrink-0" aria-hidden="true" />
-              <span>{availabilityText}</span>
+            <span className="font-bold text-emerald-700 dark:text-emerald-400">
+              {availabilityText}
             </span>
             <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
               ·
             </span>
             <span>{AHMED_CONFIG.location[lang]}</span>
-            <span aria-hidden="true" className="text-slate-300 dark:text-slate-700 hidden sm:inline">
+            <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
               ·
             </span>
-            <span className="font-mono text-[#0369a1] dark:text-[#38bdf8] font-semibold hidden sm:inline">
+            <span className="font-mono text-[#0369a1] dark:text-[#38bdf8] font-semibold">
               {lang === 'ar' ? 'Flutter والذكاء الاصطناعي' : 'Flutter & AI'}
             </span>
           </motion.div>
 
-          {/* 2–5. Cohesive Hero Signature Lockup: Compact Geometric Outfit "Meet" Eyebrow + Emblem & Display Name */}
-          <div className="space-y-1.5 sm:space-y-2.5 w-full pt-0.5">
+          {/* 2. Cohesive Signature Lockup with Proportional Medium Leaf Emblem */}
+          <div className="space-y-2 sm:space-y-3 w-full">
             <motion.div variants={itemVariants}>
               <span
                 className={`inline-block font-meet-accent font-bold leading-snug tracking-tight gradient-text ${
                   lang === 'ar'
-                    ? 'text-base sm:text-xl lg:text-[22px]'
-                    : 'text-lg sm:text-xl lg:text-[24px]'
+                    ? 'text-base sm:text-xl'
+                    : 'text-lg sm:text-xl'
                 }`}
               >
                 {t.hero.thisIs}
               </span>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="flex items-center gap-3.5 sm:gap-5 min-w-0 ps-1">
-              <span className="inline-flex shrink-0">
+            <motion.div
+              variants={itemVariants}
+              className="flex items-center flex-wrap gap-3 sm:gap-4 min-w-0 py-0.5"
+            >
+              <h1 className="font-display text-[clamp(2.05rem,4.5vw,3.95rem)] font-extrabold tracking-tight leading-[1.04] text-slate-900 dark:text-[#f1f5f9] [text-wrap:balance] min-w-0">
+                {displayName}
+              </h1>
+              <span className="inline-flex shrink-0 overflow-visible items-center">
                 <BrandLogoMark
-                  floatEffect={true}
-                  sizeClassName="w-10 h-10 sm:w-14 sm:h-14"
+                  floatingInk={true}
+                  fieldRef={heroFieldRef}
+                  sizeClassName="w-10 h-10 sm:w-12 sm:h-12"
                   alt="Ahmed El-Bialy Brand Emblem"
                 />
               </span>
-              <h1 className="font-display text-[clamp(1.95rem,7.8vw,4.35rem)] font-extrabold tracking-tight leading-[1.04] text-slate-900 dark:text-[#f1f5f9] [text-wrap:balance] min-w-0">
-                {displayName}
-              </h1>
             </motion.div>
 
             <motion.h2
               variants={itemVariants}
-              className="font-display text-[17px] sm:text-2xl lg:text-[26px] font-bold tracking-[-0.015em] text-[#0369a1] dark:text-[#38bdf8] [text-wrap:balance] pt-0.5"
+              className="font-display text-lg sm:text-2xl font-bold tracking-[-0.015em] text-[#0369a1] dark:text-[#38bdf8] [text-wrap:balance]"
             >
               {t.hero.headlineRole}
             </motion.h2>
 
             <motion.p
               variants={itemVariants}
-              className="text-[15px] sm:text-[17px] font-semibold text-slate-800 dark:text-slate-100 max-w-xl leading-relaxed"
+              className="text-[15px] sm:text-[17px] font-medium text-slate-800 dark:text-slate-200 max-w-xl leading-relaxed"
             >
               {t.hero.tagline}{' '}
-              <span className="font-normal text-slate-600 dark:text-[#94a3b8]">
+              <span className="text-slate-600 dark:text-[#94a3b8]">
                 · {t.hero.subAvailability}
               </span>
             </motion.p>
           </div>
 
-          {/* High-Contrast Animated Specialty Line */}
-          <motion.div
-            variants={itemVariants}
-            className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm sm:text-base font-medium text-slate-700 dark:text-slate-200"
-          >
-            <span className="font-semibold text-slate-900 dark:text-[#f1f5f9]">
-              {t.hero.specializedIn}:
-            </span>
-            <span className="relative inline-flex items-center overflow-hidden min-h-[26px]">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={`${lang}-${currentRotatingWord}`}
-                  initial={prefersReducedMotion ? false : { y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={prefersReducedMotion ? undefined : { y: -10, opacity: 0 }}
-                  transition={{ duration: 0.22, ease: EASE_EDITORIAL }}
-                  className="font-bold text-[#0369a1] dark:text-[#38bdf8]"
-                >
-                  {currentRotatingWord}
-                </motion.span>
-              </AnimatePresence>
-            </span>
+          {/* 3. Specialty Rotating Focus + Concise Engineering Bio */}
+          <motion.div variants={itemVariants} className="space-y-2 max-w-xl">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm sm:text-[15px] text-slate-700 dark:text-slate-200">
+              <span className="font-semibold text-slate-900 dark:text-[#f1f5f9]">
+                {t.hero.specializedIn}:
+              </span>
+              <span className="relative inline-flex items-center overflow-hidden min-h-[24px]">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={`${lang}-${currentRotatingWord}`}
+                    initial={prefersReducedMotion ? false : { y: 8, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={prefersReducedMotion ? undefined : { y: -8, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: EASE_EDITORIAL }}
+                    className="font-bold text-[#0369a1] dark:text-[#38bdf8]"
+                  >
+                    {currentRotatingWord}
+                  </motion.span>
+                </AnimatePresence>
+              </span>
+            </div>
+
+            <p className="text-sm sm:text-[15px] text-slate-600 dark:text-[#94a3b8] leading-relaxed">
+              {t.hero.bio}
+            </p>
           </motion.div>
 
-          {/* Concise Verified Bio */}
-          <motion.p
-            variants={itemVariants}
-            className="text-sm sm:text-base text-slate-600 dark:text-[#94a3b8] max-w-xl leading-relaxed"
-          >
-            {t.hero.bio}
-          </motion.p>
-
-          {/* Compact Tiered Action Hierarchy: Row 1 (Primary) + Row 2 (Secondary) */}
-          <motion.div
-            variants={itemVariants}
-            className="flex flex-col items-start gap-2.5 pt-1.5 w-full"
-          >
-            {/* Primary Row: View Projects (Focal Solid) + Hire Me (Quiet Outline) */}
-            <div className="flex flex-wrap items-center gap-2.5">
+          {/* 4. Focused Action Hierarchy: 1 Primary CTA + 1 Secondary CTA + Clean Utility Links */}
+          <motion.div variants={itemVariants} className="flex flex-col items-start gap-3.5 pt-1 w-full">
+            <div className="flex flex-wrap items-center gap-3">
               <MagneticButton
                 onClick={onExploreProjects}
                 strength={0.09}
-                className="cta-primary group px-4 sm:px-5 py-2 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-bold text-[13px] sm:text-sm border border-[#38bdf8]/40 border-t border-t-white/25 hover:border-[#93c5fd]/60 cursor-pointer min-h-[40px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
+                className="cta-primary group px-5 py-2.5 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-bold text-sm border border-[#38bdf8]/40 border-t border-t-white/25 cursor-pointer min-h-[44px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
               >
                 <span>{t.hero.exploreApps}</span>
                 <ArrowRight
@@ -467,8 +476,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
               <MagneticButton
                 onClick={() => (onOpenContact ? onOpenContact() : onOpenResume())}
-                strength={0.09}
-                className="cta-secondary group px-4 py-2 rounded-xl bg-white/85 dark:bg-white/[0.035] hover:bg-[#0284ff]/[0.07] dark:hover:bg-[#0284ff]/[0.11] text-slate-900 dark:text-slate-100 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-300/85 dark:border-white/15 border-t border-t-white dark:border-t-white/20 hover:border-[#0284ff]/45 font-semibold text-[13px] sm:text-sm cursor-pointer min-h-[40px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
+                strength={0.08}
+                className="cta-secondary group px-5 py-2.5 rounded-xl bg-white/90 dark:bg-white/[0.04] hover:bg-[#0284ff]/[0.07] dark:hover:bg-[#0284ff]/[0.11] text-slate-900 dark:text-slate-100 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-300/85 dark:border-white/15 hover:border-[#0284ff]/45 font-semibold text-sm cursor-pointer min-h-[44px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
               >
                 <Briefcase
                   size={15}
@@ -478,112 +487,76 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </MagneticButton>
             </div>
 
-            {/* Secondary Row: Start a Project + Resume / CV */}
-            <div className="flex flex-wrap items-center gap-2">
-              <MagneticButton
+            {/* Secondary Inline Actions (No competing pills) */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-[13px] font-semibold text-slate-600 dark:text-slate-300">
+              <button
+                type="button"
                 onClick={() =>
                   onOpenBooking ? onOpenBooking() : onOpenContact ? onOpenContact() : undefined
                 }
-                strength={0.07}
-                className="cta-secondary group px-3.5 py-1.5 rounded-xl bg-white/75 dark:bg-white/[0.025] hover:bg-[#0284ff]/[0.07] dark:hover:bg-[#0284ff]/[0.1] text-slate-700 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-300/80 dark:border-white/12 border-t border-t-white dark:border-t-white/15 hover:border-[#0284ff]/40 font-medium text-xs sm:text-[13px] cursor-pointer min-h-[36px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
+                className="inline-flex items-center gap-1.5 hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors cursor-pointer whitespace-nowrap min-h-[36px] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded"
               >
-                <Rocket
-                  size={14}
-                  className="text-[#0369a1] dark:text-[#38bdf8] shrink-0 transition-transform duration-150 group-hover:scale-105"
-                />
-                <span>{t.hero.startProject}</span>
-              </MagneticButton>
+                <Video size={14} className="text-[#0369a1] dark:text-[#38bdf8] shrink-0" />
+                <span className="underline decoration-slate-300 dark:decoration-white/20 underline-offset-4 hover:decoration-current">
+                  {t.hero.startProject}
+                </span>
+              </button>
 
-              <MagneticButton
+              <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
+                ·
+              </span>
+
+              <button
+                type="button"
                 onClick={onOpenResume}
                 title={t.hero.downloadCv}
                 aria-label={t.hero.downloadCv}
-                strength={0.07}
-                className="cta-secondary group px-3.5 py-1.5 rounded-xl bg-white/75 dark:bg-white/[0.025] hover:bg-emerald-500/[0.07] dark:hover:bg-emerald-500/[0.1] text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-300 border border-slate-300/80 dark:border-white/12 border-t border-t-white dark:border-t-white/15 hover:border-emerald-500/40 font-medium text-xs sm:text-[13px] cursor-pointer min-h-[36px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
+                className="inline-flex items-center gap-1.5 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors cursor-pointer whitespace-nowrap min-h-[36px] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded"
               >
-                <Download
-                  size={14}
-                  className="text-emerald-700 dark:text-emerald-400 shrink-0 transition-transform duration-150 group-hover:scale-105"
-                />
-                <span>{lang === 'ar' ? 'السيرة (CV)' : t.hero.resumeCv}</span>
-              </MagneticButton>
+                <Download size={14} className="text-emerald-700 dark:text-emerald-400 shrink-0" />
+                <span className="underline decoration-slate-300 dark:decoration-white/20 underline-offset-4 hover:decoration-current">
+                  {lang === 'ar' ? 'السيرة الذاتية (CV)' : t.hero.resumeCv}
+                </span>
+              </button>
             </div>
           </motion.div>
 
-          {/* Uniform Direct Contact & Social Channels Bar */}
+          {/* 5. Streamlined Direct WhatsApp + Social Channel Strip */}
           <motion.div
             variants={itemVariants}
-            className="w-full pt-3 mt-0.5 border-t border-slate-200/75 dark:border-white/10 space-y-2"
+            className="w-full pt-4 mt-1 border-t border-slate-200/80 dark:border-white/10 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs"
           >
-            <div className="text-[11px] font-mono font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              {t.hero.channelsLabel}
-            </div>
+            <a
+              href={AHMED_CONFIG.socials.whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 min-h-[36px] px-3 rounded-lg bg-emerald-500/[0.1] hover:bg-emerald-600 text-emerald-800 dark:text-emerald-300 hover:text-white border border-emerald-600/30 hover:border-emerald-600 font-bold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+            >
+              <WhatsAppLogo size={14} />
+              <span>{lang === 'ar' ? 'واتساب مباشر' : 'WhatsApp'}</span>
+            </a>
 
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11.5px] sm:text-xs w-full">
-              <a
-                href={AHMED_CONFIG.socials.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="cta-secondary inline-flex items-center justify-center gap-1.5 min-h-[36px] sm:min-h-[34px] px-3 rounded-xl bg-emerald-500/[0.08] hover:bg-emerald-600 text-emerald-800 dark:text-emerald-300 hover:text-white border border-emerald-600/30 hover:border-emerald-600 font-semibold whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
-              >
-                <WhatsAppLogo size={13} />
-                <span>{lang === 'ar' ? 'واتساب' : 'WhatsApp'}</span>
-              </a>
-
-              <a
-                href={emailHref}
-                className="cta-secondary inline-flex items-center justify-center gap-1.5 min-h-[36px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-xl bg-white/80 dark:bg-white/[0.03] hover:bg-[#0284ff]/[0.07] dark:hover:bg-[#0284ff]/[0.12] text-slate-700 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-200/90 dark:border-white/12 hover:border-[#0284ff]/40 font-medium whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
-              >
-                <Mail size={13} className="text-[#0369a1] dark:text-[#38bdf8] shrink-0" />
-                <span>{lang === 'ar' ? 'البريد' : 'Email'}</span>
-              </a>
-
-              <a
-                href={`tel:${profile.phone}`}
-                className="cta-secondary inline-flex items-center justify-center gap-1.5 min-h-[36px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-xl bg-white/80 dark:bg-white/[0.03] hover:bg-[#0284ff]/[0.07] dark:hover:bg-[#0284ff]/[0.12] text-slate-700 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-200/90 dark:border-white/12 hover:border-[#0284ff]/40 font-medium whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
-                aria-label={lang === 'ar' ? 'اتصال هاتفي' : 'Call Phone'}
-              >
-                <Phone size={13} className="text-slate-500 dark:text-slate-400 shrink-0" />
-                <span dir="ltr" className="tabular-nums">
-                  {lang === 'ar' ? 'اتصال' : 'Call'}
-                </span>
-              </a>
-
-              <a
-                href={profile.githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="cta-secondary inline-flex items-center justify-center gap-1.5 min-h-[36px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-xl bg-white/80 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white border border-slate-200/90 dark:border-white/12 hover:border-slate-400 dark:hover:border-white/25 font-medium whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
-              >
-                <Github size={13} className="shrink-0" />
-                <span>GitHub</span>
-              </a>
-
-              <a
-                href={profile.linkedinUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="cta-secondary inline-flex items-center justify-center gap-1.5 min-h-[36px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-xl bg-white/80 dark:bg-white/[0.03] hover:bg-[#0a66c2]/[0.08] dark:hover:bg-[#38bdf8]/[0.12] text-slate-700 dark:text-slate-200 hover:text-[#0a66c2] dark:hover:text-[#38bdf8] border border-slate-200/90 dark:border-white/12 hover:border-[#0a66c2]/40 dark:hover:border-[#38bdf8]/40 font-medium whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
-              >
-                <Linkedin size={13} className="text-[#0a66c2] dark:text-[#38bdf8] shrink-0" />
-                <span>LinkedIn</span>
-              </a>
-
-              <a
-                href={profile.youtubeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="cta-secondary inline-flex items-center justify-center gap-1.5 min-h-[36px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-xl bg-white/80 dark:bg-white/[0.03] hover:bg-red-500/[0.08] text-slate-700 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-400 border border-slate-200/90 dark:border-white/12 hover:border-red-500/40 font-medium whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
-              >
-                <Youtube size={13} className="text-red-600 dark:text-red-400 shrink-0" />
-                <span>YouTube</span>
-              </a>
-
+            <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-slate-600 dark:text-slate-300">
+              {channelLinks.map((ch) => {
+                const Icon = ch.icon;
+                return (
+                  <a
+                    key={ch.label}
+                    href={ch.href}
+                    target={ch.external ? '_blank' : undefined}
+                    rel={ch.external ? 'noopener noreferrer' : undefined}
+                    className="inline-flex items-center gap-1.5 min-h-[36px] py-1 font-medium hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded"
+                  >
+                    <Icon size={13} className="shrink-0 opacity-80" />
+                    <span>{ch.label}</span>
+                  </a>
+                );
+              })}
               <a
                 href={profile.tiktokUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="cta-secondary inline-flex items-center justify-center gap-1.5 min-h-[36px] sm:min-h-[34px] px-2.5 sm:px-3 rounded-xl bg-white/80 dark:bg-white/[0.03] hover:bg-pink-500/[0.08] text-slate-700 dark:text-slate-200 hover:text-pink-600 dark:hover:text-pink-400 border border-slate-200/90 dark:border-white/12 hover:border-pink-500/40 font-medium whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
+                className="inline-flex items-center gap-1.5 min-h-[36px] py-1 font-medium hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded"
               >
                 <TikTokLogo size={12} />
                 <span>TikTok</span>
@@ -592,7 +565,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </motion.div>
         </motion.div>
 
-        {/* Right Column: Interactive Revio & Vibrant-Store Device Mockup */}
+        {/* Right Column: Interactive Revio & Multi-App Device Mockup */}
         <motion.div
           initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
           animate={entryReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
@@ -615,27 +588,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </motion.div>
       </div>
 
-      {/* Full-Width 4-KPI Architectural Strip Below Hero Split */}
-      <div className="max-w-[1440px] mx-auto w-full mt-6 sm:mt-12 pt-5 sm:pt-8 border-t border-slate-200/80 dark:border-white/10 grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-5 relative z-10">
+      {/* Full-Width 4-KPI Architectural Proof Row Below Hero Split */}
+      <div className="max-w-[1440px] mx-auto w-full mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-slate-200/80 dark:border-white/10 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 relative z-10">
         {kpis.map((kpi, idx) => {
           const KpiIcon = kpi.icon;
           const cardBody = (
-            <div className="surface-card card-shimmer overflow-hidden w-full h-full p-3.5 sm:p-5 rounded-2xl shadow-sm hover:shadow-lg flex flex-col justify-between gap-2.5 sm:gap-3">
+            <div className="surface-card card-shimmer overflow-hidden w-full h-full p-4 sm:p-5 rounded-2xl shadow-sm hover:shadow-md flex flex-col justify-between gap-3">
               <div className="flex items-center justify-between gap-2">
                 <div
-                  className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${kpi.iconBg}`}
+                  className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${kpi.iconClass}`}
                 >
-                  <KpiIcon size={17} />
+                  <KpiIcon size={16} />
                 </div>
-                <span className="font-display text-[11px] font-semibold text-slate-600 dark:text-slate-400 tracking-wide">
-                  {kpi.badge}
+                <span className="font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                  {kpi.sourceLabel}
                 </span>
               </div>
 
               <div>
                 <div className="flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
                   <span
-                    className={`font-display text-2xl sm:text-[34px] font-extrabold tabular-nums tracking-tight leading-none ${kpi.accentClass}`}
+                    className={`font-display text-2xl sm:text-[32px] font-extrabold tabular-nums tracking-tight leading-none ${kpi.accentClass}`}
                   >
                     <CountUpMetric
                       value={kpi.value}
@@ -643,11 +616,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       reducedMotion={Boolean(prefersReducedMotion)}
                     />
                   </span>
-                  <span className="font-display text-xs sm:text-[15px] font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+                  <span className="font-display text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 tracking-tight">
                     {kpi.suffix}
                   </span>
                 </div>
-                <p className="text-[11px] sm:text-xs text-slate-600 dark:text-[#94a3b8] mt-1.5 sm:mt-2 leading-snug">
+                <p className="text-[11.5px] sm:text-xs text-slate-600 dark:text-[#94a3b8] mt-1.5 leading-snug">
                   {kpi.label}
                 </p>
               </div>

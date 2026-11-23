@@ -562,8 +562,10 @@ export const StackSection: React.FC<StackSectionProps> = ({
                     type="button"
                     data-selected={isInspected ? 'true' : 'false'}
                     aria-pressed={isLocked}
+                    aria-label={`${tech.name} — ${lang === 'ar' ? tech.categoryLabelAr : tech.categoryLabel}`}
                     onMouseEnter={() => setHoveredToolId(tech.id)}
                     onFocus={() => setHoveredToolId(tech.id)}
+                    onBlur={() => setHoveredToolId((prev) => (prev === tech.id ? null : prev))}
                     onClick={() => {
                       setHoveredToolId(null);
                       setSelectedToolId(tech.id);
@@ -572,49 +574,51 @@ export const StackSection: React.FC<StackSectionProps> = ({
                       isInspected
                         ? {
                             borderColor: `rgba(${tech.glowRgb}, 0.52)`,
-                            boxShadow: `0 8px 28px -8px rgba(${tech.glowRgb}, 0.24), inset 0 1px 0 rgba(255,255,255,0.06)`,
+                            boxShadow: `0 12px 30px -10px rgba(${tech.glowRgb}, 0.28), inset 0 1px 0 rgba(255,255,255,0.08)`,
                           }
                         : undefined
                     }
-                    className={`stack-logo-tile group relative flex flex-col items-center justify-center gap-3 p-4 rounded-2xl border text-center cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] min-h-[120px] ${
+                    className={`stack-logo-tile group relative overflow-hidden flex flex-col items-center justify-center p-4 rounded-2xl border text-center cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] min-h-[116px] sm:min-h-[124px] ${
                       isInspected
-                        ? 'bg-white dark:bg-[#121622]/95 dark:backdrop-blur-md'
-                        : 'bg-white/95 dark:bg-[#0f1117]/80 dark:backdrop-blur-md border-slate-200/90 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/22 hover:bg-white dark:hover:bg-[#121620]/90'
+                        ? 'bg-white dark:bg-[#131826]/95 dark:backdrop-blur-md'
+                        : 'bg-white/75 dark:bg-[#0f1117]/70 dark:backdrop-blur-md border-slate-200/80 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/20 hover:bg-white dark:hover:bg-[#131826]/90'
                     }`}
                   >
-                    {/* Animated Logo Well */}
-                    <div className="relative w-12 h-12 rounded-xl flex items-center justify-center shrink-0">
+                    {/* Subtle Illuminated Top Radial Wash */}
+                    <span
+                      aria-hidden="true"
+                      className={`pointer-events-none absolute inset-0 transition-opacity duration-200 ${
+                        isInspected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100'
+                      }`}
+                      style={{
+                        background: `radial-gradient(circle at 50% 42%, rgba(${tech.glowRgb}, 0.14) 0%, transparent 72%)`,
+                      }}
+                    />
+
+                    {/* Muted-to-Luminous Animated Logo Well */}
+                    <div className="stack-tile-well relative z-10 w-13 h-13 rounded-xl flex items-center justify-center shrink-0">
                       <span
                         aria-hidden="true"
-                        className="stack-logo-halo absolute inset-0 rounded-xl pointer-events-none"
+                        className={`stack-logo-halo absolute inset-0 rounded-xl pointer-events-none transition-opacity duration-200 ${
+                          isInspected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100'
+                        }`}
                         style={{
-                          background: `radial-gradient(circle, rgba(${tech.glowRgb}, ${
-                            isInspected ? 0.34 : 0.2
-                          }) 0%, rgba(${tech.glowRgb}, 0.05) 68%, transparent 100%)`,
-                          boxShadow: `0 0 22px rgba(${tech.glowRgb}, ${isInspected ? 0.32 : 0.14})`,
+                          background: `radial-gradient(circle, rgba(${tech.glowRgb}, 0.36) 0%, rgba(${tech.glowRgb}, 0.08) 65%, transparent 100%)`,
+                          boxShadow: `0 0 26px rgba(${tech.glowRgb}, 0.34)`,
                         }}
                       />
-                      <span className="stack-logo-glyph relative z-10 flex items-center justify-center">
-                        <Logo size={28} />
+                      <span className="stack-logo-glyph stack-muted-glyph relative z-10 flex items-center justify-center">
+                        <Logo size={32} />
                       </span>
                     </div>
 
-                    {/* Tool Title & Layer */}
-                    <div className="min-w-0 w-full">
-                      <span
-                        dir="ltr"
-                        className={`block text-[13px] font-bold truncate transition-colors ${
-                          isInspected
-                            ? 'text-[#0369a1] dark:text-[#38bdf8]'
-                            : 'text-slate-900 dark:text-slate-100 group-hover:text-[#0369a1] dark:group-hover:text-[#38bdf8]'
-                        }`}
-                      >
-                        {tech.name}
-                      </span>
-                      <span className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                        {lang === 'ar' ? tech.categoryLabelAr : tech.categoryLabel}
-                      </span>
-                    </div>
+                    {/* Dynamic Tool Name Reveal (Hidden at rest, glides up on hover/focus/selection) */}
+                    <span
+                      dir="ltr"
+                      className="stack-tile-name pointer-events-none absolute inset-x-2 bottom-3 z-10 block text-[11.5px] font-bold tracking-tight text-slate-900 dark:text-white truncate"
+                    >
+                      {tech.name}
+                    </span>
                   </button>
                 );
               })}
