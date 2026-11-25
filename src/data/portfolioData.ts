@@ -152,7 +152,7 @@ export const openEmailClient = (
     anchor.rel = 'noopener noreferrer';
     anchor.click();
   } catch {
-    navigator.clipboard?.writeText(email);
+    navigator.clipboard?.writeText(email).catch(() => {});
   }
 };
 

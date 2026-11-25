@@ -3,9 +3,6 @@ import {
   getFirestore,
   doc,
   runTransaction,
-  getDoc,
-  setDoc,
-  collection,
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 import {
@@ -87,7 +84,6 @@ export interface BookingSyncEvent {
 const STORAGE_KEY_SLOTS = 'ahmed_booking_validation_slots';
 const BROADCAST_CHANNEL_NAME = 'ahmed_booking_validation_channel';
 const DEFAULT_1ON1_CAPACITY = 1;
-const DEFAULT_GROUP_CAPACITY = 100;
 
 // Initialize Firebase App instance safely
 const firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);

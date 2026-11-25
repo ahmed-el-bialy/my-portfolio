@@ -75,7 +75,7 @@ class ShowcaseErrorBoundary extends Component<ShowcaseBoundaryProps, ShowcaseBou
   render() {
     if (this.state.hasError) {
       return (
-        <div className="w-full h-full min-h-[360px] rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-6 shadow-xl flex flex-col items-center justify-center text-center gap-3">
+        <div className="w-full h-full min-h-[360px] rounded-[28px] border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-6 shadow-xl flex flex-col items-center justify-center text-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-[#0284ff]/10 border border-[#0284ff]/25 flex items-center justify-center text-[#0369a1] dark:text-[#38bdf8]">
             <Smartphone size={22} />
           </div>
@@ -235,7 +235,8 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
 
   const isRevio = activeProject.repoName.toLowerCase() === 'revio';
   const safeScreenCount = activeScreens.length;
-  const normalizedIdx = safeScreenCount > 0 ? ((screenIndex % safeScreenCount) + safeScreenCount) % safeScreenCount : 0;
+  const normalizedIdx =
+    safeScreenCount > 0 ? ((screenIndex % safeScreenCount) + safeScreenCount) % safeScreenCount : 0;
   const currentScreen = activeScreens[normalizedIdx] || activeScreens[0];
 
   const { liveRelease, resolvedLinks, linksMapperFailed } = (() => {
@@ -301,11 +302,15 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
         hasApk: Boolean(activeProject.hasApk || dynamicApkUrl || liveRelease?.hasRelease),
         links: {
           ...activeProject.links,
-          github: activeProject.links?.github || `https://github.com/ahmed-el-bialy/${activeProject.repoName}`,
+          github:
+            activeProject.links?.github ||
+            `https://github.com/ahmed-el-bialy/${activeProject.repoName}`,
           demoVideoUrl: resolvedLinks.demoVideoUrl,
           liveDemoUrl:
             resolvedLinks.webLiveDemoUrl ||
-            (typeof activeLiveMedia?.liveDemoUrl === 'string' ? activeLiveMedia.liveDemoUrl : undefined) ||
+            (typeof activeLiveMedia?.liveDemoUrl === 'string'
+              ? activeLiveMedia.liveDemoUrl
+              : undefined) ||
             activeProject.links?.liveDemoUrl,
           playlistUrl: resolvedLinks.playlistUrl,
           googlePlay: playUrl,
@@ -639,6 +644,8 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
     </TiltCard>
   );
 };
+
+
 
 export const RevioShowcaseStage: React.FC<RevioShowcaseStageProps> = (props) => {
   const { lang } = useLanguage();

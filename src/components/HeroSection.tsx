@@ -206,7 +206,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           ? totalReposCount
           : 13;
       const reposDisplay = `${safeRepoTotal}+`;
-      const productionAppsCount = `${FEATURED_PROJECTS.length}+`;
 
       return [
         {
@@ -252,19 +251,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           iconClass: 'text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.06] border-slate-200 dark:border-white/10',
           onClick: onExploreProjects,
         },
-        {
-          id: 'featured-apps',
-          icon: Smartphone,
-          sourceLabel: 'Clean Arch',
-          value: productionAppsCount,
-          suffix: lang === 'ar' ? 'تطبيقات إنتاج' : 'Shipped Apps',
-          label: lang === 'ar'
-            ? 'تطبيقات بـ BLoC/Cubit و REST APIs و Hive'
-            : 'Production apps with BLoC/Cubit & Hive',
-          accentClass: 'text-[#0369a1] dark:text-[#38bdf8]',
-          iconClass: 'text-[#0369a1] dark:text-[#38bdf8] bg-[#0284ff]/10 border-[#0284ff]/20',
-          onClick: onExploreProjects,
-        },
       ];
     } catch {
       return [
@@ -282,16 +268,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           href: AHMED_CONFIG.socials.playstore,
         },
         {
-          id: 'featured-apps',
-          icon: Smartphone,
-          sourceLabel: 'Clean Arch',
-          value: `${FEATURED_PROJECTS.length}+`,
-          suffix: lang === 'ar' ? 'تطبيقات إنتاج' : 'Shipped Apps',
+          id: 'play-downloads',
+          icon: Download,
+          sourceLabel: lang === 'ar' ? 'إحصائيات مباشرة' : 'Store Sync',
+          value: '10+',
+          suffix: lang === 'ar' ? 'تحميل' : 'Downloads',
           label: lang === 'ar'
-            ? 'تطبيقات بـ BLoC/Cubit و REST APIs و Hive'
-            : 'Production apps with BLoC/Cubit & Hive',
+            ? 'إجمالي تثبيتات Revio من متجر Google Play'
+            : 'Revio installs synced from Google Play listing',
           accentClass: 'text-[#0369a1] dark:text-[#38bdf8]',
           iconClass: 'text-[#0369a1] dark:text-[#38bdf8] bg-[#0284ff]/10 border-[#0284ff]/20',
+          href: AHMED_CONFIG.socials.playstore,
+        },
+        {
+          id: 'github-repos',
+          icon: FolderGit2,
+          sourceLabel: 'GitHub',
+          value: `${FEATURED_PROJECTS.length}+`,
+          suffix: lang === 'ar' ? 'مستودع' : 'Repositories',
+          label: lang === 'ar'
+            ? 'مشاريع وتطبيقات موبايل مفتوحة المصدر'
+            : 'Public Flutter & architecture codebases',
+          accentClass: 'text-slate-900 dark:text-white',
+          iconClass: 'text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/[0.06] border-slate-200 dark:border-white/10',
           onClick: onExploreProjects,
         },
       ];
@@ -348,8 +347,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       id="overview"
       className="relative px-4 sm:px-6 lg:px-8 pt-[76px] pb-8 sm:pt-28 sm:pb-14 overflow-x-clip w-full"
     >
-      <div className="ambient-glow-top absolute inset-0 pointer-events-none" />
-
       {/* Editorial Split Hero (Equal-stretch alignment) */}
       <div className="max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-12 items-stretch relative z-10">
         {/* Left Column: Calm Editorial Typography, Medium Emblem & Focused Action Hierarchy */}
@@ -455,15 +452,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </p>
           </motion.div>
 
-          {/* 4. Focused Action Hierarchy: 1 Primary CTA + 1 Secondary CTA + Clean Utility Links */}
-          <motion.div variants={itemVariants} className="flex flex-col items-start gap-3.5 pt-1 w-full">
-            <div className="flex flex-wrap items-center gap-3">
+          {/* 4. Unified Calm Action Bar (1 Primary Anchor + 3 Cohesive Secondary Controls) */}
+          <motion.div variants={itemVariants} className="w-full pt-1.5">
+            <div className="w-full grid grid-cols-2 sm:flex sm:flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3">
               <MagneticButton
                 onClick={onExploreProjects}
-                strength={0.09}
-                className="cta-primary group px-5 py-2.5 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-bold text-sm border border-[#38bdf8]/40 border-t border-t-white/25 cursor-pointer min-h-[44px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
+                strength={0.07}
+                className="btn-kinetic group px-4 sm:px-5 py-2.5 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-semibold text-[13px] sm:text-sm border border-[#0284ff] cursor-pointer min-h-[46px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
               >
-                <span>{t.hero.exploreApps}</span>
+                <span className="truncate">{t.hero.exploreApps}</span>
                 <ArrowRight
                   size={15}
                   className={
@@ -476,92 +473,97 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
               <MagneticButton
                 onClick={() => (onOpenContact ? onOpenContact() : onOpenResume())}
-                strength={0.08}
-                className="cta-secondary group px-5 py-2.5 rounded-xl bg-white/90 dark:bg-white/[0.04] hover:bg-[#0284ff]/[0.07] dark:hover:bg-[#0284ff]/[0.11] text-slate-900 dark:text-slate-100 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-300/85 dark:border-white/15 hover:border-[#0284ff]/45 font-semibold text-sm cursor-pointer min-h-[44px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
+                strength={0.07}
+                className="btn-kinetic group px-3.5 sm:px-4 py-2.5 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] text-slate-900 dark:text-[#f1f5f9] hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 font-semibold text-[13px] sm:text-sm cursor-pointer min-h-[46px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
               >
                 <Briefcase
                   size={15}
                   className="text-[#0369a1] dark:text-[#38bdf8] shrink-0 transition-transform duration-150 group-hover:scale-105"
                 />
-                <span>{t.hero.hireMe}</span>
+                <span className="truncate">{t.hero.hireMe}</span>
               </MagneticButton>
-            </div>
 
-            {/* Secondary Inline Actions (No competing pills) */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-[13px] font-semibold text-slate-600 dark:text-slate-300">
-              <button
-                type="button"
+              <MagneticButton
                 onClick={() =>
                   onOpenBooking ? onOpenBooking() : onOpenContact ? onOpenContact() : undefined
                 }
-                className="inline-flex items-center gap-1.5 hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors cursor-pointer whitespace-nowrap min-h-[36px] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded"
+                strength={0.07}
+                className="btn-kinetic group px-3.5 sm:px-4 py-2.5 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] text-slate-900 dark:text-[#f1f5f9] hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 font-semibold text-[13px] sm:text-sm cursor-pointer min-h-[46px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
               >
-                <Video size={14} className="text-[#0369a1] dark:text-[#38bdf8] shrink-0" />
-                <span className="underline decoration-slate-300 dark:decoration-white/20 underline-offset-4 hover:decoration-current">
-                  {t.hero.startProject}
-                </span>
-              </button>
+                <Video
+                  size={15}
+                  className="text-[#0369a1] dark:text-[#38bdf8] shrink-0 transition-transform duration-150 group-hover:scale-105"
+                />
+                <span className="truncate">{t.hero.startProject}</span>
+              </MagneticButton>
 
-              <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
-                ·
-              </span>
-
-              <button
-                type="button"
+              <MagneticButton
                 onClick={onOpenResume}
                 title={t.hero.downloadCv}
                 aria-label={t.hero.downloadCv}
-                className="inline-flex items-center gap-1.5 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors cursor-pointer whitespace-nowrap min-h-[36px] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded"
+                strength={0.07}
+                className="btn-kinetic group px-3.5 sm:px-4 py-2.5 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] text-slate-900 dark:text-[#f1f5f9] hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 font-semibold text-[13px] sm:text-sm cursor-pointer min-h-[46px] whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f8fafc] dark:focus-visible:ring-offset-[#08090d]"
               >
-                <Download size={14} className="text-emerald-700 dark:text-emerald-400 shrink-0" />
-                <span className="underline decoration-slate-300 dark:decoration-white/20 underline-offset-4 hover:decoration-current">
-                  {lang === 'ar' ? 'السيرة الذاتية (CV)' : t.hero.resumeCv}
+                <Download
+                  size={15}
+                  className="text-[#0369a1] dark:text-[#38bdf8] shrink-0 transition-transform duration-150 group-hover:translate-y-0.5"
+                />
+                <span className="truncate">
+                  {lang === 'ar' ? 'السيرة الذاتية' : t.hero.resumeCv}
                 </span>
-              </button>
+              </MagneticButton>
             </div>
           </motion.div>
 
-          {/* 5. Streamlined Direct WhatsApp + Social Channel Strip */}
+          {/* 5. Unified Direct Contact & Social Channel Buttons */}
           <motion.div
             variants={itemVariants}
-            className="w-full pt-4 mt-1 border-t border-slate-200/80 dark:border-white/10 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs"
+            className="w-full pt-4 mt-1 border-t border-slate-200/80 dark:border-white/10 flex flex-wrap items-center gap-2"
           >
             <a
               href={AHMED_CONFIG.socials.whatsapp}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 min-h-[36px] px-3 rounded-lg bg-emerald-500/[0.1] hover:bg-emerald-600 text-emerald-800 dark:text-emerald-300 hover:text-white border border-emerald-600/30 hover:border-emerald-600 font-bold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+              className="group inline-flex items-center gap-1.5 min-h-[38px] px-3 py-1.5 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] text-slate-800 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 text-xs font-semibold whitespace-nowrap transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
             >
-              <WhatsAppLogo size={14} />
-              <span>{lang === 'ar' ? 'واتساب مباشر' : 'WhatsApp'}</span>
+              <WhatsAppLogo
+                size={13}
+                className="shrink-0 text-emerald-600 dark:text-emerald-400 transition-transform duration-150 group-hover:scale-105"
+              />
+              <span>{lang === 'ar' ? 'واتساب' : 'WhatsApp'}</span>
             </a>
 
-            <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-slate-600 dark:text-slate-300">
-              {channelLinks.map((ch) => {
-                const Icon = ch.icon;
-                return (
-                  <a
-                    key={ch.label}
-                    href={ch.href}
-                    target={ch.external ? '_blank' : undefined}
-                    rel={ch.external ? 'noopener noreferrer' : undefined}
-                    className="inline-flex items-center gap-1.5 min-h-[36px] py-1 font-medium hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded"
-                  >
-                    <Icon size={13} className="shrink-0 opacity-80" />
-                    <span>{ch.label}</span>
-                  </a>
-                );
-              })}
-              <a
-                href={profile.tiktokUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 min-h-[36px] py-1 font-medium hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded"
-              >
-                <TikTokLogo size={12} />
-                <span>TikTok</span>
-              </a>
-            </div>
+            {channelLinks.map((ch) => {
+              const Icon = ch.icon;
+              return (
+                <a
+                  key={ch.label}
+                  href={ch.href}
+                  target={ch.external ? '_blank' : undefined}
+                  rel={ch.external ? 'noopener noreferrer' : undefined}
+                  className="group inline-flex items-center gap-1.5 min-h-[38px] px-3 py-1.5 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] text-slate-800 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 text-xs font-semibold whitespace-nowrap transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
+                >
+                  <Icon
+                    size={13}
+                    className="shrink-0 text-[#0369a1] dark:text-[#38bdf8] transition-transform duration-150 group-hover:scale-105"
+                  />
+                  <span>{ch.label}</span>
+                </a>
+              );
+            })}
+
+            <a
+              href={profile.tiktokUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-1.5 min-h-[38px] px-3 py-1.5 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] text-slate-800 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 text-xs font-semibold whitespace-nowrap transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
+            >
+              <TikTokLogo
+                size={12}
+                className="shrink-0 text-[#0369a1] dark:text-[#38bdf8] transition-transform duration-150 group-hover:scale-105"
+              />
+              <span>TikTok</span>
+            </a>
           </motion.div>
         </motion.div>
 
@@ -592,8 +594,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </motion.div>
       </div>
 
-      {/* Full-Width 4-KPI Architectural Proof Row Below Hero Split */}
-      <div className="max-w-[1440px] mx-auto w-full mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-slate-200/80 dark:border-white/10 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 relative z-10">
+      {/* Full-Width 3-KPI Architectural Proof Row Below Hero Split */}
+      <div className="max-w-[1440px] mx-auto w-full mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-slate-200/80 dark:border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-5 relative z-10">
         {kpis.map((kpi, idx) => {
           const KpiIcon = kpi.icon;
           const cardBody = (

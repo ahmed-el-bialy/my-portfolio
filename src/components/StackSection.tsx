@@ -789,7 +789,11 @@ export const StackSection: React.FC<StackSectionProps> = ({
   return (
     <section
       id="stack"
-      className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8 w-full"
+      className={`scroll-mt-24 max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 w-full ${
+        isFull
+          ? 'py-12 sm:py-16 border-t border-slate-200/80 dark:border-white/8'
+          : 'py-14 sm:py-20'
+      }`}
     >
       {/* Unified Header Zone */}
       <RevealOnScroll className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8">
@@ -805,7 +809,7 @@ export const StackSection: React.FC<StackSectionProps> = ({
                 : 'Production Tools Linked to Live Apps & Code Patterns'}
             </span>
           </div>
-          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#f1f5f9] tracking-tight [text-wrap:balance]">
+          <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-[#f1f5f9] tracking-tight [text-wrap:balance]">
             {t.stack.title}
           </h2>
           <p className="text-sm text-slate-600 dark:text-[#94a3b8] mt-1.5 leading-relaxed">
@@ -1184,35 +1188,56 @@ export const StackSection: React.FC<StackSectionProps> = ({
                               key={proj.id}
                               className="flex items-center justify-between gap-2.5 p-2.5 rounded-xl border border-slate-200/80 dark:border-white/8 bg-slate-50/75 dark:bg-white/[0.025] hover:border-[#0284ff]/45 transition-colors"
                             >
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (onInspectProject) {
-                                    onInspectProject(proj, 0);
-                                  } else {
-                                    window.open(proj.links.github, '_blank', 'noopener,noreferrer');
-                                  }
-                                }}
-                                className="min-w-0 flex-1 text-start cursor-pointer group/proj focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded"
-                              >
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <span
-                                    dir="ltr"
-                                    className="font-display text-xs font-bold text-slate-900 dark:text-white group-hover/proj:text-[#0369a1] dark:group-hover/proj:text-[#38bdf8] truncate transition-colors"
-                                  >
-                                    {proj.name}
-                                  </span>
-                                  {proj.links.googlePlay && (
-                                    <span className="text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 shrink-0">
-                                      · Google Play
+                              {onInspectProject ? (
+                                <button
+                                  type="button"
+                                  onClick={() => onInspectProject(proj, 0)}
+                                  className="min-w-0 flex-1 text-start cursor-pointer group/proj focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span
+                                      dir="ltr"
+                                      className="font-display text-xs font-bold text-slate-900 dark:text-white group-hover/proj:text-[#0369a1] dark:group-hover/proj:text-[#38bdf8] truncate transition-colors"
+                                    >
+                                      {proj.name}
                                     </span>
-                                  )}
-                                </div>
-                                <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                                  {t.projects.localizedProjects?.[proj.repoName]?.subtitle ||
-                                    proj.subtitle}
-                                </div>
-                              </button>
+                                    {proj.links.googlePlay && (
+                                      <span className="text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 shrink-0">
+                                        · Google Play
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                    {t.projects.localizedProjects?.[proj.repoName]?.subtitle ||
+                                      proj.subtitle}
+                                  </div>
+                                </button>
+                              ) : (
+                                <a
+                                  href={proj.links.github}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="min-w-0 flex-1 text-start cursor-pointer group/proj focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span
+                                      dir="ltr"
+                                      className="font-display text-xs font-bold text-slate-900 dark:text-white group-hover/proj:text-[#0369a1] dark:group-hover/proj:text-[#38bdf8] truncate transition-colors"
+                                    >
+                                      {proj.name}
+                                    </span>
+                                    {proj.links.googlePlay && (
+                                      <span className="text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 shrink-0">
+                                        · Google Play
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                    {t.projects.localizedProjects?.[proj.repoName]?.subtitle ||
+                                      proj.subtitle}
+                                  </div>
+                                </a>
+                              )}
 
                               <div className="flex items-center gap-1 shrink-0">
                                 {onInspectProject && (

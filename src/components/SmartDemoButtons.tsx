@@ -25,22 +25,22 @@ export const SmartDemoButtons: React.FC<SmartDemoButtonsProps> = ({
   }
 
   const youtubeWatchBtnClass = compact
-    ? 'btn-kinetic group/demo inline-flex items-center justify-center gap-2 px-3.5 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border border-rose-400/40 shadow-md shadow-rose-600/30 hover:shadow-lg hover:shadow-rose-500/40 font-bold text-xs whitespace-nowrap transition-all cursor-pointer active:scale-[0.97]'
+    ? 'btn-kinetic group/demo inline-flex items-center justify-center gap-2 px-3.5 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border border-rose-400/40 shadow-md shadow-rose-600/30 hover:shadow-lg hover:shadow-rose-500/40 font-bold text-xs whitespace-nowrap shrink-0 min-w-0 transition-all cursor-pointer active:scale-[0.97]'
     : `${
-        fullWidthOnRow ? 'flex-1 min-w-[132px]' : ''
-      } btn-kinetic group/demo inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border border-rose-400/40 shadow-md shadow-rose-600/30 hover:shadow-lg hover:shadow-rose-500/40 font-bold text-xs min-h-[42px] sm:min-h-[40px] whitespace-nowrap transition-all cursor-pointer active:scale-[0.97]`;
+        fullWidthOnRow ? 'flex-1 min-w-[132px]' : 'shrink-0 min-w-0'
+      } btn-kinetic group/demo inline-flex items-center justify-center gap-2 py-2.5 px-3.5 sm:px-4 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border border-rose-400/40 shadow-md shadow-rose-600/30 hover:shadow-lg hover:shadow-rose-500/40 font-bold text-xs min-h-[42px] sm:min-h-[40px] whitespace-nowrap transition-all cursor-pointer active:scale-[0.97]`;
 
   const youtubePlaylistBtnClass = compact
-    ? 'btn-kinetic group/demo inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border border-amber-300/40 shadow-md shadow-amber-500/25 hover:shadow-lg hover:shadow-amber-500/35 font-bold text-xs whitespace-nowrap transition-all cursor-pointer active:scale-[0.97]'
+    ? 'btn-kinetic group/demo inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border border-amber-300/40 shadow-md shadow-amber-500/25 hover:shadow-lg hover:shadow-amber-500/35 font-bold text-xs whitespace-nowrap shrink-0 min-w-0 transition-all cursor-pointer active:scale-[0.97]'
     : `${
-        fullWidthOnRow ? 'flex-1 min-w-[128px]' : ''
-      } btn-kinetic group/demo inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border border-amber-300/40 shadow-md shadow-amber-500/25 hover:shadow-lg hover:shadow-amber-500/35 font-bold text-xs min-h-[42px] sm:min-h-[40px] whitespace-nowrap transition-all cursor-pointer active:scale-[0.97]`;
+        fullWidthOnRow ? 'flex-1 min-w-[128px]' : 'shrink-0 min-w-0'
+      } btn-kinetic group/demo inline-flex items-center justify-center gap-2 py-2.5 px-3.5 sm:px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border border-amber-300/40 shadow-md shadow-amber-500/25 hover:shadow-lg hover:shadow-amber-500/35 font-bold text-xs min-h-[42px] sm:min-h-[40px] whitespace-nowrap transition-all cursor-pointer active:scale-[0.97]`;
 
   const webLiveBtnClass = compact
-    ? 'btn-kinetic group/demo inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-gradient-to-r from-[#0284ff] to-[#0099FF] hover:from-[#026ae0] hover:to-[#0284ff] text-white border border-sky-400/40 shadow-md shadow-[#0284ff]/30 hover:shadow-lg hover:shadow-[#0284ff]/40 font-bold text-xs whitespace-nowrap transition-all active:scale-[0.97]'
+    ? 'btn-kinetic group/demo inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-gradient-to-r from-[#0284ff] to-[#0099FF] hover:from-[#026ae0] hover:to-[#0284ff] text-white border border-sky-400/40 shadow-md shadow-[#0284ff]/30 hover:shadow-lg hover:shadow-[#0284ff]/40 font-bold text-xs whitespace-nowrap shrink-0 min-w-0 transition-all active:scale-[0.97]'
     : `${
-        fullWidthOnRow ? 'flex-1 min-w-[132px]' : ''
-      } btn-kinetic group/demo inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#0284ff] to-[#0099FF] hover:from-[#026ae0] hover:to-[#0284ff] text-white border border-sky-400/40 shadow-md shadow-[#0284ff]/30 hover:shadow-lg hover:shadow-[#0284ff]/40 font-bold text-xs min-h-[42px] sm:min-h-[40px] whitespace-nowrap transition-all active:scale-[0.97]`;
+        fullWidthOnRow ? 'flex-1 min-w-[132px]' : 'shrink-0 min-w-0'
+      } btn-kinetic group/demo inline-flex items-center justify-center gap-2 py-2.5 px-3.5 sm:px-4 rounded-xl bg-gradient-to-r from-[#0284ff] to-[#0099FF] hover:from-[#026ae0] hover:to-[#0284ff] text-white border border-sky-400/40 shadow-md shadow-[#0284ff]/30 hover:shadow-lg hover:shadow-[#0284ff]/40 font-bold text-xs min-h-[42px] sm:min-h-[40px] whitespace-nowrap transition-all active:scale-[0.97]`;
 
   const handleStop = (e: React.MouseEvent) => {
     if (stopPropagation) {

@@ -515,17 +515,6 @@ export const LeafAnimation: React.FC<LeafAnimationProps> = ({
           compact ? 'w-24 h-24 sm:w-28 sm:h-28' : 'w-44 h-44 sm:w-56 sm:h-56'
         }`}
       >
-        <motion.div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-4 rounded-full bg-gradient-to-tr from-[#0284ff]/15 via-[#00C7FF]/10 to-transparent"
-          animate={
-            prefersReducedMotion
-              ? undefined
-              : { scale: [0.94, 1.06, 0.94], opacity: [0.45, 0.85, 0.45] }
-          }
-          transition={{ duration: totalSec, repeat: Infinity, ease: 'easeInOut' }}
-        />
-
         <canvas
           ref={canvasRef}
           aria-label="Ahmed El-Bialy Leaf Loading"

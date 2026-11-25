@@ -420,22 +420,10 @@ export const BrandLogoMark: React.FC<BrandLogoMarkProps> = ({
 
   const activeSet = inkAssets ? (isDark ? inkAssets.dark : inkAssets.light) : null;
 
-  // Sharper, higher-contrast smoked-grey drop-shadow that cleanly detaches the leaf without heavy black
+  // Crisp, clean drop-shadow that detaches the leaf silhouette cleanly without any muddy halo
   const liftedPrimaryShadow = isDark
-    ? 'drop-shadow(0 5px 6px rgba(71, 85, 105, 0.58)) drop-shadow(0 2px 3px rgba(100, 116, 139, 0.42)) drop-shadow(0 0 1px rgba(248, 250, 252, 0.34))'
-    : 'drop-shadow(0 5px 7px rgba(71, 85, 105, 0.44)) drop-shadow(0 1.5px 2.5px rgba(51, 65, 85, 0.48)) drop-shadow(0 0 0.75px rgba(15, 23, 42, 0.25))';
-
-  // Soft, non-intrusive radial frosted contrast layer (feathered mask, zero box/card contour)
-  const frostedMaskStyle: React.CSSProperties = {
-    backdropFilter: isDark ? 'blur(9px) brightness(1.08)' : 'blur(9px) brightness(0.98)',
-    WebkitBackdropFilter: isDark ? 'blur(9px) brightness(1.08)' : 'blur(9px) brightness(0.98)',
-    maskImage: 'radial-gradient(circle, rgba(0,0,0,1) 26%, rgba(0,0,0,0.42) 54%, transparent 74%)',
-    WebkitMaskImage:
-      'radial-gradient(circle, rgba(0,0,0,1) 26%, rgba(0,0,0,0.42) 54%, transparent 74%)',
-    background: isDark
-      ? 'radial-gradient(circle at 50% 50%, rgba(148, 163, 184, 0.13) 0%, rgba(100, 116, 139, 0.05) 48%, transparent 74%)'
-      : 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.62) 0%, rgba(226, 232, 240, 0.24) 48%, transparent 74%)',
-  };
+    ? 'drop-shadow(0 4px 6px rgba(15, 23, 42, 0.55))'
+    : 'drop-shadow(0 4px 6px rgba(51, 65, 85, 0.28))';
 
   // 1. Compact Containerless Leaf (Top Navbar, Mobile Drawer, Resume Modal, Footer)
   if (!floatingInk) {
@@ -449,11 +437,6 @@ export const BrandLogoMark: React.FC<BrandLogoMarkProps> = ({
       <span
         className={`relative inline-flex items-center justify-center shrink-0 ${floatClass} ${sizeClassName} ${className}`}
       >
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute -inset-2 rounded-full"
-          style={frostedMaskStyle}
-        />
         {activeSet ? (
           <img
             src={activeSet.primarySrc}
@@ -469,7 +452,7 @@ export const BrandLogoMark: React.FC<BrandLogoMarkProps> = ({
     );
   }
 
-  // 2. Frameless Interactive Signature Leaf (Frosted radial contrast + sharper smoked shadow + gated echoes)
+  // 2. Frameless Interactive Signature Leaf (Crisp silhouette + subtle click ripple + gated echoes)
   return (
     <span
       ref={anchorRef}
@@ -495,38 +478,16 @@ export const BrandLogoMark: React.FC<BrandLogoMarkProps> = ({
       }}
       className={`relative inline-flex items-center justify-center shrink-0 cursor-pointer select-none overflow-visible focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-white/40 rounded-full ${sizeClassName} ${className}`}
     >
-      {/* Radial-Feathered Frosted Contrast Layer (No Card Box / Zero Square Edges) */}
-      <span
-        aria-hidden="true"
-        className={`pointer-events-none absolute -inset-4 rounded-full transition-all duration-300 ${
-          isDirectlyHovered ? 'opacity-100 scale-108' : 'opacity-88 scale-100'
-        }`}
-        style={frostedMaskStyle}
-      />
-
-      {/* Harmonized Monochrome Pearl / Slate Click Ripples */}
+      {/* Crisp Minimal Click Ring (No hazy glow backdrop) */}
       {burstWaves.map((id) => (
-        <React.Fragment key={id}>
-          <motion.span
-            aria-hidden="true"
-            initial={{ scale: 0.65, opacity: 0.72 }}
-            animate={{ scale: 2.35, opacity: 0 }}
-            transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
-            className="pointer-events-none absolute inset-0 rounded-full border-[1.5px] border-slate-600/45 dark:border-slate-300/55 shadow-[0_0_16px_rgba(148,163,184,0.24)]"
-          />
-          <motion.span
-            aria-hidden="true"
-            initial={{ scale: 0.55, opacity: 0.45 }}
-            animate={{ scale: 1.9, opacity: 0 }}
-            transition={{ duration: 0.6, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-            className="pointer-events-none absolute inset-0 rounded-full"
-            style={{
-              background: isDark
-                ? 'radial-gradient(circle, rgba(203,213,225,0.22) 0%, rgba(148,163,184,0.06) 55%, transparent 75%)'
-                : 'radial-gradient(circle, rgba(71,85,105,0.16) 0%, rgba(100,116,139,0.05) 55%, transparent 75%)',
-            }}
-          />
-        </React.Fragment>
+        <motion.span
+          key={id}
+          aria-hidden="true"
+          initial={{ scale: 0.72, opacity: 0.55 }}
+          animate={{ scale: 2.1, opacity: 0 }}
+          transition={{ duration: 0.62, ease: [0.16, 1, 0.3, 1] }}
+          className="pointer-events-none absolute inset-0 rounded-full border border-slate-500/40 dark:border-slate-300/45"
+        />
       ))}
 
       {/* Stationary >3s Organic Breathing Sway Envelope + Velocity-Gated Smoked Echoes */}

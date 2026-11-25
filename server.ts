@@ -387,7 +387,7 @@ async function startServer() {
   });
 
   // Endpoint to check last push status for auto-refetching
-  app.get('/api/github/status', (req, res) => {
+  app.get('/api/github/status', (_req, res) => {
     return res.json({
       lastPushTimestamp,
       lastPushRepo,
@@ -844,7 +844,7 @@ Strict verified facts only:
   } else {
     const distPath = path.resolve(__dirname, 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
+    app.get('*', (_req, res) => {
       res.sendFile(path.resolve(distPath, 'index.html'));
     });
   }

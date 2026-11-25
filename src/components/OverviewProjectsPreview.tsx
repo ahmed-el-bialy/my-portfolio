@@ -5,6 +5,7 @@ import { FEATURED_PROJECTS, Project } from '../data/portfolioData';
 import {
   ConsolidatedGitHubPortfolio,
   fetchConsolidatedGitHubPortfolio,
+  getCachedConsolidatedPortfolio,
 } from '../services/githubService';
 import { resolveSmartProjectLinks } from '../utils/projectLinks';
 import { SmartDemoButtons } from './SmartDemoButtons';
@@ -56,9 +57,11 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
     queryKey: ['github-consolidated', githubUsername],
     queryFn: () => fetchConsolidatedGitHubPortfolio(githubUsername),
     staleTime: 1000 * 60 * 5,
+    placeholderData: () => getCachedConsolidatedPortfolio(githubUsername),
   });
 
   const liveMediaMap = portfolioData?.liveMediaMap || {};
+
   // Symmetric 2x2 showcase matching the spacious 2-column Hero-first layout
   const topFlagshipProjects = FEATURED_PROJECTS.slice(0, 4);
 
@@ -81,7 +84,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
         <button
           type="button"
           onClick={onExploreAllProjects}
-          className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl bg-slate-900 dark:bg-white/10 hover:bg-[#0284ff] dark:hover:bg-[#0284ff] text-white text-xs font-semibold cursor-pointer whitespace-nowrap self-start md:self-auto shadow-xs"
+          className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] text-slate-900 dark:text-[#f1f5f9] hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 text-xs font-semibold cursor-pointer whitespace-nowrap self-start md:self-auto transition-colors"
         >
           <span>{lang === 'ar' ? 'استعراض كافة المشاريع والمستودعات' : 'View All Projects & Repos'}</span>
           <ArrowRight size={14} className={dir === 'rtl' ? 'rotate-180' : ''} />
@@ -89,7 +92,7 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
       </RevealOnScroll>
 
       {/* Spacious 2-Column Hero-First Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-7">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-7">
         {topFlagshipProjects.map((project, idx) => {
           const liveMedia =
             liveMediaMap[project.repoName] ||

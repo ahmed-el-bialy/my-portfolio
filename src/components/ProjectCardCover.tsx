@@ -230,6 +230,7 @@ export function synthesizeProjectBlueprint(
   const matched = Object.entries(KNOWN_BLUEPRINTS).find(
     ([key]) => key.replace(/[-_\s]/g, '') === cleanKey
   );
+
   if (matched) {
     return matched[1];
   }

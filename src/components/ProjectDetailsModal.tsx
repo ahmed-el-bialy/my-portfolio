@@ -27,6 +27,13 @@ import {
   BookOpen,
   AlertTriangle,
   CheckCircle2,
+  Check,
+  Link2,
+  Youtube,
+  Play,
+  Layers,
+  Database,
+  Smartphone,
 } from 'lucide-react';
 import { Project } from '../data/portfolioData';
 import { resolveSmartProjectLinks } from '../utils/projectLinks';
@@ -38,6 +45,7 @@ import { TechIconBadge } from './TechLogos';
 import { ReadmeDocumentView } from './ReadmeDocumentView';
 import { ProjectDeviceStage, DeviceStageMode } from './ProjectDeviceStage';
 import { ProjectArchitectureInspector } from './ProjectArchitectureInspector';
+import { YouTubeEmbedPlayer } from './YouTubeEmbedPlayer';
 import {
   extractStructuredReadmeTemplate,
   formatReadableScreenName,
@@ -60,6 +68,8 @@ import {
 } from '../services/githubService';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
+import { copyToClipboard } from '../utils/clipboard';
 import { usePlayStoreAppStats } from '../services/playStoreService';
 
 interface ProjectDetailsModalProps {
@@ -310,6 +320,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   initialScreenIndex = 0,
 }) => {
   const { lang, dir } = useLanguage();
+  const { showToast } = useToast();
   const shouldReduceMotion = useReducedMotion();
 
   const safeProject = useMemo(() => normalizeProjectInput(project), [project]);
@@ -322,7 +333,9 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const [galleryCategory, setGalleryCategory] = useState<string>('all');
   const [visibleGalleryCount, setVisibleGalleryCount] = useState<number>(GALLERY_PAGE_SIZE);
   const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
+  const [lightboxMediaType, setLightboxMediaType] = useState<'screen' | 'video'>('screen');
   const [adHocLightboxUrl, setAdHocLightboxUrl] = useState<string | null>(null);
+  const [copiedProjectLink, setCopiedProjectLink] = useState<boolean>(false);
   const [lightboxImgState, setLightboxImgState] = useState<{
     triedDirect: boolean;
     failed: boolean;
@@ -492,7 +505,9 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         setGalleryCategory('all');
         setVisibleGalleryCount(GALLERY_PAGE_SIZE);
         setLightboxOpen(false);
+        setLightboxMediaType('screen');
         setAdHocLightboxUrl(null);
+        setCopiedProjectLink(false);
         setLightboxImgState({ triedDirect: false, failed: false });
         setCaseStudyData({ en: null, ar: null });
         setStudyCaseLang(lang === 'ar' ? 'ar' : 'en');
@@ -641,12 +656,15 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     });
   }, [safeScreenCount]);
 
+  const stepLightboxRef = useRef<((direction: 'next' | 'prev') => void) | null>(null);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
       if (e.key === 'Escape') {
         if (lightboxOpen) {
           setLightboxOpen(false);
+          setLightboxMediaType('screen');
           setAdHocLightboxUrl(null);
         } else if (isFullPage) {
           setIsFullPage(false);
@@ -654,13 +672,18 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           onClose();
         }
       } else if (lightboxOpen) {
-        if (e.key === 'ArrowRight') nextScreen();
-        if (e.key === 'ArrowLeft') prevScreen();
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          stepLightboxRef.current?.(dir === 'rtl' ? 'prev' : 'next');
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          stepLightboxRef.current?.(dir === 'rtl' ? 'next' : 'prev');
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, lightboxOpen, isFullPage, nextScreen, prevScreen, onClose]);
+  }, [isOpen, lightboxOpen, isFullPage, dir, onClose]);
 
   const rawReadme = liveMeta?.rawReadmeText || cachedLiveMedia?.rawReadmeText || '';
   const defaultBranch =
@@ -763,6 +786,12 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     hasAnyStudyCase: boolean;
     activeStudyCaseMarkdown: string;
     distributionLabel: string;
+    archSummary: {
+      architecture: string;
+      stateEngine: string;
+      dataLayer: string;
+      platform: string;
+    };
     navSections: Array<{ id: WorkspaceSectionId; label: string; count?: number }>;
   } | null = null;
 
@@ -922,6 +951,76 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         ? 'مستودع مفتوح المصدر'
         : 'Open-Source Codebase';
 
+      const stackHaystack = [
+        ...displayTechStack,
+        ...(safeProject.technologies || []),
+        ...(matchedCachedRepo?.topics || []),
+        ...(liveMeta?.topics || []),
+        realLanguage || '',
+        displayDescription,
+      ]
+        .join(' ')
+        .toLowerCase();
+
+      const derivedArchitecture = stackHaystack.includes('clean')
+        ? 'Clean Architecture'
+        : stackHaystack.includes('mvvm')
+        ? 'MVVM Pattern'
+        : stackHaystack.includes('feature')
+        ? 'Feature-First Modular'
+        : realLanguage?.toLowerCase() === 'python'
+        ? lang === 'ar'
+          ? 'بايثون معياري'
+          : 'Modular Python'
+        : lang === 'ar'
+        ? 'طبقات معمارية منظمة'
+        : 'Layered Modular';
+
+      const derivedStateEngine = stackHaystack.includes('bloc') && stackHaystack.includes('cubit')
+        ? 'BLoC & Cubit'
+        : stackHaystack.includes('cubit')
+        ? 'Flutter Cubit'
+        : stackHaystack.includes('bloc')
+        ? 'Flutter BLoC'
+        : stackHaystack.includes('provider')
+        ? 'Provider'
+        : stackHaystack.includes('riverpod')
+        ? 'Riverpod'
+        : stackHaystack.includes('setstate') || stackHaystack.includes('stream')
+        ? 'Reactive Streams'
+        : realLanguage?.toLowerCase() === 'dart' || !realLanguage
+        ? 'Cubit / State Streams'
+        : realLanguage;
+
+      const derivedDataLayer = [
+        stackHaystack.includes('hive') ? 'Hive NoSQL' : null,
+        stackHaystack.includes('firebase') || stackHaystack.includes('firestore')
+          ? 'Firebase Firestore'
+          : null,
+        stackHaystack.includes('dio') ? 'Dio HTTP' : null,
+        stackHaystack.includes('retrofit') ? 'Retrofit' : null,
+        stackHaystack.includes('tmdb') ? 'TMDB REST' : null,
+        stackHaystack.includes('api') || stackHaystack.includes('rest') ? 'REST API' : null,
+      ]
+        .filter(Boolean)
+        .slice(0, 2)
+        .join(' · ') || (lang === 'ar' ? 'تخزين محلي وبيانات منظمة' : 'Local & Structured Data');
+
+      const derivedPlatform = hasPlayStore
+        ? lang === 'ar'
+          ? 'Android (Google Play) & iOS'
+          : 'Android (Play Store) & iOS'
+        : realLanguage?.toLowerCase() === 'dart' || stackHaystack.includes('flutter')
+        ? 'Android & iOS (Flutter)'
+        : realLanguage || 'Cross-Platform';
+
+      const archSummary = {
+        architecture: derivedArchitecture,
+        stateEngine: derivedStateEngine,
+        dataLayer: derivedDataLayer,
+        platform: derivedPlatform,
+      };
+
       const navSections: Array<{ id: WorkspaceSectionId; label: string; count?: number }> =
         [
           {
@@ -976,6 +1075,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         hasAnyStudyCase,
         activeStudyCaseMarkdown,
         distributionLabel,
+        archSummary,
         navSections,
       };
     } catch {
@@ -1029,8 +1129,59 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       hasAnyStudyCase,
       activeStudyCaseMarkdown,
       distributionLabel,
+      archSummary,
       navSections,
     } = preparedData;
+
+    const handleCopyProjectLink = async () => {
+      if (typeof window === 'undefined') return;
+      const shareUrl = `${window.location.origin}${window.location.pathname}?project=${encodeURIComponent(
+        safeRepoName
+      )}#projects`;
+      const ok = await copyToClipboard(shareUrl);
+      if (!ok) return;
+      setCopiedProjectLink(true);
+      showToast({
+        message: lang === 'ar' ? `تم نسخ رابط ${safeDisplayName}` : `Copied link to ${safeDisplayName}`,
+        detail: shareUrl,
+      });
+      window.setTimeout(() => setCopiedProjectLink(false), 2000);
+    };
+
+    const hasVideoSlide = Boolean(parsedVideoId && youtubeIframeSrc && !adHocLightboxUrl);
+
+    const stepLightbox = (direction: 'next' | 'prev') => {
+      if (adHocLightboxUrl) return;
+      if (!hasVideoSlide) {
+        if (direction === 'next') nextScreen();
+        else prevScreen();
+        return;
+      }
+      if (lightboxMediaType === 'video') {
+        if (safeScreenCount === 0) return;
+        setLightboxMediaType('screen');
+        setStageMode('screens');
+        setActiveScreenIndex(direction === 'next' ? 0 : safeScreenCount - 1);
+      } else {
+        if (direction === 'next') {
+          if (safeScreenIndex >= safeScreenCount - 1) {
+            setIsPlayingVideo(false);
+            setLightboxMediaType('video');
+          } else {
+            nextScreen();
+          }
+        } else {
+          if (safeScreenIndex <= 0) {
+            setIsPlayingVideo(false);
+            setLightboxMediaType('video');
+          } else {
+            prevScreen();
+          }
+        }
+      }
+    };
+
+    stepLightboxRef.current = stepLightbox;
 
     const activeLightboxRawUrl =
       adHocLightboxUrl || (safeScreenCount > 0 ? safeScreenshots[safeScreenIndex] : '');
@@ -1096,9 +1247,36 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
+                onClick={handleCopyProjectLink}
+                className={`btn-kinetic inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[40px] sm:min-h-0 rounded-xl border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+                  copiedProjectLink
+                    ? 'bg-emerald-500/12 border-emerald-500/35 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-slate-100/80 dark:bg-white/[0.04] hover:bg-slate-200/80 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-white/10'
+                }`}
+                title={lang === 'ar' ? 'نسخ رابط المشروع المباشر' : 'Copy project link'}
+                aria-label={lang === 'ar' ? 'نسخ رابط المشروع' : 'Copy project link'}
+              >
+                {copiedProjectLink ? (
+                  <Check size={13} className="text-emerald-500 shrink-0" />
+                ) : (
+                  <Link2 size={13} className="shrink-0" />
+                )}
+                <span className="hidden sm:inline">
+                  {copiedProjectLink
+                    ? lang === 'ar'
+                      ? 'تم النسخ'
+                      : 'Copied'
+                    : lang === 'ar'
+                    ? 'نسخ الرابط'
+                    : 'Copy Link'}
+                </span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => syncLiveProjectData(safeProject, true, defaultBranch)}
                 disabled={isSyncingLive}
-                className="btn-kinetic inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[40px] sm:min-h-0 rounded-lg bg-slate-100/80 dark:bg-white/[0.04] hover:bg-slate-200/80 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/10 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60 whitespace-nowrap"
+                className="btn-kinetic inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 min-h-[40px] sm:min-h-0 rounded-xl bg-slate-100/80 dark:bg-white/[0.04] hover:bg-slate-200/80 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-white/10 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60 whitespace-nowrap"
                 title={
                   lang === 'ar' ? 'تحديث البيانات من GitHub' : 'Sync latest from GitHub'
                 }
@@ -1121,7 +1299,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               <button
                 type="button"
                 onClick={() => setIsFullPage((prev) => !prev)}
-                className={`btn-kinetic hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+                className={`btn-kinetic hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                   isFullPage
                     ? 'bg-[#0284ff] text-white border-[#0284ff]'
                     : 'bg-slate-100/80 dark:bg-white/[0.04] hover:bg-slate-200/80 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-white/10'
@@ -1143,7 +1321,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-11 h-11 sm:w-8 sm:h-8 rounded-lg bg-slate-100/80 dark:bg-white/[0.04] hover:bg-rose-500/12 text-slate-600 dark:text-slate-400 hover:text-rose-500 border border-slate-200/80 dark:border-white/10 flex items-center justify-center transition-colors cursor-pointer"
+                className="w-11 h-11 sm:w-8 sm:h-8 rounded-xl bg-slate-100/80 dark:bg-white/[0.04] hover:bg-rose-500/12 text-slate-600 dark:text-slate-400 hover:text-rose-500 border border-slate-200/80 dark:border-white/10 flex items-center justify-center transition-colors cursor-pointer"
                 aria-label="Close workspace"
               >
                 <X size={16} />
@@ -1219,8 +1397,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 className="scroll-mt-4"
               >
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-                  {/* Start Column on Desktop, Second on Mobile so Video Demo appears immediately above the fold */}
-                  <div className="order-2 lg:order-1 lg:col-span-5 space-y-5">
+                  {/* Balanced 6/12 Brief Column with Quick Technical Summary */}
+                  <div className="order-2 lg:order-1 lg:col-span-6 space-y-4">
                     {/* Unboxed Metadata Line */}
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-mono">
                       <span
@@ -1254,7 +1432,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       )}
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <h3 className="font-display text-2xl sm:text-[32px] font-extrabold text-slate-950 dark:text-white tracking-tight leading-[1.12] [text-wrap:balance]">
                         {safeDisplayName}
                       </h3>
@@ -1297,30 +1475,45 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       {displayDescription}
                     </p>
 
-                    {/* Hairline 3-Column Spec Strip (No Nested Box Clutter) */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-0 py-3.5 border-y border-slate-200/80 dark:border-white/10 sm:divide-x sm:divide-slate-200/80 sm:dark:divide-white/10 rtl:sm:divide-x-reverse">
-                      <div className="sm:pe-4">
-                        <div className="text-[10.5px] font-mono text-slate-500 dark:text-slate-400">
-                          {lang === 'ar' ? 'التصنيف' : 'Category'}
+                    {/* Quick Technical Summary (2x2 Architectural Glance) */}
+                    <div className="rounded-2xl bg-slate-50/90 dark:bg-white/[0.025] border border-slate-200/80 dark:border-white/10 p-3.5 sm:p-4 grid grid-cols-2 gap-3.5">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 text-[10.5px] font-mono text-slate-500 dark:text-slate-400">
+                          <Layers size={11} className="text-[#0369a1] dark:text-[#38bdf8] shrink-0" />
+                          <span className="truncate">{lang === 'ar' ? 'النمط المعماري' : 'Architecture'}</span>
                         </div>
                         <div className="text-xs font-bold text-slate-900 dark:text-white mt-0.5 truncate">
-                          {appBlueprint.genre}
+                          {archSummary.architecture}
                         </div>
                       </div>
-                      <div className="sm:px-4">
-                        <div className="text-[10.5px] font-mono text-slate-500 dark:text-slate-400">
-                          {lang === 'ar' ? 'المعمارية' : 'Architecture'}
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 text-[10.5px] font-mono text-slate-500 dark:text-slate-400">
+                          <Cpu size={11} className="text-[#0369a1] dark:text-[#38bdf8] shrink-0" />
+                          <span className="truncate">{lang === 'ar' ? 'إدارة الحالة' : 'State & Logic'}</span>
                         </div>
                         <div className="text-xs font-bold text-[#0369a1] dark:text-[#38bdf8] mt-0.5 truncate">
-                          Clean Arch · BLoC
+                          {archSummary.stateEngine}
                         </div>
                       </div>
-                      <div className="sm:ps-4">
-                        <div className="text-[10.5px] font-mono text-slate-500 dark:text-slate-400">
-                          {lang === 'ar' ? 'النشر' : 'Distribution'}
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 text-[10.5px] font-mono text-slate-500 dark:text-slate-400">
+                          <Database size={11} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="truncate">{lang === 'ar' ? 'البيانات والشبكة' : 'Data & API'}</span>
                         </div>
-                        <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">
-                          {distributionLabel}
+                        <div className="text-xs font-bold text-slate-900 dark:text-white mt-0.5 truncate">
+                          {archSummary.dataLayer}
+                        </div>
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 text-[10.5px] font-mono text-slate-500 dark:text-slate-400">
+                          <Smartphone size={11} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="truncate">{lang === 'ar' ? 'المنصة المستهدفة' : 'Platform'}</span>
+                        </div>
+                        <div className="text-xs font-bold text-slate-900 dark:text-white mt-0.5 truncate">
+                          {archSummary.platform}
                         </div>
                       </div>
                     </div>
@@ -1346,7 +1539,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                           href={currentPlayUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs whitespace-nowrap"
+                          className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs whitespace-nowrap"
                         >
                           <PackageCheck size={14} />
                           <span>Google Play</span>
@@ -1373,7 +1566,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                           href={apkHref}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-xs whitespace-nowrap"
+                          className="btn-kinetic inline-flex items-center gap-1.5 px-4 py-2 min-h-[42px] sm:min-h-[38px] rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs whitespace-nowrap"
                         >
                           <Download size={14} />
                           <span>
@@ -1408,8 +1601,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Priority Media Stage: First on Mobile, Prominent Theater Column on Desktop */}
-                  <div className="order-1 lg:order-2 lg:col-span-7">
+                  {/* Balanced 6/12 Media Stage */}
+                  <div className="order-1 lg:order-2 lg:col-span-6">
                     <ProjectDeviceStage
                       lang={lang}
                       dir={dir}
@@ -1450,10 +1643,62 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       onNextScreen={nextScreen}
                       onOpenLightbox={() => {
                         setAdHocLightboxUrl(null);
+                        setLightboxMediaType('screen');
                         setLightboxOpen(true);
                       }}
+                      onOpenVideoLightbox={
+                        parsedVideoId
+                          ? () => {
+                              setAdHocLightboxUrl(null);
+                              setIsPlayingVideo(false);
+                              setLightboxMediaType('video');
+                              setLightboxOpen(true);
+                            }
+                          : undefined
+                      }
                       onJumpToGallery={() => scrollToSection('gallery')}
                     />
+                  </div>
+                </div>
+
+                {/* FULL-WIDTH 3-COLUMN SPEC MATRIX (12/12 below preview) */}
+                <div className="mt-7 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-0 py-4 sm:py-5 border-y border-slate-200/80 dark:border-white/10 md:divide-x md:divide-slate-200/80 md:dark:divide-white/10 rtl:md:divide-x-reverse">
+                  <div className="md:pe-6 min-w-0">
+                    <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                      {lang === 'ar' ? 'التصنيف والنطاق' : 'Category & Scope'}
+                    </div>
+                    <div className="text-sm font-bold text-slate-900 dark:text-white mt-1 truncate">
+                      {appBlueprint.genre}
+                    </div>
+                    <div className="text-xs font-mono text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                      {(realLanguage || 'Dart')} · {safeScreenCount > 0 ? `${safeScreenCount} ${lang === 'ar' ? 'شاشات' : 'screens'}` : lang === 'ar' ? 'كود مصدري' : 'Source repo'}
+                    </div>
+                  </div>
+
+                  <div className="md:px-6 min-w-0">
+                    <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                      {lang === 'ar' ? 'المعمارية والتقنيات' : 'Architecture & State'}
+                    </div>
+                    <div className="text-sm font-bold text-[#0369a1] dark:text-[#38bdf8] mt-1 truncate">
+                      {archSummary.architecture} · {archSummary.stateEngine}
+                    </div>
+                    <div className="text-xs font-mono text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                      {archSummary.dataLayer}
+                    </div>
+                  </div>
+
+                  <div className="md:ps-6 min-w-0">
+                    <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                      {lang === 'ar' ? 'النشر والإصدار' : 'Distribution & Release'}
+                    </div>
+                    <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
+                      {distributionLabel}
+                    </div>
+                    <div className="text-xs font-mono text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                      {releaseInfo.tagName
+                        ? `${releaseInfo.tagName}${realApkSizeLabel ? ` · ${realApkSizeLabel}` : ''}`
+                        : realPushedLabel || archSummary.platform}
+                    </div>
                   </div>
                 </div>
               </section>
@@ -1574,6 +1819,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       type="button"
                       onClick={() => {
                         setAdHocLightboxUrl(null);
+                        setLightboxMediaType('screen');
                         setLightboxOpen(true);
                       }}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] sm:min-h-0 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-[#0284ff] hover:text-white text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
@@ -1669,6 +1915,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                               onInspect={() => {
                                 setAdHocLightboxUrl(null);
                                 setIsPlayingVideo(false);
+                                setLightboxMediaType('screen');
                                 setStageMode('screens');
                                 setActiveScreenIndex(targetIndex);
                                 setLightboxOpen(true);
@@ -1800,6 +2047,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         } else {
                           setAdHocLightboxUrl(clickedUrl);
                         }
+                        setLightboxMediaType('screen');
                         setLightboxOpen(true);
                       }}
                     />
@@ -1827,58 +2075,122 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           </div>
         </motion.div>
 
-        {/* Fullscreen Keyboard-Navigable Gallery Lightbox */}
-        {lightboxOpen && activeLightboxRawUrl && (
+        {/* Fullscreen Keyboard-Navigable Gallery + Video Lightbox */}
+        {lightboxOpen && ((lightboxMediaType === 'video' && hasVideoSlide) || activeLightboxRawUrl) && (
           <div
             role="dialog"
             aria-modal="true"
             aria-label={
-              lang === 'ar' ? 'معاينة الصورة بالحجم الكامل' : 'Screenshot Lightbox'
+              lightboxMediaType === 'video'
+                ? lang === 'ar'
+                  ? 'معاينة الفيديو بملء الشاشة'
+                  : 'Fullscreen Video Demo'
+                : lang === 'ar'
+                ? 'معاينة الصورة بالحجم الكامل'
+                : 'Screenshot Lightbox'
             }
-            className="fixed inset-0 z-[120] bg-black/95 flex flex-col items-center justify-center p-4"
+            tabIndex={-1}
+            className="fixed inset-0 z-[120] bg-black/95 flex flex-col items-center justify-center p-4 outline-none"
             onClick={(e) => {
               e.stopPropagation();
               setLightboxOpen(false);
+              setLightboxMediaType('screen');
               setAdHocLightboxUrl(null);
             }}
           >
-            <div className="absolute top-4 inset-x-4 flex items-center justify-between pointer-events-none z-20">
-              <span className="px-3.5 py-1.5 rounded-full bg-white/12 text-white font-mono text-xs border border-white/15 capitalize">
-                {safeDisplayName} ·{' '}
-                {formatReadableScreenName(activeLightboxRawUrl, safeScreenIndex)}
-                {!adHocLightboxUrl && safeScreenCount > 0
-                  ? ` (${safeScreenIndex + 1} / ${safeScreenCount})`
-                  : ''}
-              </span>
+            <div className="absolute top-4 inset-x-4 flex items-center justify-between gap-2 pointer-events-none z-20">
+              <div className="flex items-center gap-2 pointer-events-auto min-w-0">
+                <span className="px-3.5 py-1.5 rounded-full bg-white/12 text-white font-mono text-xs border border-white/15 capitalize truncate">
+                  {lightboxMediaType === 'video'
+                    ? `${safeDisplayName} · ${lang === 'ar' ? 'فيديو العرض' : 'Video Walkthrough'}`
+                    : `${safeDisplayName} · ${formatReadableScreenName(activeLightboxRawUrl, safeScreenIndex)}${
+                        !adHocLightboxUrl && safeScreenCount > 0
+                          ? ` (${safeScreenIndex + 1} / ${safeScreenCount})`
+                          : ''
+                      }`}
+                </span>
+
+                {hasVideoSlide && safeScreenCount > 0 && (
+                  <div
+                    className="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-md"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsPlayingVideo(false);
+                        setLightboxMediaType('video');
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${
+                        lightboxMediaType === 'video'
+                          ? 'bg-red-600 text-white'
+                          : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      <Youtube size={12} />
+                      <span>{lang === 'ar' ? 'الفيديو' : 'Video'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLightboxMediaType('screen');
+                        setStageMode('screens');
+                      }}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${
+                        lightboxMediaType === 'screen'
+                          ? 'bg-[#0284ff] text-white'
+                          : 'text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      <ImageIcon size={12} />
+                      <span>{lang === 'ar' ? 'الشاشات' : 'Screens'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   setLightboxOpen(false);
+                  setLightboxMediaType('screen');
                   setAdHocLightboxUrl(null);
                 }}
-                className="pointer-events-auto text-white hover:text-rose-400 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 cursor-pointer transition-colors"
+                className="pointer-events-auto text-white hover:text-rose-400 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 cursor-pointer transition-colors shrink-0"
                 aria-label="Close Lightbox"
               >
                 <X size={22} />
               </button>
             </div>
 
-            {!adHocLightboxUrl && safeScreenCount > 1 && (
+            {!adHocLightboxUrl && (safeScreenCount > 1 || (hasVideoSlide && safeScreenCount >= 1)) && (
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  prevScreen();
+                  stepLightbox('prev');
                 }}
-                className="absolute start-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white cursor-pointer z-20 transition-all hover:scale-110 flex items-center justify-center"
-                aria-label="Previous Screenshot"
+                className="absolute start-3 sm:start-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/12 hover:bg-white/25 text-white cursor-pointer z-20 transition-all hover:scale-110 flex items-center justify-center"
+                aria-label={lang === 'ar' ? 'العنصر السابق' : 'Previous media'}
               >
                 <ChevronLeft size={24} className={dir === 'rtl' ? 'rotate-180' : ''} />
               </button>
             )}
 
-            {lightboxImgState.failed || !activeLightboxSrc ? (
+            {lightboxMediaType === 'video' && parsedVideoId ? (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-5xl aspect-video max-h-[75vh] rounded-2xl overflow-hidden bg-[#06080f] border border-white/15 shadow-2xl"
+              >
+                <YouTubeEmbedPlayer
+                  videoId={parsedVideoId}
+                  title={`${safeDisplayName} Fullscreen Video Demo`}
+                  youtubeUrl={playerCandidateUrl}
+                  autoplay={true}
+                />
+              </div>
+            ) : lightboxImgState.failed || !activeLightboxSrc ? (
               <div
                 onClick={(e) => e.stopPropagation()}
                 className="max-w-sm w-full rounded-2xl bg-[#0e1424] border border-white/15 p-6 text-center space-y-4 text-slate-200 shadow-2xl"
@@ -1913,6 +2225,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     type="button"
                     onClick={() => {
                       setLightboxOpen(false);
+                      setLightboxMediaType('screen');
                       setAdHocLightboxUrl(null);
                     }}
                     className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold cursor-pointer"
@@ -1942,33 +2255,58 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               />
             )}
 
-            {!adHocLightboxUrl && safeScreenCount > 1 && (
+            {!adHocLightboxUrl && (safeScreenCount > 1 || (hasVideoSlide && safeScreenCount >= 1)) && (
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  nextScreen();
+                  stepLightbox('next');
                 }}
-                className="absolute end-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 text-white cursor-pointer z-20 transition-all hover:scale-110 flex items-center justify-center"
-                aria-label="Next Screenshot"
+                className="absolute end-3 sm:end-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/12 hover:bg-white/25 text-white cursor-pointer z-20 transition-all hover:scale-110 flex items-center justify-center"
+                aria-label={lang === 'ar' ? 'العنصر التالي' : 'Next media'}
               >
                 <ChevronRight size={24} className={dir === 'rtl' ? 'rotate-180' : ''} />
               </button>
             )}
 
-            {!adHocLightboxUrl && safeScreenCount > 1 && (
+            {!adHocLightboxUrl && (safeScreenCount > 1 || (hasVideoSlide && safeScreenCount >= 1)) && (
               <div
                 className="mt-5 flex items-center gap-2 max-w-[90vw] overflow-x-auto px-3 py-2 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md no-scrollbar"
                 onClick={(e) => e.stopPropagation()}
               >
+                {hasVideoSlide && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPlayingVideo(false);
+                      setLightboxMediaType('video');
+                    }}
+                    aria-label={lang === 'ar' ? 'عرض فيديو المشروع' : 'View video walkthrough'}
+                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer flex flex-col items-center justify-center gap-1 bg-[#141926] text-white ${
+                      lightboxMediaType === 'video'
+                        ? 'border-red-500 scale-105 opacity-100'
+                        : 'border-white/15 opacity-75 hover:opacity-100'
+                    }`}
+                  >
+                    <Play size={16} className="text-red-500" fill="currentColor" />
+                    <span className="text-[10px] font-mono font-bold">
+                      {lang === 'ar' ? 'فيديو' : 'Demo'}
+                    </span>
+                  </button>
+                )}
+
                 {safeScreenshots.map((imgUrl, idx) => (
                   <button
                     key={`${imgUrl}-lb-${idx}`}
                     type="button"
-                    onClick={() => setActiveScreenIndex(idx)}
+                    onClick={() => {
+                      setLightboxMediaType('screen');
+                      setStageMode('screens');
+                      setActiveScreenIndex(idx);
+                    }}
                     aria-label={`View screenshot ${idx + 1}`}
                     className={`w-10 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${
-                      safeScreenIndex === idx
+                      lightboxMediaType === 'screen' && safeScreenIndex === idx
                         ? 'border-[#38bdf8] scale-110 opacity-100'
                         : 'border-white/15 opacity-70 hover:opacity-100'
                     }`}

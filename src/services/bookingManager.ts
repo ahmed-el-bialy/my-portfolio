@@ -1,9 +1,4 @@
-import {
-  BookingValidationService,
-  BookingRequest,
-  BookingValidationResult,
-  SlotCapacityInfo,
-} from './BookingValidationService';
+import { BookingValidationService } from './BookingValidationService';
 
 export interface OfficialBooking {
   bookingId: string;

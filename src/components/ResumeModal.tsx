@@ -236,11 +236,11 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center justify-between sm:justify-end flex-wrap gap-1.5 sm:gap-2 w-full sm:w-auto shrink-0">
             <button
               type="button"
               onClick={handleToggleViewMode}
-              className={`btn-kinetic flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border min-h-[42px] sm:min-h-[36px] ${
+              className={`btn-kinetic flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border min-h-[42px] sm:min-h-[36px] whitespace-nowrap shrink-0 ${
                 viewMode === 'pdf'
                   ? 'bg-[#0284ff] text-white border-[#0284ff] shadow-sm'
                   : 'bg-white dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-[#0369a1] dark:text-[#38bdf8] border-slate-200 dark:border-white/10'
@@ -248,12 +248,12 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
             >
               {viewMode === 'pdf' ? (
                 <>
-                  <Layout size={13} />
-                  <span>{lang === 'ar' ? 'عرض السيرة التفاعلية' : 'Executive Web View'}</span>
+                  <Layout size={13} className="shrink-0" />
+                  <span>{lang === 'ar' ? 'السيرة التفاعلية' : 'Executive Web View'}</span>
                 </>
               ) : (
                 <>
-                  <FileText size={13} />
+                  <FileText size={13} className="shrink-0" />
                   <span>{lang === 'ar' ? 'عرض PDF' : 'View PDF'}</span>
                 </>
               )}

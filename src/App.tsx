@@ -634,6 +634,50 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
+  // Deep-link ?project=<repoName> opening support
+  const deepLinkedProjectRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const targetParam = params.get('project')?.trim();
+    if (!targetParam) return;
+    const normalizedTarget = targetParam.toLowerCase();
+    if (deepLinkedProjectRef.current === normalizedTarget) return;
+
+    const featuredMatch = FEATURED_PROJECTS.find(
+      (p) =>
+        p.repoName.toLowerCase() === normalizedTarget ||
+        p.name.toLowerCase() === normalizedTarget
+    );
+
+    if (featuredMatch) {
+      deepLinkedProjectRef.current = normalizedTarget;
+      inspectHeroProjectSafely(featuredMatch, 0);
+      return;
+    }
+
+    const repoMatch = liveRepos.find((r) => r.name.toLowerCase() === normalizedTarget);
+    if (repoMatch) {
+      deepLinkedProjectRef.current = normalizedTarget;
+      inspectHeroProjectSafely(
+        {
+          id: repoMatch.id,
+          name: repoMatch.name,
+          repoName: repoMatch.name,
+          subtitle: repoMatch.language || 'Flutter Repository',
+          description: repoMatch.description || '',
+          image: repoMatch.coverImageUrl || '',
+          technologies: Array.isArray(repoMatch.topics) ? repoMatch.topics : [],
+          features: [],
+          links: {
+            github: repoMatch.html_url,
+          },
+        },
+        0
+      );
+    }
+  }, [liveRepos, inspectHeroProjectSafely]);
+
   const prefetchTab = useCallback((tab: NavTab) => {
     if (tab === 'projects') {
       loadProjectsSection().catch(() => {});
@@ -662,13 +706,27 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  const clearProjectQueryParam = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('project')) {
+      url.searchParams.delete('project');
+      window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+    }
+  }, []);
+
   const handleNavigate = (tab: NavTab) => {
     prefetchTab(tab);
     setActiveTab(tab);
     if (typeof window !== 'undefined') {
       const targetHash = `#${tab}`;
-      if (window.location.hash !== targetHash) {
-        window.history.replaceState(null, '', targetHash);
+      const url = new URL(window.location.href);
+      const hadProjectParam = url.searchParams.has('project');
+      if (hadProjectParam) {
+        url.searchParams.delete('project');
+      }
+      if (window.location.hash !== targetHash || hadProjectParam) {
+        window.history.replaceState(null, '', `${url.pathname}${url.search}${targetHash}`);
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -929,6 +987,7 @@ export default function App() {
               onClose={() => {
                 setHeroInspectedProject(null);
                 setHeroInspectedScreenIndex(0);
+                clearProjectQueryParam();
               }}
               project={heroInspectedProject}
               initialScreenIndex={heroInspectedScreenIndex}
@@ -949,7 +1008,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-24 lg:bottom-6 end-4 sm:end-6 z-40 w-11 h-11 rounded-full bg-[#0284ff] hover:bg-[#0070e0] text-white shadow-lg shadow-[#0284ff]/30 transition-transform duration-200 hover:scale-105 cursor-pointer border border-white/20 flex items-center justify-center"
+            className="fixed bottom-[84px] md:bottom-6 end-4 sm:end-6 z-40 w-11 h-11 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white shadow-sm transition-transform duration-200 hover:scale-105 cursor-pointer border border-[#0284ff] flex items-center justify-center"
             aria-label={lang === 'ar' ? 'الرجوع للأعلى' : 'Back to top'}
             title={lang === 'ar' ? 'الرجوع للأعلى' : 'Back to top'}
           >
@@ -958,7 +1017,7 @@ export default function App() {
         )}
 
         {/* Clean Responsive Obsidian / Light Studio Glass Footer */}
-        <footer className="relative z-10 w-full border-t border-slate-200 dark:border-white/10 bg-white/90 dark:bg-[#0d1017]/90 backdrop-blur-md pt-8 pb-28 lg:pb-8 px-4 sm:px-6 lg:px-8 text-xs text-slate-600 dark:text-[#94a3b8] transition-colors">
+        <footer className="relative z-10 w-full border-t border-slate-200 dark:border-white/10 bg-white/90 dark:bg-[#0d1017]/90 backdrop-blur-md pt-8 pb-28 md:pb-10 px-4 sm:px-6 lg:px-8 text-xs text-slate-600 dark:text-[#94a3b8] transition-colors">
           <div className="max-w-[1440px] mx-auto flex flex-col gap-6 w-full">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-5">
               {/* Brand Identity + Live Sync Status (Left / Top) */}
@@ -1008,12 +1067,12 @@ export default function App() {
                   type="button"
                   onClick={handleManualRefresh}
                   disabled={isSyncing}
-                  className="btn-kinetic flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-[#151a26] hover:bg-slate-100 dark:hover:bg-[#1c2333] text-slate-800 dark:text-[#f1f5f9] border border-slate-200 dark:border-white/10 text-xs font-mono font-semibold transition-all cursor-pointer disabled:opacity-50 min-h-[44px] sm:min-h-[38px]"
+                  className="btn-kinetic flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] text-slate-800 dark:text-[#f1f5f9] hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 text-xs font-mono font-semibold transition-colors cursor-pointer disabled:opacity-50 min-h-[44px] sm:min-h-[38px]"
                   title="Refresh GitHub repository & Play stats cache"
                 >
                   <RefreshCw
                     size={13}
-                    className={isSyncing ? 'animate-spin text-[#0284ff]' : 'text-slate-500 dark:text-slate-400'}
+                    className={isSyncing ? 'animate-spin text-[#0284ff]' : 'text-[#0369a1] dark:text-[#38bdf8]'}
                   />
                   <span>
                     {isSyncing
@@ -1027,7 +1086,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsTerminalOpen(true)}
-                  className="btn-kinetic flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#0284ff]/10 dark:bg-[#0284ff]/15 hover:bg-[#0284ff]/18 dark:hover:bg-[#0284ff]/25 text-[#0369a1] dark:text-[#7DD3FC] border border-[#0284ff]/35 dark:border-[#38bdf8]/35 hover:border-[#0284ff]/70 text-xs font-mono font-bold transition-all cursor-pointer min-h-[44px] sm:min-h-[38px] shadow-xs"
+                  className="btn-kinetic flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] text-[#0369a1] dark:text-[#38bdf8] border border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 text-xs font-mono font-bold transition-colors cursor-pointer min-h-[44px] sm:min-h-[38px]"
                   title="Open AI-Powered Developer CLI Inspector"
                   aria-label="Open Developer AI CLI"
                 >
@@ -1043,7 +1102,7 @@ export default function App() {
                   href={profile.githubUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-slate-400 dark:hover:border-white/25 hover:text-slate-900 dark:hover:text-white transition-all"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/12 flex items-center justify-center hover:border-[#0284ff]/45 hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors"
                   title="GitHub"
                   aria-label="GitHub"
                 >
@@ -1053,7 +1112,7 @@ export default function App() {
                   href={profile.linkedinUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-[#0284ff]/50 hover:text-[#0284ff] transition-all"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/12 flex items-center justify-center hover:border-[#0284ff]/45 hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors"
                   title="LinkedIn"
                   aria-label="LinkedIn"
                 >
@@ -1063,7 +1122,7 @@ export default function App() {
                   href={profile.youtubeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-red-500/40 hover:text-red-500 transition-all"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/12 flex items-center justify-center hover:border-[#0284ff]/45 hover:text-red-500 transition-colors"
                   title="YouTube"
                   aria-label="YouTube"
                 >
@@ -1073,7 +1132,7 @@ export default function App() {
                   href={profile.tiktokUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-pink-500/40 hover:text-pink-500 transition-all"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/12 flex items-center justify-center hover:border-[#0284ff]/45 hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors"
                   title="TikTok"
                   aria-label="TikTok"
                 >
@@ -1083,7 +1142,7 @@ export default function App() {
                   href={AHMED_CONFIG.socials.whatsapp}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-emerald-500/40 hover:text-emerald-500 transition-all"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/12 flex items-center justify-center hover:border-emerald-500/45 hover:text-emerald-500 transition-colors"
                   title="WhatsApp"
                   aria-label="WhatsApp"
                 >
@@ -1092,7 +1151,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => openEmailClient(profile.email, 'Mobile App Project Inquiry')}
-                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-slate-50 dark:bg-[#151a26] border border-slate-200 dark:border-white/10 flex items-center justify-center hover:border-[#0284ff]/50 hover:text-[#0284ff] transition-all cursor-pointer"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/12 flex items-center justify-center hover:border-[#0284ff]/45 hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors cursor-pointer"
                   title="Send Email"
                   aria-label="Send Email"
                 >

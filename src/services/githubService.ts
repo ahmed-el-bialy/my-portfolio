@@ -472,29 +472,51 @@ export async function fetchGitHubUserStats(username: string = 'ahmed-el-bialy'):
       };
     }
 
-    const totalStars = AHMED_DEFAULT_REPOS.reduce((acc, r) => acc + r.stargazers_count, 0);
-    const totalForks = AHMED_DEFAULT_REPOS.reduce((acc, r) => acc + r.forks_count, 0);
-
     return {
-      stats: {
-        username: "ahmed-el-bialy",
-        name: "Ahmed El-Bialy",
-        avatar_url: "https://avatars.githubusercontent.com/u/245139141?v=4",
-        bio: "🚀 Junior Flutter Developer | B.Sc. Student in AI | Mobile App Developer",
-        public_repos: AHMED_DEFAULT_REPOS.length,
-        followers: 12,
-        following: 5,
-        totalStars,
-        totalForks,
-        languages: [
-          { name: "Dart", count: 8, percentage: 88, color: "#00B4AB" },
-          { name: "Python", count: 1, percentage: 12, color: "#3572A5" }
-        ],
-        isFromCache: true
-      },
+      stats: computeFallbackGitHubStats(cleanUsername, AHMED_DEFAULT_REPOS, true),
       repos: AHMED_DEFAULT_REPOS
     };
   }
+}
+
+export function computeFallbackGitHubStats(
+  username: string = 'ahmed-el-bialy',
+  repos: GitHubRepo[] = AHMED_DEFAULT_REPOS,
+  isFromCache: boolean = true
+): GitHubStats {
+  const totalStars = repos.reduce((acc, r) => acc + (r.stargazers_count || 0), 0);
+  const totalForks = repos.reduce((acc, r) => acc + (r.forks_count || 0), 0);
+
+  const langCounts: Record<string, number> = {};
+  repos.forEach((r) => {
+    if (r.language) {
+      langCounts[r.language] = (langCounts[r.language] || 0) + 1;
+    }
+  });
+
+  const totalLangRepos = Object.values(langCounts).reduce((a, b) => a + b, 0) || 1;
+  const languages = Object.entries(langCounts)
+    .map(([name, count]) => ({
+      name,
+      count,
+      percentage: Math.round((count / totalLangRepos) * 100),
+      color: getLanguageColor(name),
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  return {
+    username: username || 'ahmed-el-bialy',
+    name: 'Ahmed El-Bialy',
+    avatar_url: 'https://avatars.githubusercontent.com/u/245139141?v=4',
+    bio: 'Junior Flutter Developer | B.Sc. Student in AI | Mobile App Developer',
+    public_repos: repos.length,
+    followers: 12,
+    following: 5,
+    totalStars,
+    totalForks,
+    languages,
+    isFromCache,
+  };
 }
 
 export async function fetchContributionCalendar(username: string = 'ahmed-el-bialy'): Promise<ContributionDay[]> {
@@ -980,7 +1002,7 @@ export function interceptAndWrapReadmeImages(readmeText?: string | null): string
   // 1. Intercept Markdown images: ![alt](url)
   processed = processed.replace(
     /!\[([^\]]*)\]\((https?:\/\/[^\s)]+\.(?:png|jpg|jpeg|webp|gif)(?:\?[^\s)]*)?)\)/gi,
-    (match, alt, url) => {
+    (_match, alt, url) => {
       return `<div class="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 my-4 shadow-md flex items-center justify-center">
   <img src="${url}" alt="${alt || 'Repository Asset'}" loading="lazy" class="w-full h-full object-cover transition-opacity duration-300" />
 </div>`;
@@ -990,7 +1012,7 @@ export function interceptAndWrapReadmeImages(readmeText?: string | null): string
   // 2. Intercept HTML img tags: <img src="url" ...>
   processed = processed.replace(
     /<img\s+([^>]*src=["']([^"']+)["'][^>]*)>/gi,
-    (match, inner, url) => {
+    (_match, inner, _url) => {
       const hasLazy = inner.includes('loading="lazy"') ? inner : `loading="lazy" ${inner}`;
       return `<div class="relative w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 my-4 shadow-md"><img ${hasLazy} class="w-full h-full object-cover" /></div>`;
     }
@@ -1496,6 +1518,21 @@ export interface ConsolidatedGitHubPortfolio {
   releasesMap: Record<string, RepoReleaseInfo>;
   liveMediaMap: Record<string, RepoLiveMetadata>;
   isServerCached?: boolean;
+  isFallback?: boolean;
+}
+
+export function getCachedConsolidatedPortfolio(
+  username: string = 'ahmed-el-bialy'
+): ConsolidatedGitHubPortfolio | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const cleanUsername = username.trim() || 'ahmed-el-bialy';
+  try {
+    const raw = localStorage.getItem(`ahmed_consolidated_gh_v3_${cleanUsername}`);
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw);
+    if (parsed?.data?.repos) return parsed.data;
+  } catch {}
+  return undefined;
 }
 
 /**
@@ -1772,11 +1809,12 @@ export async function fetchConsolidatedGitHubPortfolio(
           liveMediaMap[r.name.toLowerCase()] = meta;
         });
         return {
-          stats,
+          stats: { ...stats, isFromCache: true },
           repos,
           releasesMap,
           liveMediaMap,
           isServerCached: true,
+          isFallback: true,
         };
       }
     } catch {}
@@ -1866,6 +1904,7 @@ export async function fetchConsolidatedGitHubPortfolio(
         releasesMap,
         liveMediaMap,
         isServerCached: false,
+        isFallback: false,
       };
 
       if (typeof window !== 'undefined') {
@@ -1894,6 +1933,7 @@ export async function fetchConsolidatedGitHubPortfolio(
           return {
             ...parsed.data,
             stats: { ...parsed.data.stats, isFromCache: true },
+            isFallback: true,
           };
         }
       }
@@ -1906,11 +1946,12 @@ export async function fetchConsolidatedGitHubPortfolio(
 
   const fallbackStatsAndRepos = await fetchGitHubUserStats(cleanUsername);
   return {
-    stats: fallbackStatsAndRepos.stats,
+    stats: { ...fallbackStatsAndRepos.stats, isFromCache: true },
     repos: fallbackStatsAndRepos.repos,
     releasesMap: {},
     liveMediaMap: {},
     isServerCached: false,
+    isFallback: true,
   };
 }
 

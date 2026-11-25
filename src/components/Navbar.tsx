@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home,
@@ -74,8 +74,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <>
       {/* 1. Strict 3-Zone Frosted Glass Top Bar */}
-      <header className="fixed top-0 inset-x-0 z-50 border-b border-slate-200/80 dark:border-white/[0.08] bg-[#f8fafc]/82 dark:bg-[#08090d]/82 backdrop-blur-xl shadow-2xs transition-colors duration-200">
-        <div className="w-full max-w-[1440px] mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4 lg:gap-8">
+      <header className="fixed top-0 inset-x-0 z-50 border-b border-slate-200/80 dark:border-white/[0.08] bg-[#f8fafc]/85 dark:bg-[#08090d]/85 backdrop-blur-xl shadow-2xs transition-colors duration-200">
+        <div className="w-full max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8 h-[52px] sm:h-16 flex items-center justify-between gap-2 sm:gap-4 lg:gap-8">
           {/* Zone 1: Logo Mark + Single-line Brand Wordmark */}
           <button
             type="button"
@@ -83,10 +83,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded-lg px-0.5 sm:px-1 min-h-[44px] sm:min-h-0"
           >
             <BrandLogoMark
-              sizeClassName="w-8 h-8 sm:w-9 sm:h-9"
+              sizeClassName="w-7 h-7 sm:w-9 sm:h-9"
               className="group-hover:scale-105 transition-transform"
             />
-            <span className="font-bold text-[13px] sm:text-base tracking-tight text-slate-900 dark:text-[#f1f5f9] group-hover:text-[#0369a1] dark:group-hover:text-[#38bdf8] transition-colors whitespace-nowrap truncate max-w-[132px] xs:max-w-[165px] sm:max-w-none">
+            <span className="font-bold text-[13px] sm:text-base tracking-tight text-slate-900 dark:text-[#f1f5f9] group-hover:text-[#0369a1] dark:group-hover:text-[#38bdf8] transition-colors whitespace-nowrap truncate max-w-[140px] xs:max-w-[175px] sm:max-w-none">
               {AHMED_CONFIG.name[lang]}
             </span>
           </button>
@@ -130,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={toggleLang}
-              className="h-11 sm:h-9 px-2.5 sm:px-3 rounded-lg flex items-center gap-1 sm:gap-1.5 bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-800 dark:text-[#f1f5f9] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              className="h-11 sm:h-9 px-2.5 sm:px-3 rounded-xl flex items-center gap-1 sm:gap-1.5 bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] border border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 text-xs font-semibold text-slate-800 dark:text-[#f1f5f9] hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors cursor-pointer whitespace-nowrap shrink-0"
               aria-label={t.nav.switchLangTooltip}
               title={t.nav.switchLangTooltip}
             >
@@ -141,7 +141,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenResume}
-              className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] border border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 text-xs font-semibold text-slate-800 dark:text-[#f1f5f9] hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors cursor-pointer whitespace-nowrap shrink-0"
               title={t.nav.resume}
             >
               <FileText size={14} className="text-[#0369a1] dark:text-[#38bdf8] shrink-0" />
@@ -152,7 +152,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={onOpenBooking}
-                className="btn-kinetic hidden lg:inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-[#0284ff] hover:bg-[#0070e0] text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 shadow-xs shadow-[#0284ff]/20"
+                className="btn-kinetic hidden lg:inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] border border-[#0284ff] text-white text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
                 title={t.nav.bookMeeting}
               >
                 <Video size={14} className="shrink-0" />
@@ -167,10 +167,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               disabled={isAnyModalOpen}
               whileHover={isAnyModalOpen ? undefined : { scale: 1.04 }}
               whileTap={isAnyModalOpen ? undefined : { scale: 0.96 }}
-              className={`theme-toggle-vt relative w-11 h-11 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center border transition-colors shrink-0 ${
+              className={`theme-toggle-vt relative w-11 h-11 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-colors shrink-0 ${
                 isAnyModalOpen
                   ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-[#0f1117] border-slate-200 dark:border-white/5'
-                  : 'bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] border-slate-200 dark:border-white/15 cursor-pointer'
+                  : 'bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 cursor-pointer'
               }`}
               aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
@@ -196,7 +196,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-              className="md:hidden w-11 h-11 rounded-lg flex items-center justify-center bg-white dark:bg-[#0f1117] hover:bg-slate-100 dark:hover:bg-[#161b27] border border-slate-200 dark:border-white/15 text-slate-800 dark:text-[#f1f5f9] transition-colors cursor-pointer shrink-0"
+              className="md:hidden w-11 h-11 rounded-xl flex items-center justify-center bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] border border-slate-200 dark:border-white/12 text-slate-800 dark:text-[#f1f5f9] transition-colors cursor-pointer shrink-0"
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open navigation menu'}
               aria-expanded={isMobileMenuOpen}
             >
@@ -206,23 +206,23 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </header>
 
-      {/* 2. Compact Mobile Bottom Dock (< 768px) */}
+      {/* 2. Sleek Compact Mobile Bottom Dock (< 768px) */}
       <nav
-        className={`md:hidden fixed bottom-2 inset-x-3 max-w-md mx-auto z-40 transition-transform duration-200 ${
+        className={`md:hidden fixed bottom-1.5 inset-x-3 max-w-sm mx-auto z-40 transition-transform duration-200 ${
           isAnyModalOpen ? 'opacity-0 pointer-events-none translate-y-6' : 'opacity-100 translate-y-0'
         }`}
         aria-label="Mobile Bottom Navigation"
       >
-        <div className="bg-white/92 dark:bg-[#0f1117]/92 backdrop-blur-xl border border-slate-200 dark:border-white/12 rounded-2xl shadow-lg p-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] grid grid-cols-4 gap-1">
+        <div className="bg-white/90 dark:bg-[#0f1117]/90 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 rounded-2xl shadow-md px-1 py-1 pb-[max(0.2rem,env(safe-area-inset-bottom))] grid grid-cols-4 gap-0.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleTabClick(item.id)}
-                  onTouchStart={() => onPrefetchTab?.(item.id)}
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => handleTabClick(item.id)}
+                onTouchStart={() => onPrefetchTab?.(item.id)}
                 className={`relative flex flex-col items-center justify-center min-h-[44px] py-1 px-1 rounded-xl transition-colors cursor-pointer select-none ${
                   isActive
                     ? 'text-[#0369a1] dark:text-[#38bdf8] bg-[#0284ff]/10 dark:bg-[#38bdf8]/12 font-bold'
@@ -230,8 +230,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
                 aria-current={isActive ? 'page' : undefined}
               >
-                <Icon size={17} />
-                <span className="text-[10px] mt-0.5 leading-none whitespace-nowrap truncate max-w-full">
+                <Icon size={16} />
+                <span className="text-[10px] mt-0.5 leading-tight whitespace-nowrap truncate max-w-full">
                   {item.mobileLabel}
                 </span>
               </button>
@@ -261,7 +261,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               exit={{ x: dir === 'rtl' ? '-100%' : '100%' }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               className={`fixed inset-y-0 ${
-                dir === 'rtl' ? 'left-0 border-e' : 'right-0 border-s'
+                dir === 'rtl' ? 'left-0 border-r' : 'right-0 border-l'
               } w-[84%] max-w-xs bg-white dark:bg-[#0f1117] border-slate-200 dark:border-white/10 shadow-2xl p-5 flex flex-col justify-between overflow-y-auto`}
               onClick={(e) => e.stopPropagation()}
             >

@@ -12,6 +12,7 @@ import {
   Loader2,
   ArrowUpRight,
   Film,
+  Maximize2,
 } from 'lucide-react';
 import { AHMED_PROFILE } from '../data/portfolioData';
 import { formatReadableScreenName } from '../utils/readmeTemplateExtractor';
@@ -48,6 +49,7 @@ interface ProjectDeviceStageProps {
   onPrevScreen: () => void;
   onNextScreen: () => void;
   onOpenLightbox: () => void;
+  onOpenVideoLightbox?: () => void;
   onJumpToGallery: () => void;
 }
 
@@ -77,6 +79,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
   onPrevScreen,
   onNextScreen,
   onOpenLightbox,
+  onOpenVideoLightbox,
   onJumpToGallery,
 }) => {
   const shouldReduceMotion = useReducedMotion();
@@ -138,7 +141,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
     : { duration: 0.18, ease: [0.16, 1, 0.3, 1] as const };
 
   return (
-    <div className="rounded-2xl bg-slate-50/85 dark:bg-white/[0.025] border border-slate-200/85 dark:border-white/10 p-3.5 sm:p-5 flex flex-col gap-3.5">
+    <div className="rounded-2xl bg-slate-50/90 dark:bg-[#0e1320]/90 border border-slate-200/90 dark:border-white/10 p-4 sm:p-5 flex flex-col gap-4 shadow-xs">
       {/* Segmented Tab Switcher + Contextual Utility Telemetry */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
         <div
@@ -227,7 +230,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
               {isShorts && hasVideo && (
                 <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
                   <Film size={12} className="text-red-500 shrink-0" />
-                  <span>{lang === 'ar' ? 'عرض رأسي 9:16' : 'App Reel · 9:16'}</span>
+                  <span>{lang === 'ar' ? '9:16' : '9:16'}</span>
                 </span>
               )}
               {playlistUrl && (
@@ -237,9 +240,20 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-[#0369a1] dark:text-[#38bdf8] hover:underline whitespace-nowrap py-1"
                 >
-                  <span>{lang === 'ar' ? 'قائمة التشغيل' : 'Full Playlist'}</span>
+                  <span>{lang === 'ar' ? 'قائمة التشغيل' : 'Playlist'}</span>
                   <ExternalLink size={11} />
                 </a>
+              )}
+              {hasVideo && onOpenVideoLightbox && (
+                <button
+                  type="button"
+                  onClick={onOpenVideoLightbox}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 min-h-[38px] sm:min-h-[34px] rounded-lg bg-white dark:bg-white/[0.05] hover:bg-[#0284ff] text-slate-700 dark:text-slate-200 hover:text-white border border-slate-200/80 dark:border-white/10 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
+                  aria-label={lang === 'ar' ? 'تكبير الفيديو بملء الشاشة' : 'Expand video fullscreen'}
+                >
+                  <Maximize2 size={13} />
+                  <span>{lang === 'ar' ? 'تكبير' : 'Expand'}</span>
+                </button>
               )}
             </>
           ) : (
@@ -283,7 +297,21 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
               className="space-y-3"
             >
               {hasVideo && parsedVideoId ? (
-                <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-[#06080f] border border-slate-200/90 dark:border-white/12 shadow-lg">
+                <div className="relative aspect-video w-full max-h-[330px] lg:max-h-[345px] mx-auto rounded-xl overflow-hidden bg-[#06080f] border border-slate-200/90 dark:border-white/12 shadow-md">
+                  {onOpenVideoLightbox && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenVideoLightbox();
+                      }}
+                      className="absolute top-2.5 end-2.5 z-20 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/70 hover:bg-[#0284ff] text-white border border-white/15 text-[11px] font-semibold backdrop-blur-sm transition-colors cursor-pointer"
+                      aria-label={lang === 'ar' ? 'فتح الفيديو بملء الشاشة' : 'Open video fullscreen'}
+                    >
+                      <Maximize2 size={12} />
+                      <span className="hidden sm:inline">{lang === 'ar' ? 'ملء الشاشة' : 'Fullscreen'}</span>
+                    </button>
+                  )}
                   {isPlayingVideo ? (
                     <YouTubeEmbedPlayer
                       videoId={parsedVideoId}
@@ -303,7 +331,11 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                           alt={`${displayName} demo preview`}
                           referrerPolicy="no-referrer"
                           onError={() => setPosterError(true)}
-                          className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-[1.03] group-hover:opacity-90 transition-all duration-300"
+                          className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 ${
+                            isShorts
+                              ? 'opacity-65 blur-[2px] scale-105 group-hover:opacity-75 group-hover:scale-110'
+                              : 'opacity-80 group-hover:scale-[1.03] group-hover:opacity-90'
+                          }`}
                         />
                       ) : (
                         <div
@@ -314,7 +346,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
 
                       <div
                         aria-hidden="true"
-                        className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/20"
+                        className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/25"
                       />
 
                       <span className="relative z-10 w-16 h-16 rounded-full bg-red-600 group-hover:bg-red-500 text-white flex items-center justify-center shadow-2xl shadow-red-600/40 group-hover:scale-105 active:scale-95 transition-transform duration-200">
@@ -407,11 +439,11 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
               transition={stageTransition}
             >
               {loadingScreens && screenCount === 0 ? (
-                <div className="min-h-[320px] rounded-2xl bg-[#161e31] skeleton-shimmer flex items-center justify-center">
+                <div className="min-h-[310px] sm:min-h-[340px] rounded-xl bg-[#161e31] skeleton-shimmer flex items-center justify-center">
                   <Loader2 size={24} className="animate-spin text-[#00C7FF]" />
                 </div>
               ) : screenCount > 0 && activeScreenUrl ? (
-                <div className="flex flex-col items-center gap-3 py-1">
+                <div className="min-h-[310px] sm:min-h-[340px] rounded-xl bg-slate-100/85 dark:bg-[#070a12] border border-slate-200/80 dark:border-white/10 p-4 flex flex-col items-center justify-center gap-3">
                   <div
                     className="relative flex items-center justify-center w-full"
                     onTouchStart={handleTouchStart}
@@ -421,7 +453,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                       <button
                         type="button"
                         onClick={onPrevScreen}
-                        className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#141a29] hover:bg-[#0284ff] text-slate-700 dark:text-slate-200 hover:text-white border border-slate-200/90 dark:border-white/15 shadow-sm transition-colors cursor-pointer me-4 shrink-0"
+                        className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#141a29] hover:bg-[#0284ff] text-slate-700 dark:text-slate-200 hover:text-white border border-slate-200/90 dark:border-white/15 shadow-sm transition-colors cursor-pointer me-5 shrink-0"
                         aria-label={lang === 'ar' ? 'الشاشة السابقة' : 'Previous screen'}
                       >
                         <ChevronLeft
@@ -432,16 +464,16 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                     )}
 
                     {/* Interactive Phone Chassis */}
-                    <div className="relative w-[198px] sm:w-[216px] aspect-[9/17.8] rounded-[30px] p-2 bg-[#0c101b] border-2 border-slate-300/90 dark:border-white/20 shadow-2xl overflow-hidden group">
+                    <div className="relative w-[176px] sm:w-[192px] aspect-[9/17.8] rounded-[28px] p-2 bg-[#0c101b] border-2 border-slate-300/90 dark:border-white/20 shadow-2xl overflow-hidden group">
                       <div
                         aria-hidden="true"
-                        className="absolute top-2.5 left-1/2 -translate-x-1/2 w-14 h-1.5 rounded-full bg-slate-800 z-20 pointer-events-none"
+                        className="absolute top-2.5 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-slate-800 z-20 pointer-events-none"
                       />
 
                       <button
                         type="button"
                         onClick={onOpenLightbox}
-                        className="w-full h-full rounded-[22px] overflow-hidden bg-[#161e31] block cursor-pointer relative"
+                        className="w-full h-full rounded-[20px] overflow-hidden bg-[#161e31] block cursor-pointer relative"
                         aria-label={
                           lang === 'ar'
                             ? 'فتح الشاشة بملء العرض'
@@ -497,7 +529,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
 
                       <div
                         aria-hidden="true"
-                        className="absolute bottom-2.5 left-1/2 -translate-x-1/2 w-14 h-1 rounded-full bg-white/30 z-20 pointer-events-none"
+                        className="absolute bottom-2 left-1/2 -translate-x-1/2 w-12 h-1 rounded-full bg-white/30 z-20 pointer-events-none"
                       />
                     </div>
 
@@ -505,7 +537,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                       <button
                         type="button"
                         onClick={onNextScreen}
-                        className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#141a29] hover:bg-[#0284ff] text-slate-700 dark:text-slate-200 hover:text-white border border-slate-200/90 dark:border-white/15 shadow-sm transition-colors cursor-pointer ms-4 shrink-0"
+                        className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#141a29] hover:bg-[#0284ff] text-slate-700 dark:text-slate-200 hover:text-white border border-slate-200/90 dark:border-white/15 shadow-sm transition-colors cursor-pointer ms-5 shrink-0"
                         aria-label={lang === 'ar' ? 'الشاشة التالية' : 'Next screen'}
                       >
                         <ChevronRight
@@ -518,7 +550,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
 
                   {/* Active Screen Caption & Quick Action */}
                   <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                    <span className="font-mono font-semibold capitalize truncate max-w-[200px]">
+                    <span className="font-mono font-semibold capitalize truncate max-w-[210px]">
                       {formatReadableScreenName(activeScreenUrl, safeIndex)}
                     </span>
                     <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
@@ -527,14 +559,14 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                     <button
                       type="button"
                       onClick={onOpenLightbox}
-                      className="text-[#0369a1] dark:text-[#38bdf8] hover:underline font-semibold cursor-pointer py-1"
+                      className="text-[#0369a1] dark:text-[#38bdf8] hover:underline font-semibold cursor-pointer py-0.5"
                     >
                       {lang === 'ar' ? 'تكبير الشاشة' : 'Inspect Fullscreen'}
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10">
+                <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-white/10">
                   <ProjectCardCover
                     repoName={repoName}
                     language={realLanguage || 'Dart'}

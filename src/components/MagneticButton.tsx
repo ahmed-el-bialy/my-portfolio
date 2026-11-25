@@ -72,7 +72,13 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
 
   if (isTouchDevice || prefersReducedMotion) {
     return (
-      <button type={props.type || 'button'} ref={ref} onClick={onClick} className={className} {...props}>
+      <button
+        type={props.type || 'button'}
+        ref={ref}
+        onClick={onClick}
+        className={`relative inline-flex items-center justify-center gap-2 ${className}`}
+        {...props}
+      >
         {children}
       </button>
     );

@@ -238,14 +238,14 @@ html.rtl-mode .font-display {
   border-color: var(--border-hover);
 }
 
-/* Subtle Ambient Glows */
+/* Calm Background Ambient Depth (Zero harsh glare flare) */
 .ambient-glow-top {
-  background: radial-gradient(ellipse 65% 45% at 50% -10%, rgba(2, 132, 255, 0.15), transparent 72%);
+  background: radial-gradient(ellipse 65% 40% at 50% -15%, rgba(2, 132, 255, 0.05), transparent 72%);
   pointer-events: none;
 }
 
 html.light .ambient-glow-top {
-  background: radial-gradient(ellipse 65% 45% at 50% -10%, rgba(2, 132, 255, 0.065), transparent 72%);
+  background: radial-gradient(ellipse 65% 40% at 50% -15%, rgba(2, 132, 255, 0.025), transparent 72%);
 }
 
 /* =========================================================
@@ -253,9 +253,9 @@ html.light .ambient-glow-top {
    ========================================================= */
 .bg-architectural-grid {
   background-image:
-    radial-gradient(circle at 1px 1px, rgba(56, 189, 248, 0.24) 1.15px, transparent 0),
-    linear-gradient(to right, rgba(148, 163, 184, 0.11) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.11) 1px, transparent 1px);
+    radial-gradient(circle at 1px 1px, rgba(56, 189, 248, 0.11) 1.15px, transparent 0),
+    linear-gradient(to right, rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
   background-size: 32px 32px;
   -webkit-mask-image: radial-gradient(ellipse 92% 88% at 50% 38%, #000 62%, transparent 100%);
   mask-image: radial-gradient(ellipse 92% 88% at 50% 38%, #000 62%, transparent 100%);
@@ -267,9 +267,9 @@ html.light .ambient-glow-top {
 html.light .bg-architectural-grid,
 [data-theme="light"] .bg-architectural-grid {
   background-image:
-    radial-gradient(circle at 1px 1px, rgba(2, 132, 255, 0.2) 1.15px, transparent 0),
-    linear-gradient(to right, rgba(15, 23, 42, 0.09) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.09) 1px, transparent 1px);
+    radial-gradient(circle at 1px 1px, rgba(2, 132, 255, 0.09) 1.15px, transparent 0),
+    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
 }
 
 /* Subtle Scrollbar */
@@ -378,47 +378,26 @@ html.light .skeleton-shimmer {
 }
 
 /* =========================================================
-   KINETIC BUTTONS & HIGH-FIDELITY SCREENSHOT SHARPNESS
+   UNIFIED CALM BUTTON INTERACTIONS & SCREENSHOT SHARPNESS
    ========================================================= */
 .btn-kinetic {
   position: relative;
   overflow: hidden;
   transition:
-    transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1),
-    background-color 180ms ease,
-    border-color 180ms ease;
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
   will-change: transform;
 }
 
-.btn-kinetic::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -130%;
-  width: 65%;
-  height: 100%;
-  background: linear-gradient(
-    110deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.24) 50%,
-    transparent 100%
-  );
-  transform: skewX(-18deg);
-  transition: left 580ms cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
-}
-
 .btn-kinetic:hover {
-  transform: translate3d(0, -2px, 0);
-}
-
-.btn-kinetic:hover::after {
-  left: 150%;
+  transform: translate3d(0, -1px, 0);
 }
 
 .btn-kinetic:active {
-  transform: translate3d(0, 0, 0) scale3d(0.97, 0.97, 1);
+  transform: translate3d(0, 0, 0) scale3d(0.985, 0.985, 1);
 }
 
 .crisp-screenshot {
@@ -426,9 +405,6 @@ html.light .skeleton-shimmer {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn-kinetic::after {
-    display: none;
-  }
   .btn-kinetic:hover,
   .btn-kinetic:active {
     transform: none;

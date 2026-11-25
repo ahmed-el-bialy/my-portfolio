@@ -1,5 +1,5 @@
 import React from 'react';
-import { Smartphone, Monitor } from 'lucide-react';
+import { Monitor } from 'lucide-react';
 
 interface SmartphoneFrameProps {
   children: React.ReactNode;
@@ -11,7 +11,7 @@ interface SmartphoneFrameProps {
 
 export const SmartphoneFrame: React.FC<SmartphoneFrameProps> = ({
   children,
-  aspectRatio = '9:16',
+  aspectRatio: _aspectRatio = '9:16',
   deviceName = 'Ahmed El-Bialy App',
   className = '',
   isVertical = true,

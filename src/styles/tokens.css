@@ -24,25 +24,21 @@
     0 0 0 1px rgba(2, 132, 255, 0.16);
   --shadow-glow: 0 0 40px var(--accent-glow);
 
-  --cta-highlight-primary: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  --cta-highlight-primary: inset 0 0 0 1px rgba(2, 132, 255, 0.14);
   --cta-shadow-primary:
-    0 1px 2px rgba(2, 132, 255, 0.32),
-    0 8px 20px -4px rgba(2, 132, 255, 0.36),
-    var(--cta-highlight-primary);
+    0 1px 2px rgba(2, 132, 255, 0.18),
+    0 4px 12px -4px rgba(2, 132, 255, 0.2);
   --cta-shadow-primary-hover:
-    0 2px 4px rgba(2, 132, 255, 0.38),
-    0 12px 26px -4px rgba(2, 132, 255, 0.48),
-    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+    0 2px 6px rgba(2, 132, 255, 0.24),
+    0 8px 18px -6px rgba(2, 132, 255, 0.24);
 
-  --cta-highlight-secondary: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --cta-highlight-secondary: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
   --cta-shadow-secondary:
-    0 1px 2px rgba(0, 0, 0, 0.42),
-    0 4px 12px -2px rgba(0, 0, 0, 0.28),
-    var(--cta-highlight-secondary);
+    0 1px 2px rgba(0, 0, 0, 0.28),
+    0 3px 8px -2px rgba(0, 0, 0, 0.2);
   --cta-shadow-secondary-hover:
-    0 2px 4px rgba(0, 0, 0, 0.48),
-    0 10px 22px -4px rgba(2, 132, 255, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    0 2px 5px rgba(0, 0, 0, 0.32),
+    0 6px 14px -4px rgba(2, 132, 255, 0.12);
 
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
@@ -65,15 +61,13 @@ html.light,
     0 4px 6px rgba(15, 23, 42, 0.08),
     0 20px 40px rgba(15, 23, 42, 0.1),
     0 0 0 1px rgba(2, 132, 255, 0.22);
-  --cta-highlight-secondary: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  --cta-highlight-secondary: inset 0 0 0 1px rgba(15, 23, 42, 0.02);
   --cta-shadow-secondary:
-    0 1px 2px rgba(15, 23, 42, 0.06),
-    0 4px 10px -2px rgba(15, 23, 42, 0.04),
-    var(--cta-highlight-secondary);
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 3px 8px -2px rgba(15, 23, 42, 0.04);
   --cta-shadow-secondary-hover:
-    0 2px 4px rgba(15, 23, 42, 0.08),
-    0 10px 22px -4px rgba(2, 132, 255, 0.14),
-    var(--cta-highlight-secondary);
+    0 2px 4px rgba(15, 23, 42, 0.07),
+    0 8px 16px -4px rgba(2, 132, 255, 0.1);
 }
 
 @layer components {

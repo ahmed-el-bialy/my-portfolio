@@ -7,6 +7,7 @@ import { FEATURED_PROJECTS, CERTIFICATES } from '../data/portfolioData';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import { copyToClipboard } from '../utils/clipboard';
 
 interface TerminalEasterEggModalProps {
   isOpen: boolean;
@@ -479,15 +480,14 @@ export const TerminalEasterEggModal: React.FC<TerminalEasterEggModalProps> = ({
   };
 
   const copyEmailQuick = async () => {
-    try {
-      await navigator.clipboard.writeText(AHMED_CONFIG.email);
-      setCopiedEmail(true);
-      showToast({
-        message: lang === 'ar' ? 'تم نسخ البريد الإلكتروني' : 'Email copied to clipboard',
-        detail: AHMED_CONFIG.email,
-      });
-      setTimeout(() => setCopiedEmail(false), 1800);
-    } catch {}
+    const ok = await copyToClipboard(AHMED_CONFIG.email);
+    if (!ok) return;
+    setCopiedEmail(true);
+    showToast({
+      message: lang === 'ar' ? 'تم نسخ البريد الإلكتروني' : 'Email copied to clipboard',
+      detail: AHMED_CONFIG.email,
+    });
+    setTimeout(() => setCopiedEmail(false), 1800);
   };
 
   const quickChips = [

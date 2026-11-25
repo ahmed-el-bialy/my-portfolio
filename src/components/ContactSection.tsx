@@ -24,6 +24,7 @@ import { useToast } from '../context/ToastContext';
 import { copyToClipboard } from '../utils/clipboard';
 import { MagneticButton } from './MagneticButton';
 import { MeetingType } from './BookingMeetingModal';
+import { RevealOnScroll, StaggerGroup, StaggerItem } from './RevealOnScroll';
 
 interface ContactSectionProps {
   profile: DeveloperProfile;
@@ -177,7 +178,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
       className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 sm:pt-28 sm:pb-16 w-full"
     >
       {/* Editorial Section Header */}
-      <div className="flex flex-col items-center text-center max-w-2xl mx-auto mb-10 sm:mb-12">
+      <RevealOnScroll className="flex flex-col items-center text-center max-w-2xl mx-auto mb-10 sm:mb-12">
         <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#0369a1] dark:text-[#38bdf8] mb-2">
           <span>{t.contact.badge}</span>
           <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
@@ -193,12 +194,15 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
         <p className="text-slate-600 dark:text-[#94a3b8] mt-2.5 text-sm sm:text-base">
           {t.contact.subtitle}
         </p>
-      </div>
+      </RevealOnScroll>
 
       {/* 2-Column Layout: Streamlined Form Left + Consultation & Quick Copy Channels Right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
         {/* Left Column: 3-Field Inquiry Form & Paper-Plane Success Card */}
-        <div className="card-shimmer overflow-hidden lg:col-span-6 p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 shadow-sm">
+        <RevealOnScroll
+          delay={0.05}
+          className="card-shimmer overflow-hidden lg:col-span-6 p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 shadow-sm"
+        >
           {submitStatus === 'success' ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -376,8 +380,8 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                   <MagneticButton
                     type="submit"
                     disabled={isSubmitting}
-                    strength={0.18}
-                    className="btn-kinetic w-full py-3 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-md shadow-[#0284ff]/25 cursor-pointer disabled:opacity-50 min-h-[46px]"
+                    strength={0.08}
+                    className="btn-kinetic w-full py-3 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] border border-[#0284ff] text-white font-bold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[46px]"
                   >
                     <Send size={15} />
                     <span>
@@ -388,12 +392,15 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
               </form>
             </div>
           )}
-        </div>
+        </RevealOnScroll>
 
         {/* Right Column: Cal.com Scheduling + Copy-to-Clipboard Contact Cards */}
         <div className="lg:col-span-6 space-y-6">
           {/* Elevated Cal.com Consultation Spotlight Card */}
-          <div className="card-shimmer overflow-hidden p-6 sm:p-7 rounded-2xl bg-white dark:bg-[#0f1117] border-2 border-[#0284ff]/35 shadow-lg">
+          <RevealOnScroll
+            delay={0.08}
+            className="card-shimmer overflow-hidden p-6 sm:p-7 rounded-2xl bg-white dark:bg-[#0f1117] border-2 border-[#0284ff]/35 shadow-sm"
+          >
             <div className="mb-4">
               <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#0369a1] dark:text-[#38bdf8]">
                 <Calendar size={13} />
@@ -432,17 +439,20 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenBooking(null)}
-                className="btn-kinetic w-full py-3 px-5 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] text-white font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-md shadow-[#0284ff]/25 cursor-pointer min-h-[46px]"
+                className="btn-kinetic w-full py-3 px-5 rounded-xl bg-[#0284ff] hover:bg-[#0070e0] border border-[#0284ff] text-white font-bold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer min-h-[46px]"
               >
                 <Calendar size={16} />
                 <span>{t.contact.meetingCard.button}</span>
                 <ArrowRight size={15} className={dir === 'rtl' ? 'rotate-180' : ''} />
               </button>
             )}
-          </div>
+          </RevealOnScroll>
 
           {/* Clickable Copy-to-Clipboard Direct Channels */}
-          <div className="card-shimmer overflow-hidden p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 space-y-4">
+          <RevealOnScroll
+            delay={0.12}
+            className="card-shimmer overflow-hidden p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/10 space-y-4"
+          >
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-bold text-slate-900 dark:text-[#f1f5f9]">
                 {t.contact.directChannels}
@@ -455,9 +465,9 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <StaggerGroup staggerDelay={0.055} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Email Copy Card */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/8">
+              <StaggerItem className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/8">
                 <div className="text-[11px] text-slate-600 dark:text-[#94a3b8]">
                   {t.contact.emailLabel}
                 </div>
@@ -469,32 +479,32 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     href={`mailto:${AHMED_CONFIG.email}?subject=${encodeURIComponent(
                       'Mobile App Project Inquiry - Flutter Developer'
                     )}`}
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0369a1] dark:text-[#38bdf8] font-semibold text-[11px] transition-colors"
+                    className="btn-kinetic inline-flex items-center justify-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0369a1] dark:text-[#38bdf8] font-semibold text-[11px] transition-colors whitespace-nowrap shrink-0"
                   >
-                    <Mail size={12} />
+                    <Mail size={12} className="shrink-0" />
                     <span>{lang === 'ar' ? 'مراسلة' : 'Compose'}</span>
                   </a>
                   <button
                     type="button"
                     onClick={() => handleCopy('email', AHMED_CONFIG.email)}
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer whitespace-nowrap shrink-0"
                   >
                     {copiedKey === 'email' ? (
-                      <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
+                      <Check size={12} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                     ) : (
-                      <Copy size={12} />
+                      <Copy size={12} className="shrink-0" />
                     )}
                     <span>{copiedKey === 'email' ? (lang === 'ar' ? 'تم' : 'Copied') : lang === 'ar' ? 'نسخ' : 'Copy'}</span>
                   </button>
                 </div>
-              </div>
+              </StaggerItem>
 
               {/* Phone / WhatsApp Copy Card */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/8">
+              <StaggerItem className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/8">
                 <div className="text-[11px] text-slate-600 dark:text-[#94a3b8]">
                   {t.contact.phoneLabel}
                 </div>
-                <div className="font-mono text-xs text-slate-900 dark:text-[#f1f5f9] font-semibold truncate mt-0.5 tabular-nums">
+                <div className="font-mono text-xs text-slate-900 dark:text-[#f1f5f9] font-semibold truncate mt-0.5 tabular-nums" dir="ltr">
                   {AHMED_CONFIG.phone}
                 </div>
                 <div className="flex flex-wrap items-center gap-2 mt-2.5">
@@ -502,35 +512,35 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     href={AHMED_CONFIG.socials.whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-emerald-600/12 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] transition-colors"
+                    className="btn-kinetic inline-flex items-center justify-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-emerald-600/12 hover:bg-emerald-600 hover:text-white text-emerald-700 dark:text-emerald-400 font-semibold text-[11px] transition-colors whitespace-nowrap shrink-0"
                   >
                     <WhatsAppLogo size={12} />
                     <span>WhatsApp</span>
                   </a>
                   <a
                     href={`tel:${AHMED_CONFIG.phone}`}
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0369a1] dark:text-[#38bdf8] font-semibold text-[11px] transition-colors"
+                    className="btn-kinetic inline-flex items-center justify-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0369a1] dark:text-[#38bdf8] font-semibold text-[11px] transition-colors whitespace-nowrap shrink-0"
                   >
-                    <Phone size={12} />
+                    <Phone size={12} className="shrink-0" />
                     <span>{lang === 'ar' ? 'اتصال' : 'Call'}</span>
                   </a>
                   <button
                     type="button"
                     onClick={() => handleCopy('phone', AHMED_CONFIG.phone)}
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer whitespace-nowrap shrink-0"
                   >
                     {copiedKey === 'phone' ? (
-                      <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
+                      <Check size={12} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                     ) : (
-                      <Copy size={12} />
+                      <Copy size={12} className="shrink-0" />
                     )}
                     <span>{copiedKey === 'phone' ? (lang === 'ar' ? 'تم' : 'Copied') : lang === 'ar' ? 'نسخ' : 'Copy'}</span>
                   </button>
                 </div>
-              </div>
+              </StaggerItem>
 
               {/* GitHub Copy Card */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/8">
+              <StaggerItem className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/8">
                 <div className="text-[11px] text-slate-600 dark:text-[#94a3b8]">GitHub</div>
                 <div className="font-mono text-xs text-slate-900 dark:text-[#f1f5f9] font-semibold truncate mt-0.5">
                   @{AHMED_CONFIG.githubUsername}
@@ -540,28 +550,28 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     href={AHMED_CONFIG.socials.github}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 hover:bg-[#0284ff] hover:text-white text-slate-800 dark:text-slate-200 font-semibold text-[11px] transition-colors"
+                    className="btn-kinetic inline-flex items-center justify-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-slate-200/80 dark:bg-white/10 hover:bg-[#0284ff] hover:text-white text-slate-800 dark:text-slate-200 font-semibold text-[11px] transition-colors whitespace-nowrap shrink-0"
                   >
-                    <Github size={12} />
+                    <Github size={12} className="shrink-0" />
                     <span>{lang === 'ar' ? 'فتح' : 'Open'}</span>
                   </a>
                   <button
                     type="button"
                     onClick={() => handleCopy('github', AHMED_CONFIG.socials.github)}
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer whitespace-nowrap shrink-0"
                   >
                     {copiedKey === 'github' ? (
-                      <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
+                      <Check size={12} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                     ) : (
-                      <Copy size={12} />
+                      <Copy size={12} className="shrink-0" />
                     )}
                     <span>{copiedKey === 'github' ? (lang === 'ar' ? 'تم' : 'Copied') : lang === 'ar' ? 'نسخ' : 'Copy'}</span>
                   </button>
                 </div>
-              </div>
+              </StaggerItem>
 
               {/* LinkedIn Copy Card */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/8">
+              <StaggerItem className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161b27] border border-slate-200 dark:border-white/8">
                 <div className="text-[11px] text-slate-600 dark:text-[#94a3b8]">LinkedIn</div>
                 <div className="font-mono text-xs text-slate-900 dark:text-[#f1f5f9] font-semibold truncate mt-0.5">
                   in/ahmedel-bialy
@@ -571,26 +581,26 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     href={AHMED_CONFIG.socials.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0369a1] dark:text-[#38bdf8] font-semibold text-[11px] transition-colors"
+                    className="btn-kinetic inline-flex items-center justify-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] hover:text-white text-[#0369a1] dark:text-[#38bdf8] font-semibold text-[11px] transition-colors whitespace-nowrap shrink-0"
                   >
-                    <Linkedin size={12} />
+                    <Linkedin size={12} className="shrink-0" />
                     <span>{lang === 'ar' ? 'فتح' : 'Open'}</span>
                   </a>
                   <button
                     type="button"
                     onClick={() => handleCopy('linkedin', AHMED_CONFIG.socials.linkedin)}
-                    className="inline-flex items-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[36px] rounded-lg bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1 px-3 py-2 min-h-[44px] sm:min-h-[38px] rounded-xl bg-slate-200/80 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-medium cursor-pointer whitespace-nowrap shrink-0"
                   >
                     {copiedKey === 'linkedin' ? (
-                      <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
+                      <Check size={12} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                     ) : (
-                      <Copy size={12} />
+                      <Copy size={12} className="shrink-0" />
                     )}
                     <span>{copiedKey === 'linkedin' ? (lang === 'ar' ? 'تم' : 'Copied') : lang === 'ar' ? 'نسخ' : 'Copy'}</span>
                   </button>
                 </div>
-              </div>
-            </div>
+              </StaggerItem>
+            </StaggerGroup>
 
             {/* Resume Quick Bar */}
             <div className="pt-3 border-t border-slate-100 dark:border-white/8 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
@@ -598,23 +608,23 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                 <button
                   type="button"
                   onClick={onOpenResume}
-                  className="btn-kinetic flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 min-h-[44px] rounded-xl bg-slate-900 dark:bg-[#161b27] hover:bg-[#0284ff] dark:hover:bg-[#0284ff] text-white font-semibold text-xs border border-transparent dark:border-white/10 transition-colors cursor-pointer"
+                  className="btn-kinetic flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 min-h-[44px] rounded-xl bg-slate-900 dark:bg-[#161b27] hover:bg-[#0284ff] dark:hover:bg-[#0284ff] text-white font-semibold text-xs border border-transparent dark:border-white/10 transition-colors cursor-pointer whitespace-nowrap"
                 >
-                  <FileText size={14} />
-                  <span>{lang === 'ar' ? 'استعراض السيرة التفاعلية' : 'Open Interactive CV'}</span>
+                  <FileText size={14} className="shrink-0" />
+                  <span className="truncate">{lang === 'ar' ? 'السيرة التفاعلية' : 'Open Interactive CV'}</span>
                 </button>
               )}
               <a
                 href={profile.cvDriveUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-kinetic flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 min-h-[44px] rounded-xl bg-slate-100 dark:bg-[#161b27] hover:bg-slate-200 dark:hover:bg-white/10 text-slate-800 dark:text-[#f1f5f9] font-semibold text-xs border border-slate-200 dark:border-white/10 transition-colors"
+                className="btn-kinetic flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 min-h-[44px] rounded-xl bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] text-slate-800 dark:text-[#f1f5f9] hover:text-[#0369a1] dark:hover:text-[#38bdf8] font-semibold text-xs border border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 transition-colors whitespace-nowrap"
               >
-                <ExternalLink size={13} className="text-[#0369a1] dark:text-[#38bdf8]" />
-                <span>{lang === 'ar' ? 'تحميل PDF الرسمي' : 'Download PDF CV'}</span>
+                <ExternalLink size={13} className="text-[#0369a1] dark:text-[#38bdf8] shrink-0" />
+                <span className="truncate">{lang === 'ar' ? 'تحميل PDF الرسمي' : 'Download PDF CV'}</span>
               </a>
             </div>
-          </div>
+          </RevealOnScroll>
         </div>
       </div>
     </section>

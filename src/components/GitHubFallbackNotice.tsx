@@ -1,5 +1,5 @@
 import React from 'react';
-import { WifiOff, ShieldCheck, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { WifiOff, RefreshCw, AlertCircle } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface GitHubFallbackNoticeProps {
@@ -10,7 +10,7 @@ interface GitHubFallbackNoticeProps {
 }
 
 export const GitHubFallbackNotice: React.FC<GitHubFallbackNoticeProps> = ({
-  isRateLimited = false,
+  isRateLimited: _isRateLimited = false,
   isOffline = false,
   onRetry,
   isRefreshing = false,

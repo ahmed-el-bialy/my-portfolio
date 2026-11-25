@@ -15,7 +15,6 @@ export const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 provider.addScope('https://www.googleapis.com/auth/calendar.events');
 
-let isSigningIn = false;
 let cachedAccessToken: string | null = null;
 
 export const initCalendarAuth = (
@@ -33,7 +32,6 @@ export const initCalendarAuth = (
 
 export const signInWithGoogleCalendar = async (): Promise<{ user: User; accessToken: string } | null> => {
   try {
-    isSigningIn = true;
     const result = await signInWithPopup(auth, provider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
     if (!credential?.accessToken) {
@@ -54,8 +52,6 @@ export const signInWithGoogleCalendar = async (): Promise<{ user: User; accessTo
     }
     console.error('Google Sign In Error:', error);
     throw error;
-  } finally {
-    isSigningIn = false;
   }
 };
 
