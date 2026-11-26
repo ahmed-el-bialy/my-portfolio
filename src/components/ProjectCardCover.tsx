@@ -467,20 +467,42 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     }
   }, [totalCovers]);
 
+  const [isManualPaused, setIsManualPaused] = useState(false);
+  const manualPauseTimerRef = React.useRef<number | null>(null);
+
+  const pauseAutoCycleTemporarily = () => {
+    setManualPausedUntil(Date.now() + 10000);
+    setIsManualPaused(true);
+    if (manualPauseTimerRef.current !== null) {
+      window.clearTimeout(manualPauseTimerRef.current);
+    }
+    manualPauseTimerRef.current = window.setTimeout(() => {
+      setIsManualPaused(false);
+      manualPauseTimerRef.current = null;
+    }, 10000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (manualPauseTimerRef.current !== null) {
+        window.clearTimeout(manualPauseTimerRef.current);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     onActiveScreenChange?.(selectedScreenIdx);
   }, [selectedScreenIdx, onActiveScreenChange]);
 
-  // Smooth automatic alternation between natural Cover(s) and interactive App Screens
+  const canAutoCycle =
+    (totalCovers > 0 && totalScreens > 0) || totalCovers > 1 || totalScreens > 1;
+
+  // Smooth automatic alternation (6s balanced pace) between Covers and App Screens
   useEffect(() => {
-    if (isHovered || shouldReduceMotion) return;
-    if (totalCovers === 0 && totalScreens <= 1) return;
-    if (totalScreens === 0 && totalCovers <= 1) return;
-    if (Date.now() < manualPausedUntil) return;
+    if (isHovered || shouldReduceMotion || isManualPaused) return;
+    if (!canAutoCycle) return;
 
     const timer = window.setInterval(() => {
-      if (Date.now() < manualPausedUntil) return;
-
       if (totalCovers > 0 && totalScreens > 0) {
         if (showingCoverArt) {
           if (activeCoverIdx + 1 < totalCovers) {
@@ -490,7 +512,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
             setSelectedScreenIdx(0);
           }
         } else {
-          // Show up to 2 app screens per turn, then smoothly glide back to natural cover
+          // Show up to 2 app screens per turn, then smoothly glide back to Cover
           const maxScreensPerCycle = Math.min(totalScreens, 2);
           if (selectedScreenIdx + 1 < maxScreensPerCycle) {
             setSelectedScreenIdx((prev) => prev + 1);
@@ -504,18 +526,19 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
       } else if (!showingCoverArt && totalScreens > 1) {
         setSelectedScreenIdx((prev) => (prev + 1) % totalScreens);
       }
-    }, 4600);
+    }, 6000);
 
     return () => window.clearInterval(timer);
   }, [
     isHovered,
     shouldReduceMotion,
+    isManualPaused,
+    canAutoCycle,
     totalCovers,
     totalScreens,
     showingCoverArt,
     activeCoverIdx,
     selectedScreenIdx,
-    manualPausedUntil,
   ]);
 
   const selectScreen = (idx: number, e?: React.MouseEvent) => {
@@ -523,7 +546,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     setShowingCoverArt(false);
     setSelectedScreenIdx(idx);
     onActiveScreenChange?.(idx);
-    setManualPausedUntil(Date.now() + 9500);
+    pauseAutoCycleTemporarily();
   };
 
   const handleNext = (e: React.MouseEvent) => {
@@ -533,7 +556,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     const nextIdx = (selectedScreenIdx + 1) % totalScreens;
     setSelectedScreenIdx(nextIdx);
     onActiveScreenChange?.(nextIdx);
-    setManualPausedUntil(Date.now() + 9500);
+    pauseAutoCycleTemporarily();
   };
 
   const handlePrev = (e: React.MouseEvent) => {
@@ -543,7 +566,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     const prevIdx = (selectedScreenIdx - 1 + totalScreens) % totalScreens;
     setSelectedScreenIdx(prevIdx);
     onActiveScreenChange?.(prevIdx);
-    setManualPausedUntil(Date.now() + 9500);
+    pauseAutoCycleTemporarily();
   };
 
   const handleNextCover = (e: React.MouseEvent) => {
@@ -551,7 +574,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     if (totalCovers <= 1) return;
     setShowingCoverArt(true);
     setActiveCoverIdx((prev) => (prev + 1) % totalCovers);
-    setManualPausedUntil(Date.now() + 9500);
+    pauseAutoCycleTemporarily();
   };
 
   const handlePrevCover = (e: React.MouseEvent) => {
@@ -559,13 +582,13 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     if (totalCovers <= 1) return;
     setShowingCoverArt(true);
     setActiveCoverIdx((prev) => (prev - 1 + totalCovers) % totalCovers);
-    setManualPausedUntil(Date.now() + 9500);
+    pauseAutoCycleTemporarily();
   };
 
   const handleToggleMode = (toCover: boolean, e: React.MouseEvent) => {
     e.stopPropagation();
     setShowingCoverArt(toCover);
-    setManualPausedUntil(Date.now() + 9500);
+    pauseAutoCycleTemporarily();
   };
 
   const BadgeIcon = blueprint.badgeIcon;
@@ -573,21 +596,24 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     totalCovers > 0 ? resolvedCoverImages[activeCoverIdx % totalCovers] : undefined;
   const activeScreenUrl = verifiedScreenshots[selectedScreenIdx] || verifiedScreenshots[0];
   const containerHeightClass = aspectClassName || 'aspect-[4/3]';
+  const hasBothModes = totalCovers > 0 && totalScreens > 0;
+  const isShowingCoverMode = Boolean(showingCoverArt && activeCoverUrl);
+  const showProgressBar =
+    canAutoCycle && !isHovered && !shouldReduceMotion && !isManualPaused;
 
   const stageTransition = shouldReduceMotion
     ? { duration: 0.01 }
-    : { duration: 0.42, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] };
+    : { duration: 0.58, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] };
 
-  const activeStageKey =
-    showingCoverArt && activeCoverUrl
-      ? `cover-${activeCoverUrl}`
-      : activeScreenUrl
-      ? `screens-${selectedScreenIdx}`
-      : 'fallback';
+  const activeStageKey = isShowingCoverMode
+    ? `cover-${activeCoverUrl}`
+    : activeScreenUrl
+    ? `screens-${selectedScreenIdx}`
+    : 'fallback';
 
   return (
     <div
-      className={`relative w-full ${containerHeightClass} bg-slate-100 dark:bg-[#070a12] overflow-hidden select-none border-b border-slate-200/90 dark:border-white/10 group/cover transition-colors duration-300`}
+      className={`relative w-full ${containerHeightClass} flex flex-col bg-slate-100 dark:bg-[#070a12] overflow-hidden select-none border-b border-slate-200/90 dark:border-white/10 group/cover transition-colors duration-300`}
       onMouseEnter={() => setIsSelfHovered(true)}
       onMouseLeave={() => setIsSelfHovered(false)}
       title={`${blueprint.appTitle} — ${blueprint.categoryBadge}`}
@@ -597,7 +623,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 transition-opacity duration-500"
         style={{
-          backgroundImage: `radial-gradient(ellipse 80% 70% at 38% 18%, rgba(${blueprint.glowRgb}, 0.2), transparent 72%)`,
+          backgroundImage: `radial-gradient(ellipse 80% 70% at 38% 18%, rgba(${blueprint.glowRgb}, 0.16), transparent 72%)`,
         }}
       />
 
@@ -612,347 +638,355 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
         />
       )}
 
-      <AnimatePresence mode="wait" initial={false}>
-        {showingCoverArt && activeCoverUrl ? (
-          /* MODE 1: NATURAL FULL-BLEED COVER ARTWORK (Not framed as an app phone) */
-          <motion.div
-            key={activeStageKey}
-            initial={shouldReduceMotion ? false : { opacity: 0, scale: 1.015 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.99 }}
-            transition={stageTransition}
-            className="relative z-20 w-full h-full bg-slate-950 pointer-events-none"
+      {/* Persistent Dual-Category Header Strip + 6s GPU Progress Hairline */}
+      <div className="relative z-30 shrink-0 px-2.5 sm:px-3.5 py-2 bg-white/95 dark:bg-[#0b101c]/95 backdrop-blur-md border-b border-slate-200/85 dark:border-white/10 flex items-center justify-between gap-2 pointer-events-none">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-md border border-slate-200 dark:border-white/12 bg-slate-50 dark:bg-[#111827] shrink-0">
+            <BadgeIcon size={11} style={{ color: blueprint.accentColor }} />
+          </span>
+          <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">
+            {blueprint.appTitle}
+          </span>
+          <span className="hidden sm:inline text-[10px] font-mono text-slate-400 dark:text-slate-500 truncate">
+            · {blueprint.categoryBadge}
+          </span>
+        </div>
+
+        {/* Clear Dual Segmented Control: Cover | App Screens */}
+        {hasBothModes ? (
+          <div
+            role="group"
+            aria-label={lang === 'ar' ? 'تبديل نوع العرض' : 'Switch preview mode'}
+            className="pointer-events-auto inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-white/[0.06] border border-slate-200/90 dark:border-white/10 shrink-0"
           >
-            <ImageWithSkeleton
-              src={activeCoverUrl}
-              alt={`${blueprint.appTitle} Cover`}
-              loading="eager"
-              className="w-full h-full object-cover object-center transition-transform duration-700 group-hover/cover:scale-[1.03]"
-            />
-
-            {/* Subtle Top & Bottom Gradient Scrims for crisp readability */}
-            <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-black/55 via-black/20 to-transparent pointer-events-none" />
-            <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" />
-
-            {/* Top Overlay Controls: Cover Indicator & Quick Switch to App Screens */}
-            <div className="absolute top-2.5 start-3 end-3 flex items-center justify-between gap-2 z-20">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-sm border border-white/15 text-[10.5px] font-mono font-semibold text-white/95">
-                <ImageIcon size={11} className="text-[#38bdf8] shrink-0" />
-                <span>{lang === 'ar' ? 'الغلاف' : 'Cover'}</span>
-                {totalCovers > 1 && (
-                  <span className="tabular-nums text-white/75">
-                    {String((activeCoverIdx % totalCovers) + 1).padStart(2, '0')}/
-                    {String(totalCovers).padStart(2, '0')}
-                  </span>
-                )}
-              </div>
-
-              {totalScreens > 0 && (
-                <button
-                  type="button"
-                  onClick={(e) => handleToggleMode(false, e)}
-                  className="pointer-events-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/55 hover:bg-[#0284ff] text-white text-[11px] font-semibold backdrop-blur-sm cursor-pointer border border-white/15 transition-colors"
-                >
-                  <Smartphone size={11} />
-                  <span>{lang === 'ar' ? 'شاشات التطبيق' : 'App Screens'}</span>
-                </button>
-              )}
-            </div>
-
-            {/* Multi-cover Prev / Next Arrows */}
-            {totalCovers > 1 && (
-              <>
-                <button
-                  type="button"
-                  onClick={handlePrevCover}
-                  aria-label={lang === 'ar' ? 'الغلاف السابق' : 'Previous cover'}
-                  className="pointer-events-auto opacity-85 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute start-2.5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-black/65 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
-                >
-                  {dir === 'rtl' ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNextCover}
-                  aria-label={lang === 'ar' ? 'الغلاف التالي' : 'Next cover'}
-                  className="pointer-events-auto opacity-85 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute end-2.5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-black/65 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
-                >
-                  {dir === 'rtl' ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}
-                </button>
-              </>
-            )}
-
-            {/* Bottom Caption Strip */}
-            <div className="absolute bottom-3 start-4 end-4 flex items-center justify-between gap-2 z-20">
-              <div className="min-w-0">
-                <span className="block text-xs sm:text-sm font-bold text-white truncate">
-                  {blueprint.appTitle}
-                </span>
-                <span className="block text-[10.5px] font-mono text-white/75 truncate">
-                  {blueprint.categoryBadge}
-                </span>
-              </div>
-
+            <button
+              type="button"
+              onClick={(e) => handleToggleMode(true, e)}
+              aria-pressed={isShowingCoverMode}
+              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10.5px] font-semibold transition-all duration-200 cursor-pointer ${
+                isShowingCoverMode
+                  ? 'bg-[#0284ff] text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <ImageIcon size={10} />
+              <span>{lang === 'ar' ? 'الغلاف' : 'Cover'}</span>
               {totalCovers > 1 && (
-                <div className="pointer-events-auto flex items-center gap-1 shrink-0">
-                  {resolvedCoverImages.slice(0, 5).map((_, cIdx) => {
-                    const isActive = (activeCoverIdx % totalCovers) === cIdx;
-                    return (
-                      <button
-                        key={cIdx}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowingCoverArt(true);
-                          setActiveCoverIdx(cIdx);
-                          setManualPausedUntil(Date.now() + 9500);
-                        }}
-                        aria-label={`Cover ${cIdx + 1}`}
-                        className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                          isActive ? 'w-4 bg-[#38bdf8]' : 'w-1.5 bg-white/45 hover:bg-white/75'
-                        }`}
-                      />
-                    );
-                  })}
-                </div>
+                <span className="opacity-80 font-mono text-[9.5px] tabular-nums">
+                  {totalCovers}
+                </span>
               )}
-            </div>
-          </motion.div>
-        ) : activeScreenUrl ? (
-          /* MODE 2: HERO-FIRST LARGE PHONE SCREEN + INTERACTIVE THUMBNAILS */
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleToggleMode(false, e)}
+              aria-pressed={!isShowingCoverMode}
+              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10.5px] font-semibold transition-all duration-200 cursor-pointer ${
+                !isShowingCoverMode
+                  ? 'bg-[#0284ff] text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Smartphone size={10} />
+              <span>{lang === 'ar' ? 'الشاشات' : 'Screens'}</span>
+              {totalScreens > 1 && (
+                <span className="opacity-80 font-mono text-[9.5px] tabular-nums">
+                  {totalScreens}
+                </span>
+              )}
+            </button>
+          </div>
+        ) : totalCovers > 0 ? (
+          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/10 text-[10px] font-mono font-semibold text-slate-600 dark:text-slate-300 shrink-0">
+            <ImageIcon size={10} className="text-[#0284ff] dark:text-[#38bdf8]" />
+            <span>{lang === 'ar' ? 'الغلاف' : 'Cover'}</span>
+            {totalCovers > 1 && (
+              <span className="tabular-nums opacity-75">
+                {String((activeCoverIdx % totalCovers) + 1).padStart(2, '0')}/
+                {String(totalCovers).padStart(2, '0')}
+              </span>
+            )}
+          </div>
+        ) : totalScreens > 0 ? (
+          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/10 text-[10px] font-mono font-semibold text-slate-600 dark:text-slate-300 shrink-0">
+            <Smartphone size={10} className="text-[#0284ff] dark:text-[#38bdf8]" />
+            <span>{lang === 'ar' ? 'الشاشات' : 'Screens'}</span>
+            {totalScreens > 1 && (
+              <span className="tabular-nums opacity-75">
+                {String(selectedScreenIdx + 1).padStart(2, '0')}/
+                {String(totalScreens).padStart(2, '0')}
+              </span>
+            )}
+          </div>
+        ) : null}
+
+        {/* Calm 6-Second GPU Hairline Progress Bar */}
+        {showProgressBar && (
           <motion.div
-            key="stage-app-screens"
-            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.988 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.99 }}
-            transition={stageTransition}
-            className="relative z-20 w-full h-full flex flex-col p-3 sm:p-4 pointer-events-none"
-          >
-            {/* Clean Micro Header */}
-            <div className="flex items-center justify-between gap-2 pb-2 shrink-0">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-md border border-slate-300/80 dark:border-white/15 bg-white dark:bg-[#0e1320] shrink-0">
-                  <BadgeIcon size={12} style={{ color: blueprint.accentColor }} />
-                </span>
-                <span
-                  className="text-[11px] font-mono font-bold truncate"
-                  style={{ color: blueprint.accentColor }}
-                >
-                  {blueprint.categoryBadge}
-                </span>
+            key={`progress-${activeStageKey}`}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 6, ease: 'linear' }}
+            style={{ transformOrigin: dir === 'rtl' ? 'right center' : 'left center' }}
+            aria-hidden="true"
+            className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-[#0284ff] via-[#38bdf8] to-[#0284ff] pointer-events-none"
+          />
+        )}
+      </div>
+
+      {/* Main Preview Viewport */}
+      <div className="relative z-20 flex-1 min-h-0 w-full pointer-events-none">
+        <AnimatePresence mode="wait" initial={false}>
+          {isShowingCoverMode && activeCoverUrl ? (
+            /* MODE 1: FULL-CONTAINED 4:3 COVER ARTWORK (Zero cropping across all screen sizes) */
+            <motion.div
+              key={activeStageKey}
+              initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.985 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.99 }}
+              transition={stageTransition}
+              className="relative w-full h-full p-2.5 sm:p-3.5 bg-slate-100/90 dark:bg-[#090d16] flex items-center justify-center pointer-events-none"
+            >
+              <div className="relative w-full h-full rounded-xl overflow-hidden bg-white/80 dark:bg-[#0c111d] border border-slate-200/80 dark:border-white/8 shadow-xs flex items-center justify-center">
+                <ImageWithSkeleton
+                  src={activeCoverUrl}
+                  alt={`${blueprint.appTitle} Cover`}
+                  loading="eager"
+                  className="w-full h-full object-contain object-center transition-transform duration-500 group-hover/cover:scale-[1.015]"
+                />
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                {totalCovers > 0 && (
+              {/* Multi-cover Prev / Next Arrows */}
+              {totalCovers > 1 && (
+                <>
                   <button
                     type="button"
-                    onClick={(e) => handleToggleMode(true, e)}
-                    className="pointer-events-auto inline-flex items-center gap-1 text-[10.5px] font-mono font-semibold text-slate-600 dark:text-slate-300 hover:text-[#0284ff] dark:hover:text-[#38bdf8] cursor-pointer px-2 py-0.5 rounded-md bg-white/85 dark:bg-white/5 border border-slate-200 dark:border-white/12 transition-colors"
+                    onClick={handlePrevCover}
+                    aria-label={lang === 'ar' ? 'الغلاف السابق' : 'Previous cover'}
+                    className="pointer-events-auto opacity-85 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute start-3.5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-slate-900/75 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
                   >
-                    <ImageIcon size={10} />
-                    <span>{lang === 'ar' ? 'الغلاف' : 'Cover'}</span>
+                    {dir === 'rtl' ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
                   </button>
-                )}
-                {totalScreens > 1 && (
-                  <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 tabular-nums">
-                    0{selectedScreenIdx + 1} / 0{totalScreens}
-                  </span>
-                )}
+                  <button
+                    type="button"
+                    onClick={handleNextCover}
+                    aria-label={lang === 'ar' ? 'الغلاف التالي' : 'Next cover'}
+                    className="pointer-events-auto opacity-85 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute end-3.5 top-1/2 -translate-y-1/2 z-30 w-8 h-8 rounded-full bg-slate-900/75 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
+                  >
+                    {dir === 'rtl' ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}
+                  </button>
+
+                  {/* Discrete Bottom Counter Pill */}
+                  <div className="pointer-events-auto absolute bottom-3.5 end-4 z-30 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/75 backdrop-blur-sm border border-white/15">
+                    {resolvedCoverImages.slice(0, 5).map((_, cIdx) => {
+                      const isActive = (activeCoverIdx % totalCovers) === cIdx;
+                      return (
+                        <button
+                          key={cIdx}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowingCoverArt(true);
+                            setActiveCoverIdx(cIdx);
+                            pauseAutoCycleTemporarily();
+                          }}
+                          aria-label={`Cover ${cIdx + 1}`}
+                          className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                            isActive ? 'w-4 bg-[#38bdf8]' : 'w-1.5 bg-white/45 hover:bg-white/75'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </motion.div>
+          ) : activeScreenUrl ? (
+            /* MODE 2: ENLARGED HERO PHONE SCREEN + INTERACTIVE THUMBNAILS */
+            <motion.div
+              key="stage-app-screens"
+              initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.985 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.99 }}
+              transition={stageTransition}
+              className="relative w-full h-full flex items-center p-2 sm:p-3 pointer-events-none"
+            >
+              <div className="w-full h-full min-h-0 grid grid-cols-12 gap-2 sm:gap-3 items-center">
+                {/* Enlarged Hero Phone Chassis filling available height */}
+                <div className="col-span-7 h-full min-h-0 flex items-center justify-center relative">
+                  <div className="relative h-full max-h-[97%] aspect-[9/18.2] rounded-[20px] sm:rounded-[24px] p-1 sm:p-1.5 bg-[#0e1320] border-2 border-slate-300/90 dark:border-white/20 shadow-[0_18px_40px_rgba(0,0,0,0.4)] transition-transform duration-300 group-hover/cover:scale-[1.02]">
+                    {/* Minimal Speaker Notch */}
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 w-9 h-1 rounded-full bg-slate-800/90 pointer-events-none" />
+
+                    <div className="relative w-full h-full rounded-[15px] sm:rounded-[18px] overflow-hidden bg-[#0e1320] flex items-center justify-center">
+                      <ImageWithSkeleton
+                        src={activeScreenUrl}
+                        alt={`${blueprint.appTitle} hero screen ${selectedScreenIdx + 1}`}
+                        loading="eager"
+                        variant="phone"
+                        className="w-full h-full object-contain crisp-screenshot"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Prev / Next Quick Arrows for Multi-Screen Cards */}
+                  {totalScreens > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handlePrev}
+                        aria-label="Previous app screen"
+                        className="pointer-events-auto opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute start-0 sm:start-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
+                      >
+                        {dir === 'rtl' ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleNext}
+                        aria-label="Next app screen"
+                        className="pointer-events-auto opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute end-0 sm:end-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
+                      >
+                        {dir === 'rtl' ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Right Interactive Rail: Title + Architecture Snapshot + Selectable Screen Thumbnails */}
+                <div className="col-span-5 h-full flex flex-col justify-center gap-1.5 sm:gap-2 min-w-0">
+                  <div className="space-y-0.5 min-w-0">
+                    <p className="text-[10.5px] sm:text-xs font-semibold text-slate-700 dark:text-slate-200 line-clamp-2 leading-snug">
+                      {blueprint.tagline}
+                    </p>
+                  </div>
+
+                  {!compactMode && (
+                    <ul className="hidden sm:block space-y-1 text-[10px] text-slate-600 dark:text-slate-400">
+                      {blueprint.coreHighlights.slice(0, 2).map((feat) => (
+                        <li key={feat} className="flex items-center gap-1.5 truncate">
+                          <span
+                            className="w-1.5 h-1.5 rounded-full shrink-0"
+                            style={{ backgroundColor: blueprint.accentColor }}
+                          />
+                          <span className="truncate">{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {totalScreens > 1 ? (
+                    <div className="space-y-1 pt-0.5">
+                      <div className="text-[9.5px] font-mono font-semibold text-slate-500 dark:text-slate-400 truncate">
+                        {lang === 'ar'
+                          ? `شاشة ${String(selectedScreenIdx + 1).padStart(2, '0')}/${String(totalScreens).padStart(2, '0')}`
+                          : `Screen ${String(selectedScreenIdx + 1).padStart(2, '0')}/${String(totalScreens).padStart(2, '0')}`}
+                      </div>
+                      <div
+                        className="grid grid-cols-2 gap-1.5 pointer-events-auto"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {verifiedScreenshots.slice(0, 4).map((thumbUrl, tIdx) => {
+                          const isActive = selectedScreenIdx === tIdx;
+                          return (
+                            <button
+                              key={thumbUrl}
+                              type="button"
+                              onClick={(e) => selectScreen(tIdx, e)}
+                              aria-label={`Select screen ${tIdx + 1}`}
+                              className={`group/thumb relative h-14 sm:h-18 w-full rounded-xl overflow-hidden bg-[#0e1320] border-2 transition-all duration-200 cursor-pointer ${
+                                isActive
+                                  ? 'border-[#0284ff] dark:border-[#00C7FF] shadow-md scale-[1.03]'
+                                  : 'border-slate-300/80 dark:border-white/15 opacity-85 hover:opacity-100 hover:border-slate-400 dark:hover:border-white/35'
+                              }`}
+                            >
+                              <ImageWithSkeleton
+                                src={thumbUrl}
+                                alt={`${blueprint.appTitle} thumbnail ${tIdx + 1}`}
+                                loading="eager"
+                                variant="phone"
+                                className="w-full h-full object-contain crisp-screenshot"
+                              />
+                              <span
+                                className={`absolute bottom-0.5 end-0.5 px-1 rounded text-[8.5px] font-mono font-bold ${
+                                  isActive
+                                    ? 'bg-[#0284ff] text-white'
+                                    : 'bg-black/75 text-slate-100'
+                                }`}
+                              >
+                                0{tIdx + 1}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="pt-1">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/80 dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 text-[10px] font-mono font-semibold text-slate-700 dark:text-slate-300">
+                        <Sparkles size={11} style={{ color: blueprint.accentColor }} />
+                        <span>{blueprint.performanceBadge}</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            </motion.div>
+          ) : (
+            /* MODE 3: ARCHITECTURAL FALLBACK CARD (When no screenshots or cover exist) */
+            <motion.div
+              key="stage-fallback"
+              initial={shouldReduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0 }}
+              transition={stageTransition}
+              className="relative w-full h-full flex flex-col justify-between pointer-events-none"
+            >
+              <div className="relative z-10 flex items-center justify-between gap-2 px-4 sm:px-5 pt-3 text-[11px] font-medium">
+                <span className="truncate font-semibold" style={{ color: blueprint.accentColor }}>
+                  {blueprint.categoryBadge}
+                </span>
+                <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 shrink-0">
+                  {blueprint.performanceBadge}
+                </span>
+              </div>
 
-            {/* Main Split: Fluid Hero Phone + Interactive Thumbnails Rail */}
-            <div className="flex-1 min-h-0 grid grid-cols-12 gap-2.5 sm:gap-4 items-center">
-              {/* Large Primary Hero Phone Showcase sized proportionally inside 4:3 */}
-              <div
-                className={`${
-                  totalScreens > 1 || !compactMode ? 'col-span-6 sm:col-span-7' : 'col-span-6'
-                } h-full min-h-0 py-1 flex items-center justify-center relative`}
-              >
+              <div className="relative z-10 px-4 sm:px-5 my-auto flex items-center gap-4">
                 <div
-                  className={`relative h-full ${
-                    compactMode
-                      ? 'max-h-[205px] sm:max-h-[235px]'
-                      : 'max-h-[215px] sm:max-h-[290px] lg:max-h-[330px]'
-                  } aspect-[9/18.2] rounded-[22px] sm:rounded-[26px] p-1.5 bg-[#0e1320] border-2 border-slate-300/90 dark:border-white/20 shadow-[0_20px_45px_rgba(0,0,0,0.45)] transition-transform duration-300 group-hover/cover:scale-[1.02]`}
+                  className="shrink-0 w-16 h-16 rounded-2xl p-[1.5px] shadow-md"
+                  style={{
+                    background: `linear-gradient(135deg, ${blueprint.accentColor}, ${blueprint.secondaryAccent})`,
+                  }}
                 >
-                  {/* Minimal Speaker Notch */}
-                  <div className="absolute top-2.5 left-1/2 -translate-x-1/2 z-20 w-10 h-1.5 rounded-full bg-slate-800/90 pointer-events-none" />
-
-                  <div className="relative w-full h-full rounded-[16px] sm:rounded-[20px] overflow-hidden bg-[#161e31]">
-                    <ImageWithSkeleton
-                      src={activeScreenUrl}
-                      alt={`${blueprint.appTitle} hero screen ${selectedScreenIdx + 1}`}
-                      loading="eager"
-                      variant="phone"
-                      className="w-full h-full object-cover object-top crisp-screenshot"
-                    />
+                  <div className="w-full h-full rounded-[14px] bg-white dark:bg-[#0a0d18] flex items-center justify-center">
+                    <BadgeIcon size={28} style={{ color: blueprint.accentColor }} />
                   </div>
                 </div>
 
-                {/* Prev / Next Quick Arrows for Multi-Screen Cards */}
-                {totalScreens > 1 && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={handlePrev}
-                      aria-label="Previous app screen"
-                      className="pointer-events-auto opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute start-0 sm:start-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
-                    >
-                      {dir === 'rtl' ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      aria-label="Next app screen"
-                      className="pointer-events-auto opacity-80 sm:opacity-0 group-hover/cover:opacity-100 focus-visible:opacity-100 transition-opacity duration-200 absolute end-0 sm:end-1 top-1/2 -translate-y-1/2 z-30 w-7 h-7 rounded-full bg-slate-900/80 hover:bg-[#0284ff] text-white border border-white/15 flex items-center justify-center cursor-pointer shadow-md"
-                    >
-                      {dir === 'rtl' ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {/* Right Interactive Rail: Architecture Snapshot + Selectable Sharp Thumbnails */}
-              <div
-                className={`${
-                  totalScreens > 1 || !compactMode ? 'col-span-6 sm:col-span-5' : 'col-span-6'
-                } h-full flex flex-col justify-center gap-2 sm:gap-2.5 min-w-0`}
-              >
-                <div className="space-y-0.5 sm:space-y-1 min-w-0">
-                  <h4 className="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white leading-tight truncate">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
                     {blueprint.appTitle}
-                  </h4>
-                  <p className="text-[10.5px] sm:text-[11px] font-medium text-slate-600 dark:text-slate-300 line-clamp-2 leading-snug">
+                  </h3>
+                  <p className="text-xs font-semibold truncate mt-0.5" style={{ color: blueprint.accentColor }}>
+                    {blueprint.genre}
+                  </p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 mt-1">
                     {blueprint.tagline}
                   </p>
                 </div>
-
-                {/* Quick Feature Bullet (keeps visual context sharp) */}
-                {!compactMode && (
-                  <ul className="hidden sm:block space-y-1 text-[10.5px] text-slate-600 dark:text-slate-400">
-                    {blueprint.coreHighlights.slice(0, 2).map((feat) => (
-                      <li key={feat} className="flex items-center gap-1.5 truncate">
-                        <span
-                          className="w-1.5 h-1.5 rounded-full shrink-0"
-                          style={{ backgroundColor: blueprint.accentColor }}
-                        />
-                        <span className="truncate">{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {/* Clickable Sharp Screen Thumbnails Grid */}
-                {totalScreens > 1 ? (
-                  <div className="space-y-1.5 pt-0.5">
-                    <div className="text-[9.5px] sm:text-[10px] font-mono font-semibold text-slate-500 dark:text-slate-400">
-                      {lang === 'ar' ? 'تبديل الشاشات:' : 'Tap screen to preview:'}
-                    </div>
-                    <div
-                      className="grid grid-cols-2 gap-1.5 pointer-events-auto"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {verifiedScreenshots.slice(0, 4).map((thumbUrl, tIdx) => {
-                        const isActive = selectedScreenIdx === tIdx;
-                        return (
-                          <button
-                            key={thumbUrl}
-                            type="button"
-                            onClick={(e) => selectScreen(tIdx, e)}
-                            aria-label={`Select screen ${tIdx + 1}`}
-                            className={`group/thumb relative h-14 sm:h-20 w-full rounded-xl overflow-hidden bg-[#161e31] border-2 transition-all duration-200 cursor-pointer ${
-                              isActive
-                                ? 'border-[#0284ff] dark:border-[#00C7FF] shadow-md scale-[1.03]'
-                                : 'border-slate-300/80 dark:border-white/15 opacity-85 hover:opacity-100 hover:border-slate-400 dark:hover:border-white/35'
-                            }`}
-                          >
-                            <ImageWithSkeleton
-                              src={thumbUrl}
-                              alt={`${blueprint.appTitle} thumbnail ${tIdx + 1}`}
-                              loading="eager"
-                              variant="phone"
-                              className="w-full h-full object-cover object-top crisp-screenshot"
-                            />
-                            <span
-                              className={`absolute bottom-1 end-1 px-1 py-0.2 rounded text-[9px] font-mono font-bold ${
-                                isActive
-                                  ? 'bg-[#0284ff] text-white'
-                                  : 'bg-black/75 text-slate-100'
-                              }`}
-                            >
-                              0{tIdx + 1}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="pt-1">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/80 dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 text-[10px] font-mono font-semibold text-slate-700 dark:text-slate-300">
-                      <Sparkles size={11} style={{ color: blueprint.accentColor }} />
-                      <span>{blueprint.performanceBadge}</span>
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          /* MODE 3: ARCHITECTURAL FALLBACK CARD (When no screenshots or cover exist) */
-          <motion.div
-            key="stage-fallback"
-            initial={shouldReduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={shouldReduceMotion ? undefined : { opacity: 0 }}
-            transition={stageTransition}
-            className="relative z-20 w-full h-full flex flex-col justify-between pointer-events-none"
-          >
-            <div className="relative z-10 flex items-center justify-between gap-2 px-4 sm:px-5 pt-4 text-[11px] font-medium">
-              <span className="truncate font-semibold" style={{ color: blueprint.accentColor }}>
-                {blueprint.categoryBadge}
-              </span>
-              <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400 shrink-0">
-                {blueprint.performanceBadge}
-              </span>
-            </div>
-
-            <div className="relative z-10 px-4 sm:px-5 my-auto flex items-center gap-4">
-              <div
-                className="shrink-0 w-16 h-16 rounded-2xl p-[1.5px] shadow-md"
-                style={{
-                  background: `linear-gradient(135deg, ${blueprint.accentColor}, ${blueprint.secondaryAccent})`,
-                }}
-              >
-                <div className="w-full h-full rounded-[14px] bg-white dark:bg-[#0a0d18] flex items-center justify-center">
-                  <BadgeIcon size={28} style={{ color: blueprint.accentColor }} />
-                </div>
               </div>
 
-              <div className="min-w-0 flex-1">
-                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
-                  {blueprint.appTitle}
-                </h3>
-                <p className="text-xs font-semibold truncate mt-0.5" style={{ color: blueprint.accentColor }}>
-                  {blueprint.genre}
-                </p>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 mt-1">
-                  {blueprint.tagline}
-                </p>
+              <div className="relative z-10 px-4 sm:px-5 py-2.5 bg-slate-100/90 dark:bg-[#05070d]/90 border-t border-slate-200/80 dark:border-white/8 flex items-center justify-between text-[11px]">
+                <span className="font-mono text-[10px] text-slate-600 dark:text-slate-300 truncate">
+                  {blueprint.architecturePattern}
+                </span>
+                <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
+                  Clean Arch
+                </span>
               </div>
-            </div>
-
-            <div className="relative z-10 px-4 sm:px-5 py-2.5 bg-slate-100/90 dark:bg-[#05070d]/90 border-t border-slate-200/80 dark:border-white/8 flex items-center justify-between text-[11px]">
-              <span className="font-mono text-[10px] text-slate-600 dark:text-slate-300 truncate">
-                {blueprint.architecturePattern}
-              </span>
-              <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 shrink-0">
-                Clean Arch
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

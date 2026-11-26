@@ -291,26 +291,23 @@ const GalleryCard: React.FC<{
         onSelect();
         onInspect();
       }}
-      className={`card-shimmer group relative rounded-2xl overflow-hidden bg-[#161e31] border transition-colors duration-200 cursor-pointer flex flex-col text-start w-full ${
+      className={`card-shimmer group relative rounded-2xl overflow-hidden bg-white dark:bg-[#111624] border transition-colors duration-200 cursor-pointer flex flex-col text-start w-full ${
         isActive
           ? 'border-[#0284ff] ring-2 ring-[#0284ff]/25 shadow-lg'
           : 'border-slate-200/80 dark:border-white/10 hover:border-[#0284ff]/60 shadow-sm hover:shadow-xl'
       }`}
     >
-      <div className="relative aspect-[9/16] w-full overflow-hidden bg-[#161e31]">
+      <div className="relative aspect-[9/16] w-full p-2 overflow-hidden bg-slate-100/90 dark:bg-[#090d16] flex items-center justify-center">
         <ImageWithSkeleton
           src={url}
           alt={`${projectName} — ${label}`}
           loading="lazy"
           variant="phone"
-          className="w-full h-full object-cover object-top group-hover:scale-[1.04] transition-transform duration-300 crisp-screenshot"
+          className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-300 crisp-screenshot rounded-lg"
         />
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3 pointer-events-none">
-          <span className="text-[11px] font-mono font-bold text-white tabular-nums">
-            #{index + 1}
-          </span>
-          <span className="p-1.5 rounded-lg bg-[#0284ff] text-white shadow-md">
+        <div className="absolute top-2.5 end-2.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <span className="inline-flex items-center justify-center p-1.5 rounded-lg bg-[#0284ff] text-white shadow-md">
             <ZoomIn size={14} />
           </span>
         </div>
@@ -321,7 +318,7 @@ const GalleryCard: React.FC<{
           {label}
         </span>
         <span className="text-[10px] font-mono text-slate-600 dark:text-slate-400 shrink-0 tabular-nums">
-          {index + 1}
+          #{index + 1}
         </span>
       </div>
     </button>
@@ -2052,24 +2049,27 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                             setLightboxMediaType('cover');
                             setLightboxOpen(true);
                           }}
-                          className="group relative aspect-[4/3] w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-[#080b12] border border-slate-200/90 dark:border-white/10 hover:border-[#0284ff]/50 shadow-xs hover:shadow-lg transition-all duration-200 text-start cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
+                          className="card-shimmer group relative w-full rounded-2xl overflow-hidden bg-white dark:bg-[#111624] border border-slate-200/90 dark:border-white/10 hover:border-[#0284ff]/55 shadow-xs hover:shadow-lg transition-all duration-200 flex flex-col text-start cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
                         >
-                          <ImageWithSkeleton
-                            src={coverSrc}
-                            alt={`${safeDisplayName} cover ${cIdx + 1}`}
-                            loading="lazy"
-                            className="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-300"
-                          />
-                          <div
-                            aria-hidden="true"
-                            className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none"
-                          />
-                          <div className="absolute bottom-2.5 inset-x-3 flex items-center justify-between gap-2 text-white">
-                            <span className="text-xs font-mono font-semibold truncate capitalize">
+                          <div className="relative aspect-[4/3] w-full p-2 sm:p-3 overflow-hidden bg-slate-100/90 dark:bg-[#090d16] flex items-center justify-center">
+                            <ImageWithSkeleton
+                              src={coverSrc}
+                              alt={`${safeDisplayName} cover ${cIdx + 1}`}
+                              loading="lazy"
+                              className="w-full h-full object-contain object-center group-hover:scale-[1.02] transition-transform duration-300 rounded-lg"
+                            />
+                            <div className="absolute top-2.5 end-2.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                              <span className="inline-flex items-center justify-center p-1.5 rounded-lg bg-[#0284ff] text-white shadow-md">
+                                <ZoomIn size={13} />
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="w-full px-3.5 py-2.5 bg-white dark:bg-[#111624] border-t border-slate-100 dark:border-white/8 flex items-center justify-between gap-2">
+                            <span className="text-xs font-mono font-semibold text-slate-700 dark:text-slate-200 truncate capitalize">
                               {coverTitle}
                             </span>
-                            <span className="inline-flex items-center gap-1 text-[11px] font-mono text-white/85 shrink-0 tabular-nums">
-                              <ZoomIn size={12} />
+                            <span className="inline-flex items-center gap-1 text-[11px] font-mono text-slate-500 dark:text-slate-400 shrink-0 tabular-nums">
                               <span>
                                 {String(cIdx + 1).padStart(2, '0')}/{String(safeCoverCount).padStart(2, '0')}
                               </span>

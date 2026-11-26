@@ -480,7 +480,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                       <button
                         type="button"
                         onClick={onOpenLightbox}
-                        className="w-full h-full rounded-[20px] overflow-hidden bg-[#161e31] block cursor-pointer relative"
+                        className="w-full h-full rounded-[20px] overflow-hidden bg-[#0e1320] flex items-center justify-center cursor-pointer relative"
                         aria-label={
                           lang === 'ar'
                             ? 'فتح الشاشة بملء العرض'
@@ -496,7 +496,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                           )}`}
                           loading="eager"
                           variant="phone"
-                          className="w-full h-full object-cover object-top crisp-screenshot group-hover:scale-[1.02] transition-transform duration-300"
+                          className="w-full h-full object-contain crisp-screenshot group-hover:scale-[1.02] transition-transform duration-300"
                         />
                       </button>
 
