@@ -906,7 +906,8 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                       <ProjectCardCover
                         repoName={project.repoName}
                         language={repoLanguage}
-                        coverUrl={project.image}
+                        coverUrl={matchingRepo?.coverImageUrl || project.image}
+                        coverImages={liveMedia?.coverImages || matchingRepo?.coverImages}
                         discoveredScreenshots={
                           liveMedia?.discoveredScreenshots || matchingRepo?.discoveredScreenshots
                         }
@@ -1154,6 +1155,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                         repoName={repo.name}
                         language={repo.language}
                         coverUrl={repo.coverImageUrl}
+                        coverImages={repo.coverImages || repoLiveMedia?.coverImages}
                         discoveredScreenshots={
                           repo.discoveredScreenshots || repoLiveMedia?.discoveredScreenshots
                         }

@@ -14,7 +14,6 @@ import {
   ExternalLink,
   PackageCheck,
   RefreshCw,
-  Loader2,
   FileCode,
   Maximize2,
   Minimize2,
@@ -42,7 +41,9 @@ import { synthesizeProjectBlueprint } from './ProjectCardCover';
 import { ImageWithSkeleton, preloadImageUrls, resolveProxiedImageUrl } from './ImageWithSkeleton';
 import { extractRepoTechTags } from '../utils/techTagExtractor';
 import { TechIconBadge } from './TechLogos';
-import { ReadmeDocumentView } from './ReadmeDocumentView';
+import { CaseStudyStructuredView } from './CaseStudyStructuredView';
+import { CoverGuidelinesModal } from './CoverGuidelinesModal';
+import { LeafAnimation } from './LeafAnimation';
 import { ProjectDeviceStage, DeviceStageMode } from './ProjectDeviceStage';
 import { ProjectArchitectureInspector } from './ProjectArchitectureInspector';
 import { YouTubeEmbedPlayer } from './YouTubeEmbedPlayer';
@@ -53,6 +54,7 @@ import {
 } from '../utils/readmeTemplateExtractor';
 import {
   fetchRepoScreenshots,
+  fetchRepoCoverImages,
   checkRepoRelease,
   fetchRepoLiveMetadata,
   fetchRepoCaseStudies,
@@ -79,7 +81,20 @@ interface ProjectDetailsModalProps {
   initialScreenIndex?: number;
 }
 
-type WorkspaceSectionId = 'overview' | 'specs' | 'gallery' | 'architecture' | 'casestudy';
+type WorkspaceSectionId = 'overview' | 'specs' | 'covers' | 'gallery' | 'architecture' | 'casestudy';
+
+function isCoverAssetUrl(url?: string): boolean {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  return (
+    lower.includes('/covers/') ||
+    lower.includes('/screenshots/cover') ||
+    lower.endsWith('/cover.png') ||
+    lower.endsWith('/cover.jpg') ||
+    lower.endsWith('/cover.webp') ||
+    lower.endsWith('/cover.jpeg')
+  );
+}
 
 function normalizeProjectInput(raw: Project | null | undefined): Project | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -330,11 +345,13 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const [stageMode, setStageMode] = useState<DeviceStageMode>('video');
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const [activeScreenIndex, setActiveScreenIndex] = useState<number>(0);
+  const [activeCoverIndex, setActiveCoverIndex] = useState<number>(0);
   const [galleryCategory, setGalleryCategory] = useState<string>('all');
   const [visibleGalleryCount, setVisibleGalleryCount] = useState<number>(GALLERY_PAGE_SIZE);
   const [lightboxOpen, setLightboxOpen] = useState<boolean>(false);
-  const [lightboxMediaType, setLightboxMediaType] = useState<'screen' | 'video'>('screen');
+  const [lightboxMediaType, setLightboxMediaType] = useState<'screen' | 'video' | 'cover'>('screen');
   const [adHocLightboxUrl, setAdHocLightboxUrl] = useState<string | null>(null);
+  const [coverGuidelinesOpen, setCoverGuidelinesOpen] = useState<boolean>(false);
   const [copiedProjectLink, setCopiedProjectLink] = useState<boolean>(false);
   const [lightboxImgState, setLightboxImgState] = useState<{
     triedDirect: boolean;
@@ -342,6 +359,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   }>({ triedDirect: false, failed: false });
   const [recoveryEpoch, setRecoveryEpoch] = useState<number>(0);
 
+  const [covers, setCovers] = useState<string[]>([]);
+  const [loadingCovers, setLoadingCovers] = useState<boolean>(false);
   const [screenshots, setScreenshots] = useState<string[]>([]);
   const [loadingScreens, setLoadingScreens] = useState<boolean>(false);
   const [liveMeta, setLiveMeta] = useState<RepoLiveMetadata | null>(null);
@@ -359,6 +378,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const scrollRef = useRef<HTMLDivElement>(null);
   const overviewRef = useRef<HTMLElement>(null);
   const specsRef = useRef<HTMLElement>(null);
+  const coversRef = useRef<HTMLElement>(null);
   const galleryRef = useRef<HTMLElement>(null);
   const architectureRef = useRef<HTMLElement>(null);
   const casestudyRef = useRef<HTMLElement>(null);
@@ -396,8 +416,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   }, [safeProject, safeRepoName, safeDisplayName, cachedConsolidated]);
 
   const syncLiveProjectData = useCallback(
-    async (targetProject: Project, forceRefresh: boolean, preferredBranch?: string) => {
+    async (
+      targetProject: Project,
+      forceRefresh: boolean,
+      preferredBranch?: string,
+      readmeHint?: string
+    ) => {
       if (!targetProject?.repoName) {
+        setLoadingCovers(false);
         setLoadingScreens(false);
         setStudyCaseLoading(false);
         setIsSyncingLive(false);
@@ -406,29 +432,57 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       if (forceRefresh) setIsSyncingLive(true);
       setStudyCaseLoading(true);
 
+      const branch = preferredBranch || 'main';
+
       try {
-        const [meta, folderUrls, rel, csData] = await Promise.all([
+        const [meta, folderUrls, folderCovers, rel, initialCsData] = await Promise.all([
           fetchRepoLiveMetadata(
             targetProject.repoName,
             'ahmed-el-bialy',
             forceRefresh
           ).catch(() => null),
-          fetchRepoScreenshots(targetProject.repoName, 'ahmed-el-bialy').catch(
-            (): string[] => []
-          ),
+          fetchRepoScreenshots(
+            targetProject.repoName,
+            'ahmed-el-bialy',
+            branch,
+            forceRefresh
+          ).catch((): string[] => []),
+          fetchRepoCoverImages(
+            targetProject.repoName,
+            branch,
+            'ahmed-el-bialy',
+            forceRefresh
+          ).catch((): string[] => []),
           checkRepoRelease(targetProject.repoName, 'ahmed-el-bialy').catch(
             (): RepoReleaseInfo => ({ hasRelease: false })
           ),
           fetchRepoCaseStudies(
             targetProject.repoName,
-            preferredBranch || 'main',
+            branch,
             'ahmed-el-bialy',
-            forceRefresh
+            forceRefresh,
+            readmeHint
           ).catch((): RepoCaseStudyData => ({ en: null, ar: null })),
         ]);
 
         if (meta) {
           setLiveMeta(meta);
+        }
+
+        let csData = initialCsData;
+        if (
+          !csData?.en &&
+          !csData?.ar &&
+          meta?.rawReadmeText &&
+          meta.rawReadmeText !== readmeHint
+        ) {
+          csData = await fetchRepoCaseStudies(
+            targetProject.repoName,
+            meta.defaultBranch || branch,
+            'ahmed-el-bialy',
+            forceRefresh,
+            meta.rawReadmeText
+          ).catch((): RepoCaseStudyData => ({ en: null, ar: null }));
         }
 
         setCaseStudyData(csData || { en: null, ar: null });
@@ -444,6 +498,20 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           setReleaseInfo({ hasRelease: false });
         }
 
+        const mergedCovers = Array.from(
+          new Set([
+            ...folderCovers,
+            ...(Array.isArray(meta?.coverImages) ? meta.coverImages : []),
+            ...(isCoverAssetUrl(targetProject.image) ? [targetProject.image] : []),
+          ])
+        ).filter((u): u is string => typeof u === 'string' && u.trim().length > 0);
+
+        if (mergedCovers.length > 0) {
+          setCovers(mergedCovers);
+          preloadImageUrls(mergedCovers.slice(0, 4));
+        }
+
+        const coverSet = new Set(mergedCovers);
         const verified =
           VERIFIED_REPO_SCREENSHOTS[targetProject.repoName] ||
           VERIFIED_REPO_SCREENSHOTS[targetProject.name] ||
@@ -460,19 +528,27 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             ...cleanMetaScreens,
             ...(Array.isArray(verified) ? verified : []),
           ])
-        ).filter((u): u is string => typeof u === 'string' && u.trim().length > 0);
+        ).filter(
+          (u): u is string =>
+            typeof u === 'string' &&
+            u.trim().length > 0 &&
+            !coverSet.has(u) &&
+            !isCoverAssetUrl(u)
+        );
 
         if (mergedScreens.length > 0) {
           setScreenshots(mergedScreens);
         } else if (
           typeof targetProject.image === 'string' &&
-          targetProject.image.trim()
+          targetProject.image.trim() &&
+          !isCoverAssetUrl(targetProject.image)
         ) {
           setScreenshots([targetProject.image.trim()]);
         }
       } catch {
         // Silent recovery — retain verified local assets when network sync fails
       } finally {
+        setLoadingCovers(false);
         setLoadingScreens(false);
         setStudyCaseLoading(false);
         setIsSyncingLive(false);
@@ -485,6 +561,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     if (!isOpen) {
       setLightboxOpen(false);
       setAdHocLightboxUrl(null);
+      setCoverGuidelinesOpen(false);
       setLightboxImgState({ triedDirect: false, failed: false });
       return;
     }
@@ -502,11 +579,13 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             ? Math.trunc(initialScreenIndex)
             : 0
         );
+        setActiveCoverIndex(0);
         setGalleryCategory('all');
         setVisibleGalleryCount(GALLERY_PAGE_SIZE);
         setLightboxOpen(false);
         setLightboxMediaType('screen');
         setAdHocLightboxUrl(null);
+        setCoverGuidelinesOpen(false);
         setCopiedProjectLink(false);
         setLightboxImgState({ triedDirect: false, failed: false });
         setCaseStudyData({ en: null, ar: null });
@@ -518,6 +597,28 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           scrollRef.current.scrollTop = 0;
         }
 
+        const initialCovers = Array.from(
+          new Set([
+            ...(Array.isArray(matchedCachedRepo?.coverImages)
+              ? matchedCachedRepo.coverImages
+              : []),
+            ...(Array.isArray(cachedLiveMedia?.coverImages)
+              ? cachedLiveMedia.coverImages
+              : []),
+            ...(isCoverAssetUrl(safeProject.image) ? [safeProject.image] : []),
+          ])
+        ).filter((u): u is string => typeof u === 'string' && u.trim().length > 0);
+
+        if (initialCovers.length > 0) {
+          setCovers(initialCovers);
+          preloadImageUrls(initialCovers.slice(0, 4));
+          setLoadingCovers(false);
+        } else {
+          setCovers([]);
+          setLoadingCovers(true);
+        }
+
+        const initialCoverSet = new Set(initialCovers);
         const verified =
           VERIFIED_REPO_SCREENSHOTS[safeRepoName] ||
           VERIFIED_REPO_SCREENSHOTS[safeDisplayName] ||
@@ -530,13 +631,19 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             ...sanitizeDiscoveredScreenshots(cachedLiveMedia?.discoveredScreenshots),
             ...(Array.isArray(verified) ? verified : []),
           ])
-        ).filter((u): u is string => typeof u === 'string' && u.trim().length > 0);
+        ).filter(
+          (u): u is string =>
+            typeof u === 'string' &&
+            u.trim().length > 0 &&
+            !initialCoverSet.has(u) &&
+            !isCoverAssetUrl(u)
+        );
 
         if (initialScreens.length > 0) {
           setScreenshots(initialScreens);
           preloadImageUrls(initialScreens.slice(0, 6));
           setLoadingScreens(false);
-        } else if (safeProject.image) {
+        } else if (safeProject.image && !isCoverAssetUrl(safeProject.image)) {
           setScreenshots([safeProject.image]);
           setLoadingScreens(false);
         } else {
@@ -546,8 +653,15 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
         const branchHint =
           cachedLiveMedia?.defaultBranch || matchedCachedRepo?.default_branch || 'main';
-        syncLiveProjectData(safeProject, false, branchHint);
+        syncLiveProjectData(
+          safeProject,
+          false,
+          branchHint,
+          cachedLiveMedia?.rawReadmeText
+        );
       } catch {
+        setCovers([]);
+        setLoadingCovers(false);
         setScreenshots([]);
         setLoadingScreens(false);
       }
@@ -563,6 +677,20 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       setStudyCaseLang('ar');
     }
   }, [lang, caseStudyData.en, caseStudyData.ar]);
+
+  const safeCovers = useMemo(
+    () =>
+      Array.isArray(covers)
+        ? covers.filter((u): u is string => typeof u === 'string' && u.trim().length > 0)
+        : [],
+    [covers]
+  );
+
+  const safeCoverCount = safeCovers.length;
+  const safeCoverIndex =
+    safeCoverCount > 0 && Number.isFinite(activeCoverIndex)
+      ? ((Math.trunc(activeCoverIndex) % safeCoverCount) + safeCoverCount) % safeCoverCount
+      : 0;
 
   const safeScreenshots = useMemo(
     () =>
@@ -581,13 +709,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
   useEffect(() => {
     setLightboxImgState({ triedDirect: false, failed: false });
-  }, [safeScreenIndex, adHocLightboxUrl, lightboxOpen]);
+  }, [safeScreenIndex, safeCoverIndex, lightboxMediaType, adHocLightboxUrl, lightboxOpen]);
 
   const scrollToSection = useCallback((sectionId: WorkspaceSectionId) => {
     setActiveSection(sectionId);
     const refMap: Record<WorkspaceSectionId, React.RefObject<HTMLElement | null>> = {
       overview: overviewRef,
       specs: specsRef,
+      covers: coversRef,
       gallery: galleryRef,
       architecture: architectureRef,
       casestudy: casestudyRef,
@@ -618,6 +747,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     const candidates: Array<{ id: WorkspaceSectionId; el: HTMLElement | null }> = [
       { id: 'overview', el: overviewRef.current },
       { id: 'specs', el: specsRef.current },
+      { id: 'covers', el: coversRef.current },
       { id: 'gallery', el: galleryRef.current },
       { id: 'architecture', el: architectureRef.current },
       { id: 'casestudy', el: casestudyRef.current },
@@ -1033,6 +1163,11 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             count: displayFeatures.length,
           },
           {
+            id: 'covers',
+            label: lang === 'ar' ? 'الأغلفة (Covers)' : 'Covers',
+            count: safeCoverCount,
+          },
+          {
             id: 'gallery',
             label: lang === 'ar' ? 'معرض الشاشات' : 'Gallery',
             count: safeScreenCount,
@@ -1152,6 +1287,15 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
     const stepLightbox = (direction: 'next' | 'prev') => {
       if (adHocLightboxUrl) return;
+      if (lightboxMediaType === 'cover') {
+        if (safeCoverCount <= 1) return;
+        setActiveCoverIndex((prev) =>
+          direction === 'next'
+            ? (prev + 1) % safeCoverCount
+            : (prev - 1 + safeCoverCount) % safeCoverCount
+        );
+        return;
+      }
       if (!hasVideoSlide) {
         if (direction === 'next') nextScreen();
         else prevScreen();
@@ -1184,7 +1328,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     stepLightboxRef.current = stepLightbox;
 
     const activeLightboxRawUrl =
-      adHocLightboxUrl || (safeScreenCount > 0 ? safeScreenshots[safeScreenIndex] : '');
+      adHocLightboxUrl ||
+      (lightboxMediaType === 'cover'
+        ? safeCoverCount > 0
+          ? safeCovers[safeCoverIndex]
+          : ''
+        : safeScreenCount > 0
+        ? safeScreenshots[safeScreenIndex]
+        : '');
     const activeLightboxSrc = activeLightboxRawUrl
       ? lightboxImgState.triedDirect
         ? activeLightboxRawUrl
@@ -1609,7 +1760,14 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       repoName={safeRepoName}
                       displayName={safeDisplayName}
                       realLanguage={realLanguage}
-                      coverImage={safeProject.image}
+                      coverImage={safeCovers[0] || safeProject.image}
+                      coverImages={
+                        safeCovers.length > 0
+                          ? safeCovers
+                          : liveMeta?.coverImages ||
+                            cachedLiveMedia?.coverImages ||
+                            matchedCachedRepo?.coverImages
+                      }
                       isHighlight={safeProject.highlight}
                       description={displayDescription}
                       technologies={safeProject.technologies}
@@ -1788,7 +1946,143 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 </div>
               </section>
 
-              {/* SECTION 3: CATEGORIZED MOBILE SCREENSHOTS GALLERY */}
+              {/* SECTION 3: PROJECT COVERS (4:3 ARTWORK SHOWCASE) */}
+              <section
+                ref={coversRef}
+                id="workspace-covers"
+                className="scroll-mt-4 pt-8 border-t border-slate-200 dark:border-white/10 space-y-5"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h4 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Layers
+                        size={18}
+                        className="text-[#0369a1] dark:text-[#38bdf8]"
+                      />
+                      <span>
+                        {lang === 'ar'
+                          ? `أغلفة المشروع · Covers (${safeCoverCount})`
+                          : `Covers (${safeCoverCount})`}
+                      </span>
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {lang === 'ar'
+                        ? 'أغلفة 4:3 من مجلد Screenshots/Covers معروضة بأبعادها الطبيعية الكاملة'
+                        : 'Full 4:3 cover artwork from Screenshots/Covers displayed in native proportions'}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setCoverGuidelinesOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[40px] sm:min-h-0 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200/80 dark:hover:bg-white/10 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
+                    >
+                      <ImageIcon size={13} />
+                      <span>{lang === 'ar' ? 'مواصفات 4:3' : '4:3 Cover Specs'}</span>
+                    </button>
+
+                    {safeCoverCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAdHocLightboxUrl(null);
+                          setActiveCoverIndex(0);
+                          setLightboxMediaType('cover');
+                          setLightboxOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[40px] sm:min-h-0 rounded-xl bg-[#0284ff]/10 hover:bg-[#0284ff] text-[#0369a1] dark:text-[#38bdf8] hover:text-white text-xs font-semibold border border-[#0284ff]/25 transition-colors cursor-pointer"
+                      >
+                        <ZoomIn size={13} />
+                        <span>{lang === 'ar' ? 'تكبير الأغلفة' : 'Inspect Covers'}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {loadingCovers && safeCoverCount === 0 ? (
+                  <div className="py-10 px-6 rounded-2xl bg-slate-50/85 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/10 flex flex-col items-center justify-center">
+                    <LeafAnimation
+                      compact
+                      loop
+                      pacing="entry"
+                      label={
+                        lang === 'ar'
+                          ? 'جارٍ البحث عن صور مجلد Covers...'
+                          : 'Loading project covers...'
+                      }
+                    />
+                  </div>
+                ) : safeCoverCount === 0 ? (
+                  <div className="py-10 px-6 text-center text-slate-500 dark:text-gray-400 bg-slate-50 dark:bg-white/[0.02] rounded-2xl border border-dashed border-slate-300 dark:border-white/10 space-y-2.5">
+                    <ImageIcon
+                      size={28}
+                      className="mx-auto opacity-60 text-[#0284ff]"
+                    />
+                    <p className="font-semibold text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                      {lang === 'ar'
+                        ? 'لم يتم العثور على أغلفة في Screenshots/Covers لهذا المستودع بعد.'
+                        : 'No custom cover artwork found in Screenshots/Covers yet.'}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                      {lang === 'ar'
+                        ? 'ارفع صوراً بنسبة 4:3 (1200×900) داخل Screenshots/Covers ثم اضغط "مزامنة" بالأعلى.'
+                        : 'Upload 4:3 (1200×900) images to Screenshots/Covers on GitHub and click Sync above.'}
+                    </p>
+                  </div>
+                ) : (
+                  <div
+                    className={`grid gap-4 sm:gap-5 ${
+                      safeCoverCount === 1
+                        ? 'grid-cols-1 max-w-2xl'
+                        : isFullPage
+                        ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                        : 'grid-cols-1 sm:grid-cols-2'
+                    }`}
+                  >
+                    {safeCovers.map((coverSrc, cIdx) => {
+                      const coverTitle = formatReadableScreenName(coverSrc, cIdx);
+                      return (
+                        <button
+                          key={`${coverSrc}-${cIdx}`}
+                          type="button"
+                          onClick={() => {
+                            setAdHocLightboxUrl(null);
+                            setActiveCoverIndex(cIdx);
+                            setLightboxMediaType('cover');
+                            setLightboxOpen(true);
+                          }}
+                          className="group relative aspect-[4/3] w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-[#080b12] border border-slate-200/90 dark:border-white/10 hover:border-[#0284ff]/50 shadow-xs hover:shadow-lg transition-all duration-200 text-start cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
+                        >
+                          <ImageWithSkeleton
+                            src={coverSrc}
+                            alt={`${safeDisplayName} cover ${cIdx + 1}`}
+                            loading="lazy"
+                            className="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-300"
+                          />
+                          <div
+                            aria-hidden="true"
+                            className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none"
+                          />
+                          <div className="absolute bottom-2.5 inset-x-3 flex items-center justify-between gap-2 text-white">
+                            <span className="text-xs font-mono font-semibold truncate capitalize">
+                              {coverTitle}
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-[11px] font-mono text-white/85 shrink-0 tabular-nums">
+                              <ZoomIn size={12} />
+                              <span>
+                                {String(cIdx + 1).padStart(2, '0')}/{String(safeCoverCount).padStart(2, '0')}
+                              </span>
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+
+              {/* SECTION 4: CATEGORIZED MOBILE SCREENSHOTS GALLERY */}
               <section
                 ref={galleryRef}
                 id="workspace-gallery"
@@ -2021,23 +2315,26 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 </div>
 
                 {studyCaseLoading ? (
-                  <div className="py-12 rounded-2xl border border-slate-200/75 dark:border-white/8 flex flex-col items-center justify-center gap-2.5 text-slate-500 dark:text-slate-400">
-                    <Loader2 size={22} className="animate-spin text-[#0284ff]" />
-                    <span className="text-xs font-mono">
-                      {lang === 'ar'
-                        ? 'جارٍ التحقق من ملف CASE_STUDY.md على GitHub...'
-                        : 'Checking GitHub repo for CASE_STUDY.md / CASE_STUDY_AR.md...'}
-                    </span>
+                  <div className="py-10 px-6 rounded-2xl bg-slate-50/85 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/10 flex flex-col items-center justify-center">
+                    <LeafAnimation
+                      compact
+                      loop
+                      pacing="entry"
+                      label={
+                        lang === 'ar'
+                          ? 'جارٍ استخراج وتنظيم دراسة الحالة...'
+                          : 'Extracting & organizing study case...'
+                      }
+                    />
                   </div>
                 ) : hasAnyStudyCase && activeStudyCaseMarkdown ? (
-                  <div
-                    dir={studyCaseLang === 'ar' ? 'rtl' : 'ltr'}
-                    className="pt-2"
-                  >
-                    <ReadmeDocumentView
+                  <div className="pt-1">
+                    <CaseStudyStructuredView
                       rawMarkdown={activeStudyCaseMarkdown}
                       repoName={safeRepoName}
                       branch={defaultBranch}
+                      docLang={studyCaseLang}
+                      uiLang={lang}
                       onImageClick={(clickedUrl) => {
                         if (!clickedUrl || typeof clickedUrl !== 'string') return;
                         const matchedIdx = safeScreenshots.indexOf(clickedUrl);
@@ -2103,6 +2400,12 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 <span className="px-3.5 py-1.5 rounded-full bg-white/12 text-white font-mono text-xs border border-white/15 capitalize truncate">
                   {lightboxMediaType === 'video'
                     ? `${safeDisplayName} · ${lang === 'ar' ? 'فيديو العرض' : 'Video Walkthrough'}`
+                    : lightboxMediaType === 'cover'
+                    ? `${safeDisplayName} · Cover · ${formatReadableScreenName(activeLightboxRawUrl, safeCoverIndex)}${
+                        !adHocLightboxUrl && safeCoverCount > 0
+                          ? ` (${safeCoverIndex + 1} / ${safeCoverCount})`
+                          : ''
+                      }`
                     : `${safeDisplayName} · ${formatReadableScreenName(activeLightboxRawUrl, safeScreenIndex)}${
                         !adHocLightboxUrl && safeScreenCount > 0
                           ? ` (${safeScreenIndex + 1} / ${safeScreenCount})`
@@ -2110,7 +2413,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       }`}
                 </span>
 
-                {hasVideoSlide && safeScreenCount > 0 && (
+                {hasVideoSlide && safeScreenCount > 0 && lightboxMediaType !== 'cover' && (
                   <div
                     className="hidden sm:inline-flex items-center gap-1 p-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-md"
                     onClick={(e) => e.stopPropagation()}
@@ -2164,7 +2467,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               </button>
             </div>
 
-            {!adHocLightboxUrl && (safeScreenCount > 1 || (hasVideoSlide && safeScreenCount >= 1)) && (
+            {!adHocLightboxUrl &&
+              ((lightboxMediaType === 'cover' && safeCoverCount > 1) ||
+                (lightboxMediaType !== 'cover' &&
+                  (safeScreenCount > 1 || (hasVideoSlide && safeScreenCount >= 1)))) && (
               <button
                 type="button"
                 onClick={(e) => {
@@ -2201,13 +2507,13 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 <div className="space-y-1">
                   <p className="text-sm font-bold text-white">
                     {lang === 'ar'
-                      ? 'تعذر تحميل هذه الشاشة حالياً'
-                      : 'Could not load this screenshot right now'}
+                      ? 'تعذر تحميل هذه الصورة حالياً'
+                      : 'Could not load this image right now'}
                   </p>
                   <p className="text-xs text-slate-400">
                     {lang === 'ar'
-                      ? 'يمكنك إعادة المحاولة أو التنقل لبقية الشاشات.'
-                      : 'You can retry loading or switch to another screen.'}
+                      ? 'يمكنك إعادة المحاولة أو التنقل لبقية العناصر.'
+                      : 'You can retry loading or switch to another item.'}
                   </p>
                 </div>
                 <div className="flex items-center justify-center gap-2">
@@ -2238,7 +2544,11 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               <img
                 key={activeLightboxSrc}
                 src={activeLightboxSrc}
-                alt={`Screenshot ${safeScreenIndex + 1}`}
+                alt={
+                  lightboxMediaType === 'cover'
+                    ? `${safeDisplayName} cover ${safeCoverIndex + 1}`
+                    : `Screenshot ${safeScreenIndex + 1}`
+                }
                 referrerPolicy="no-referrer"
                 onError={() => {
                   if (
@@ -2255,7 +2565,10 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               />
             )}
 
-            {!adHocLightboxUrl && (safeScreenCount > 1 || (hasVideoSlide && safeScreenCount >= 1)) && (
+            {!adHocLightboxUrl &&
+              ((lightboxMediaType === 'cover' && safeCoverCount > 1) ||
+                (lightboxMediaType !== 'cover' &&
+                  (safeScreenCount > 1 || (hasVideoSlide && safeScreenCount >= 1)))) && (
               <button
                 type="button"
                 onClick={(e) => {
@@ -2269,7 +2582,37 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               </button>
             )}
 
-            {!adHocLightboxUrl && (safeScreenCount > 1 || (hasVideoSlide && safeScreenCount >= 1)) && (
+            {!adHocLightboxUrl && lightboxMediaType === 'cover' && safeCoverCount > 1 && (
+              <div
+                className="mt-5 flex items-center gap-2 max-w-[90vw] overflow-x-auto px-3 py-2 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md no-scrollbar"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {safeCovers.map((cUrl, idx) => (
+                  <button
+                    key={`${cUrl}-cov-lb-${idx}`}
+                    type="button"
+                    onClick={() => setActiveCoverIndex(idx)}
+                    aria-label={`View cover ${idx + 1}`}
+                    className={`w-16 h-12 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${
+                      safeCoverIndex === idx
+                        ? 'border-[#38bdf8] scale-105 opacity-100'
+                        : 'border-white/15 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <ImageWithSkeleton
+                      src={cUrl}
+                      alt={`Cover thumb ${idx + 1}`}
+                      loading="eager"
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {!adHocLightboxUrl &&
+              lightboxMediaType !== 'cover' &&
+              (safeScreenCount > 1 || (hasVideoSlide && safeScreenCount >= 1)) && (
               <div
                 className="mt-5 flex items-center gap-2 max-w-[90vw] overflow-x-auto px-3 py-2 rounded-2xl bg-black/70 border border-white/10 backdrop-blur-md no-scrollbar"
                 onClick={(e) => e.stopPropagation()}
@@ -2324,6 +2667,11 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
             )}
           </div>
         )}
+
+        <CoverGuidelinesModal
+          isOpen={coverGuidelinesOpen}
+          onClose={() => setCoverGuidelinesOpen(false)}
+        />
       </motion.div>
     );
   }

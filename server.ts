@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
+import fs from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
@@ -136,45 +138,207 @@ async function startServer() {
     }
   }
 
+  async function collectLocalPublicCovers(repoName: string): Promise<string[]> {
+    const coversRoot = path.join(__dirname, 'public', 'covers');
+    if (!existsSync(coversRoot)) return [];
+
+    const normalizeKey = (s: string) => s.toLowerCase().replace(/[-_\s.]+/g, '');
+    const targetKey = normalizeKey(repoName);
+    const imageRegex = /\.(png|jpe?g|webp)$/i;
+    const found: string[] = [];
+
+    try {
+      const entries = await fs.readdir(coversRoot, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory() && normalizeKey(entry.name) === targetKey) {
+          const subFiles = await fs.readdir(path.join(coversRoot, entry.name), { withFileTypes: true });
+          subFiles
+            .filter((f) => f.isFile() && imageRegex.test(f.name))
+            .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+            .forEach((f) => {
+              found.push(`/covers/${encodeURIComponent(entry.name)}/${encodeURIComponent(f.name)}`);
+            });
+        } else if (entry.isFile() && imageRegex.test(entry.name)) {
+          const baseName = entry.name.replace(imageRegex, '');
+          if (normalizeKey(baseName) === targetKey || normalizeKey(baseName).startsWith(targetKey)) {
+            found.push(`/covers/${encodeURIComponent(entry.name)}`);
+          }
+        }
+      }
+    } catch {
+      // Ignore optional local covers directory read errors
+    }
+
+    return found;
+  }
+
+  async function fetchGitHubFolderImagesServer(
+    username: string,
+    repoName: string,
+    folderPath: string
+  ): Promise<any[]> {
+    try {
+      const res = await fetchWithTimeout(
+        `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/contents/${folderPath}`,
+        { headers: githubHeaders() },
+        8000
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  }
+
   async function fetchRepoScreenshotsServer(
     username: string,
     repoName: string,
     defaultBranch: string
-  ): Promise<{ coverUrl?: string; screens: string[] }> {
+  ): Promise<{ coverUrl?: string; coverImages: string[]; screens: string[] }> {
+    const imageRegex = /\.(png|jpe?g|webp)$/i;
+    const localCovers = await collectLocalPublicCovers(repoName);
+    const coverImages: string[] = [...localCovers];
+    const screens: string[] = [];
+
+    const encodeGitPath = (relPath: string) =>
+      relPath
+        .split('/')
+        .filter(Boolean)
+        .map((seg) => encodeURIComponent(seg))
+        .join('/');
+
+    const toRawUrl = (relPath: string, downloadUrl?: string) =>
+      downloadUrl ||
+      `https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/${encodeURIComponent(
+        defaultBranch || 'main'
+      )}/${encodeGitPath(relPath)}`;
+
+    const isCoverPath = (relPath: string) => {
+      const lower = relPath.toLowerCase();
+      return (
+        /(?:^|\/)covers\/[^/]+\.(png|jpe?g|webp)$/i.test(lower) ||
+        /^(?:screenshots\/)?cover[^/]*\.(png|jpe?g|webp)$/i.test(lower)
+      );
+    };
+
+    const isDirectScreenshotPath = (relPath: string) => {
+      const lower = relPath.toLowerCase();
+      return (
+        /^screenshots\/[^/]+\.(png|jpe?g|webp)$/i.test(lower) &&
+        !isCoverPath(lower)
+      );
+    };
+
     try {
-      const res = await fetchWithTimeout(
-        `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/contents/screenshots`,
+      // Primary: single recursive Git tree lookup preserves exact case (e.g. Screenshots/Covers) and cuts API calls by 70%
+      const treeRes = await fetchWithTimeout(
+        `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(
+          repoName
+        )}/git/trees/${encodeURIComponent(defaultBranch || 'main')}?recursive=1`,
         { headers: githubHeaders() },
         8000
       );
-      if (!res.ok) return { screens: [] };
-      const files = await res.json();
-      if (!Array.isArray(files)) return { screens: [] };
 
-      const imageRegex = /\.(png|jpe?g|webp)$/i;
-      let coverUrl: string | undefined;
-      const screens: string[] = [];
+      if (treeRes.ok) {
+        const treeJson: any = await treeRes.json();
+        if (Array.isArray(treeJson?.tree) && !treeJson?.truncated) {
+          const blobs = treeJson.tree
+            .filter(
+              (item: any) =>
+                item?.type === 'blob' &&
+                typeof item?.path === 'string' &&
+                imageRegex.test(item.path)
+            )
+            .sort((a: any, b: any) =>
+              a.path.localeCompare(b.path, undefined, { numeric: true })
+            );
 
-      for (const file of files) {
+          for (const item of blobs) {
+            if (isCoverPath(item.path)) {
+              coverImages.push(toRawUrl(item.path));
+            } else if (isDirectScreenshotPath(item.path)) {
+              screens.push(toRawUrl(item.path));
+            }
+          }
+
+          const uniqueCovers = Array.from(new Set(coverImages));
+          return {
+            coverUrl: uniqueCovers[0],
+            coverImages: uniqueCovers,
+            screens: Array.from(new Set(screens)),
+          };
+        }
+      }
+
+      // Fallback: Contents API using exact entry.path casing from parent directory listings
+      const rootEntries = await fetchGitHubFolderImagesServer(username, repoName, '');
+      const coversDirEntry = rootEntries.find(
+        (e: any) => e?.type === 'dir' && String(e?.name || '').toLowerCase() === 'covers'
+      );
+      const screenshotsDirEntry = rootEntries.find(
+        (e: any) => e?.type === 'dir' && String(e?.name || '').toLowerCase() === 'screenshots'
+      );
+
+      const [coversFiles, screenshotFiles] = await Promise.all([
+        coversDirEntry?.path
+          ? fetchGitHubFolderImagesServer(username, repoName, encodeGitPath(coversDirEntry.path))
+          : Promise.resolve([]),
+        screenshotsDirEntry?.path
+          ? fetchGitHubFolderImagesServer(username, repoName, encodeGitPath(screenshotsDirEntry.path))
+          : Promise.resolve([]),
+      ]);
+
+      coversFiles
+        .filter((f: any) => f?.type === 'file' && typeof f?.name === 'string' && imageRegex.test(f.name))
+        .sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+        .forEach((f: any) => {
+          coverImages.push(toRawUrl(f.path || `${coversDirEntry.path}/${f.name}`, f.download_url));
+        });
+
+      const nestedCoversEntry = screenshotFiles.find(
+        (f: any) => f?.type === 'dir' && String(f?.name || '').toLowerCase() === 'covers'
+      );
+      if (nestedCoversEntry?.path) {
+        const nestedFiles = await fetchGitHubFolderImagesServer(
+          username,
+          repoName,
+          encodeGitPath(nestedCoversEntry.path)
+        );
+        nestedFiles
+          .filter((f: any) => f?.type === 'file' && typeof f?.name === 'string' && imageRegex.test(f.name))
+          .sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+          .forEach((f: any) => {
+            coverImages.push(
+              toRawUrl(f.path || `${nestedCoversEntry.path}/${f.name}`, f.download_url)
+            );
+          });
+      }
+
+      for (const file of screenshotFiles) {
         if (file?.type !== 'file' || typeof file?.name !== 'string') continue;
         if (!imageRegex.test(file.name)) continue;
 
-        const rawUrl =
-          file.download_url ||
-          `https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/${encodeURIComponent(
-            defaultBranch || 'main'
-          )}/screenshots/${encodeURIComponent(file.name)}`;
-
-        if (/^cover\.(png|jpe?g|webp)$/i.test(file.name)) {
-          coverUrl = rawUrl;
+        const rawUrl = toRawUrl(
+          file.path || `${screenshotsDirEntry?.path || 'screenshots'}/${file.name}`,
+          file.download_url
+        );
+        if (/^cover.*\.(png|jpe?g|webp)$/i.test(file.name)) {
+          coverImages.push(rawUrl);
         } else {
           screens.push(rawUrl);
         }
       }
 
-      return { coverUrl, screens };
+      const uniqueCovers = Array.from(new Set(coverImages));
+      return {
+        coverUrl: uniqueCovers[0],
+        coverImages: uniqueCovers,
+        screens: Array.from(new Set(screens)),
+      };
     } catch {
-      return { screens: [] };
+      const uniqueCovers = Array.from(new Set(coverImages));
+      return { coverUrl: uniqueCovers[0], coverImages: uniqueCovers, screens: [] };
     }
   }
 
@@ -262,6 +426,10 @@ async function startServer() {
     }
     const forceRefresh = req.query.refresh === '1';
     const cacheKey = username.toLowerCase();
+    if (forceRefresh) {
+      portfolioServerCache.delete(cacheKey);
+      mediaServerCache.clear();
+    }
     const cached = portfolioServerCache.get(cacheKey);
 
     if (!forceRefresh && cached && Date.now() - cached.timestamp < GITHUB_CACHE_TTL_MS) {
@@ -308,7 +476,7 @@ async function startServer() {
       const targetRepos = reposList.slice(0, 20);
       const rawReadmes: Record<string, string> = {};
       const releasesMap: Record<string, any> = {};
-      const screenshotsMap: Record<string, { coverUrl?: string; screens: string[] }> = {};
+      const screenshotsMap: Record<string, { coverUrl?: string; coverImages: string[]; screens: string[] }> = {};
 
       await Promise.all(
         targetRepos.map(async (r: any) => {

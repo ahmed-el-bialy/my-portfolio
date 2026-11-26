@@ -16,6 +16,7 @@ export interface GitHubRepo {
   size: number;
   default_branch: string;
   coverImageUrl?: string;
+  coverImages?: string[];
   discoveredScreenshots?: string[];
   candidateCoverUrls?: string[];
   liveDemoUrl?: string;
@@ -712,22 +713,199 @@ export const VERIFIED_REPO_SCREENSHOTS: Record<string, string[]> = {
   ]
 };
 
-/**
- * Dynamically queries the GitHub Contents API for the repo's /screenshots folder.
- * Retrieves all valid image files regardless of arbitrary filenames (e.g. login.png, feed.jpg)!
- */
-export async function fetchRepoScreenshots(repoName: string, username: string = 'ahmed-el-bialy'): Promise<string[]> {
+async function fetchRepoImageAssetsViaTree(
+  repoName: string,
+  defaultBranch: string = 'main',
+  username: string = 'ahmed-el-bialy',
+  forceRefresh: boolean = false
+): Promise<{ ok: boolean; coverImages: string[]; screens: string[] }> {
   const cleanName = repoName.trim();
-  const cacheKey = `repo-screens-${username}-${cleanName}`;
+  if (!cleanName || (typeof window !== 'undefined' && !navigator.onLine)) {
+    return { ok: false, coverImages: [], screens: [] };
+  }
 
-  if (typeof window !== 'undefined' && !navigator.onLine) {
+  const imageRegex = /\.(png|jpe?g|webp)$/i;
+  const encodeGitPath = (relPath: string) =>
+    relPath
+      .split('/')
+      .filter(Boolean)
+      .map((seg) => encodeURIComponent(seg))
+      .join('/');
+
+  const toRawUrl = (relPath: string, downloadUrl?: string) =>
+    downloadUrl ||
+    `https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(
+      cleanName
+    )}/${encodeURIComponent(defaultBranch || 'main')}/${encodeGitPath(relPath)}`;
+
+  const isCoverPath = (relPath: string) => {
+    const lower = relPath.toLowerCase();
+    return (
+      /(?:^|\/)covers\/[^/]+\.(png|jpe?g|webp)$/i.test(lower) ||
+      /^(?:screenshots\/)?cover[^/]*\.(png|jpe?g|webp)$/i.test(lower)
+    );
+  };
+
+  const isDirectScreenshotPath = (relPath: string) => {
+    const lower = relPath.toLowerCase();
+    return /^screenshots\/[^/]+\.(png|jpe?g|webp)$/i.test(lower) && !isCoverPath(lower);
+  };
+
+  try {
+    const treeRes = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(
+        cleanName
+      )}/git/trees/${encodeURIComponent(defaultBranch || 'main')}?recursive=1`,
+      {
+        headers: { Accept: 'application/vnd.github+json' },
+        cache: forceRefresh ? 'no-store' : 'default',
+      }
+    );
+
+    if (treeRes.ok) {
+      const treeJson: any = await treeRes.json();
+      if (Array.isArray(treeJson?.tree) && !treeJson?.truncated) {
+        const coverImages: string[] = [];
+        const screens: string[] = [];
+        const blobs = treeJson.tree
+          .filter(
+            (item: any) =>
+              item?.type === 'blob' &&
+              typeof item?.path === 'string' &&
+              imageRegex.test(item.path)
+          )
+          .sort((a: any, b: any) =>
+            a.path.localeCompare(b.path, undefined, { numeric: true })
+          );
+
+        for (const item of blobs) {
+          if (isCoverPath(item.path)) {
+            coverImages.push(toRawUrl(item.path));
+          } else if (isDirectScreenshotPath(item.path)) {
+            screens.push(toRawUrl(item.path));
+          }
+        }
+
+        return {
+          ok: true,
+          coverImages: Array.from(new Set(coverImages)),
+          screens: Array.from(new Set(screens)),
+        };
+      }
+    }
+
+    // Fallback: Contents API preserving exact entry.path casing (handles Screenshots/Covers, Covers, screenshots/covers)
+    const fetchDir = async (dirPath: string): Promise<{ ok: boolean; entries: any[] }> => {
+      try {
+        const res = await fetch(
+          `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(
+            cleanName
+          )}/contents${dirPath ? `/${encodeGitPath(dirPath)}` : ''}`,
+          {
+            headers: { Accept: 'application/vnd.github+json' },
+            cache: forceRefresh ? 'no-store' : 'default',
+          }
+        );
+        if (!res.ok) return { ok: false, entries: [] };
+        const data = await res.json();
+        return { ok: true, entries: Array.isArray(data) ? data : [] };
+      } catch {
+        return { ok: false, entries: [] };
+      }
+    };
+
+    const rootResult = await fetchDir('');
+    if (!rootResult.ok) {
+      return { ok: false, coverImages: [], screens: [] };
+    }
+
+    const coversDirEntry = rootResult.entries.find(
+      (e: any) => e?.type === 'dir' && String(e?.name || '').toLowerCase() === 'covers'
+    );
+    const screenshotsDirEntry = rootResult.entries.find(
+      (e: any) => e?.type === 'dir' && String(e?.name || '').toLowerCase() === 'screenshots'
+    );
+
+    const [coversRes, screenshotsRes] = await Promise.all([
+      coversDirEntry?.path
+        ? fetchDir(coversDirEntry.path)
+        : Promise.resolve({ ok: true, entries: [] }),
+      screenshotsDirEntry?.path
+        ? fetchDir(screenshotsDirEntry.path)
+        : Promise.resolve({ ok: true, entries: [] }),
+    ]);
+
+    const coverImages: string[] = [];
+    const screens: string[] = [];
+
+    coversRes.entries
+      .filter((f: any) => f?.type === 'file' && typeof f?.name === 'string' && imageRegex.test(f.name))
+      .sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+      .forEach((f: any) => {
+        coverImages.push(toRawUrl(f.path || `${coversDirEntry.path}/${f.name}`, f.download_url));
+      });
+
+    const nestedCoversEntry = screenshotsRes.entries.find(
+      (e: any) => e?.type === 'dir' && String(e?.name || '').toLowerCase() === 'covers'
+    );
+    if (nestedCoversEntry?.path) {
+      const nestedRes = await fetchDir(nestedCoversEntry.path);
+      nestedRes.entries
+        .filter((f: any) => f?.type === 'file' && typeof f?.name === 'string' && imageRegex.test(f.name))
+        .sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+        .forEach((f: any) => {
+          coverImages.push(
+            toRawUrl(f.path || `${nestedCoversEntry.path}/${f.name}`, f.download_url)
+          );
+        });
+    }
+
+    screenshotsRes.entries
+      .filter((f: any) => f?.type === 'file' && typeof f?.name === 'string' && imageRegex.test(f.name))
+      .sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+      .forEach((f: any) => {
+        const rawUrl = toRawUrl(
+          f.path || `${screenshotsDirEntry.path}/${f.name}`,
+          f.download_url
+        );
+        if (/^cover.*\.(png|jpe?g|webp)$/i.test(f.name)) {
+          coverImages.push(rawUrl);
+        } else {
+          screens.push(rawUrl);
+        }
+      });
+
+    return {
+      ok: true,
+      coverImages: Array.from(new Set(coverImages)),
+      screens: Array.from(new Set(screens)),
+    };
+  } catch {
+    return { ok: false, coverImages: [], screens: [] };
+  }
+}
+
+/**
+ * Dynamically queries the GitHub tree/contents for the repo's screenshots folder (case-preserving).
+ * Excludes nested Covers/ subfolders and cover.* banner files so covers stay separated from phone screens.
+ */
+export async function fetchRepoScreenshots(
+  repoName: string,
+  username: string = 'ahmed-el-bialy',
+  defaultBranch: string = 'main',
+  forceRefresh: boolean = false
+): Promise<string[]> {
+  const cleanName = repoName.trim();
+  const cacheKey = `repo-screens-v2-${username}-${cleanName}`;
+
+  if (!forceRefresh && typeof window !== 'undefined' && !navigator.onLine) {
     try {
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch (e) {}
+    } catch {}
   }
 
   const verifiedFallback =
@@ -737,53 +915,20 @@ export async function fetchRepoScreenshots(repoName: string, username: string = 
       ([k]) => k.toLowerCase() === cleanName.toLowerCase()
     )?.[1];
 
-  try {
-    const res = await fetch(
-      `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(cleanName)}/contents/screenshots`,
-      {
-        headers: { Accept: "application/vnd.github+json" },
-        cache: 'no-store'
-      }
-    );
-    if (res.ok) {
-      const files = await res.json();
-      if (Array.isArray(files)) {
-        const imageExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
-        const allImageFiles = files.filter(
-          (file: any) =>
-            file.type === 'file' &&
-            imageExtensions.some((ext) => file.name.toLowerCase().endsWith(ext))
-        );
+  const assets = await fetchRepoImageAssetsViaTree(
+    cleanName,
+    defaultBranch,
+    username,
+    forceRefresh
+  );
 
-        const nonCoverScreens = allImageFiles
-          .filter((file: any) => !/^cover\.(png|jpe?g|webp)$/i.test(file.name))
-          .map(
-            (file: any) =>
-              file.download_url ||
-              `https://raw.githubusercontent.com/${username}/${cleanName}/main/screenshots/${encodeURIComponent(file.name)}`
-          );
-
-        const imageUrls =
-          nonCoverScreens.length > 0
-            ? nonCoverScreens
-            : allImageFiles.map(
-                (file: any) =>
-                  file.download_url ||
-                  `https://raw.githubusercontent.com/${username}/${cleanName}/main/screenshots/${encodeURIComponent(file.name)}`
-              );
-
-        if (imageUrls.length > 0) {
-          if (typeof window !== 'undefined') {
-            try {
-              localStorage.setItem(cacheKey, JSON.stringify(imageUrls));
-            } catch (e) {}
-          }
-          return imageUrls;
-        }
-      }
+  if (assets.ok && assets.screens.length > 0) {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(assets.screens));
+      } catch {}
     }
-  } catch (err) {
-    // API rate limits or network issues fallback
+    return assets.screens;
   }
 
   if (typeof window !== 'undefined') {
@@ -793,11 +938,78 @@ export async function fetchRepoScreenshots(repoName: string, username: string = 
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch (e) {}
+    } catch {}
   }
 
   if (verifiedFallback && verifiedFallback.length > 0) {
     return verifiedFallback;
+  }
+
+  return [];
+}
+
+/**
+ * Automatically discovers natural cover images for a repo from:
+ * 1. /Covers or /covers folder at repository root
+ * 2. /Screenshots/Covers or /screenshots/covers nested subfolder
+ * 3. cover.* banner files inside /Screenshots or /screenshots
+ * Preserves exact case-sensitive Git paths and never caches failed/rate-limited responses.
+ */
+export async function fetchRepoCoverImages(
+  repoName: string,
+  defaultBranch: string = 'main',
+  username: string = 'ahmed-el-bialy',
+  forceRefresh: boolean = false
+): Promise<string[]> {
+  if (!repoName) return [];
+  const cleanName = repoName.trim();
+  const cacheKey = `repo_covers_v2_${username}_${cleanName}`;
+
+  if (!forceRefresh && typeof window !== 'undefined') {
+    try {
+      const cachedRaw = localStorage.getItem(cacheKey);
+      if (cachedRaw) {
+        const parsed = JSON.parse(cachedRaw);
+        if (
+          parsed &&
+          Date.now() - (parsed.timestamp || 0) < 1000 * 60 * 10 &&
+          Array.isArray(parsed.urls)
+        ) {
+          return parsed.urls;
+        }
+      }
+    } catch {}
+  }
+
+  const assets = await fetchRepoImageAssetsViaTree(
+    cleanName,
+    defaultBranch,
+    username,
+    forceRefresh
+  );
+
+  if (assets.ok) {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(
+          cacheKey,
+          JSON.stringify({ timestamp: Date.now(), urls: assets.coverImages })
+        );
+      } catch {}
+    }
+    return assets.coverImages;
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const cachedRaw = localStorage.getItem(cacheKey);
+      if (cachedRaw) {
+        const parsed = JSON.parse(cachedRaw);
+        if (Array.isArray(parsed?.urls) && parsed.urls.length > 0) {
+          return parsed.urls;
+        }
+      }
+    } catch {}
   }
 
   return [];
@@ -1183,19 +1395,55 @@ export interface RepoCaseStudyData {
   ar: string | null;
 }
 
+function extractEmbeddedCaseStudyFromReadme(rawReadme?: string): string | null {
+  if (typeof rawReadme !== 'string' || rawReadme.trim().length < 40) return null;
+  const lines = rawReadme.replace(/\r\n/g, '\n').split('\n');
+  const startHeadingRegex =
+    /^#{1,3}\s+.*(?:case\s*study|study\s*case|problem\s*(?:&|and)\s*solution|engineering\s*challenges?|دراسة\s*الحالة|المشكلة\s*والحل|التحدي\s*والحل)/i;
+  const nextTopHeadingRegex = /^#{1,2}\s+/;
+
+  let startIdx = -1;
+  let startLevel = 2;
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+    if (startHeadingRegex.test(trimmed)) {
+      startIdx = i;
+      const hashMatch = trimmed.match(/^(#{1,3})/);
+      startLevel = hashMatch ? hashMatch[1].length : 2;
+      break;
+    }
+  }
+  if (startIdx < 0) return null;
+
+  const collected: string[] = [lines[startIdx]];
+  for (let i = startIdx + 1; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+    const headingMatch = trimmed.match(/^(#{1,3})\s+/);
+    if (headingMatch && headingMatch[1].length <= startLevel && nextTopHeadingRegex.test(trimmed)) {
+      break;
+    }
+    collected.push(lines[i]);
+  }
+
+  const block = collected.join('\n').trim();
+  return block.length > 60 ? block : null;
+}
+
 /**
- * Fetches live CASE_STUDY.md and CASE_STUDY_AR.md directly from the repository root.
- * Returns null per missing file so the UI never displays fabricated study case data.
+ * Fetches live CASE_STUDY / CASE_STUDY_AR markdown across repository root, /docs subfolder,
+ * case/hyphen filename variants, and optional embedded README Case Study sections.
+ * Returns null per missing file so the UI never fabricates study case content.
  */
 export async function fetchRepoCaseStudies(
   repoName: string,
   defaultBranch: string = 'main',
   username: string = 'ahmed-el-bialy',
-  forceRefresh: boolean = false
+  forceRefresh: boolean = false,
+  readmeFallback?: string
 ): Promise<RepoCaseStudyData> {
   if (!repoName) return { en: null, ar: null };
   const cleanRepo = repoName.trim();
-  const cacheKey = `gh_casestudy_v1_${username}_${cleanRepo}`;
+  const cacheKey = `gh_casestudy_v2_${username}_${cleanRepo}`;
 
   if (!forceRefresh && typeof window !== 'undefined') {
     try {
@@ -1203,52 +1451,122 @@ export async function fetchRepoCaseStudies(
       if (cachedRaw) {
         const parsed = JSON.parse(cachedRaw);
         if (parsed && Date.now() - (parsed.timestamp || 0) < 1000 * 60 * 15) {
-          return {
-            en: parsed.en || null,
-            ar: parsed.ar || null,
-          };
+          if (parsed.en || parsed.ar) {
+            return {
+              en: parsed.en || null,
+              ar: parsed.ar || null,
+            };
+          }
         }
       }
     } catch {}
   }
 
+  const bust = forceRefresh ? `?t=${Date.now()}` : '';
   const branchCandidates = Array.from(new Set([defaultBranch || 'main', 'main', 'master']));
+
+  const fetchTextFromUrl = async (url: string): Promise<string | null> => {
+    try {
+      const res = await fetch(`${url}${bust ? (url.includes('?') ? `&t=${Date.now()}` : bust) : ''}`, {
+        cache: forceRefresh ? 'no-store' : 'default',
+      });
+      if (!res.ok) return null;
+      const text = await res.text();
+      return text && text.trim().length > 15 ? text : null;
+    } catch {
+      return null;
+    }
+  };
+
   const fetchMarkdownFile = async (filename: string): Promise<string | null> => {
-    const bust = forceRefresh ? `?t=${Date.now()}` : '';
     for (const branch of branchCandidates) {
-      try {
-        const res = await fetch(
-          `https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(
-            cleanRepo
-          )}/${encodeURIComponent(branch)}/${filename}${bust}`,
-          { cache: forceRefresh ? 'no-store' : 'default' }
-        );
-        if (res.ok) {
-          const text = await res.text();
-          if (text && text.trim().length > 15) {
-            return text;
-          }
-        }
-        // If default branch responded explicitly with 404, only check alternate branch if main vs master differs
-        if (res.status === 404 && branch !== defaultBranch) {
-          break;
-        }
-      } catch {}
+      const url = `https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(
+        cleanRepo
+      )}/${encodeURIComponent(branch)}/${filename}`;
+      const text = await fetchTextFromUrl(url);
+      if (text) return text;
     }
     return null;
   };
 
-  const [enRaw, arRaw] = await Promise.all([
-    fetchMarkdownFile('CASE_STUDY.md'),
-    fetchMarkdownFile('CASE_STUDY_AR.md'),
-  ]);
+  let enRaw: string | null = null;
+  let arRaw: string | null = null;
+
+  // 1. Inspect repo root & /docs directory first to match any naming convention cleanly
+  try {
+    const rootRes = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(cleanRepo)}/contents`,
+      { headers: { Accept: 'application/vnd.github+json' }, cache: forceRefresh ? 'no-store' : 'default' }
+    );
+    if (rootRes.ok) {
+      const rootEntries = await rootRes.json();
+      if (Array.isArray(rootEntries)) {
+        const docsDir = rootEntries.find(
+          (e: any) => e?.type === 'dir' && String(e?.name || '').toLowerCase() === 'docs'
+        );
+        let candidateFiles = rootEntries.filter((e: any) => e?.type === 'file' && typeof e?.name === 'string');
+
+        if (docsDir) {
+          try {
+            const docsRes = await fetch(
+              `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(cleanRepo)}/contents/docs`,
+              { headers: { Accept: 'application/vnd.github+json' }, cache: forceRefresh ? 'no-store' : 'default' }
+            );
+            if (docsRes.ok) {
+              const docsEntries = await docsRes.json();
+              if (Array.isArray(docsEntries)) {
+                candidateFiles = [
+                  ...candidateFiles,
+                  ...docsEntries.filter((e: any) => e?.type === 'file' && typeof e?.name === 'string'),
+                ];
+              }
+            }
+          } catch {}
+        }
+
+        const arFile = candidateFiles.find((f: any) =>
+          /^(?:case[-_\s]?study|study[-_\s]?case)[-_\s.]?ar\.md$/i.test(f.name)
+        );
+        const enFile = candidateFiles.find((f: any) =>
+          /^(?:case[-_\s]?study|study[-_\s]?case)(?:[-_\s.]?en)?\.md$/i.test(f.name)
+        );
+
+        const [fetchedEn, fetchedAr] = await Promise.all([
+          enFile?.download_url ? fetchTextFromUrl(enFile.download_url) : Promise.resolve(null),
+          arFile?.download_url ? fetchTextFromUrl(arFile.download_url) : Promise.resolve(null),
+        ]);
+        enRaw = fetchedEn;
+        arRaw = fetchedAr;
+      }
+    }
+  } catch {}
+
+  // 2. Fallback to direct raw root paths if Contents API didn't yield files
+  if (!enRaw && !arRaw) {
+    const [directEn, directAr] = await Promise.all([
+      fetchMarkdownFile('CASE_STUDY.md'),
+      fetchMarkdownFile('CASE_STUDY_AR.md'),
+    ]);
+    enRaw = directEn;
+    arRaw = directAr;
+  }
+
+  // 3. Final fallback: extract authentic Case Study section from README if present
+  if (!enRaw && !arRaw && readmeFallback) {
+    const embedded = extractEmbeddedCaseStudyFromReadme(readmeFallback);
+    if (embedded) {
+      const hasArabic = /[\u0600-\u06FF]{4,}/.test(embedded);
+      if (hasArabic) arRaw = embedded;
+      else enRaw = embedded;
+    }
+  }
 
   const result: RepoCaseStudyData = {
     en: enRaw ? preprocessReadmeContent(enRaw) : null,
     ar: arRaw ? preprocessReadmeContent(arRaw) : null,
   };
 
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && (result.en || result.ar)) {
     try {
       localStorage.setItem(
         cacheKey,
@@ -1411,6 +1729,7 @@ export interface RepoLiveMetadata {
   googlePlayUrl?: string;
   apkDownloadUrl?: string;
   releaseUrl?: string;
+  coverImages?: string[];
   discoveredScreenshots?: string[];
   hasRelease: boolean;
   readmeText?: string;
@@ -1436,7 +1755,7 @@ export async function fetchRepoLiveMetadata(
   forceRefresh: boolean = false
 ): Promise<RepoLiveMetadata> {
   const cleanName = repoName.trim();
-  const cacheKey = `live_media_v4_${username}_${cleanName}`;
+  const cacheKey = `live_media_v5_${username}_${cleanName}`;
 
   if (!forceRefresh && typeof window !== 'undefined') {
     try {
@@ -1450,17 +1769,21 @@ export async function fetchRepoLiveMetadata(
     } catch {}
   }
 
-  // 1. Fetch live fresh raw README with cache-busting timestamp & no-cache headers in parallel with releases & repo screenshots
-  const [rawReadme, releaseInfo, folderScreens] = await Promise.all([
+  // 1. Fetch live fresh raw README with cache-busting timestamp & no-cache headers in parallel with releases, covers & repo screenshots
+  const [rawReadme, releaseInfo, folderScreens, discoveredCovers] = await Promise.all([
     fetchRawRepoReadme(cleanName, username).catch(() => null),
     fetchRepositoryReleaseData(cleanName, username).catch((): RepoReleaseInfo => ({ hasRelease: false })),
-    fetchRepoScreenshots(cleanName, username).catch((): string[] => []),
+    fetchRepoScreenshots(cleanName, username, 'main', forceRefresh).catch((): string[] => []),
+    fetchRepoCoverImages(cleanName, 'main', username, forceRefresh).catch((): string[] => []),
   ]);
 
   // 2. Parse links & embedded screenshots dynamically from fresh raw README
   const parsedLinks = parseLinksFromReadme(rawReadme);
   const embeddedScreens = extractEmbeddedReadmeScreenshots(rawReadme);
-  const combinedScreens = Array.from(new Set([...folderScreens, ...embeddedScreens]));
+  const coverSet = new Set(discoveredCovers);
+  const combinedScreens = Array.from(new Set([...folderScreens, ...embeddedScreens])).filter(
+    (u) => !coverSet.has(u) && !/\/covers\//i.test(u)
+  );
 
   // 3. Verified known fallback mappings ONLY if README didn't declare them
   const known = KNOWN_REPO_MEDIA[cleanName] || KNOWN_REPO_MEDIA[cleanName.toLowerCase()] || {};
@@ -1472,11 +1795,12 @@ export async function fetchRepoLiveMetadata(
     googlePlayUrl: parsedLinks.playStoreUrl || known.playStore,
     apkDownloadUrl: releaseInfo.apkDownloadUrl || parsedLinks.apkUrl,
     releaseUrl: releaseInfo.releaseUrl,
+    coverImages: discoveredCovers.length > 0 ? discoveredCovers : undefined,
     discoveredScreenshots: combinedScreens.length > 0 ? combinedScreens : undefined,
     hasRelease: Boolean(releaseInfo.hasRelease),
     rawReadmeText: rawReadme || undefined,
     readmeText: rawReadme ? preprocessReadmeContent(rawReadme) : undefined,
-    lastChecked: Date.now()
+    lastChecked: Date.now(),
   };
 
   if (typeof window !== 'undefined') {
@@ -1527,7 +1851,7 @@ export function getCachedConsolidatedPortfolio(
   if (typeof window === 'undefined') return undefined;
   const cleanUsername = username.trim() || 'ahmed-el-bialy';
   try {
-    const raw = localStorage.getItem(`ahmed_consolidated_gh_v3_${cleanUsername}`);
+    const raw = localStorage.getItem(`ahmed_consolidated_gh_v5_${cleanUsername}`);
     if (!raw) return undefined;
     const parsed = JSON.parse(raw);
     if (parsed?.data?.repos) return parsed.data;
@@ -1637,7 +1961,7 @@ export async function fetchConsolidatedGitHubPortfolio(
   forceRefresh: boolean = false
 ): Promise<ConsolidatedGitHubPortfolio> {
   const cleanUsername = username.trim() || 'ahmed-el-bialy';
-  const cacheKey = `ahmed_consolidated_gh_v3_${cleanUsername}`;
+  const cacheKey = `ahmed_consolidated_gh_v5_${cleanUsername}`;
 
   if (!forceRefresh && typeof window !== 'undefined') {
     try {
@@ -1673,7 +1997,7 @@ export async function fetchConsolidatedGitHubPortfolio(
 
         const liveMediaMap: Record<string, RepoLiveMetadata> = {};
         const rawReadmes: Record<string, string> = json.rawReadmes || {};
-        const screenshotsMap: Record<string, { coverUrl?: string; screens?: string[] }> =
+        const screenshotsMap: Record<string, { coverUrl?: string; coverImages?: string[]; screens?: string[] }> =
           json.screenshotsMap || {};
         const allNames = Array.from(
           new Set([
@@ -1694,10 +2018,19 @@ export async function fetchConsolidatedGitHubPortfolio(
             screensEntry?.screens && screensEntry.screens.length > 0
               ? screensEntry.screens
               : extractEmbeddedReadmeScreenshots(rawReadme);
+          const discoveredCovers =
+            screensEntry?.coverImages && screensEntry.coverImages.length > 0
+              ? screensEntry.coverImages
+              : screensEntry?.coverUrl
+              ? [screensEntry.coverUrl]
+              : [];
 
           const repoMatch = repos.find((r) => r.name.toLowerCase() === name.toLowerCase());
           if (repoMatch) {
-            if (screensEntry?.coverUrl) {
+            if (discoveredCovers.length > 0) {
+              repoMatch.coverImages = discoveredCovers;
+              repoMatch.coverImageUrl = discoveredCovers[0];
+            } else if (screensEntry?.coverUrl) {
               repoMatch.coverImageUrl = screensEntry.coverUrl;
             }
             if (discoveredScreens.length > 0) {
@@ -1716,6 +2049,7 @@ export async function fetchConsolidatedGitHubPortfolio(
             googlePlayUrl: parsedLinks.playStoreUrl || known.playStore,
             apkDownloadUrl: releaseInfo.apkDownloadUrl || parsedLinks.apkUrl,
             releaseUrl: releaseInfo.releaseUrl,
+            coverImages: discoveredCovers.length > 0 ? discoveredCovers : undefined,
             discoveredScreenshots: discoveredScreens.length > 0 ? discoveredScreens : undefined,
             hasRelease: Boolean(releaseInfo.hasRelease),
             rawReadmeText: rawReadme || undefined,
@@ -1831,26 +2165,42 @@ export async function fetchConsolidatedGitHubPortfolio(
       const liveMediaMap: Record<string, RepoLiveMetadata> = {};
       const targetRepos = liveStatsAndRepos.repos.slice(0, 15);
       const directReadmes: Record<string, string | null> = {};
+      const directAssets: Record<string, { coverImages: string[]; screens: string[] }> = {};
 
       await Promise.all(
         targetRepos.map(async (r) => {
           const branches = Array.from(new Set([r.default_branch || 'main', 'main', 'master']));
-          for (const branch of branches) {
-            try {
-              const rawRes = await fetch(
-                `https://raw.githubusercontent.com/${encodeURIComponent(cleanUsername)}/${encodeURIComponent(r.name)}/${encodeURIComponent(branch)}/README.md`,
-                { cache: forceRefresh ? 'no-store' : 'default' }
-              );
-              if (rawRes.ok) {
-                const text = await rawRes.text();
-                if (text && text.length > 10) {
-                  directReadmes[r.name] = text;
-                  return;
-                }
+          const [readmeText, assets] = await Promise.all([
+            (async () => {
+              for (const branch of branches) {
+                try {
+                  const rawRes = await fetch(
+                    `https://raw.githubusercontent.com/${encodeURIComponent(cleanUsername)}/${encodeURIComponent(r.name)}/${encodeURIComponent(branch)}/README.md`,
+                    { cache: forceRefresh ? 'no-store' : 'default' }
+                  );
+                  if (rawRes.ok) {
+                    const text = await rawRes.text();
+                    if (text && text.length > 10) return text;
+                  }
+                } catch {}
               }
-            } catch {}
+              return null;
+            })(),
+            fetchRepoImageAssetsViaTree(
+              r.name,
+              r.default_branch || 'main',
+              cleanUsername,
+              forceRefresh
+            ).catch(() => ({ ok: false, coverImages: [] as string[], screens: [] as string[] })),
+          ]);
+
+          directReadmes[r.name] = readmeText;
+          if (assets.ok) {
+            directAssets[r.name] = {
+              coverImages: assets.coverImages,
+              screens: assets.screens,
+            };
           }
-          directReadmes[r.name] = null;
         })
       );
 
@@ -1858,9 +2208,20 @@ export async function fetchConsolidatedGitHubPortfolio(
         const rawReadme = directReadmes[r.name] || null;
         const parsedLinks = parseLinksFromReadme(rawReadme);
         const known = KNOWN_REPO_MEDIA[r.name] || KNOWN_REPO_MEDIA[r.name.toLowerCase()] || {};
+        const assets = directAssets[r.name];
         const readmeScreens = extractEmbeddedReadmeScreenshots(rawReadme);
-        if (readmeScreens.length > 0) {
-          r.discoveredScreenshots = readmeScreens;
+        const coverList = assets?.coverImages || [];
+        const coverSet = new Set(coverList);
+        const mergedScreens = Array.from(
+          new Set([...(assets?.screens || []), ...readmeScreens])
+        ).filter((u) => !coverSet.has(u) && !/\/covers\//i.test(u));
+
+        if (coverList.length > 0) {
+          r.coverImages = coverList;
+          r.coverImageUrl = coverList[0];
+        }
+        if (mergedScreens.length > 0) {
+          r.discoveredScreenshots = mergedScreens;
         }
 
         const meta: RepoLiveMetadata = {
@@ -1870,7 +2231,8 @@ export async function fetchConsolidatedGitHubPortfolio(
           googlePlayUrl: parsedLinks.playStoreUrl || r.googlePlayUrl || known.playStore,
           apkDownloadUrl: parsedLinks.apkUrl || r.apkDownloadUrl,
           releaseUrl: r.releaseUrl,
-          discoveredScreenshots: readmeScreens.length > 0 ? readmeScreens : undefined,
+          coverImages: coverList.length > 0 ? coverList : undefined,
+          discoveredScreenshots: mergedScreens.length > 0 ? mergedScreens : undefined,
           hasRelease: Boolean(r.releaseUrl || r.apkDownloadUrl || parsedLinks.apkUrl),
           rawReadmeText: rawReadme || undefined,
           readmeText: rawReadme ? preprocessReadmeContent(rawReadme) : undefined,

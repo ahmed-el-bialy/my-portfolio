@@ -9,7 +9,6 @@ import {
   ZoomIn,
   Image as ImageIcon,
   ExternalLink,
-  Loader2,
   ArrowUpRight,
   Film,
   Maximize2,
@@ -17,6 +16,7 @@ import {
 import { AHMED_PROFILE } from '../data/portfolioData';
 import { formatReadableScreenName } from '../utils/readmeTemplateExtractor';
 import { ImageWithSkeleton } from './ImageWithSkeleton';
+import { LeafAnimation } from './LeafAnimation';
 import { ProjectCardCover } from './ProjectCardCover';
 import { YouTubeEmbedPlayer } from './YouTubeEmbedPlayer';
 
@@ -29,6 +29,7 @@ interface ProjectDeviceStageProps {
   displayName: string;
   realLanguage: string | null;
   coverImage?: string;
+  coverImages?: string[];
   isHighlight?: boolean;
   description: string;
   technologies: string[];
@@ -60,6 +61,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
   displayName,
   realLanguage,
   coverImage,
+  coverImages,
   isHighlight,
   description,
   technologies,
@@ -439,8 +441,13 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
               transition={stageTransition}
             >
               {loadingScreens && screenCount === 0 ? (
-                <div className="min-h-[310px] sm:min-h-[340px] rounded-xl bg-[#161e31] skeleton-shimmer flex items-center justify-center">
-                  <Loader2 size={24} className="animate-spin text-[#00C7FF]" />
+                <div className="min-h-[310px] sm:min-h-[340px] rounded-xl bg-slate-100/85 dark:bg-[#0b101b] border border-slate-200/80 dark:border-white/10 flex flex-col items-center justify-center p-6">
+                  <LeafAnimation
+                    compact
+                    loop
+                    pacing="entry"
+                    label={lang === 'ar' ? 'جارٍ تحميل الشاشات...' : 'Loading app screens...'}
+                  />
                 </div>
               ) : screenCount > 0 && activeScreenUrl ? (
                 <div className="min-h-[310px] sm:min-h-[340px] rounded-xl bg-slate-100/85 dark:bg-[#070a12] border border-slate-200/80 dark:border-white/10 p-4 flex flex-col items-center justify-center gap-3">
@@ -571,6 +578,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                     repoName={repoName}
                     language={realLanguage || 'Dart'}
                     coverUrl={coverImage}
+                    coverImages={coverImages}
                     discoveredScreenshots={screenshots}
                     isHighlight={isHighlight}
                     description={description}

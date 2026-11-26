@@ -99,6 +99,12 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
             liveMediaMap[project.name] ||
             liveMediaMap[project.repoName.toLowerCase()];
 
+          const matchingRepo = portfolioData?.repos?.find(
+            (r) =>
+              r.name.toLowerCase() === project.repoName.toLowerCase() ||
+              r.name.toLowerCase() === project.name.toLowerCase()
+          );
+
           const resolvedLinks = resolveSmartProjectLinks(project.links, liveMedia);
           const dynamicPlayUrl = resolvedLinks.googlePlayUrl;
 
@@ -131,7 +137,8 @@ export const OverviewProjectsPreview: React.FC<OverviewProjectsPreviewProps> = (
                   <ProjectCardCover
                     repoName={project.repoName}
                     language="Dart"
-                    coverUrl={project.image}
+                    coverUrl={matchingRepo?.coverImageUrl || project.image}
+                    coverImages={liveMedia?.coverImages || matchingRepo?.coverImages}
                     discoveredScreenshots={liveMedia?.discoveredScreenshots}
                     description={project.description}
                     topics={project.technologies}
