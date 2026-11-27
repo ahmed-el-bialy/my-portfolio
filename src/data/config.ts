@@ -55,6 +55,7 @@ export const AHMED_CONFIG = {
     linkedin: 'https://www.linkedin.com/in/ahmedel-bialy/',
     youtube: 'https://www.youtube.com/@AhmedEl-Bialy',
     tiktok: 'https://www.tiktok.com/@ahmedelbialydev',
+    instagram: 'https://www.instagram.com/ah.elbialy.dev/',
     whatsapp: 'https://wa.me/201022121573',
     playstore: 'https://play.google.com/store/apps/details?id=com.ahmed.revio&hl=en_US',
   },

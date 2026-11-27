@@ -467,8 +467,15 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     }
   }, [totalCovers]);
 
+  const COVER_TURN_MS = 5000;
+  const SCREEN_TURN_MS = 5000;
+  const SINGLE_MODE_SLIDE_MS = 4500;
+  const [modeCycleEpoch, setModeCycleEpoch] = useState(0);
+  const [resumeFraction, setResumeFraction] = useState(0);
+  const [screenTurnStep, setScreenTurnStep] = useState(0);
   const [isManualPaused, setIsManualPaused] = useState(false);
   const manualPauseTimerRef = React.useRef<number | null>(null);
+  const prevHoveredRef = React.useRef(isHovered);
 
   const pauseAutoCycleTemporarily = () => {
     setManualPausedUntil(Date.now() + 10000);
@@ -478,6 +485,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     }
     manualPauseTimerRef.current = window.setTimeout(() => {
       setIsManualPaused(false);
+      setModeCycleEpoch((prev) => prev + 1);
       manualPauseTimerRef.current = null;
     }, 10000);
   };
@@ -491,60 +499,126 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   }, []);
 
   useEffect(() => {
+    setScreenTurnStep(0);
+  }, [repoName]);
+
+  useEffect(() => {
     onActiveScreenChange?.(selectedScreenIdx);
   }, [selectedScreenIdx, onActiveScreenChange]);
 
-  const canAutoCycle =
-    (totalCovers > 0 && totalScreens > 0) || totalCovers > 1 || totalScreens > 1;
+  const hasBothModes = totalCovers > 0 && totalScreens > 0;
+  const isShowingCoverMode = Boolean(showingCoverArt && totalCovers > 0);
+  const normalizedCoverIdx = totalCovers > 0 ? activeCoverIdx % totalCovers : 0;
+  const normalizedScreenIdx = totalScreens > 0 ? selectedScreenIdx % totalScreens : 0;
 
-  // Smooth automatic alternation (6s balanced pace) between Covers and App Screens
+  // In combined Cover <-> Screens mode:
+  // - Cover turn displays ONE cover comfortably for 5s (advancing to the next cover on the following return cycle)
+  // - Screens turn calmly shows up to 2 featured screens (~2.5s each = 5s total), then advances to next cover
+  const screensInTurnCount = hasBothModes
+    ? Math.min(totalScreens, 2)
+    : Math.max(1, totalScreens);
+  const currentStepDurationMs = hasBothModes
+    ? isShowingCoverMode
+      ? COVER_TURN_MS
+      : Math.round(SCREEN_TURN_MS / screensInTurnCount)
+    : SINGLE_MODE_SLIDE_MS;
+
+  const canAutoCycle = hasBothModes || totalCovers > 1 || totalScreens > 1;
+  const showProgressBar =
+    canAutoCycle && !isHovered && !shouldReduceMotion && !isManualPaused;
+
+  useEffect(() => {
+    if (prevHoveredRef.current && !isHovered && !isManualPaused) {
+      if (!hasBothModes) {
+        setResumeFraction(0);
+      } else if (isShowingCoverMode) {
+        setResumeFraction(0);
+      } else {
+        setResumeFraction(screenTurnStep / Math.max(1, screensInTurnCount));
+      }
+      setModeCycleEpoch((prev) => prev + 1);
+    }
+    prevHoveredRef.current = isHovered;
+  }, [
+    isHovered,
+    isManualPaused,
+    hasBothModes,
+    isShowingCoverMode,
+    screenTurnStep,
+    screensInTurnCount,
+  ]);
+
+  useEffect(() => {
+    if (isManualPaused) {
+      setResumeFraction(
+        !hasBothModes || isShowingCoverMode
+          ? 0
+          : screenTurnStep / Math.max(1, screensInTurnCount)
+      );
+    }
+  }, [isManualPaused, hasBothModes, isShowingCoverMode, screenTurnStep, screensInTurnCount]);
+
+  // Calm alternating cycle: Cover (5s) -> Featured App Screens (5s across 1-2 screens) -> Next Cover (5s)
   useEffect(() => {
     if (isHovered || shouldReduceMotion || isManualPaused) return;
     if (!canAutoCycle) return;
 
-    const timer = window.setInterval(() => {
-      if (totalCovers > 0 && totalScreens > 0) {
+    const timer = window.setTimeout(() => {
+      if (hasBothModes) {
         if (showingCoverArt) {
-          if (activeCoverIdx + 1 < totalCovers) {
-            setActiveCoverIdx((prev) => prev + 1);
-          } else {
-            setShowingCoverArt(false);
-            setSelectedScreenIdx(0);
-          }
+          setShowingCoverArt(false);
+          setScreenTurnStep(0);
+          setResumeFraction(0);
+          setModeCycleEpoch((prev) => prev + 1);
         } else {
-          // Show up to 2 app screens per turn, then smoothly glide back to Cover
-          const maxScreensPerCycle = Math.min(totalScreens, 2);
-          if (selectedScreenIdx + 1 < maxScreensPerCycle) {
-            setSelectedScreenIdx((prev) => prev + 1);
+          const nextStep = screenTurnStep + 1;
+          if (nextStep < screensInTurnCount) {
+            setScreenTurnStep(nextStep);
+            setSelectedScreenIdx((prev) => (prev + 1) % totalScreens);
           } else {
+            // Advance both Cover cursor (for next Cover turn) & Screen cursor seamlessly across cycles
             setShowingCoverArt(true);
-            setActiveCoverIdx(0);
+            setScreenTurnStep(0);
+            setSelectedScreenIdx((prev) => (prev + 1) % totalScreens);
+            if (totalCovers > 1) {
+              setActiveCoverIdx((prev) => (prev + 1) % totalCovers);
+            }
+            setResumeFraction(0);
+            setModeCycleEpoch((prev) => prev + 1);
           }
         }
       } else if (showingCoverArt && totalCovers > 1) {
         setActiveCoverIdx((prev) => (prev + 1) % totalCovers);
+        setResumeFraction(0);
+        setModeCycleEpoch((prev) => prev + 1);
       } else if (!showingCoverArt && totalScreens > 1) {
         setSelectedScreenIdx((prev) => (prev + 1) % totalScreens);
+        setResumeFraction(0);
+        setModeCycleEpoch((prev) => prev + 1);
       }
-    }, 6000);
+    }, currentStepDurationMs);
 
-    return () => window.clearInterval(timer);
+    return () => window.clearTimeout(timer);
   }, [
     isHovered,
     shouldReduceMotion,
     isManualPaused,
     canAutoCycle,
+    hasBothModes,
+    showingCoverArt,
     totalCovers,
     totalScreens,
-    showingCoverArt,
-    activeCoverIdx,
-    selectedScreenIdx,
+    screenTurnStep,
+    screensInTurnCount,
+    currentStepDurationMs,
   ]);
 
   const selectScreen = (idx: number, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setShowingCoverArt(false);
     setSelectedScreenIdx(idx);
+    setScreenTurnStep(0);
+    setResumeFraction(0);
     onActiveScreenChange?.(idx);
     pauseAutoCycleTemporarily();
   };
@@ -553,8 +627,10 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     e.stopPropagation();
     if (totalScreens <= 1) return;
     setShowingCoverArt(false);
-    const nextIdx = (selectedScreenIdx + 1) % totalScreens;
+    const nextIdx = (normalizedScreenIdx + 1) % totalScreens;
     setSelectedScreenIdx(nextIdx);
+    setScreenTurnStep(0);
+    setResumeFraction(0);
     onActiveScreenChange?.(nextIdx);
     pauseAutoCycleTemporarily();
   };
@@ -563,8 +639,10 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     e.stopPropagation();
     if (totalScreens <= 1) return;
     setShowingCoverArt(false);
-    const prevIdx = (selectedScreenIdx - 1 + totalScreens) % totalScreens;
+    const prevIdx = (normalizedScreenIdx - 1 + totalScreens) % totalScreens;
     setSelectedScreenIdx(prevIdx);
+    setScreenTurnStep(0);
+    setResumeFraction(0);
     onActiveScreenChange?.(prevIdx);
     pauseAutoCycleTemporarily();
   };
@@ -573,7 +651,10 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     e.stopPropagation();
     if (totalCovers <= 1) return;
     setShowingCoverArt(true);
-    setActiveCoverIdx((prev) => (prev + 1) % totalCovers);
+    const nextIdx = (normalizedCoverIdx + 1) % totalCovers;
+    setActiveCoverIdx(nextIdx);
+    setResumeFraction(0);
+    setModeCycleEpoch((prev) => prev + 1);
     pauseAutoCycleTemporarily();
   };
 
@@ -581,35 +662,45 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     e.stopPropagation();
     if (totalCovers <= 1) return;
     setShowingCoverArt(true);
-    setActiveCoverIdx((prev) => (prev - 1 + totalCovers) % totalCovers);
+    const prevIdx = (normalizedCoverIdx - 1 + totalCovers) % totalCovers;
+    setActiveCoverIdx(prevIdx);
+    setResumeFraction(0);
+    setModeCycleEpoch((prev) => prev + 1);
     pauseAutoCycleTemporarily();
   };
 
   const handleToggleMode = (toCover: boolean, e: React.MouseEvent) => {
     e.stopPropagation();
     setShowingCoverArt(toCover);
+    setScreenTurnStep(0);
+    setResumeFraction(0);
+    setModeCycleEpoch((prev) => prev + 1);
     pauseAutoCycleTemporarily();
   };
 
   const BadgeIcon = blueprint.badgeIcon;
   const activeCoverUrl =
-    totalCovers > 0 ? resolvedCoverImages[activeCoverIdx % totalCovers] : undefined;
-  const activeScreenUrl = verifiedScreenshots[selectedScreenIdx] || verifiedScreenshots[0];
+    totalCovers > 0 ? resolvedCoverImages[normalizedCoverIdx] : undefined;
+  const activeScreenUrl = verifiedScreenshots[normalizedScreenIdx] || verifiedScreenshots[0];
   const containerHeightClass = aspectClassName || 'aspect-[4/3]';
-  const hasBothModes = totalCovers > 0 && totalScreens > 0;
-  const isShowingCoverMode = Boolean(showingCoverArt && activeCoverUrl);
-  const showProgressBar =
-    canAutoCycle && !isHovered && !shouldReduceMotion && !isManualPaused;
+
+  const fullTurnMs = hasBothModes
+    ? isShowingCoverMode
+      ? COVER_TURN_MS
+      : SCREEN_TURN_MS
+    : SINGLE_MODE_SLIDE_MS;
+  const modeRemainingDurationSec = Math.max(
+    0.5,
+    (fullTurnMs * Math.max(0.05, 1 - resumeFraction)) / 1000
+  );
 
   const stageTransition = shouldReduceMotion
     ? { duration: 0.01 }
-    : { duration: 0.58, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] };
+    : { duration: 0.46, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] };
 
-  const activeStageKey = isShowingCoverMode
-    ? `cover-${activeCoverUrl}`
-    : activeScreenUrl
-    ? `screens-${selectedScreenIdx}`
-    : 'fallback';
+  const itemCrossfadeTransition = shouldReduceMotion
+    ? { duration: 0.01 }
+    : { duration: 0.35, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] };
 
   return (
     <div
@@ -638,7 +729,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
         />
       )}
 
-      {/* Persistent Dual-Category Header Strip + 6s GPU Progress Hairline */}
+      {/* Persistent Dual-Category Header Strip + Calm 5s Mode Hairline Progress Bar */}
       <div className="relative z-30 shrink-0 px-2.5 sm:px-3.5 py-2 bg-white/95 dark:bg-[#0b101c]/95 backdrop-blur-md border-b border-slate-200/85 dark:border-white/10 flex items-center justify-between gap-2 pointer-events-none">
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="inline-flex items-center justify-center w-5 h-5 rounded-md border border-slate-200 dark:border-white/12 bg-slate-50 dark:bg-[#111827] shrink-0">
@@ -672,8 +763,8 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
               <ImageIcon size={10} />
               <span>{lang === 'ar' ? 'الغلاف' : 'Cover'}</span>
               {totalCovers > 1 && (
-                <span className="opacity-80 font-mono text-[9.5px] tabular-nums">
-                  {totalCovers}
+                <span className="opacity-85 font-mono text-[9.5px] tabular-nums">
+                  {isShowingCoverMode ? `${normalizedCoverIdx + 1}/${totalCovers}` : totalCovers}
                 </span>
               )}
             </button>
@@ -690,8 +781,8 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
               <Smartphone size={10} />
               <span>{lang === 'ar' ? 'الشاشات' : 'Screens'}</span>
               {totalScreens > 1 && (
-                <span className="opacity-80 font-mono text-[9.5px] tabular-nums">
-                  {totalScreens}
+                <span className="opacity-85 font-mono text-[9.5px] tabular-nums">
+                  {!isShowingCoverMode ? `${normalizedScreenIdx + 1}/${totalScreens}` : totalScreens}
                 </span>
               )}
             </button>
@@ -702,7 +793,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
             <span>{lang === 'ar' ? 'الغلاف' : 'Cover'}</span>
             {totalCovers > 1 && (
               <span className="tabular-nums opacity-75">
-                {String((activeCoverIdx % totalCovers) + 1).padStart(2, '0')}/
+                {String(normalizedCoverIdx + 1).padStart(2, '0')}/
                 {String(totalCovers).padStart(2, '0')}
               </span>
             )}
@@ -713,20 +804,20 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
             <span>{lang === 'ar' ? 'الشاشات' : 'Screens'}</span>
             {totalScreens > 1 && (
               <span className="tabular-nums opacity-75">
-                {String(selectedScreenIdx + 1).padStart(2, '0')}/
+                {String(normalizedScreenIdx + 1).padStart(2, '0')}/
                 {String(totalScreens).padStart(2, '0')}
               </span>
             )}
           </div>
         ) : null}
 
-        {/* Calm 6-Second GPU Hairline Progress Bar */}
+        {/* Unified Calm Mode Hairline Progress Bar */}
         {showProgressBar && (
           <motion.div
-            key={`progress-${activeStageKey}`}
-            initial={{ scaleX: 0 }}
+            key={`mode-progress-${isShowingCoverMode ? 'cover' : 'screens'}-${modeCycleEpoch}`}
+            initial={{ scaleX: resumeFraction }}
             animate={{ scaleX: 1 }}
-            transition={{ duration: 6, ease: 'linear' }}
+            transition={{ duration: modeRemainingDurationSec, ease: 'linear' }}
             style={{ transformOrigin: dir === 'rtl' ? 'right center' : 'left center' }}
             aria-hidden="true"
             className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-[#0284ff] via-[#38bdf8] to-[#0284ff] pointer-events-none"
@@ -738,9 +829,9 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
       <div className="relative z-20 flex-1 min-h-0 w-full pointer-events-none">
         <AnimatePresence mode="wait" initial={false}>
           {isShowingCoverMode && activeCoverUrl ? (
-            /* MODE 1: FULL-CONTAINED 4:3 COVER ARTWORK (Zero cropping across all screen sizes) */
+            /* MODE 1: FULL-CONTAINED 4:3 COVER ARTWORK (Calm 5s per turn, advancing to next cover next cycle) */
             <motion.div
-              key={activeStageKey}
+              key="stage-cover-mode"
               initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.985 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.99 }}
@@ -748,15 +839,26 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
               className="relative w-full h-full p-2.5 sm:p-3.5 bg-slate-100/90 dark:bg-[#090d16] flex items-center justify-center pointer-events-none"
             >
               <div className="relative w-full h-full rounded-xl overflow-hidden bg-white/80 dark:bg-[#0c111d] border border-slate-200/80 dark:border-white/8 shadow-xs flex items-center justify-center">
-                <ImageWithSkeleton
-                  src={activeCoverUrl}
-                  alt={`${blueprint.appTitle} Cover`}
-                  loading="eager"
-                  className="w-full h-full object-contain object-center transition-transform duration-500 group-hover/cover:scale-[1.015]"
-                />
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={activeCoverUrl}
+                    initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.99 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={shouldReduceMotion ? undefined : { opacity: 0 }}
+                    transition={itemCrossfadeTransition}
+                    className="w-full h-full flex items-center justify-center"
+                  >
+                    <ImageWithSkeleton
+                      src={activeCoverUrl}
+                      alt={`${blueprint.appTitle} Cover ${normalizedCoverIdx + 1}`}
+                      loading="eager"
+                      className="w-full h-full object-contain object-center transition-transform duration-500 group-hover/cover:scale-[1.015]"
+                    />
+                  </motion.div>
+                </AnimatePresence>
               </div>
 
-              {/* Multi-cover Prev / Next Arrows */}
+              {/* Multi-cover Prev / Next Arrows + Cover Micro Indicators */}
               {totalCovers > 1 && (
                 <>
                   <button
@@ -776,27 +878,56 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                     {dir === 'rtl' ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}
                   </button>
 
-                  {/* Discrete Bottom Counter Pill */}
-                  <div className="pointer-events-auto absolute bottom-3.5 end-4 z-30 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/75 backdrop-blur-sm border border-white/15">
-                    {resolvedCoverImages.slice(0, 5).map((_, cIdx) => {
-                      const isActive = (activeCoverIdx % totalCovers) === cIdx;
-                      return (
-                        <button
-                          key={cIdx}
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowingCoverArt(true);
-                            setActiveCoverIdx(cIdx);
-                            pauseAutoCycleTemporarily();
-                          }}
-                          aria-label={`Cover ${cIdx + 1}`}
-                          className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                            isActive ? 'w-4 bg-[#38bdf8]' : 'w-1.5 bg-white/45 hover:bg-white/75'
-                          }`}
-                        />
-                      );
-                    })}
+                  <div className="pointer-events-auto absolute bottom-3.5 end-4 z-30 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-900/80 backdrop-blur-sm border border-white/15 shadow-sm">
+                    <span className="text-[9.5px] font-mono font-bold text-white/85 tabular-nums me-0.5">
+                      {String(normalizedCoverIdx + 1).padStart(2, '0')}/
+                      {String(totalCovers).padStart(2, '0')}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {resolvedCoverImages.map((_, cIdx) => {
+                        const isActive = cIdx === normalizedCoverIdx;
+                        return (
+                          <button
+                            key={cIdx}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowingCoverArt(true);
+                              setActiveCoverIdx(cIdx);
+                              setResumeFraction(0);
+                              setModeCycleEpoch((prev) => prev + 1);
+                              pauseAutoCycleTemporarily();
+                            }}
+                            aria-label={`Cover ${cIdx + 1}`}
+                            className={`relative h-1.5 rounded-full overflow-hidden cursor-pointer transition-all ${
+                              isActive
+                                ? 'w-6 bg-white/30'
+                                : 'w-2 bg-white/35 hover:bg-white/60'
+                            }`}
+                          >
+                            {isActive &&
+                              (showProgressBar ? (
+                                <motion.span
+                                  key={`cover-slice-${normalizedCoverIdx}-${modeCycleEpoch}`}
+                                  initial={{ scaleX: 0 }}
+                                  animate={{ scaleX: 1 }}
+                                  transition={{
+                                    duration: currentStepDurationMs / 1000,
+                                    ease: 'linear',
+                                  }}
+                                  style={{
+                                    transformOrigin:
+                                      dir === 'rtl' ? 'right center' : 'left center',
+                                  }}
+                                  className="absolute inset-0 bg-[#38bdf8] rounded-full"
+                                />
+                              ) : (
+                                <span className="absolute inset-0 bg-[#38bdf8] rounded-full" />
+                              ))}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </>
               )}
@@ -815,17 +946,27 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                 {/* Enlarged Hero Phone Chassis filling available height */}
                 <div className="col-span-7 h-full min-h-0 flex items-center justify-center relative">
                   <div className="relative h-full max-h-[97%] aspect-[9/18.2] rounded-[20px] sm:rounded-[24px] p-1 sm:p-1.5 bg-[#0e1320] border-2 border-slate-300/90 dark:border-white/20 shadow-[0_18px_40px_rgba(0,0,0,0.4)] transition-transform duration-300 group-hover/cover:scale-[1.02]">
-                    {/* Minimal Speaker Notch */}
                     <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 w-9 h-1 rounded-full bg-slate-800/90 pointer-events-none" />
 
                     <div className="relative w-full h-full rounded-[15px] sm:rounded-[18px] overflow-hidden bg-[#0e1320] flex items-center justify-center">
-                      <ImageWithSkeleton
-                        src={activeScreenUrl}
-                        alt={`${blueprint.appTitle} hero screen ${selectedScreenIdx + 1}`}
-                        loading="eager"
-                        variant="phone"
-                        className="w-full h-full object-contain crisp-screenshot"
-                      />
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.div
+                          key={activeScreenUrl}
+                          initial={shouldReduceMotion ? false : { opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={shouldReduceMotion ? undefined : { opacity: 0 }}
+                          transition={itemCrossfadeTransition}
+                          className="w-full h-full flex items-center justify-center"
+                        >
+                          <ImageWithSkeleton
+                            src={activeScreenUrl}
+                            alt={`${blueprint.appTitle} hero screen ${normalizedScreenIdx + 1}`}
+                            loading="eager"
+                            variant="phone"
+                            className="w-full h-full object-contain crisp-screenshot"
+                          />
+                        </motion.div>
+                      </AnimatePresence>
                     </div>
                   </div>
 
@@ -852,7 +993,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                   )}
                 </div>
 
-                {/* Right Interactive Rail: Title + Architecture Snapshot + Selectable Screen Thumbnails */}
+                {/* Right Interactive Rail: Title + Micro Progress Segments + Screen Thumbnails */}
                 <div className="col-span-5 h-full flex flex-col justify-center gap-1.5 sm:gap-2 min-w-0">
                   <div className="space-y-0.5 min-w-0">
                     <p className="text-[10.5px] sm:text-xs font-semibold text-slate-700 dark:text-slate-200 line-clamp-2 leading-snug">
@@ -875,18 +1016,55 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                   )}
 
                   {totalScreens > 1 ? (
-                    <div className="space-y-1 pt-0.5">
-                      <div className="text-[9.5px] font-mono font-semibold text-slate-500 dark:text-slate-400 truncate">
-                        {lang === 'ar'
-                          ? `شاشة ${String(selectedScreenIdx + 1).padStart(2, '0')}/${String(totalScreens).padStart(2, '0')}`
-                          : `Screen ${String(selectedScreenIdx + 1).padStart(2, '0')}/${String(totalScreens).padStart(2, '0')}`}
+                    <div className="space-y-1.5 pt-0.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[9.5px] font-mono font-semibold text-slate-500 dark:text-slate-400 tabular-nums shrink-0">
+                          {String(normalizedScreenIdx + 1).padStart(2, '0')}/
+                          {String(totalScreens).padStart(2, '0')}
+                        </span>
+                        <div className="flex items-center gap-1 flex-1 max-w-[110px]">
+                          {verifiedScreenshots.map((_, sIdx) => {
+                            const isActive = sIdx === normalizedScreenIdx;
+                            return (
+                              <div
+                                key={sIdx}
+                                className={`relative h-1 rounded-full overflow-hidden transition-all ${
+                                  isActive
+                                    ? 'flex-[1.8] bg-slate-300/80 dark:bg-white/20'
+                                    : 'flex-1 bg-slate-300/60 dark:bg-white/12'
+                                }`}
+                              >
+                                {isActive &&
+                                  (showProgressBar ? (
+                                    <motion.span
+                                      key={`screen-slice-${normalizedScreenIdx}-${modeCycleEpoch}`}
+                                      initial={{ scaleX: 0 }}
+                                      animate={{ scaleX: 1 }}
+                                      transition={{
+                                        duration: currentStepDurationMs / 1000,
+                                        ease: 'linear',
+                                      }}
+                                      style={{
+                                        transformOrigin:
+                                          dir === 'rtl' ? 'right center' : 'left center',
+                                      }}
+                                      className="absolute inset-0 bg-[#0284ff] dark:bg-[#38bdf8] rounded-full"
+                                    />
+                                  ) : (
+                                    <span className="absolute inset-0 bg-[#0284ff] dark:bg-[#38bdf8] rounded-full" />
+                                  ))}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
+
                       <div
                         className="grid grid-cols-2 gap-1.5 pointer-events-auto"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {verifiedScreenshots.slice(0, 4).map((thumbUrl, tIdx) => {
-                          const isActive = selectedScreenIdx === tIdx;
+                          const isActive = normalizedScreenIdx === tIdx;
                           return (
                             <button
                               key={thumbUrl}

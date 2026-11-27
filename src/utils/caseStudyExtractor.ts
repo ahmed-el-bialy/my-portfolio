@@ -1,9 +1,18 @@
 export type CaseStudyPillarId = 'problem' | 'solution' | 'results';
 
+export type CaseStudyLinkKind = 'play' | 'github' | 'video' | 'demo' | 'doc' | 'external';
+
+export interface CaseStudyLink {
+  label: string;
+  url: string;
+  kind: CaseStudyLinkKind;
+}
+
 export interface CaseStudyPillar {
   id: CaseStudyPillarId;
   title: string;
   summary: string;
+  paragraphs: string[];
   bullets: string[];
   sourceHeadings: string[];
 }
@@ -11,12 +20,14 @@ export interface CaseStudyPillar {
 export interface CaseStudyExtraSection {
   title: string;
   summary: string;
+  paragraphs: string[];
   bullets: string[];
 }
 
 export interface ExtractedCaseStudy {
   title?: string;
   executiveSummary: string;
+  executiveParagraphs: string[];
   readingMinutes: number;
   totalSections: number;
   pillars: {
@@ -26,11 +37,128 @@ export interface ExtractedCaseStudy {
   };
   metrics: string[];
   remainingSections: CaseStudyExtraSection[];
+  links: CaseStudyLink[];
   rawMarkdown: string;
 }
 
-function cleanInlineMarkdown(text: string): string {
+export interface CaseStudyRepoContext {
+  repoName?: string;
+  branch?: string;
+  owner?: string;
+}
+
+function isDecorativeBadgeHost(url: string): boolean {
+  const lower = (url || '').toLowerCase();
+  return (
+    lower.includes('shields.io') ||
+    lower.includes('camo.githubusercontent.com') ||
+    lower.includes('capsule-render') ||
+    lower.includes('readme-typing-svg') ||
+    lower.includes('komarev.com') ||
+    lower.includes('skillicons.dev')
+  );
+}
+
+function isLikelyImageAssetUrl(url: string): boolean {
+  const clean = url.split(/[?#]/)[0].toLowerCase();
+  return /\.(png|jpe?g|webp|gif|svg|ico|bmp)$/i.test(clean);
+}
+
+export function resolveCaseStudyHref(rawUrl: string, ctx?: CaseStudyRepoContext): string {
+  const url = (rawUrl || '').trim();
+  if (!url) return '';
+  if (/^(https?:\/\/|mailto:|tel:)/i.test(url)) return url;
+  if (url.startsWith('#')) return '';
+
+  const owner = ctx?.owner || 'ahmed-el-bialy';
+  const repo = ctx?.repoName?.trim();
+  const branch = ctx?.branch?.trim() || 'main';
+  if (!repo) return '';
+
+  const cleanRel = url.replace(/^\.?\//, '');
+  if (!cleanRel) return `https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+  return `https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/blob/${encodeURIComponent(branch)}/${cleanRel}`;
+}
+
+function classifyLinkKind(url: string, label: string): CaseStudyLinkKind {
+  const combined = `${url} ${label}`.toLowerCase();
+  if (combined.includes('play.google.com') || combined.includes('google play')) return 'play';
+  if (combined.includes('youtube.com') || combined.includes('youtu.be') || combined.includes('video') || combined.includes('فيديو')) {
+    return 'video';
+  }
+  if (combined.includes('github.com')) return 'github';
+  if (
+    combined.includes('.apk') ||
+    combined.includes('/releases') ||
+    combined.includes('vercel.app') ||
+    combined.includes('netlify.app') ||
+    combined.includes('web.app') ||
+    combined.includes('demo') ||
+    combined.includes('تجربة')
+  ) {
+    return 'demo';
+  }
+  if (
+    combined.includes('.md') ||
+    combined.includes('docs') ||
+    combined.includes('drive.google.com') ||
+    combined.includes('notion') ||
+    combined.includes('figma')
+  ) {
+    return 'doc';
+  }
+  return 'external';
+}
+
+function deriveLinkLabel(rawLabel: string, url: string): string {
+  const clean = rawLabel
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/[*_`~]/g, '')
+    .trim();
+
+  if (clean && !/^https?:\/\//i.test(clean) && !/^(badge|shield|img|image|icon)$/i.test(clean)) {
+    return clean;
+  }
+
+  const lower = url.toLowerCase();
+  if (lower.includes('play.google.com')) return 'Google Play';
+  if (lower.includes('youtu.be') || lower.includes('youtube.com')) return 'YouTube Demo';
+  if (lower.includes('github.com')) {
+    if (lower.includes('/releases')) return 'GitHub Releases';
+    return 'GitHub Repository';
+  }
+  if (lower.includes('figma.com')) return 'Figma Design';
+  if (lower.includes('drive.google.com')) return 'Document / Drive';
+  if (lower.includes('linkedin.com')) return 'LinkedIn';
+  if (lower.includes('wa.me')) return 'WhatsApp';
+
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, '');
+    const pathTail = parsed.pathname.split('/').filter(Boolean).pop();
+    return pathTail && pathTail.length <= 24 ? `${host}/${pathTail}` : host;
+  } catch {
+    return clean || url;
+  }
+}
+
+function convertHtmlAnchorsToMarkdown(text: string): string {
   return text
+    .replace(
+      /<a\s+[^>]*href=["']([^"']+)["'][^>]*>\s*<img\s+[^>]*src=["']([^"']+)["'][^>]*(?:alt=["']([^"']*)["'])?[^>]*\/?>\s*<\/a>/gi,
+      (_, href, src, alt) => `[![${alt || 'Link'}](${src})](${href})`
+    )
+    .replace(/<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (_, href, inner) => {
+      const innerClean = inner
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return `[${innerClean || href}](${href})`;
+    });
+}
+
+function cleanPlainMarkdown(text: string): string {
+  return convertHtmlAnchorsToMarkdown(text)
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, '')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
     .replace(/<[^>]+>/g, ' ')
@@ -41,11 +169,109 @@ function cleanInlineMarkdown(text: string): string {
     .trim();
 }
 
+function cleanRichMarkdown(text: string, ctx?: CaseStudyRepoContext): string {
+  let out = convertHtmlAnchorsToMarkdown(text);
+
+  // Convert linked badge images [![alt](img)](href) -> [label](href) when href points to a real external resource
+  out = out.replace(
+    /\[!\[([^\]]*)\]\(([^)]*)\)\]\(([^)]+)\)/g,
+    (_, alt, _imgSrc, href) => {
+      const resolved = resolveCaseStudyHref(href, ctx);
+      if (!resolved || isDecorativeBadgeHost(resolved)) return '';
+      return `[${deriveLinkLabel(alt, resolved)}](${resolved})`;
+    }
+  );
+
+  // Strip standalone decorative images
+  out = out.replace(/!\[([^\]]*)\]\([^)]*\)/g, '');
+
+  // Resolve relative or GitHub links inside [label](url)
+  out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, href) => {
+    const cleanLabel = label.replace(/<[^>]+>/g, '').trim();
+    const resolved = resolveCaseStudyHref(href, ctx);
+    if (!resolved) return cleanLabel;
+    return `[${cleanLabel || deriveLinkLabel('', resolved)}](${resolved})`;
+  });
+
+  // Strip remaining raw HTML tags while keeping inline markdown formatting (**bold**, `code`, [label](url))
+  out = out
+    .replace(/<\/?(?:b|strong)>/gi, '**')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/^>\s?/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return out;
+}
+
+function extractLinksFromLine(
+  rawLine: string,
+  ctx?: CaseStudyRepoContext
+): CaseStudyLink[] {
+  const found: CaseStudyLink[] = [];
+  const line = convertHtmlAnchorsToMarkdown(rawLine);
+
+  // 1. Linked images [![alt](img)](href)
+  const linkedImgRegex = /\[!\[([^\]]*)\]\(([^)]*)\)\]\(([^)\s]+)\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = linkedImgRegex.exec(line)) !== null) {
+    const resolved = resolveCaseStudyHref(m[3], ctx);
+    if (resolved && !isDecorativeBadgeHost(resolved)) {
+      const label = deriveLinkLabel(m[1], resolved);
+      found.push({
+        label,
+        url: resolved,
+        kind: classifyLinkKind(resolved, label),
+      });
+    }
+  }
+
+  // 2. Standard markdown links [label](url)
+  const withoutLinkedImgs = line.replace(linkedImgRegex, ' ').replace(/!\[[^\]]*\]\([^)]*\)/g, ' ');
+  const mdLinkRegex = /\[([^\]]+)\]\(([^)\s]+)\)/g;
+  while ((m = mdLinkRegex.exec(withoutLinkedImgs)) !== null) {
+    const resolved = resolveCaseStudyHref(m[2], ctx);
+    if (
+      resolved &&
+      !isDecorativeBadgeHost(resolved) &&
+      (!isLikelyImageAssetUrl(resolved) || resolved.toLowerCase().includes('github.com'))
+    ) {
+      const label = deriveLinkLabel(m[1], resolved);
+      found.push({
+        label,
+        url: resolved,
+        kind: classifyLinkKind(resolved, label),
+      });
+    }
+  }
+
+  // 3. Bare https:// URLs outside markdown link parentheses
+  const withoutMdLinks = withoutLinkedImgs.replace(mdLinkRegex, ' ');
+  const bareUrlRegex = /https?:\/\/[^\s<>"')\]]+/gi;
+  while ((m = bareUrlRegex.exec(withoutMdLinks)) !== null) {
+    const cleanUrl = m[0].replace(/[.,;:!?]+$/, '');
+    if (
+      cleanUrl &&
+      !isDecorativeBadgeHost(cleanUrl) &&
+      !isLikelyImageAssetUrl(cleanUrl)
+    ) {
+      const label = deriveLinkLabel('', cleanUrl);
+      found.push({
+        label,
+        url: cleanUrl,
+        kind: classifyLinkKind(cleanUrl, label),
+      });
+    }
+  }
+
+  return found;
+}
+
 function classifyHeadingToPillar(heading: string): CaseStudyPillarId | null {
   const h = heading.toLowerCase();
 
   if (
-    /(problem|challenge|challenges|context|background|pain|issue|motivation|why|obstacle|constraint|gap|المشكلة|التحدي|التحديات|السياق|الخلفية|الدافع|الصعوبات|القيود|لماذا)/.test(
+    /(problem|challenge|challenges|context|background|pain|issue|motivation|why|obstacle|constraint|gap|overview|goal|goals|المشكلة|التحدي|التحديات|السياق|الخلفية|الدافع|الصعوبات|القيود|لماذا|نظرة\s*عامة|الهدف|الأهداف)/.test(
       h
     )
   ) {
@@ -53,7 +279,7 @@ function classifyHeadingToPillar(heading: string): CaseStudyPillarId | null {
   }
 
   if (
-    /(solution|approach|architecture|implementation|engineering|design|workflow|system|how\s+it\s+works|state|pattern|data\s*flow|technical\s*decisions?|الحل|المعمارية|التنفيذ|الهندسة|التصميم|آلية\s*العمل|الأسلوب|إدارة\s*الحالة|البنية)/.test(
+    /(solution|approach|architecture|implementation|engineering|design|workflow|system|how\s+it\s+works|state|pattern|data\s*flow|technical\s*decisions?|stack|features?|methodology|الحل|المعمارية|التنفيذ|الهندسة|التصميم|آلية\s*العمل|الأسلوب|إدارة\s*الحالة|البنية|المميزات|المنهجية|التقنيات)/.test(
       h
     )
   ) {
@@ -61,7 +287,7 @@ function classifyHeadingToPillar(heading: string): CaseStudyPillarId | null {
   }
 
   if (
-    /(result|results|impact|outcome|outcomes|performance|metric|metrics|takeaway|takeaways|lesson|lessons|conclusion|achievement|achievements|benefit|benefits|النتائج|النتيجة|الأثر|التأثير|الأداء|المكاسب|الدروس|الخلاصة|الإنجازات|النجاح)/.test(
+    /(result|results|impact|outcome|outcomes|performance|metric|metrics|takeaway|takeaways|lesson|lessons|conclusion|achievement|achievements|benefit|benefits|benchmark|testing|النتائج|النتيجة|الأثر|التأثير|الأداء|المكاسب|الدروس|الخلاصة|الإنجازات|النجاح|الاختبار|التجربة)/.test(
       h
     )
   ) {
@@ -69,6 +295,12 @@ function classifyHeadingToPillar(heading: string): CaseStudyPillarId | null {
   }
 
   return null;
+}
+
+function isLinksSectionHeading(heading: string): boolean {
+  return /(link|links|resource|resources|demo|download|try\s*it|references|live|روابط|المصادر|الروابط|التجربة|التحميل|المراجع)/i.test(
+    heading
+  );
 }
 
 function extractRealMetrics(text: string): string[] {
@@ -86,7 +318,7 @@ function extractRealMetrics(text: string): string[] {
       seen.add(norm);
       matches.push(cleaned);
     }
-    if (matches.length >= 4) break;
+    if (matches.length >= 6) break;
   }
 
   return matches;
@@ -99,21 +331,28 @@ interface RawParsedSection {
   bullets: string[];
 }
 
-export function extractStructuredCaseStudy(rawMarkdown: string): ExtractedCaseStudy {
+export function extractStructuredCaseStudy(
+  rawMarkdown: string,
+  repoContext?: CaseStudyRepoContext
+): ExtractedCaseStudy {
   const safeRaw = typeof rawMarkdown === 'string' ? rawMarkdown : '';
-  const normalized = safeRaw
-    .replace(/\r\n/g, '\n')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (_, t) => `\n# ${cleanInlineMarkdown(t)}\n`)
-    .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, (_, t) => `\n## ${cleanInlineMarkdown(t)}\n`)
-    .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, (_, t) => `\n### ${cleanInlineMarkdown(t)}\n`)
-    .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_, t) => `\n- ${cleanInlineMarkdown(t)}`)
+  const normalized = convertHtmlAnchorsToMarkdown(
+    safeRaw
+      .replace(/\r\n/g, '\n')
+      .replace(/<!--[\s\S]*?-->/g, '')
+  )
+    .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (_, t) => `\n# ${cleanPlainMarkdown(t)}\n`)
+    .replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, (_, t) => `\n## ${cleanPlainMarkdown(t)}\n`)
+    .replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, (_, t) => `\n### ${cleanPlainMarkdown(t)}\n`)
+    .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_, t) => `\n- ${cleanRichMarkdown(t, repoContext)}`)
     .replace(/<\/?(?:div|p|center|section|ul|ol|span|br|hr)[^>]*>/gi, '\n');
 
   const lines = normalized.split('\n');
   let documentTitle: string | undefined;
   const introParagraphs: string[] = [];
   const parsedSections: RawParsedSection[] = [];
+  const priorityLinks: CaseStudyLink[] = [];
+  const generalLinks: CaseStudyLink[] = [];
 
   let activeSection: RawParsedSection | null = null;
   let inCodeBlock = false;
@@ -127,17 +366,28 @@ export function extractStructuredCaseStudy(rawMarkdown: string): ExtractedCaseSt
     }
     if (inCodeBlock || !trimmed) continue;
 
-    // Skip decorative shield/badge markdown lines & pure horizontal rules
     if (/^[-*_]{3,}$/.test(trimmed)) continue;
+
+    // Harvest clickable links from every non-code line (including linked badges)
+    const lineLinks = extractLinksFromLine(trimmed, repoContext);
+    if (lineLinks.length > 0) {
+      if (activeSection && isLinksSectionHeading(activeSection.heading)) {
+        priorityLinks.push(...lineLinks);
+      } else {
+        generalLinks.push(...lineLinks);
+      }
+    }
+
+    // Skip pure image-only decorative lines after harvesting any real href from them
     if (/^\[?!\[[^\]]*\]\([^)]*(?:shields\.io|camo\.|badge|komarev|skillicons)[^)]*\)/i.test(trimmed)) {
-      continue;
+      if (!lineLinks.length) continue;
     }
     if (/^!\[[^\]]*\]\([^)]+\)$/.test(trimmed)) continue;
 
     const headingMatch = trimmed.match(/^(#{1,4})\s+(.+)$/);
     if (headingMatch) {
       const level = headingMatch[1].length;
-      const cleanHeading = cleanInlineMarkdown(headingMatch[2]);
+      const cleanHeading = cleanPlainMarkdown(headingMatch[2]);
       if (!cleanHeading) continue;
 
       if (level === 1 && !documentTitle) {
@@ -157,29 +407,56 @@ export function extractStructuredCaseStudy(rawMarkdown: string): ExtractedCaseSt
 
     const bulletMatch = trimmed.match(/^(?:[-*+•✅✓⚡🔹🔸]|\d+\.)\s+(.+)$/);
     if (bulletMatch) {
-      const cleanBullet = cleanInlineMarkdown(bulletMatch[1]);
-      if (cleanBullet.length > 3) {
+      const richBullet = cleanRichMarkdown(bulletMatch[1], repoContext);
+      if (richBullet.length > 2) {
         if (activeSection) {
-          activeSection.bullets.push(cleanBullet);
+          activeSection.bullets.push(richBullet);
         } else {
-          introParagraphs.push(cleanBullet);
+          introParagraphs.push(richBullet);
         }
       }
       continue;
     }
 
-    // Skip markdown table dividers or raw table rows for executive summary clarity
-    if (/^\|[\s:-]+\|$/.test(trimmed) || (trimmed.startsWith('|') && trimmed.endsWith('|'))) {
+    // Parse concise markdown table rows into readable comparison points rather than dropping them
+    if (/^\|[\s:-]+\|$/.test(trimmed)) {
+      continue;
+    }
+    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+      const cells = trimmed
+        .slice(1, -1)
+        .split('|')
+        .map((c) => cleanRichMarkdown(c, repoContext))
+        .filter(Boolean);
+      if (cells.length >= 2) {
+        const joinedRow = cells.join(' — ');
+        if (activeSection) {
+          activeSection.bullets.push(joinedRow);
+        } else {
+          introParagraphs.push(joinedRow);
+        }
+      }
       continue;
     }
 
-    const cleanPara = cleanInlineMarkdown(trimmed);
-    if (cleanPara.length > 10) {
+    const richPara = cleanRichMarkdown(trimmed, repoContext);
+    if (richPara.length > 6) {
       if (activeSection) {
-        activeSection.paragraphs.push(cleanPara);
+        activeSection.paragraphs.push(richPara);
       } else {
-        introParagraphs.push(cleanPara);
+        introParagraphs.push(richPara);
       }
+    }
+  }
+
+  // Deduplicate extracted links, putting explicit bottom/Links-section links first
+  const dedupedLinks: CaseStudyLink[] = [];
+  const seenUrls = new Set<string>();
+  for (const item of [...priorityLinks, ...generalLinks]) {
+    const normUrl = item.url.replace(/\/+$/, '').toLowerCase();
+    if (!seenUrls.has(normUrl)) {
+      seenUrls.add(normUrl);
+      dedupedLinks.push(item);
     }
   }
 
@@ -199,7 +476,6 @@ export function extractStructuredCaseStudy(rawMarkdown: string): ExtractedCaseSt
     }
   }
 
-  // If intro narrative exists and no explicit Problem section was classified, promote first overview section
   if (pillarBuckets.problem.length === 0 && uncategorized.length > 0) {
     const first = uncategorized.shift();
     if (first) pillarBuckets.problem.push(first);
@@ -212,43 +488,48 @@ export function extractStructuredCaseStudy(rawMarkdown: string): ExtractedCaseSt
   ): CaseStudyPillar | null => {
     if (sections.length === 0) return null;
 
-    const allParagraphs = sections.flatMap((s) => s.paragraphs);
-    const allBullets = Array.from(new Set(sections.flatMap((s) => s.bullets))).slice(0, 5);
+    const allParagraphs = Array.from(new Set(sections.flatMap((s) => s.paragraphs)));
+    const allBullets = Array.from(new Set(sections.flatMap((s) => s.bullets))).slice(0, 12);
     const summary =
       allParagraphs[0] ||
       (allBullets.length > 0 ? allBullets[0] : '');
 
-    if (!summary && allBullets.length === 0) return null;
+    if (!summary && allParagraphs.length === 0 && allBullets.length === 0) return null;
 
     return {
       id,
       title: sections[0].heading || fallbackHeading,
       summary,
+      paragraphs: allParagraphs,
       bullets: allBullets,
       sourceHeadings: sections.map((s) => s.heading),
     };
   };
 
-  const wordCount = cleanInlineMarkdown(safeRaw).split(/\s+/).filter(Boolean).length;
+  const plainForStats = cleanPlainMarkdown(safeRaw);
+  const wordCount = plainForStats.split(/\s+/).filter(Boolean).length;
   const readingMinutes = Math.max(1, Math.round(wordCount / 180));
 
-  const executiveSummary =
-    introParagraphs[0] ||
-    parsedSections.find((s) => s.paragraphs.length > 0)?.paragraphs[0] ||
-    '';
+  const executiveParagraphs =
+    introParagraphs.length > 0
+      ? introParagraphs.slice(0, 3)
+      : parsedSections.find((s) => s.paragraphs.length > 0)?.paragraphs.slice(0, 2) || [];
+  const executiveSummary = executiveParagraphs[0] || '';
 
   const remainingSections: CaseStudyExtraSection[] = uncategorized
     .filter((s) => s.paragraphs.length > 0 || s.bullets.length > 0)
-    .slice(0, 4)
+    .slice(0, 12)
     .map((s) => ({
       title: s.heading,
       summary: s.paragraphs[0] || '',
-      bullets: s.bullets.slice(0, 4),
+      paragraphs: s.paragraphs,
+      bullets: s.bullets.slice(0, 12),
     }));
 
   return {
     title: documentTitle,
     executiveSummary,
+    executiveParagraphs,
     readingMinutes,
     totalSections: parsedSections.length,
     pillars: {
@@ -256,8 +537,9 @@ export function extractStructuredCaseStudy(rawMarkdown: string): ExtractedCaseSt
       solution: buildPillar('solution', pillarBuckets.solution, 'Solution & Architecture'),
       results: buildPillar('results', pillarBuckets.results, 'Results & Impact'),
     },
-    metrics: extractRealMetrics(cleanInlineMarkdown(safeRaw)),
+    metrics: extractRealMetrics(plainForStats),
     remainingSections,
+    links: dedupedLinks,
     rawMarkdown: safeRaw,
   };
 }

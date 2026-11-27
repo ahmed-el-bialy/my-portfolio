@@ -370,6 +370,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   });
   const [studyCaseLoading, setStudyCaseLoading] = useState<boolean>(false);
   const [studyCaseLang, setStudyCaseLang] = useState<'en' | 'ar'>('en');
+  const manualStudyLangRef = useRef(false);
 
   const dialogRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -482,7 +483,19 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           ).catch((): RepoCaseStudyData => ({ en: null, ar: null }));
         }
 
-        setCaseStudyData(csData || { en: null, ar: null });
+        const resolvedCs = csData || { en: null, ar: null };
+        setCaseStudyData(resolvedCs);
+        if (!manualStudyLangRef.current) {
+          if (lang === 'ar' && resolvedCs.ar) {
+            setStudyCaseLang('ar');
+          } else if (lang === 'en' && resolvedCs.en) {
+            setStudyCaseLang('en');
+          } else if (resolvedCs.ar && !resolvedCs.en) {
+            setStudyCaseLang('ar');
+          } else if (resolvedCs.en) {
+            setStudyCaseLang('en');
+          }
+        }
 
         if (rel?.hasRelease || meta?.hasRelease || meta?.apkDownloadUrl) {
           setReleaseInfo({
@@ -586,6 +599,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         setCopiedProjectLink(false);
         setLightboxImgState({ triedDirect: false, failed: false });
         setCaseStudyData({ en: null, ar: null });
+        manualStudyLangRef.current = false;
         setStudyCaseLang(lang === 'ar' ? 'ar' : 'en');
         setLiveMeta(cachedLiveMedia || null);
         setReleaseInfo({ hasRelease: false });
@@ -911,6 +925,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     hasEnglishStudyCase: boolean;
     hasArabicStudyCase: boolean;
     hasAnyStudyCase: boolean;
+    effectiveStudyCaseLang: 'en' | 'ar';
     activeStudyCaseMarkdown: string;
     distributionLabel: string;
     archSummary: {
@@ -1061,8 +1076,16 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       const hasEnglishStudyCase = Boolean(caseStudyData.en);
       const hasArabicStudyCase = Boolean(caseStudyData.ar);
       const hasAnyStudyCase = hasEnglishStudyCase || hasArabicStudyCase;
-      const activeStudyCaseMarkdown =
+      const effectiveStudyCaseLang: 'en' | 'ar' =
         studyCaseLang === 'ar'
+          ? hasArabicStudyCase
+            ? 'ar'
+            : 'en'
+          : hasEnglishStudyCase
+          ? 'en'
+          : 'ar';
+      const activeStudyCaseMarkdown =
+        effectiveStudyCaseLang === 'ar'
           ? caseStudyData.ar || caseStudyData.en || ''
           : caseStudyData.en || caseStudyData.ar || '';
 
@@ -1205,6 +1228,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         hasEnglishStudyCase,
         hasArabicStudyCase,
         hasAnyStudyCase,
+        effectiveStudyCaseLang,
         activeStudyCaseMarkdown,
         distributionLabel,
         archSummary,
@@ -1259,6 +1283,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       hasEnglishStudyCase,
       hasArabicStudyCase,
       hasAnyStudyCase,
+      effectiveStudyCaseLang,
       activeStudyCaseMarkdown,
       distributionLabel,
       archSummary,
@@ -2286,13 +2311,16 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     </span>
                   </div>
 
-                  {hasEnglishStudyCase && hasArabicStudyCase && (
+                  {hasEnglishStudyCase && hasArabicStudyCase ? (
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/10 p-1 rounded-xl border border-slate-200 dark:border-white/10">
                       <button
                         type="button"
-                        onClick={() => setStudyCaseLang('en')}
+                        onClick={() => {
+                          manualStudyLangRef.current = true;
+                          setStudyCaseLang('en');
+                        }}
                         className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
-                          studyCaseLang === 'en'
+                          effectiveStudyCaseLang === 'en'
                             ? 'bg-[#0284ff] text-white'
                             : 'text-slate-600 dark:text-slate-300'
                         }`}
@@ -2301,9 +2329,12 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       </button>
                       <button
                         type="button"
-                        onClick={() => setStudyCaseLang('ar')}
+                        onClick={() => {
+                          manualStudyLangRef.current = true;
+                          setStudyCaseLang('ar');
+                        }}
                         className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
-                          studyCaseLang === 'ar'
+                          effectiveStudyCaseLang === 'ar'
                             ? 'bg-[#0284ff] text-white'
                             : 'text-slate-600 dark:text-slate-300'
                         }`}
@@ -2311,7 +2342,11 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                         العربية
                       </button>
                     </div>
-                  )}
+                  ) : hasAnyStudyCase ? (
+                    <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">
+                      {effectiveStudyCaseLang === 'ar' ? 'العربية · AR' : 'English · EN'}
+                    </span>
+                  ) : null}
                 </div>
 
                 {studyCaseLoading ? (
@@ -2333,8 +2368,11 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       rawMarkdown={activeStudyCaseMarkdown}
                       repoName={safeRepoName}
                       branch={defaultBranch}
-                      docLang={studyCaseLang}
+                      docLang={effectiveStudyCaseLang}
                       uiLang={lang}
+                      githubRepoUrl={githubRepoUrl}
+                      googlePlayUrl={currentPlayUrl || undefined}
+                      demoVideoUrl={playerCandidateUrl || undefined}
                       onImageClick={(clickedUrl) => {
                         if (!clickedUrl || typeof clickedUrl !== 'string') return;
                         const matchedIdx = safeScreenshots.indexOf(clickedUrl);

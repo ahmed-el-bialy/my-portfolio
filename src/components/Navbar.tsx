@@ -17,7 +17,7 @@ import {
   Youtube,
   ArrowRight,
 } from 'lucide-react';
-import { WhatsAppLogo, TikTokLogo } from './TechLogos';
+import { WhatsAppLogo, TikTokLogo, InstagramLogo } from './TechLogos';
 import { BrandLogoMark } from './BrandLogoMark';
 import { AHMED_CONFIG } from '../data/config';
 import { DEFAULT_PROFILE } from '../data/portfolioData';
@@ -389,6 +389,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="w-11 h-11 rounded-xl flex items-center justify-center hover:text-pink-500 transition-colors"
               >
                 <TikTokLogo size={15} />
+              </a>
+              <a
+                href={profile.instagramUrl || AHMED_CONFIG.socials.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="w-11 h-11 rounded-xl flex items-center justify-center hover:text-pink-500 transition-colors"
+              >
+                <InstagramLogo size={17} />
               </a>
             </div>
             </motion.div>

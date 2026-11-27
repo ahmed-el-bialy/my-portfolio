@@ -1395,44 +1395,131 @@ export interface RepoCaseStudyData {
   ar: string | null;
 }
 
+const ARABIC_CHAR_REGEX = /[\u0600-\u06FF]/g;
+
+function hasSignificantArabic(text: string): boolean {
+  const matches = text.match(ARABIC_CHAR_REGEX);
+  return Boolean(matches && matches.length >= 16);
+}
+
+function hasSignificantLatin(text: string): boolean {
+  const withoutUrls = text.replace(/https?:\/\/\S+/g, '');
+  const matches = withoutUrls.match(/[a-zA-Z]{3,}/g);
+  return Boolean(matches && matches.length >= 10);
+}
+
+/**
+ * Splits a single markdown file into separate English and Arabic study cases
+ * if the author documented both languages under separate top-level headings inside one file.
+ */
+function splitBilingualCaseStudyMarkdown(raw: string): RepoCaseStudyData {
+  const clean = raw.replace(/\r\n/g, '\n').trim();
+  if (!clean) return { en: null, ar: null };
+
+  const hasAr = hasSignificantArabic(clean);
+  const hasEn = hasSignificantLatin(clean);
+
+  if (hasAr && !hasEn) return { en: null, ar: clean };
+  if (hasEn && !hasAr) return { en: clean, ar: null };
+  if (!hasAr && !hasEn) return { en: clean, ar: null };
+
+  // Split by ## or # headings and classify each block by Arabic dominance
+  const lines = clean.split('\n');
+  const blocks: { heading: string; lines: string[]; isArHeading: boolean }[] = [];
+  let current: { heading: string; lines: string[]; isArHeading: boolean } = {
+    heading: '',
+    lines: [],
+    isArHeading: false,
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (/^#{1,2}\s+/.test(trimmed)) {
+      if (current.lines.length > 0 || current.heading) {
+        blocks.push(current);
+      }
+      current = {
+        heading: trimmed,
+        lines: [line],
+        isArHeading:
+          /[\u0600-\u06FF]{2,}/.test(trimmed) ||
+          /\b(?:arabic|ar)\b|العربية|عربي/i.test(trimmed),
+      };
+    } else {
+      current.lines.push(line);
+    }
+  }
+  if (current.lines.length > 0 || current.heading) {
+    blocks.push(current);
+  }
+
+  const arParts: string[] = [];
+  const enParts: string[] = [];
+
+  for (const block of blocks) {
+    const text = block.lines.join('\n').trim();
+    if (!text) continue;
+    const arCount = (text.match(ARABIC_CHAR_REGEX) || []).length;
+    const enWords = (text.replace(/https?:\/\/\S+/g, '').match(/[a-zA-Z]{2,}/g) || []).length;
+
+    if (block.isArHeading || arCount > enWords * 1.5) {
+      arParts.push(text);
+    } else if (enWords >= 4) {
+      enParts.push(text);
+    }
+  }
+
+  const arDoc = arParts.join('\n\n').trim();
+  const enDoc = enParts.join('\n\n').trim();
+
+  if (arDoc.length > 50 && enDoc.length > 50) {
+    return { en: enDoc, ar: arDoc };
+  }
+  return arDoc.length > enDoc.length ? { en: null, ar: clean } : { en: clean, ar: null };
+}
+
 function extractEmbeddedCaseStudyFromReadme(rawReadme?: string): string | null {
   if (typeof rawReadme !== 'string' || rawReadme.trim().length < 40) return null;
   const lines = rawReadme.replace(/\r\n/g, '\n').split('\n');
   const startHeadingRegex =
-    /^#{1,3}\s+.*(?:case\s*study|study\s*case|problem\s*(?:&|and)\s*solution|engineering\s*challenges?|دراسة\s*الحالة|المشكلة\s*والحل|التحدي\s*والحل)/i;
+    /^#{1,3}\s+.*(?:case\s*study|study\s*case|problem\s*(?:&|and)\s*solution|engineering\s*challenges?|architecture\s*(?:&|and)\s*design|دراسة\s*الحالة|المشكلة\s*والحل|التحدي\s*والحل)/i;
   const nextTopHeadingRegex = /^#{1,2}\s+/;
 
-  let startIdx = -1;
+  const collectedSections: string[] = [];
+  let collecting = false;
   let startLevel = 2;
+
   for (let i = 0; i < lines.length; i++) {
     const trimmed = lines[i].trim();
     if (startHeadingRegex.test(trimmed)) {
-      startIdx = i;
+      collecting = true;
       const hashMatch = trimmed.match(/^(#{1,3})/);
       startLevel = hashMatch ? hashMatch[1].length : 2;
-      break;
+      collectedSections.push(lines[i]);
+      continue;
+    }
+
+    if (collecting) {
+      const headingMatch = trimmed.match(/^(#{1,3})\s+/);
+      if (
+        headingMatch &&
+        headingMatch[1].length <= startLevel &&
+        nextTopHeadingRegex.test(trimmed)
+      ) {
+        collecting = false;
+        continue;
+      }
+      collectedSections.push(lines[i]);
     }
   }
-  if (startIdx < 0) return null;
 
-  const collected: string[] = [lines[startIdx]];
-  for (let i = startIdx + 1; i < lines.length; i++) {
-    const trimmed = lines[i].trim();
-    const headingMatch = trimmed.match(/^(#{1,3})\s+/);
-    if (headingMatch && headingMatch[1].length <= startLevel && nextTopHeadingRegex.test(trimmed)) {
-      break;
-    }
-    collected.push(lines[i]);
-  }
-
-  const block = collected.join('\n').trim();
+  const block = collectedSections.join('\n').trim();
   return block.length > 60 ? block : null;
 }
 
 /**
- * Fetches live CASE_STUDY / CASE_STUDY_AR markdown across repository root, /docs subfolder,
- * case/hyphen filename variants, and optional embedded README Case Study sections.
- * Returns null per missing file so the UI never fabricates study case content.
+ * Fetches live CASE_STUDY / STUDY_CASE markdown across ALL repository folders via recursive Git tree,
+ * expanded filename & Arabic conventions, /api/study-case fallback, and bilingual README extraction.
  */
 export async function fetchRepoCaseStudies(
   repoName: string,
@@ -1443,7 +1530,7 @@ export async function fetchRepoCaseStudies(
 ): Promise<RepoCaseStudyData> {
   if (!repoName) return { en: null, ar: null };
   const cleanRepo = repoName.trim();
-  const cacheKey = `gh_casestudy_v2_${username}_${cleanRepo}`;
+  const cacheKey = `gh_casestudy_v3_${username}_${cleanRepo}`;
 
   if (!forceRefresh && typeof window !== 'undefined') {
     try {
@@ -1465,11 +1552,23 @@ export async function fetchRepoCaseStudies(
   const bust = forceRefresh ? `?t=${Date.now()}` : '';
   const branchCandidates = Array.from(new Set([defaultBranch || 'main', 'main', 'master']));
 
+  const toRawUrl = (relPath: string, branch: string = defaultBranch || 'main') => {
+    const cleanRel = relPath
+      .replace(/^\/+/, '')
+      .split('/')
+      .map((seg) => encodeURIComponent(seg))
+      .join('/');
+    return `https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(
+      cleanRepo
+    )}/${encodeURIComponent(branch)}/${cleanRel}`;
+  };
+
   const fetchTextFromUrl = async (url: string): Promise<string | null> => {
     try {
-      const res = await fetch(`${url}${bust ? (url.includes('?') ? `&t=${Date.now()}` : bust) : ''}`, {
-        cache: forceRefresh ? 'no-store' : 'default',
-      });
+      const res = await fetch(
+        `${url}${bust ? (url.includes('?') ? `&t=${Date.now()}` : bust) : ''}`,
+        { cache: forceRefresh ? 'no-store' : 'default' }
+      );
       if (!res.ok) return null;
       const text = await res.text();
       return text && text.trim().length > 15 ? text : null;
@@ -1478,13 +1577,13 @@ export async function fetchRepoCaseStudies(
     }
   };
 
-  const fetchMarkdownFile = async (filename: string): Promise<string | null> => {
+  const fetchFirstMarkdownVariant = async (relPaths: string[]): Promise<string | null> => {
     for (const branch of branchCandidates) {
-      const url = `https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(
-        cleanRepo
-      )}/${encodeURIComponent(branch)}/${filename}`;
-      const text = await fetchTextFromUrl(url);
-      if (text) return text;
+      const results = await Promise.all(
+        relPaths.map((relPath) => fetchTextFromUrl(toRawUrl(relPath, branch)))
+      );
+      const hit = results.find((t): t is string => Boolean(t));
+      if (hit) return hit;
     }
     return null;
   };
@@ -1492,73 +1591,155 @@ export async function fetchRepoCaseStudies(
   let enRaw: string | null = null;
   let arRaw: string | null = null;
 
-  // 1. Inspect repo root & /docs directory first to match any naming convention cleanly
-  try {
-    const rootRes = await fetch(
-      `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(cleanRepo)}/contents`,
-      { headers: { Accept: 'application/vnd.github+json' }, cache: forceRefresh ? 'no-store' : 'default' }
+  const isArabicStudyCasePath = (relPath: string): boolean => {
+    const lower = relPath.toLowerCase();
+    if (!lower.endsWith('.md')) return false;
+    const isCaseStudyContext =
+      /(case[-_\s]?study|study[-_\s]?case|casestudy|studycase|دراسة)/.test(lower);
+    const hasArMarker =
+      /(?:[-_./](?:ar|arabic)|عربي|العربية)/.test(lower) ||
+      lower.endsWith('readme_ar.md');
+    return isCaseStudyContext && hasArMarker;
+  };
+
+  const isEnglishStudyCasePath = (relPath: string): boolean => {
+    const lower = relPath.toLowerCase();
+    if (!lower.endsWith('.md')) return false;
+    if (isArabicStudyCasePath(lower) || /(?:[-_./](?:ar|arabic)|عربي|العربية)/.test(lower)) {
+      return false;
+    }
+    return /(?:^|\/)(?:[^/]*[-_])?(?:case[-_\s]?study|study[-_\s]?case|casestudy|studycase)(?:[-_.](?:en|english))?\.md$/i.test(
+      lower
     );
-    if (rootRes.ok) {
-      const rootEntries = await rootRes.json();
-      if (Array.isArray(rootEntries)) {
-        const docsDir = rootEntries.find(
-          (e: any) => e?.type === 'dir' && String(e?.name || '').toLowerCase() === 'docs'
-        );
-        let candidateFiles = rootEntries.filter((e: any) => e?.type === 'file' && typeof e?.name === 'string');
+  };
 
-        if (docsDir) {
-          try {
-            const docsRes = await fetch(
-              `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(cleanRepo)}/contents/docs`,
-              { headers: { Accept: 'application/vnd.github+json' }, cache: forceRefresh ? 'no-store' : 'default' }
-            );
-            if (docsRes.ok) {
-              const docsEntries = await docsRes.json();
-              if (Array.isArray(docsEntries)) {
-                candidateFiles = [
-                  ...candidateFiles,
-                  ...docsEntries.filter((e: any) => e?.type === 'file' && typeof e?.name === 'string'),
-                ];
-              }
-            }
-          } catch {}
+  // 1. Recursive Git Tree scan across EVERY folder (case-insensitive, 1 request)
+  try {
+    let matchedPaths: string[] = [];
+    let resolvedBranch = defaultBranch || 'main';
+
+    for (const branch of branchCandidates) {
+      const treeRes = await fetch(
+        `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(
+          cleanRepo
+        )}/git/trees/${encodeURIComponent(branch)}?recursive=1`,
+        {
+          headers: { Accept: 'application/vnd.github+json' },
+          cache: forceRefresh ? 'no-store' : 'default',
         }
-
-        const arFile = candidateFiles.find((f: any) =>
-          /^(?:case[-_\s]?study|study[-_\s]?case)[-_\s.]?ar\.md$/i.test(f.name)
-        );
-        const enFile = candidateFiles.find((f: any) =>
-          /^(?:case[-_\s]?study|study[-_\s]?case)(?:[-_\s.]?en)?\.md$/i.test(f.name)
-        );
-
-        const [fetchedEn, fetchedAr] = await Promise.all([
-          enFile?.download_url ? fetchTextFromUrl(enFile.download_url) : Promise.resolve(null),
-          arFile?.download_url ? fetchTextFromUrl(arFile.download_url) : Promise.resolve(null),
-        ]);
-        enRaw = fetchedEn;
-        arRaw = fetchedAr;
+      );
+      if (treeRes.ok) {
+        const treeJson: any = await treeRes.json();
+        if (Array.isArray(treeJson?.tree)) {
+          resolvedBranch = branch;
+          matchedPaths = treeJson.tree
+            .filter(
+              (item: any) =>
+                item?.type === 'blob' &&
+                typeof item?.path === 'string' &&
+                item.path.toLowerCase().endsWith('.md')
+            )
+            .map((item: any) => item.path as string);
+          break;
+        }
       }
+    }
+
+    if (matchedPaths.length > 0) {
+      const sortByPriority = (paths: string[]) =>
+        [...paths].sort((a, b) => a.split('/').length - b.split('/').length || a.localeCompare(b));
+
+      const arCandidates = sortByPriority(matchedPaths.filter(isArabicStudyCasePath));
+      const enCandidates = sortByPriority(matchedPaths.filter(isEnglishStudyCasePath));
+      const readmeArPath = matchedPaths.find((p) => p.toLowerCase() === 'readme_ar.md');
+
+      const [fetchedEn, fetchedAr, fetchedReadmeAr] = await Promise.all([
+        enCandidates[0] ? fetchTextFromUrl(toRawUrl(enCandidates[0], resolvedBranch)) : Promise.resolve(null),
+        arCandidates[0] ? fetchTextFromUrl(toRawUrl(arCandidates[0], resolvedBranch)) : Promise.resolve(null),
+        !arCandidates[0] && readmeArPath
+          ? fetchTextFromUrl(toRawUrl(readmeArPath, resolvedBranch))
+          : Promise.resolve(null),
+      ]);
+
+      enRaw = fetchedEn;
+      arRaw =
+        fetchedAr ||
+        (fetchedReadmeAr ? extractEmbeddedCaseStudyFromReadme(fetchedReadmeAr) || fetchedReadmeAr : null);
     }
   } catch {}
 
-  // 2. Fallback to direct raw root paths if Contents API didn't yield files
-  if (!enRaw && !arRaw) {
-    const [directEn, directAr] = await Promise.all([
-      fetchMarkdownFile('CASE_STUDY.md'),
-      fetchMarkdownFile('CASE_STUDY_AR.md'),
+  // 2. Fallback to expanded direct raw path candidates (handles rate limits seamlessly)
+  if (!enRaw || !arRaw) {
+    const enCandidatePaths = [
+      'CASE_STUDY.md',
+      'STUDY_CASE.md',
+      'case-study.md',
+      'study-case.md',
+      'CASE_STUDY_EN.md',
+      'docs/CASE_STUDY.md',
+      'docs/STUDY_CASE.md',
+      'docs/case-study.md',
+      'docs/study-case.md',
+    ];
+    const arCandidatePaths = [
+      'CASE_STUDY_AR.md',
+      'STUDY_CASE_AR.md',
+      'case-study-ar.md',
+      'study-case-ar.md',
+      'CASE_STUDY.ar.md',
+      'STUDY_CASE.ar.md',
+      'docs/CASE_STUDY_AR.md',
+      'docs/STUDY_CASE_AR.md',
+      'docs/case-study-ar.md',
+      'docs/study-case-ar.md',
+      'docs/CASE_STUDY.ar.md',
+    ];
+
+    const [fallbackEn, fallbackAr] = await Promise.all([
+      !enRaw ? fetchFirstMarkdownVariant(enCandidatePaths) : Promise.resolve(null),
+      !arRaw ? fetchFirstMarkdownVariant(arCandidatePaths) : Promise.resolve(null),
     ]);
-    enRaw = directEn;
-    arRaw = directAr;
+
+    if (!enRaw && fallbackEn) enRaw = fallbackEn;
+    if (!arRaw && fallbackAr) arRaw = fallbackAr;
   }
 
-  // 3. Final fallback: extract authentic Case Study section from README if present
+  // 3. Local / Vercel server proxy fallback if client direct raw/API was incomplete
+  if (!enRaw && !arRaw && typeof window !== 'undefined') {
+    try {
+      const apiRes = await fetch(
+        `/api/study-case?repo=${encodeURIComponent(cleanRepo)}`,
+        { cache: forceRefresh ? 'no-store' : 'default' }
+      );
+      if (apiRes.ok) {
+        const apiJson = await apiRes.json();
+        if (apiJson?.success && apiJson?.exists) {
+          if (apiJson.contentEn) enRaw = apiJson.contentEn;
+          if (apiJson.contentAr) arRaw = apiJson.contentAr;
+        }
+      }
+    } catch {}
+  }
+
+  // 4. README embedded Case Study fallback (supports bilingual sections inside README too)
   if (!enRaw && !arRaw && readmeFallback) {
     const embedded = extractEmbeddedCaseStudyFromReadme(readmeFallback);
     if (embedded) {
-      const hasArabic = /[\u0600-\u06FF]{4,}/.test(embedded);
-      if (hasArabic) arRaw = embedded;
-      else enRaw = embedded;
+      const splitEmbedded = splitBilingualCaseStudyMarkdown(embedded);
+      enRaw = splitEmbedded.en;
+      arRaw = splitEmbedded.ar;
     }
+  }
+
+  // 5. If only one file was found, inspect if it contains bilingual AR + EN sections or mislabeled language
+  if (enRaw && !arRaw) {
+    const splitSingle = splitBilingualCaseStudyMarkdown(enRaw);
+    enRaw = splitSingle.en;
+    arRaw = splitSingle.ar;
+  } else if (arRaw && !enRaw) {
+    const splitSingle = splitBilingualCaseStudyMarkdown(arRaw);
+    if (splitSingle.en) enRaw = splitSingle.en;
+    if (splitSingle.ar) arRaw = splitSingle.ar;
   }
 
   const result: RepoCaseStudyData = {

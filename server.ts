@@ -802,30 +802,61 @@ Strict verified facts only:
         return res.status(400).json({ success: false, error: 'Valid repository name required' });
       }
 
-      const enFiles = ['CASE_STUDY.md', 'case-study.md', 'STUDY_CASE.md'];
-      const arFiles = ['CASE_STUDY_AR.md', 'case-study-ar.md', 'STUDY_CASE_AR.md'];
+      const enFiles = [
+        'CASE_STUDY.md',
+        'STUDY_CASE.md',
+        'case-study.md',
+        'study-case.md',
+        'CASE_STUDY_EN.md',
+        'docs/CASE_STUDY.md',
+        'docs/STUDY_CASE.md',
+        'docs/case-study.md',
+        'docs/study-case.md',
+      ];
+      const arFiles = [
+        'CASE_STUDY_AR.md',
+        'STUDY_CASE_AR.md',
+        'case-study-ar.md',
+        'study-case-ar.md',
+        'CASE_STUDY.ar.md',
+        'STUDY_CASE.ar.md',
+        'docs/CASE_STUDY_AR.md',
+        'docs/STUDY_CASE_AR.md',
+        'docs/case-study-ar.md',
+        'docs/study-case-ar.md',
+        'docs/CASE_STUDY.ar.md',
+      ];
       const branches = ['main', 'master'];
 
       async function fetchFirstValid(filenames: string[]) {
         for (const branch of branches) {
-          for (const filename of filenames) {
-            const url = `https://raw.githubusercontent.com/ahmed-el-bialy/${encodeURIComponent(rawRepo)}/${branch}/${filename}`;
-            try {
-              const r = await fetchWithTimeout(url, {}, 7000);
-              if (r.ok) {
-                const text = await r.text();
-                if (text && text.trim().length > 0) {
-                  return { content: text, filename };
+          const batch = await Promise.all(
+            filenames.map(async (filename) => {
+              const url = `https://raw.githubusercontent.com/ahmed-el-bialy/${encodeURIComponent(
+                rawRepo
+              )}/${branch}/${filename}`;
+              try {
+                const r = await fetchWithTimeout(url, {}, 7000);
+                if (r.ok) {
+                  const text = await r.text();
+                  if (text && text.trim().length > 15) {
+                    return { content: text, filename };
+                  }
                 }
-              }
-            } catch {}
-          }
+              } catch {}
+              return null;
+            })
+          );
+          const hit = batch.find((item): item is { content: string; filename: string } => Boolean(item));
+          if (hit) return hit;
         }
         return null;
       }
 
-      const enResult = await fetchFirstValid(enFiles);
-      const arResult = await fetchFirstValid(arFiles);
+      const [enResult, arResult] = await Promise.all([
+        fetchFirstValid(enFiles),
+        fetchFirstValid(arFiles),
+      ]);
 
       const existsEn = Boolean(enResult);
       const existsAr = Boolean(arResult);

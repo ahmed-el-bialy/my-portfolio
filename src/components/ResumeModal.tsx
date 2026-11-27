@@ -27,6 +27,7 @@ import {
   CheckCircle2,
   Star,
   RefreshCw,
+  Youtube,
 } from 'lucide-react';
 import {
   DeveloperProfile,
@@ -38,7 +39,7 @@ import {
   getGmailComposeUrl,
 } from '../data/portfolioData';
 import { AHMED_CONFIG } from '../data/config';
-import { WhatsAppLogo } from './TechLogos';
+import { WhatsAppLogo, TikTokLogo, InstagramLogo } from './TechLogos';
 import { BrandLogoMark } from './BrandLogoMark';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import { useLanguage } from '../context/LanguageContext';
@@ -506,6 +507,36 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({
                       >
                         <Linkedin size={14} className="text-blue-600 dark:text-blue-400 shrink-0" />
                         <span>LinkedIn · ahmedel-bialy</span>
+                      </a>
+
+                      <a
+                        href={profile.youtubeUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] font-medium"
+                      >
+                        <Youtube size={14} className="text-[#0369a1] dark:text-[#38bdf8] shrink-0" />
+                        <span>YouTube · @AhmedEl-Bialy</span>
+                      </a>
+
+                      <a
+                        href={profile.tiktokUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] font-medium"
+                      >
+                        <TikTokLogo size={13} className="text-[#0369a1] dark:text-[#38bdf8] shrink-0" />
+                        <span>TikTok · @ahmedelbialydev</span>
+                      </a>
+
+                      <a
+                        href={profile.instagramUrl || AHMED_CONFIG.socials.instagram}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] font-medium"
+                      >
+                        <InstagramLogo size={14} className="text-[#0369a1] dark:text-[#38bdf8] shrink-0" />
+                        <span>Instagram · @ah.elbialy.dev</span>
                       </a>
 
                       <div className="flex items-center gap-2.5 text-slate-600 dark:text-slate-400 pt-1">

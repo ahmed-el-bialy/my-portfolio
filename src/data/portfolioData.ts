@@ -94,6 +94,7 @@ export interface DeveloperProfile {
   linkedinUrl: string;
   youtubeUrl: string;
   tiktokUrl: string;
+  instagramUrl: string;
   cvDriveUrl: string;
   avatarUrl: string;
   statusText: string;
@@ -118,6 +119,7 @@ export const AHMED_PROFILE: DeveloperProfile = {
   linkedinUrl: "https://www.linkedin.com/in/ahmedel-bialy/",
   youtubeUrl: "https://www.youtube.com/@AhmedEl-Bialy",
   tiktokUrl: "https://www.tiktok.com/@ahmedelbialydev?is_from_webapp=1&sender_device=pc",
+  instagramUrl: "https://www.instagram.com/ah.elbialy.dev/",
   cvDriveUrl: "https://drive.google.com/file/d/1lQMnmyIA100YyXLu4jqFdhWluSeig4Pn/view?usp=drive_link",
   avatarUrl: "https://avatars.githubusercontent.com/u/245139141?v=4",
   statusText: "Available for Mobile Roles & Projects",

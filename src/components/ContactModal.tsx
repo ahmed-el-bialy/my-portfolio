@@ -11,9 +11,13 @@ import {
   ArrowUpRight,
   Video,
   AlertCircle,
+  Github,
+  Linkedin,
+  Youtube,
 } from 'lucide-react';
 import { DeveloperProfile } from '../data/portfolioData';
-import { WhatsAppLogo } from './TechLogos';
+import { AHMED_CONFIG } from '../data/config';
+import { WhatsAppLogo, TikTokLogo, InstagramLogo } from './TechLogos';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -255,13 +259,66 @@ export const ContactModal: React.FC<ContactModalProps> = ({
                   )}
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs text-slate-600 dark:text-gray-400 space-y-1.5 font-mono">
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs text-slate-600 dark:text-gray-400 space-y-2.5 font-mono">
                   <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-semibold">
                     <Clock size={12} />
                     <span>{lang === 'ar' ? 'زمن الاستجابة: أقل من 12 ساعة' : 'Response Time: < 12 Hours'}</span>
                   </div>
                   <div>
                     {t.contact.locationLabel}: {t.hero.location}
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-1.5">
+                    <a
+                      href={profile.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="GitHub"
+                      title="GitHub"
+                      className="w-9 h-9 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:border-[#0284ff]/50 hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors"
+                    >
+                      <Github size={14} />
+                    </a>
+                    <a
+                      href={profile.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="LinkedIn"
+                      title="LinkedIn"
+                      className="w-9 h-9 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:border-[#0284ff]/50 hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors"
+                    >
+                      <Linkedin size={14} />
+                    </a>
+                    <a
+                      href={profile.youtubeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="YouTube"
+                      title="YouTube"
+                      className="w-9 h-9 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:border-[#0284ff]/50 hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors"
+                    >
+                      <Youtube size={14} />
+                    </a>
+                    <a
+                      href={profile.tiktokUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="TikTok"
+                      title="TikTok"
+                      className="w-9 h-9 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:border-[#0284ff]/50 hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors"
+                    >
+                      <TikTokLogo size={13} />
+                    </a>
+                    <a
+                      href={profile.instagramUrl || AHMED_CONFIG.socials.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Instagram"
+                      title="Instagram"
+                      className="w-9 h-9 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-700 dark:text-slate-300 hover:border-[#0284ff]/50 hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors"
+                    >
+                      <InstagramLogo size={14} />
+                    </a>
                   </div>
                 </div>
               </div>

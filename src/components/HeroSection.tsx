@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { DeveloperProfile, FEATURED_PROJECTS, Project } from '../data/portfolioData';
 import { AHMED_CONFIG } from '../data/config';
-import { WhatsAppLogo, TikTokLogo } from './TechLogos';
+import { WhatsAppLogo, TikTokLogo, InstagramLogo } from './TechLogos';
 import { BrandLogoMark } from './BrandLogoMark';
 import { useLanguage } from '../context/LanguageContext';
 import { MagneticButton } from './MagneticButton';
@@ -563,6 +563,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 className="shrink-0 text-[#0369a1] dark:text-[#38bdf8] transition-transform duration-150 group-hover:scale-105"
               />
               <span>TikTok</span>
+            </a>
+
+            <a
+              href={profile.instagramUrl || AHMED_CONFIG.socials.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-1.5 min-h-[38px] px-3 py-1.5 rounded-xl bg-white dark:bg-[#0f1117] hover:bg-[#0284ff]/[0.06] dark:hover:bg-[#0284ff]/[0.1] text-slate-800 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border border-slate-200 dark:border-white/12 hover:border-[#0284ff]/45 text-xs font-semibold whitespace-nowrap transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff]"
+            >
+              <InstagramLogo
+                size={13}
+                className="shrink-0 text-[#0369a1] dark:text-[#38bdf8] transition-transform duration-150 group-hover:scale-105"
+              />
+              <span>Instagram</span>
             </a>
           </motion.div>
         </motion.div>

@@ -30,7 +30,7 @@ import { LanguageTransitionOverlay } from './components/LanguageTransitionOverla
 import { preloadImageUrls } from './components/ImageWithSkeleton';
 import { VERIFIED_REPO_SCREENSHOTS } from './services/githubService';
 import { Github, Linkedin, Youtube, Mail, RefreshCw, ArrowUp, Terminal, Sparkles } from 'lucide-react';
-import { WhatsAppLogo, TikTokLogo } from './components/TechLogos';
+import { WhatsAppLogo, TikTokLogo, InstagramLogo } from './components/TechLogos';
 import { useLanguage } from './context/LanguageContext';
 import { ModalLoadingFallback } from './components/ModalLoadingFallback';
 
@@ -1137,6 +1137,16 @@ export default function App() {
                   aria-label="TikTok"
                 >
                   <TikTokLogo size={14} />
+                </a>
+                <a
+                  href={profile.instagramUrl || AHMED_CONFIG.socials.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-xl bg-white dark:bg-[#0f1117] border border-slate-200 dark:border-white/12 flex items-center justify-center hover:border-[#0284ff]/45 hover:text-[#0369a1] dark:hover:text-[#38bdf8] transition-colors"
+                  title="Instagram"
+                  aria-label="Instagram"
+                >
+                  <InstagramLogo size={15} />
                 </a>
                 <a
                   href={AHMED_CONFIG.socials.whatsapp}
