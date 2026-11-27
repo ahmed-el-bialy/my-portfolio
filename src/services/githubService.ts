@@ -584,12 +584,161 @@ const NON_SCREENSHOT_HOST_PATTERNS = [
   'example.com',
 ];
 
+const BROKEN_MEDIA_STORAGE_KEY = 'ahmed_broken_media_urls_v1';
+const BROKEN_MEDIA_TTL_MS = 1000 * 60 * 30;
+const brokenMediaUrls = new Map<string, number>();
+const brokenMediaListeners = new Set<(url: string) => void>();
+let brokenMediaHydrated = false;
+
+function hydrateBrokenMediaCache(): void {
+  if (brokenMediaHydrated || typeof window === 'undefined') return;
+  brokenMediaHydrated = true;
+  try {
+    const raw = sessionStorage.getItem(BROKEN_MEDIA_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      const now = Date.now();
+      for (const [url, ts] of Object.entries(parsed)) {
+        if (typeof url === 'string' && typeof ts === 'number' && now - ts < BROKEN_MEDIA_TTL_MS) {
+          brokenMediaUrls.set(url, ts);
+        }
+      }
+    }
+  } catch {}
+}
+
+function persistBrokenMediaCache(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const obj: Record<string, number> = {};
+    const now = Date.now();
+    for (const [url, ts] of brokenMediaUrls.entries()) {
+      if (now - ts < BROKEN_MEDIA_TTL_MS) {
+        obj[url] = ts;
+      }
+    }
+    sessionStorage.setItem(BROKEN_MEDIA_STORAGE_KEY, JSON.stringify(obj));
+  } catch {}
+}
+
+export function isMediaUrlBroken(url?: string | null): boolean {
+  if (!url || typeof url !== 'string') return false;
+  hydrateBrokenMediaCache();
+  const trimmed = url.trim();
+  const recordedAt = brokenMediaUrls.get(trimmed);
+  if (!recordedAt) return false;
+  if (Date.now() - recordedAt >= BROKEN_MEDIA_TTL_MS) {
+    brokenMediaUrls.delete(trimmed);
+    return false;
+  }
+  return true;
+}
+
+export function markMediaUrlBroken(url?: string | null): void {
+  if (!url || typeof url !== 'string') return;
+  const trimmed = url.trim();
+  if (!trimmed) return;
+  hydrateBrokenMediaCache();
+  const alreadyRecorded = isMediaUrlBroken(trimmed);
+  brokenMediaUrls.set(trimmed, Date.now());
+  persistBrokenMediaCache();
+  if (!alreadyRecorded) {
+    brokenMediaListeners.forEach((listener) => {
+      try {
+        listener(trimmed);
+      } catch {}
+    });
+  }
+}
+
+export function subscribeBrokenMediaUrls(listener: (url: string) => void): () => void {
+  brokenMediaListeners.add(listener);
+  return () => {
+    brokenMediaListeners.delete(listener);
+  };
+}
+
+export async function checkImageUrlReachable(
+  url: string,
+  timeoutMs: number = 4500
+): Promise<boolean> {
+  if (!url || typeof url !== 'string') return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  if (isMediaUrlBroken(trimmed)) return false;
+
+  const probe = async (target: string): Promise<boolean> => {
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+    try {
+      const res = await fetch(target, {
+        method: 'HEAD',
+        signal: controller?.signal,
+        cache: 'no-store',
+      });
+      if (res.status === 404 || res.status === 410 || res.status === 400) {
+        return false;
+      }
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  };
+
+  try {
+    const ok = await probe(trimmed);
+    if (!ok) {
+      markMediaUrlBroken(trimmed);
+    }
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function filterReachableImageUrls(
+  urls: string[],
+  options: { maxConcurrent?: number; timeoutMs?: number } = {}
+): Promise<string[]> {
+  if (!Array.isArray(urls) || urls.length === 0) return [];
+  const { maxConcurrent = 5, timeoutMs = 4500 } = options;
+  const candidates = urls.filter((u) => typeof u === 'string' && u.trim() && !isMediaUrlBroken(u));
+  if (candidates.length === 0) return [];
+
+  const results: Array<string | null> = new Array(candidates.length).fill(null);
+  let cursor = 0;
+
+  const worker = async () => {
+    while (cursor < candidates.length) {
+      const idx = cursor++;
+      const url = candidates[idx];
+      try {
+        const ok = await checkImageUrlReachable(url, timeoutMs);
+        results[idx] = ok ? url : null;
+      } catch {
+        markMediaUrlBroken(url);
+        results[idx] = null;
+      }
+    }
+  };
+
+  await Promise.all(
+    Array.from({ length: Math.min(maxConcurrent, candidates.length) }, () => worker())
+  );
+
+  return results.filter((u): u is string => Boolean(u));
+}
+
 export function sanitizeDiscoveredScreenshots(urls?: string[] | null): string[] {
   if (!Array.isArray(urls)) return [];
   return urls.filter((url) => {
     if (typeof url !== 'string') return false;
     const trimmed = url.trim();
     if (!trimmed) return false;
+    if (isMediaUrlBroken(trimmed)) return false;
     const lower = trimmed.toLowerCase().split('?')[0];
     if (NON_SCREENSHOT_HOST_PATTERNS.some((pattern) => lower.includes(pattern))) {
       return false;
@@ -965,57 +1114,79 @@ export async function fetchRepoScreenshots(
   defaultBranch: string = 'main',
   forceRefresh: boolean = false
 ): Promise<string[]> {
-  const cleanName = repoName.trim();
-  const cacheKey = `repo-screens-v4-${username}-${cleanName}`;
+  try {
+    const cleanName = repoName.trim();
+    if (!cleanName) return [];
+    const cacheKey = `repo-screens-v4-${username}-${cleanName}`;
 
-  if (!forceRefresh && typeof window !== 'undefined' && !navigator.onLine) {
-    try {
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch {}
-  }
-
-  const verifiedFallback =
-    VERIFIED_REPO_SCREENSHOTS[cleanName] ||
-    VERIFIED_REPO_SCREENSHOTS[cleanName.toLowerCase()] ||
-    Object.entries(VERIFIED_REPO_SCREENSHOTS).find(
-      ([k]) => k.toLowerCase() === cleanName.toLowerCase()
-    )?.[1];
-
-  const assets = await fetchRepoImageAssetsViaTree(
-    cleanName,
-    defaultBranch,
-    username,
-    forceRefresh
-  );
-
-  if (assets.ok && assets.screens.length > 0) {
-    if (typeof window !== 'undefined') {
+    if (!forceRefresh && typeof window !== 'undefined' && !navigator.onLine) {
       try {
-        localStorage.setItem(cacheKey, JSON.stringify(assets.screens));
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const parsed = sanitizeDiscoveredScreenshots(JSON.parse(cached));
+          if (parsed.length > 0) return parsed;
+        }
       } catch {}
     }
-    return assets.screens;
-  }
 
-  if (typeof window !== 'undefined') {
-    try {
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    const verifiedFallback = sanitizeDiscoveredScreenshots(
+      VERIFIED_REPO_SCREENSHOTS[cleanName] ||
+        VERIFIED_REPO_SCREENSHOTS[cleanName.toLowerCase()] ||
+        Object.entries(VERIFIED_REPO_SCREENSHOTS).find(
+          ([k]) => k.toLowerCase() === cleanName.toLowerCase()
+        )?.[1]
+    );
+
+    const assets = await fetchRepoImageAssetsViaTree(
+      cleanName,
+      defaultBranch,
+      username,
+      forceRefresh
+    ).catch(() => ({ ok: false, coverImages: [] as string[], screens: [] as string[] }));
+
+    const cleanLiveScreens = sanitizeDiscoveredScreenshots(assets.screens);
+    if (assets.ok && cleanLiveScreens.length > 0) {
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(cleanLiveScreens));
+        } catch {}
       }
-    } catch {}
-  }
+      return cleanLiveScreens;
+    }
 
-  if (verifiedFallback && verifiedFallback.length > 0) {
-    return verifiedFallback;
-  }
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const parsed = sanitizeDiscoveredScreenshots(JSON.parse(cached));
+          if (parsed.length > 0) {
+            if (navigator.onLine) {
+              const verifiedCached = await filterReachableImageUrls(parsed.slice(0, 8));
+              const brokenSet = new Set(
+                parsed.slice(0, 8).filter((u) => !verifiedCached.includes(u))
+              );
+              const healthy = parsed.filter((u) => !brokenSet.has(u));
+              if (healthy.length > 0) return healthy;
+            } else {
+              return parsed;
+            }
+          }
+        }
+      } catch {}
+    }
 
-  return [];
+    if (verifiedFallback.length > 0) {
+      if (typeof navigator === 'undefined' || navigator.onLine !== false) {
+        const reachable = await filterReachableImageUrls(verifiedFallback);
+        if (reachable.length > 0) return reachable;
+      }
+      return verifiedFallback;
+    }
+
+    return [];
+  } catch {
+    return [];
+  }
 }
 
 /**

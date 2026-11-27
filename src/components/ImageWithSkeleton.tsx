@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Smartphone } from 'lucide-react';
+import { isMediaUrlBroken, markMediaUrlBroken } from '../services/githubService';
 
 export interface ImageWithSkeletonProps {
   src: string;
@@ -41,11 +42,19 @@ export function resolveProxiedImageUrl(rawUrl: string): string {
 
 /**
  * Preloads image URLs safely into browser memory so screen switches happen without black flashes.
+ * Catches 404s/network errors at runtime, records broken URLs, and notifies optional listener.
  */
-export function preloadImageUrls(urls: string[]): void {
+export function preloadImageUrls(
+  urls: string[],
+  onBrokenUrl?: (failedUrl: string) => void
+): void {
   if (typeof window === 'undefined') return;
   for (const raw of urls) {
     if (!raw) continue;
+    if (isMediaUrlBroken(raw)) {
+      onBrokenUrl?.(raw);
+      continue;
+    }
     const proxied = resolveProxiedImageUrl(raw);
     if (MEMORY_LOADED_URLS.has(raw) || MEMORY_LOADED_URLS.has(proxied)) continue;
     if (INFLIGHT_PRELOADS.has(proxied)) continue;
@@ -56,6 +65,7 @@ export function preloadImageUrls(urls: string[]): void {
       img.onload = () => {
         MEMORY_LOADED_URLS.add(proxied);
         MEMORY_LOADED_URLS.add(raw);
+        INFLIGHT_PRELOADS.delete(proxied);
         resolve();
       };
       img.onerror = () => {
@@ -64,11 +74,20 @@ export function preloadImageUrls(urls: string[]): void {
           fallbackImg.referrerPolicy = 'no-referrer';
           fallbackImg.onload = () => {
             MEMORY_LOADED_URLS.add(raw);
+            INFLIGHT_PRELOADS.delete(proxied);
             resolve();
           };
-          fallbackImg.onerror = () => resolve();
+          fallbackImg.onerror = () => {
+            INFLIGHT_PRELOADS.delete(proxied);
+            markMediaUrlBroken(raw);
+            onBrokenUrl?.(raw);
+            resolve();
+          };
           fallbackImg.src = raw;
         } else {
+          INFLIGHT_PRELOADS.delete(proxied);
+          markMediaUrlBroken(raw);
+          onBrokenUrl?.(raw);
           resolve();
         }
       };
@@ -105,7 +124,7 @@ export const ImageWithSkeleton: React.FC<ImageWithSkeletonProps> = ({
   const [loaded, setLoaded] = useState<boolean>(() =>
     MEMORY_LOADED_URLS.has(primarySrc) || MEMORY_LOADED_URLS.has(src)
   );
-  const [error, setError] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(() => isMediaUrlBroken(src));
   const [triedDirectFallback, setTriedDirectFallback] = useState<boolean>(false);
 
   const reportDimensions = (el: HTMLImageElement | null) => {
@@ -121,6 +140,14 @@ export const ImageWithSkeleton: React.FC<ImageWithSkeletonProps> = ({
     const nextPrimary = disableProxy ? src : resolveProxiedImageUrl(src);
     setActiveSrc(nextPrimary);
     setTriedDirectFallback(false);
+
+    if (!src || isMediaUrlBroken(src)) {
+      setError(true);
+      setLoaded(false);
+      onLoadErrorRef.current?.();
+      return;
+    }
+
     setError(false);
 
     const imgEl = imgRef.current;
@@ -157,6 +184,7 @@ export const ImageWithSkeleton: React.FC<ImageWithSkeletonProps> = ({
       setActiveSrc(src);
       return;
     }
+    markMediaUrlBroken(src);
     setError(true);
     onLoadErrorRef.current?.();
   };

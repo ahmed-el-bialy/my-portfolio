@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, lazy, Suspense, Component } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense, Component } from 'react';
 import { motion, AnimatePresence, LayoutGroup, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -16,6 +16,9 @@ import {
   ConsolidatedGitHubPortfolio,
   fetchConsolidatedGitHubPortfolio,
   sanitizeDiscoveredScreenshots,
+  isMediaUrlBroken,
+  markMediaUrlBroken,
+  subscribeBrokenMediaUrls,
 } from '../services/githubService';
 import { resolveSmartProjectLinks } from '../utils/projectLinks';
 import { ImageWithSkeleton, preloadImageUrls } from './ImageWithSkeleton';
@@ -125,7 +128,20 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
   } | null>(null);
   const [hasOpenedVideoModal, setHasOpenedVideoModal] = useState(false);
   const [isLandscapeScreen, setIsLandscapeScreen] = useState(false);
+  const [failedUrls, setFailedUrls] = useState<Record<string, true>>({});
   const { data: revioPlayStats } = usePlayStoreAppStats('com.ahmed.revio');
+
+  const markFailed = useCallback((url?: string) => {
+    if (!url) return;
+    markMediaUrlBroken(url);
+    setFailedUrls((prev) => (prev[url] ? prev : { ...prev, [url]: true }));
+  }, []);
+
+  useEffect(() => {
+    return subscribeBrokenMediaUrls((brokenUrl) => {
+      setFailedUrls((prev) => (prev[brokenUrl] ? prev : { ...prev, [brokenUrl]: true }));
+    });
+  }, []);
 
   const {
     data: cachedConsolidated,
@@ -196,10 +212,17 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
           : verifiedScreens.length > 0
           ? verifiedScreens
           : fallbackImg;
-      const list = rawList.filter((u): u is string => typeof u === 'string' && u.trim().length > 0);
+      const list = rawList.filter(
+        (u): u is string =>
+          typeof u === 'string' &&
+          u.trim().length > 0 &&
+          !failedUrls[u] &&
+          !isMediaUrlBroken(u)
+      );
       return {
-        screens: list.slice(0, 4).map((src, idx) => ({
+        screens: list.map((src, idx) => ({
           id: `${activeProject.repoName}-${idx}`,
+          globalIdx: idx,
           label: formatHeroScreenLabel(src, idx),
           src,
         })),
@@ -211,26 +234,33 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
         VERIFIED_REPO_SCREENSHOTS[activeProject.name] ||
         [];
       return {
-        screens: staticScreens.slice(0, 4).map((src, idx) => ({
-          id: `${activeProject.repoName}-fallback-${idx}`,
-          label: formatHeroScreenLabel(src, idx),
-          src,
-        })),
+        screens: staticScreens
+          .filter((u) => !failedUrls[u] && !isMediaUrlBroken(u))
+          .map((src, idx) => ({
+            id: `${activeProject.repoName}-fallback-${idx}`,
+            globalIdx: idx,
+            label: formatHeroScreenLabel(src, idx),
+            src,
+          })),
         mapperFailed: true,
       };
     }
-  }, [activeProject, activeLiveMedia]);
+  }, [activeProject, activeLiveMedia, failedUrls]);
 
-  // Preload active app screens & primary screens of showcase apps on mount/switch
+  // Preload active app screens (current window + next) & primary screens of showcase apps on mount/switch
   useEffect(() => {
+    const safeTotal = activeScreens.length;
+    const normIdx =
+      safeTotal > 0 ? ((screenIndex % safeTotal) + safeTotal) % safeTotal : 0;
+    const windowStart = Math.floor(normIdx / 4) * 4;
     const urls = [
-      ...activeScreens.map((s) => s.src),
+      ...activeScreens.slice(windowStart, windowStart + 8).map((s) => s.src),
       ...(SHOWCASE_REPO_ORDER.map((k) => VERIFIED_REPO_SCREENSHOTS[k]?.[0]).filter(
         (u): u is string => typeof u === 'string' && u.trim().length > 0
       )),
     ];
-    preloadImageUrls(urls);
-  }, [activeScreens]);
+    preloadImageUrls(urls, markFailed);
+  }, [activeScreens, screenIndex, markFailed]);
 
   if (!activeProject) return null;
 
@@ -239,6 +269,8 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
   const normalizedIdx =
     safeScreenCount > 0 ? ((screenIndex % safeScreenCount) + safeScreenCount) % safeScreenCount : 0;
   const currentScreen = activeScreens[normalizedIdx] || activeScreens[0];
+  const quickBatchStart = Math.floor(normalizedIdx / 4) * 4;
+  const visibleQuickScreens = activeScreens.slice(quickBatchStart, quickBatchStart + 4);
 
   useEffect(() => {
     setIsLandscapeScreen(false);
@@ -398,7 +430,8 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
           </div>
 
           <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400 tabular-nums">
-            0{safeScreenCount > 0 ? normalizedIdx + 1 : 0} / 0{activeScreens.length}
+            {String(safeScreenCount > 0 ? normalizedIdx + 1 : 0).padStart(2, '0')} /{' '}
+            {String(activeScreens.length).padStart(2, '0')}
           </span>
         </div>
 
@@ -495,6 +528,7 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
                           alt={`${activeProject.name} ${currentScreen.label}`}
                           loading="eager"
                           variant="phone"
+                          onLoadError={() => markFailed(currentScreen.src)}
                           onImageDimensions={({ isLandscape }) =>
                             setIsLandscapeScreen(isLandscape)
                           }
@@ -565,17 +599,17 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
               )}
             </div>
 
-            {/* Screen Quick Switcher */}
-            {activeScreens.length > 0 && (
+            {/* Screen Quick Switcher (Active 4-screen window across full circular buffer) */}
+            {visibleQuickScreens.length > 0 && (
               <div className="grid grid-cols-2 gap-1.5 min-w-0">
-                {activeScreens.map((scr, idx) => (
+                {visibleQuickScreens.map((scr) => (
                   <button
                     key={scr.id}
                     type="button"
-                    onClick={() => handleJumpScreen(idx)}
+                    onClick={() => handleJumpScreen(scr.globalIdx)}
                     dir="ltr"
                     className={`px-2.5 py-2 rounded-xl text-[11px] font-mono font-semibold text-left border transition-colors cursor-pointer truncate capitalize min-h-[44px] sm:min-h-[38px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] ${
-                      normalizedIdx === idx
+                      normalizedIdx === scr.globalIdx
                         ? 'bg-[#0284ff]/12 border-[#0284ff]/60 text-[#0369a1] dark:text-[#38bdf8] shadow-2xs'
                         : 'bg-slate-50 dark:bg-[#161b27] border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/25'
                     }`}

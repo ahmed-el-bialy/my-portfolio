@@ -69,6 +69,9 @@ import {
   ConsolidatedGitHubPortfolio,
   formatFileSize,
   sanitizeDiscoveredScreenshots,
+  isMediaUrlBroken,
+  markMediaUrlBroken,
+  subscribeBrokenMediaUrls,
 } from '../services/githubService';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import { useLanguage } from '../context/LanguageContext';
@@ -286,7 +289,8 @@ const GalleryCard: React.FC<{
   isActive: boolean;
   onSelect: () => void;
   onInspect: () => void;
-}> = ({ url, label, index, projectName, isActive, onSelect, onInspect }) => {
+  onLoadError?: () => void;
+}> = ({ url, label, index, projectName, isActive, onSelect, onInspect, onLoadError }) => {
   const [isLandscape, setIsLandscape] = useState(false);
 
   return (
@@ -308,6 +312,7 @@ const GalleryCard: React.FC<{
           alt={`${projectName} — ${label}`}
           loading="lazy"
           variant="phone"
+          onLoadError={onLoadError}
           onImageDimensions={({ isLandscape: landscape }) => setIsLandscape(landscape)}
           className={`w-full h-full group-hover:scale-[1.02] transition-transform duration-300 crisp-screenshot rounded-xl ${
             isLandscape ? 'object-contain' : 'object-cover object-top'
@@ -368,9 +373,22 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const [loadingCovers, setLoadingCovers] = useState<boolean>(false);
   const [screenshots, setScreenshots] = useState<string[]>([]);
   const [loadingScreens, setLoadingScreens] = useState<boolean>(false);
+  const [failedMediaUrls, setFailedMediaUrls] = useState<Record<string, true>>({});
   const [liveMeta, setLiveMeta] = useState<RepoLiveMetadata | null>(null);
   const [isSyncingLive, setIsSyncingLive] = useState<boolean>(false);
   const [releaseInfo, setReleaseInfo] = useState<RepoReleaseInfo>({ hasRelease: false });
+
+  const markModalMediaFailed = useCallback((url?: string) => {
+    if (!url) return;
+    markMediaUrlBroken(url);
+    setFailedMediaUrls((prev) => (prev[url] ? prev : { ...prev, [url]: true }));
+  }, []);
+
+  useEffect(() => {
+    return subscribeBrokenMediaUrls((brokenUrl) => {
+      setFailedMediaUrls((prev) => (prev[brokenUrl] ? prev : { ...prev, [brokenUrl]: true }));
+    });
+  }, []);
 
   const [caseStudyData, setCaseStudyData] = useState<RepoCaseStudyData>({
     en: null,
@@ -614,6 +632,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         manualStudyLangRef.current = false;
         setStudyCaseLang(lang === 'ar' ? 'ar' : 'en');
         setStudyOrReadmeTab('casestudy');
+        setFailedMediaUrls({});
         setLiveMeta(cachedLiveMedia || null);
         setReleaseInfo({ hasRelease: false });
 
@@ -754,9 +773,15 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const safeCovers = useMemo(
     () =>
       Array.isArray(covers)
-        ? covers.filter((u): u is string => typeof u === 'string' && u.trim().length > 0)
+        ? covers.filter(
+            (u): u is string =>
+              typeof u === 'string' &&
+              u.trim().length > 0 &&
+              !failedMediaUrls[u] &&
+              !isMediaUrlBroken(u)
+          )
         : [],
-    [covers]
+    [covers, failedMediaUrls]
   );
 
   const safeCoverCount = safeCovers.length;
@@ -768,9 +793,15 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const safeScreenshots = useMemo(
     () =>
       Array.isArray(screenshots)
-        ? screenshots.filter((u): u is string => typeof u === 'string' && u.trim().length > 0)
+        ? screenshots.filter(
+            (u): u is string =>
+              typeof u === 'string' &&
+              u.trim().length > 0 &&
+              !failedMediaUrls[u] &&
+              !isMediaUrlBroken(u)
+          )
         : [],
-    [screenshots]
+    [screenshots, failedMediaUrls]
   );
 
   const safeScreenCount = safeScreenshots.length;
@@ -1899,6 +1930,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                           : undefined
                       }
                       onJumpToGallery={() => scrollToSection('gallery')}
+                      onScreenError={markModalMediaFailed}
                     />
                   </div>
                 </div>
@@ -2301,6 +2333,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                                 setActiveScreenIndex(targetIndex);
                                 setLightboxOpen(true);
                               }}
+                              onLoadError={() => markModalMediaFailed(item.url)}
                             />
                           );
                         })}
@@ -2741,6 +2774,15 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   ) {
                     setLightboxImgState({ triedDirect: true, failed: false });
                   } else {
+                    if (!adHocLightboxUrl && activeLightboxRawUrl) {
+                      const remainingCount =
+                        lightboxMediaType === 'cover' ? safeCoverCount - 1 : safeScreenCount - 1;
+                      markModalMediaFailed(activeLightboxRawUrl);
+                      if (remainingCount > 0) {
+                        setLightboxImgState({ triedDirect: false, failed: false });
+                        return;
+                      }
+                    }
                     setLightboxImgState({ triedDirect: true, failed: true });
                   }
                 }}

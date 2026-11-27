@@ -52,6 +52,7 @@ interface ProjectDeviceStageProps {
   onOpenLightbox: () => void;
   onOpenVideoLightbox?: () => void;
   onJumpToGallery: () => void;
+  onScreenError?: (failedUrl: string) => void;
 }
 
 export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
@@ -83,6 +84,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
   onOpenLightbox,
   onOpenVideoLightbox,
   onJumpToGallery,
+  onScreenError,
 }) => {
   const shouldReduceMotion = useReducedMotion();
   const [userToggledStage, setUserToggledStage] = useState(false);
@@ -519,6 +521,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                             )}`}
                             loading="eager"
                             variant="phone"
+                            onLoadError={() => onScreenError?.(activeScreenUrl)}
                             onImageDimensions={({ isLandscape }) =>
                               setIsLandscapeScreen(isLandscape)
                             }
@@ -630,17 +633,22 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
       </div>
 
       {/* Synchronized Interactive Filmstrip (Bridges Video Demo <-> Pixel 9 Pro XL Screens) */}
-      {screenCount > 0 && (
+      {screenCount > 0 && (() => {
+        const FILMSTRIP_WINDOW = 6;
+        const filmStart = Math.floor(safeIndex / FILMSTRIP_WINDOW) * FILMSTRIP_WINDOW;
+        const visibleFilmThumbs = screenshots.slice(filmStart, filmStart + FILMSTRIP_WINDOW);
+        return (
         <div className="pt-3 border-t border-slate-200/80 dark:border-white/8 flex items-center gap-2 overflow-x-auto no-scrollbar">
-          {screenshots.slice(0, 6).map((thumb, idx) => {
-            const active = safeIndex === idx && effectiveMode === 'screens';
+          {visibleFilmThumbs.map((thumb, idx) => {
+            const globalIdx = filmStart + idx;
+            const active = safeIndex === globalIdx && effectiveMode === 'screens';
             return (
               <button
-                key={`${thumb}-${idx}`}
+                key={`${thumb}-${globalIdx}`}
                 type="button"
                 onClick={() => {
                   handleSelectMode('screens');
-                  onSelectScreen(idx);
+                  onSelectScreen(globalIdx);
                 }}
                 className={`w-9 aspect-[9/20] rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer bg-[#08090d] ${
                   active
@@ -648,14 +656,15 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                     : 'border-slate-200 dark:border-white/15 opacity-80 hover:opacity-100'
                 }`}
                 aria-label={`${lang === 'ar' ? 'معاينة الشاشة' : 'Inspect screen'} ${
-                  idx + 1
+                  globalIdx + 1
                 }`}
               >
                 <ImageWithSkeleton
                   src={thumb}
-                  alt={`${displayName} screen ${idx + 1}`}
+                  alt={`${displayName} screen ${globalIdx + 1}`}
                   loading="eager"
                   variant="phone"
+                  onLoadError={() => onScreenError?.(thumb)}
                   className="w-full h-full object-cover object-top crisp-screenshot"
                 />
               </button>
@@ -673,7 +682,8 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
             </span>
           </button>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

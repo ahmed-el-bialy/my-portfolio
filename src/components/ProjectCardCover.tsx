@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   Smartphone,
@@ -24,6 +24,9 @@ import {
   fetchRepoScreenshots,
   fetchRepoCoverImages,
   sanitizeDiscoveredScreenshots,
+  isMediaUrlBroken,
+  markMediaUrlBroken,
+  subscribeBrokenMediaUrls,
 } from '../services/githubService';
 import { ImageWithSkeleton, preloadImageUrls } from './ImageWithSkeleton';
 import { useLanguage } from '../context/LanguageContext';
@@ -356,10 +359,17 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   );
   const isHovered = Boolean(isCardHovered || isSelfHovered);
 
-  const markAssetFailed = (url?: string) => {
+  const markAssetFailed = useCallback((url?: string) => {
     if (!url) return;
+    markMediaUrlBroken(url);
     setFailedAssetUrls((prev) => (prev[url] ? prev : { ...prev, [url]: true }));
-  };
+  }, []);
+
+  useEffect(() => {
+    return subscribeBrokenMediaUrls((brokenUrl) => {
+      setFailedAssetUrls((prev) => (prev[brokenUrl] ? prev : { ...prev, [brokenUrl]: true }));
+    });
+  }, []);
 
   const blueprint: ProjectBlueprintSpec = useMemo(
     () => synthesizeProjectBlueprint(repoName, language, description, topics),
@@ -431,7 +441,11 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     return Array.from(
       new Set(
         rawList.filter(
-          (u): u is string => typeof u === 'string' && u.trim().length > 0 && !failedAssetUrls[u]
+          (u): u is string =>
+            typeof u === 'string' &&
+            u.trim().length > 0 &&
+            !failedAssetUrls[u] &&
+            !isMediaUrlBroken(u)
         )
       )
     );
@@ -440,7 +454,13 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   const verifiedScreenshots = useMemo(() => {
     const coverSet = new Set(resolvedCoverImages);
     const filterValidScreens = (list: string[]) =>
-      list.filter((u) => !coverSet.has(u) && !isStrictCoverAssetUrl(u) && !failedAssetUrls[u]);
+      list.filter(
+        (u) =>
+          !coverSet.has(u) &&
+          !isStrictCoverAssetUrl(u) &&
+          !failedAssetUrls[u] &&
+          !isMediaUrlBroken(u)
+      );
 
     if (sanitizedDiscovered.length > 0) {
       const live = filterValidScreens(sanitizedDiscovered);
@@ -454,7 +474,14 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
       const fallbackCurated = filterValidScreens(curatedScreens);
       if (fallbackCurated.length > 0) return fallbackCurated;
     }
-    if (coverUrl && !isStrictCoverAssetUrl(coverUrl) && !failedAssetUrls[coverUrl]) return [coverUrl];
+    if (
+      coverUrl &&
+      !isStrictCoverAssetUrl(coverUrl) &&
+      !failedAssetUrls[coverUrl] &&
+      !isMediaUrlBroken(coverUrl)
+    ) {
+      return [coverUrl];
+    }
     return [];
   }, [curatedScreens, sanitizedDiscovered, autoDiscoveredScreens, coverUrl, resolvedCoverImages, failedAssetUrls]);
 
@@ -464,10 +491,12 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   const SCREEN_BATCH_SIZE = 4;
   const totalScreenBatches =
     totalScreens > 0 ? Math.ceil(totalScreens / SCREEN_BATCH_SIZE) : 0;
-  const normalizedScreenIdxEarly =
-    totalScreens > 0 ? selectedScreenIdx % totalScreens : 0;
+  const normalizedCoverIdx =
+    totalCovers > 0 ? ((activeCoverIdx % totalCovers) + totalCovers) % totalCovers : 0;
+  const normalizedScreenIdx =
+    totalScreens > 0 ? ((selectedScreenIdx % totalScreens) + totalScreens) % totalScreens : 0;
   const activeBatchIdx =
-    totalScreens > 0 ? Math.floor(normalizedScreenIdxEarly / SCREEN_BATCH_SIZE) : 0;
+    totalScreens > 0 ? Math.floor(normalizedScreenIdx / SCREEN_BATCH_SIZE) : 0;
   const batchStartIdx = activeBatchIdx * SCREEN_BATCH_SIZE;
   const visibleThumbBatch = verifiedScreenshots.slice(
     batchStartIdx,
@@ -486,7 +515,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
       ...verifiedScreenshots.slice(nextBatchStart, nextBatchStart + SCREEN_BATCH_SIZE),
     ];
     if (toPreload.length > 0) {
-      preloadImageUrls(toPreload);
+      preloadImageUrls(toPreload, markAssetFailed);
     }
   }, [
     resolvedCoverImages,
@@ -495,6 +524,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     activeBatchIdx,
     totalScreenBatches,
     totalScreens,
+    markAssetFailed,
   ]);
 
   // Reset state cleanly on repo change
@@ -552,13 +582,11 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   }, [repoName]);
 
   useEffect(() => {
-    onActiveScreenChange?.(selectedScreenIdx);
-  }, [selectedScreenIdx, onActiveScreenChange]);
+    onActiveScreenChange?.(normalizedScreenIdx);
+  }, [normalizedScreenIdx, onActiveScreenChange]);
 
   const hasBothModes = totalCovers > 0 && totalScreens > 0;
   const isShowingCoverMode = Boolean(showingCoverArt && totalCovers > 0);
-  const normalizedCoverIdx = totalCovers > 0 ? activeCoverIdx % totalCovers : 0;
-  const normalizedScreenIdx = totalScreens > 0 ? selectedScreenIdx % totalScreens : 0;
 
   // In combined Cover <-> Screens mode:
   // - Cover turn displays ONE cover comfortably for 5s (advancing to the next cover on the following return cycle)
@@ -660,6 +688,9 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     screenTurnStep,
     screensInTurnCount,
     currentStepDurationMs,
+    selectedScreenIdx,
+    activeCoverIdx,
+    modeCycleEpoch,
   ]);
 
   const selectScreen = (idx: number, e?: React.MouseEvent) => {
