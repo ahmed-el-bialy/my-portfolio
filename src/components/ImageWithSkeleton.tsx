@@ -10,6 +10,8 @@ export interface ImageWithSkeletonProps {
   referrerPolicy?: React.ImgHTMLAttributes<HTMLImageElement>['referrerPolicy'];
   fallbackContent?: React.ReactNode;
   onLoadComplete?: () => void;
+  onImageDimensions?: (dims: { width: number; height: number; isLandscape: boolean }) => void;
+  onLoadError?: () => void;
   variant?: 'default' | 'phone';
   disableProxy?: boolean;
 }
@@ -85,12 +87,18 @@ export const ImageWithSkeleton: React.FC<ImageWithSkeletonProps> = ({
   referrerPolicy = 'no-referrer',
   fallbackContent,
   onLoadComplete,
+  onImageDimensions,
+  onLoadError,
   variant = 'default',
   disableProxy = false,
 }) => {
   const imgRef = useRef<HTMLImageElement | null>(null);
   const onLoadCompleteRef = useRef(onLoadComplete);
   onLoadCompleteRef.current = onLoadComplete;
+  const onImageDimensionsRef = useRef(onImageDimensions);
+  onImageDimensionsRef.current = onImageDimensions;
+  const onLoadErrorRef = useRef(onLoadError);
+  onLoadErrorRef.current = onLoadError;
 
   const primarySrc = disableProxy ? src : resolveProxiedImageUrl(src);
   const [activeSrc, setActiveSrc] = useState<string>(primarySrc);
@@ -100,23 +108,34 @@ export const ImageWithSkeleton: React.FC<ImageWithSkeletonProps> = ({
   const [error, setError] = useState<boolean>(false);
   const [triedDirectFallback, setTriedDirectFallback] = useState<boolean>(false);
 
+  const reportDimensions = (el: HTMLImageElement | null) => {
+    if (!el || !el.naturalWidth || !el.naturalHeight) return;
+    onImageDimensionsRef.current?.({
+      width: el.naturalWidth,
+      height: el.naturalHeight,
+      isLandscape: el.naturalWidth > el.naturalHeight,
+    });
+  };
+
   useEffect(() => {
     const nextPrimary = disableProxy ? src : resolveProxiedImageUrl(src);
     setActiveSrc(nextPrimary);
     setTriedDirectFallback(false);
     setError(false);
 
+    const imgEl = imgRef.current;
     if (MEMORY_LOADED_URLS.has(nextPrimary) || MEMORY_LOADED_URLS.has(src)) {
       setLoaded(true);
+      reportDimensions(imgEl);
       onLoadCompleteRef.current?.();
       return;
     }
 
-    const imgEl = imgRef.current;
     if (imgEl && imgEl.complete && imgEl.naturalWidth > 0) {
       MEMORY_LOADED_URLS.add(nextPrimary);
       MEMORY_LOADED_URLS.add(src);
       setLoaded(true);
+      reportDimensions(imgEl);
       onLoadCompleteRef.current?.();
     } else {
       setLoaded(false);
@@ -128,6 +147,7 @@ export const ImageWithSkeleton: React.FC<ImageWithSkeletonProps> = ({
     MEMORY_LOADED_URLS.add(src);
     setLoaded(true);
     setError(false);
+    reportDimensions(imgRef.current);
     onLoadCompleteRef.current?.();
   };
 
@@ -138,6 +158,7 @@ export const ImageWithSkeleton: React.FC<ImageWithSkeletonProps> = ({
       return;
     }
     setError(true);
+    onLoadErrorRef.current?.();
   };
 
   return (

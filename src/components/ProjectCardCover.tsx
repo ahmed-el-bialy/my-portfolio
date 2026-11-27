@@ -314,6 +314,7 @@ function isStrictCoverAssetUrl(url?: string): boolean {
   const lower = url.toLowerCase();
   return (
     lower.includes('/covers/') ||
+    lower.includes('/cover/') ||
     lower.includes('/screenshots/cover') ||
     lower.endsWith('/cover.png') ||
     lower.endsWith('/cover.jpg') ||
@@ -344,6 +345,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
   const [activeCoverIdx, setActiveCoverIdx] = useState<number>(0);
   const [autoDiscoveredCovers, setAutoDiscoveredCovers] = useState<string[]>([]);
   const [autoDiscoveredScreens, setAutoDiscoveredScreens] = useState<string[]>([]);
+  const [failedAssetUrls, setFailedAssetUrls] = useState<Record<string, true>>({});
   const [isSelfHovered, setIsSelfHovered] = useState<boolean>(false);
   const [manualPausedUntil, setManualPausedUntil] = useState<number>(0);
   const [showingCoverArt, setShowingCoverArt] = useState<boolean>(() =>
@@ -353,6 +355,11 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     )
   );
   const isHovered = Boolean(isCardHovered || isSelfHovered);
+
+  const markAssetFailed = (url?: string) => {
+    if (!url) return;
+    setFailedAssetUrls((prev) => (prev[url] ? prev : { ...prev, [url]: true }));
+  };
 
   const blueprint: ProjectBlueprintSpec = useMemo(
     () => synthesizeProjectBlueprint(repoName, language, description, topics),
@@ -386,10 +393,10 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     };
   }, [repoName, coverImages]);
 
-  // Automatic client-side fallback discovery for app screens
+  // Automatic client-side live discovery for app screens whenever parent didn't pass live discoveredScreenshots
   useEffect(() => {
     let isCancelled = false;
-    if (curatedScreens.length > 0 || sanitizedDiscovered.length > 0) {
+    if (sanitizedDiscovered.length > 0) {
       setAutoDiscoveredScreens([]);
       return;
     }
@@ -406,7 +413,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [repoName, curatedScreens.length, sanitizedDiscovered.length]);
+  }, [repoName, sanitizedDiscovered.length]);
 
   const resolvedCoverImages = useMemo(() => {
     const rawList: string[] = [];
@@ -419,40 +426,82 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     if (coverUrl && isStrictCoverAssetUrl(coverUrl)) {
       rawList.push(coverUrl);
     } else if (repoName.toLowerCase() === 'revio' && rawList.length === 0) {
-      rawList.push('https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/cover.png');
+      rawList.push('https://raw.githubusercontent.com/ahmed-el-bialy/Revio/main/screenshots/covers/cover.png');
     }
     return Array.from(
-      new Set(rawList.filter((u): u is string => typeof u === 'string' && u.trim().length > 0))
+      new Set(
+        rawList.filter(
+          (u): u is string => typeof u === 'string' && u.trim().length > 0 && !failedAssetUrls[u]
+        )
+      )
     );
-  }, [coverImages, autoDiscoveredCovers, coverUrl, repoName]);
+  }, [coverImages, autoDiscoveredCovers, coverUrl, repoName, failedAssetUrls]);
 
   const verifiedScreenshots = useMemo(() => {
     const coverSet = new Set(resolvedCoverImages);
-    const filterNonCover = (list: string[]) =>
-      list.filter((u) => !coverSet.has(u) && !isStrictCoverAssetUrl(u));
+    const filterValidScreens = (list: string[]) =>
+      list.filter((u) => !coverSet.has(u) && !isStrictCoverAssetUrl(u) && !failedAssetUrls[u]);
 
-    if (curatedScreens.length > 0) return filterNonCover(curatedScreens).slice(0, 5);
-    if (sanitizedDiscovered.length > 0) return filterNonCover(sanitizedDiscovered).slice(0, 5);
-    if (autoDiscoveredScreens.length > 0) return filterNonCover(autoDiscoveredScreens).slice(0, 5);
-    if (coverUrl && !isStrictCoverAssetUrl(coverUrl)) return [coverUrl];
+    if (sanitizedDiscovered.length > 0) {
+      const live = filterValidScreens(sanitizedDiscovered);
+      if (live.length > 0) return live;
+    }
+    if (autoDiscoveredScreens.length > 0) {
+      const autoLive = filterValidScreens(autoDiscoveredScreens);
+      if (autoLive.length > 0) return autoLive;
+    }
+    if (curatedScreens.length > 0) {
+      const fallbackCurated = filterValidScreens(curatedScreens);
+      if (fallbackCurated.length > 0) return fallbackCurated;
+    }
+    if (coverUrl && !isStrictCoverAssetUrl(coverUrl) && !failedAssetUrls[coverUrl]) return [coverUrl];
     return [];
-  }, [curatedScreens, sanitizedDiscovered, autoDiscoveredScreens, coverUrl, resolvedCoverImages]);
+  }, [curatedScreens, sanitizedDiscovered, autoDiscoveredScreens, coverUrl, resolvedCoverImages, failedAssetUrls]);
 
   const totalCovers = resolvedCoverImages.length;
   const totalScreens = verifiedScreenshots.length;
 
-  // Preload both covers and primary screens so alternating transitions never flash blank
+  const SCREEN_BATCH_SIZE = 4;
+  const totalScreenBatches =
+    totalScreens > 0 ? Math.ceil(totalScreens / SCREEN_BATCH_SIZE) : 0;
+  const normalizedScreenIdxEarly =
+    totalScreens > 0 ? selectedScreenIdx % totalScreens : 0;
+  const activeBatchIdx =
+    totalScreens > 0 ? Math.floor(normalizedScreenIdxEarly / SCREEN_BATCH_SIZE) : 0;
+  const batchStartIdx = activeBatchIdx * SCREEN_BATCH_SIZE;
+  const visibleThumbBatch = verifiedScreenshots.slice(
+    batchStartIdx,
+    batchStartIdx + SCREEN_BATCH_SIZE
+  );
+
+  // Preload active covers, active 4-screen batch, and next 4-screen batch so batch transitions never flash blank
   useEffect(() => {
-    const toPreload = [...resolvedCoverImages.slice(0, 4), ...verifiedScreenshots.slice(0, 4)];
+    const nextBatchStart =
+      totalScreens > 0
+        ? ((activeBatchIdx + 1) % Math.max(1, totalScreenBatches)) * SCREEN_BATCH_SIZE
+        : 0;
+    const toPreload = [
+      ...resolvedCoverImages.slice(0, 4),
+      ...verifiedScreenshots.slice(batchStartIdx, batchStartIdx + SCREEN_BATCH_SIZE),
+      ...verifiedScreenshots.slice(nextBatchStart, nextBatchStart + SCREEN_BATCH_SIZE),
+    ];
     if (toPreload.length > 0) {
       preloadImageUrls(toPreload);
     }
-  }, [resolvedCoverImages, verifiedScreenshots]);
+  }, [
+    resolvedCoverImages,
+    verifiedScreenshots,
+    batchStartIdx,
+    activeBatchIdx,
+    totalScreenBatches,
+    totalScreens,
+  ]);
 
   // Reset state cleanly on repo change
   useEffect(() => {
     setSelectedScreenIdx(0);
     setActiveCoverIdx(0);
+    setFailedAssetUrls({});
     setManualPausedUntil(0);
     setShowingCoverArt(totalCovers > 0);
     onActiveScreenChange?.(0);
@@ -469,7 +518,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
 
   const COVER_TURN_MS = 5000;
   const SCREEN_TURN_MS = 5000;
-  const SINGLE_MODE_SLIDE_MS = 4500;
+  const SINGLE_MODE_SLIDE_MS = 3500;
   const [modeCycleEpoch, setModeCycleEpoch] = useState(0);
   const [resumeFraction, setResumeFraction] = useState(0);
   const [screenTurnStep, setScreenTurnStep] = useState(0);
@@ -669,6 +718,18 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
     pauseAutoCycleTemporarily();
   };
 
+  const handleNextBatch = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (totalScreenBatches <= 1) return;
+    setShowingCoverArt(false);
+    const nextBatchStart = ((activeBatchIdx + 1) % totalScreenBatches) * SCREEN_BATCH_SIZE;
+    setSelectedScreenIdx(nextBatchStart);
+    setScreenTurnStep(0);
+    setResumeFraction(0);
+    onActiveScreenChange?.(nextBatchStart);
+    pauseAutoCycleTemporarily();
+  };
+
   const handleToggleMode = (toCover: boolean, e: React.MouseEvent) => {
     e.stopPropagation();
     setShowingCoverArt(toCover);
@@ -852,6 +913,7 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                       src={activeCoverUrl}
                       alt={`${blueprint.appTitle} Cover ${normalizedCoverIdx + 1}`}
                       loading="eager"
+                      onLoadError={() => markAssetFailed(activeCoverUrl)}
                       className="w-full h-full object-contain object-center transition-transform duration-500 group-hover/cover:scale-[1.015]"
                     />
                   </motion.div>
@@ -960,9 +1022,10 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                         >
                           <ImageWithSkeleton
                             src={activeScreenUrl}
-                            alt={`${blueprint.appTitle} hero screen ${normalizedScreenIdx + 1}`}
+                            alt={`${blueprint.appTitle} screen ${normalizedScreenIdx + 1}`}
                             loading="eager"
                             variant="phone"
+                            onLoadError={() => markAssetFailed(activeScreenUrl)}
                             className="w-full h-full object-contain crisp-screenshot"
                           />
                         </motion.div>
@@ -1017,17 +1080,18 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
 
                   {totalScreens > 1 ? (
                     <div className="space-y-1.5 pt-0.5">
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center justify-between gap-1.5">
                         <span className="text-[9.5px] font-mono font-semibold text-slate-500 dark:text-slate-400 tabular-nums shrink-0">
                           {String(normalizedScreenIdx + 1).padStart(2, '0')}/
                           {String(totalScreens).padStart(2, '0')}
                         </span>
-                        <div className="flex items-center gap-1 flex-1 max-w-[110px]">
-                          {verifiedScreenshots.map((_, sIdx) => {
-                            const isActive = sIdx === normalizedScreenIdx;
+                        <div className="flex items-center gap-1 flex-1 max-w-[90px]">
+                          {visibleThumbBatch.map((_, sIdx) => {
+                            const globalIdx = batchStartIdx + sIdx;
+                            const isActive = globalIdx === normalizedScreenIdx;
                             return (
                               <div
-                                key={sIdx}
+                                key={`${activeBatchIdx}-${sIdx}`}
                                 className={`relative h-1 rounded-full overflow-hidden transition-all ${
                                   isActive
                                     ? 'flex-[1.8] bg-slate-300/80 dark:bg-white/20'
@@ -1057,46 +1121,81 @@ export const ProjectCardCover: React.FC<ProjectCardCoverProps> = ({
                             );
                           })}
                         </div>
+                        {totalScreenBatches > 1 && (
+                          <button
+                            type="button"
+                            onClick={handleNextBatch}
+                            aria-label={
+                              lang === 'ar'
+                                ? 'عرض المجموعة التالية من 4 شاشات'
+                                : 'Show next 4 screens'
+                            }
+                            title={
+                              lang === 'ar'
+                                ? 'المجموعة التالية (4 شاشات)'
+                                : 'Next 4 screens'
+                            }
+                            className="pointer-events-auto inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-slate-200/75 dark:bg-white/[0.08] hover:bg-[#0284ff] text-slate-600 dark:text-slate-300 hover:text-white text-[9px] font-mono font-bold tabular-nums transition-colors cursor-pointer shrink-0"
+                          >
+                            <span>
+                              {activeBatchIdx + 1}/{totalScreenBatches}
+                            </span>
+                            {dir === 'rtl' ? (
+                              <ChevronLeft size={9} />
+                            ) : (
+                              <ChevronRight size={9} />
+                            )}
+                          </button>
+                        )}
                       </div>
 
-                      <div
-                        className="grid grid-cols-2 gap-1.5 pointer-events-auto"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {verifiedScreenshots.slice(0, 4).map((thumbUrl, tIdx) => {
-                          const isActive = normalizedScreenIdx === tIdx;
-                          return (
-                            <button
-                              key={thumbUrl}
-                              type="button"
-                              onClick={(e) => selectScreen(tIdx, e)}
-                              aria-label={`Select screen ${tIdx + 1}`}
-                              className={`group/thumb relative h-14 sm:h-18 w-full rounded-xl overflow-hidden bg-[#0e1320] border-2 transition-all duration-200 cursor-pointer ${
-                                isActive
-                                  ? 'border-[#0284ff] dark:border-[#00C7FF] shadow-md scale-[1.03]'
-                                  : 'border-slate-300/80 dark:border-white/15 opacity-85 hover:opacity-100 hover:border-slate-400 dark:hover:border-white/35'
-                              }`}
-                            >
-                              <ImageWithSkeleton
-                                src={thumbUrl}
-                                alt={`${blueprint.appTitle} thumbnail ${tIdx + 1}`}
-                                loading="eager"
-                                variant="phone"
-                                className="w-full h-full object-contain crisp-screenshot"
-                              />
-                              <span
-                                className={`absolute bottom-0.5 end-0.5 px-1 rounded text-[8.5px] font-mono font-bold ${
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.div
+                          key={`thumb-batch-${activeBatchIdx}`}
+                          initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={shouldReduceMotion ? undefined : { opacity: 0, y: -4 }}
+                          transition={itemCrossfadeTransition}
+                          className="grid grid-cols-2 gap-1.5 pointer-events-auto"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {visibleThumbBatch.map((thumbUrl, tIdx) => {
+                            const globalIdx = batchStartIdx + tIdx;
+                            const isActive = normalizedScreenIdx === globalIdx;
+                            return (
+                              <button
+                                key={thumbUrl}
+                                type="button"
+                                onClick={(e) => selectScreen(globalIdx, e)}
+                                aria-label={`Select screen ${globalIdx + 1}`}
+                                className={`group/thumb relative h-14 sm:h-18 w-full rounded-xl overflow-hidden bg-[#0e1320] border-2 transition-all duration-200 cursor-pointer ${
                                   isActive
-                                    ? 'bg-[#0284ff] text-white'
-                                    : 'bg-black/75 text-slate-100'
+                                    ? 'border-[#0284ff] dark:border-[#00C7FF] shadow-md scale-[1.03]'
+                                    : 'border-slate-300/80 dark:border-white/15 opacity-85 hover:opacity-100 hover:border-slate-400 dark:hover:border-white/35'
                                 }`}
                               >
-                                0{tIdx + 1}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                                <ImageWithSkeleton
+                                  src={thumbUrl}
+                                  alt={`${blueprint.appTitle} thumbnail ${globalIdx + 1}`}
+                                  loading="eager"
+                                  variant="phone"
+                                  onLoadError={() => markAssetFailed(thumbUrl)}
+                                  className="w-full h-full object-contain crisp-screenshot"
+                                />
+                                <span
+                                  className={`absolute bottom-0.5 end-0.5 px-1 rounded text-[8.5px] font-mono font-bold tabular-nums ${
+                                    isActive
+                                      ? 'bg-[#0284ff] text-white'
+                                      : 'bg-black/75 text-slate-100'
+                                  }`}
+                                >
+                                  {String(globalIdx + 1).padStart(2, '0')}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      </AnimatePresence>
                     </div>
                   ) : (
                     <div className="pt-1">

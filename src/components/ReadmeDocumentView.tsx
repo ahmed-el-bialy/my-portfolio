@@ -12,6 +12,9 @@ import {
   Circle,
   ChevronRight,
   ZoomIn,
+  Hash,
+  BookOpen,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
@@ -46,7 +49,6 @@ export function resolveGitHubAssetUrl(
   if (!url) return '';
 
   if (url.startsWith('http://') || url.startsWith('https://')) {
-    // Convert github.com/owner/repo/blob/branch/path -> raw.githubusercontent.com
     const blobMatch = url.match(
       /^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/i
     );
@@ -79,6 +81,12 @@ export function isDecorativeBadgeUrl(url: string): boolean {
   );
 }
 
+function detectArabicDominance(text: string): boolean {
+  const arChars = (text.match(/[\u0600-\u06FF]/g) || []).length;
+  const latinChars = (text.replace(/https?:\/\/\S+/g, '').match(/[a-zA-Z]/g) || []).length;
+  return arChars >= 16 && arChars >= latinChars * 0.45;
+}
+
 function slugifyHeading(text: string): string {
   return text
     .toLowerCase()
@@ -107,7 +115,7 @@ function normalizeGitHubHtmlToMarkdown(raw: string): string {
   text = text.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (_, inner) => `\n# ${stripInlineMarkdown(inner)}\n`);
   text = text.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, (_, inner) => `\n## ${stripInlineMarkdown(inner)}\n`);
   text = text.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, (_, inner) => `\n### ${stripInlineMarkdown(inner)}\n`);
-  text = text.replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, (_, inner) => `\n#### ${stripInlineMarkdown(inner)}\n`);
+  text = text.replace(/<h[4-6][^>]*>([\s\S]*?)<\/h[4-6]>/gi, (_, inner) => `\n#### ${stripInlineMarkdown(inner)}\n`);
 
   // Convert HTML <a href="...">...</a> wrapping <img> or text into markdown
   text = text.replace(
@@ -137,13 +145,11 @@ function normalizeGitHubHtmlToMarkdown(raw: string): string {
   // Convert HTML <li> inside <ul>/<ol>
   text = text.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_, inner) => `\n- ${stripInlineMarkdown(inner)}`);
 
-  // Convert <hr>
+  // Convert <hr> & <br>
   text = text.replace(/<hr\s*\/?>/gi, '\n---\n');
-
-  // Convert <br>
   text = text.replace(/<br\s*\/?>/gi, '\n');
 
-  // Strip wrapper layout tags while keeping block spacing (<div align="center">, <p>, <tbody>, etc.)
+  // Strip wrapper layout tags while keeping block spacing
   text = text.replace(/<\/?(?:div|p|center|section|article|header|footer|ul|ol|span|picture|source)[^>]*>/gi, '\n');
   text = text.replace(/<\/?(?:b|strong)>/gi, '**');
   text = text.replace(/<\/?(?:i|em)>/gi, '*');
@@ -198,7 +204,6 @@ export function extractReadmeInsights(
     }
     if (inCodeBlock || !line) continue;
 
-    // Extract badge markdowns [![alt](img)](href) and standalone ![alt](img)
     const linkedImgRegex = /\[!\[([^\]]*)\]\(([^)]+)\)\]\(([^)]+)\)/g;
     let m: RegExpExecArray | null;
     while ((m = linkedImgRegex.exec(line)) !== null) {
@@ -231,7 +236,6 @@ export function extractReadmeInsights(
       }
     }
 
-    // Headings
     const hMatch = line.match(/^(#{1,4})\s+(.+)/);
     if (hMatch) {
       const level = hMatch[1].length;
@@ -249,7 +253,6 @@ export function extractReadmeInsights(
       continue;
     }
 
-    // Check bullets
     const bulletMatch = line.match(/^(?:[-*+]\s+(?:\[[ xX]\]\s+)?|\d+\.\s+)(.+)/);
     if (bulletMatch) {
       const cleanBullet = stripInlineMarkdown(bulletMatch[1]);
@@ -266,7 +269,6 @@ export function extractReadmeInsights(
       continue;
     }
 
-    // Summary paragraph candidate
     if (!summaryParagraph && (passedH1 || sections.length === 0)) {
       const cleanPara = stripInlineMarkdown(line);
       if (
@@ -289,7 +291,7 @@ export function extractReadmeInsights(
   return {
     summaryParagraph,
     highlights,
-    sections: sections.slice(0, 12),
+    sections: sections.slice(0, 14),
     badges: badges.slice(0, 10),
     images,
   };
@@ -310,7 +312,6 @@ const InlineMarkdownText: React.FC<InlineRunProps> = ({
   owner,
   onImageClick,
 }) => {
-  // Tokenize inline elements: linked badges [![alt](img)](href), ![alt](img), [text](href), `code`, **bold**, *italic*
   const tokenRegex =
     /(\[!\[([^\]]*)\]\(([^)]+)\)\]\(([^)]+)\)|!\[([^\]]*)\]\(([^)]+)\)|\[([^\]]+)\]\(([^)]+)\)|`([^`]+)`|\*\*([^*]+)\*\*|\*([^*]+)\*)/g;
 
@@ -325,19 +326,17 @@ const InlineMarkdownText: React.FC<InlineRunProps> = ({
     }
 
     if (match[3] && match[4]) {
-      // Linked image/badge: [![alt](img)](href)
       const alt = match[2] || 'Link';
       const imgSrc = resolveGitHubAssetUrl(match[3], repoName, branch, owner);
       const href = resolveGitHubAssetUrl(match[4], repoName, branch, owner);
       if (isDecorativeBadgeUrl(imgSrc)) {
-        // Render as a sleek subtle link tag rather than external raster badge noise
         nodes.push(
           <a
             key={keyCounter++}
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-2.5 py-0.5 mx-1 my-0.5 rounded-lg bg-slate-100 dark:bg-white/8 hover:bg-[#027DFD]/12 text-[#027DFD] dark:text-[#7DD3FC] border border-slate-200 dark:border-white/10 text-[11px] font-mono font-semibold transition-colors"
+            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 mx-1 my-0.5 rounded-lg bg-[#0284ff]/8 dark:bg-[#0284ff]/12 hover:bg-[#0284ff] text-[#0369a1] dark:text-[#7DD3FC] hover:text-white border border-[#0284ff]/20 text-[11px] font-mono font-semibold transition-colors"
           >
             <span>{alt}</span>
             <ExternalLink size={10} />
@@ -350,14 +349,19 @@ const InlineMarkdownText: React.FC<InlineRunProps> = ({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block my-2 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm hover:border-[#027DFD]/50 transition-all"
+            className="inline-block my-2 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm hover:border-[#0284ff]/50 transition-all"
           >
-            <img src={imgSrc} alt={alt} loading="lazy" className="max-h-72 w-auto object-contain" />
+            <img
+              src={imgSrc}
+              alt={alt}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              className="max-h-72 w-auto object-contain"
+            />
           </a>
         );
       }
     } else if (match[6]) {
-      // Standalone image: ![alt](src)
       const alt = match[5] || 'Asset';
       const imgSrc = resolveGitHubAssetUrl(match[6], repoName, branch, owner);
       if (isDecorativeBadgeUrl(imgSrc)) {
@@ -365,7 +369,7 @@ const InlineMarkdownText: React.FC<InlineRunProps> = ({
           nodes.push(
             <span
               key={keyCounter++}
-              className="inline-flex items-center px-2 py-0.5 mx-1 rounded-md bg-slate-100 dark:bg-white/8 border border-slate-200 dark:border-white/10 text-[11px] font-mono text-slate-600 dark:text-slate-300"
+              className="inline-flex items-center px-2 py-0.5 mx-1 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 text-[11px] font-mono text-slate-600 dark:text-slate-300"
             >
               {alt}
             </span>
@@ -377,12 +381,13 @@ const InlineMarkdownText: React.FC<InlineRunProps> = ({
             key={keyCounter++}
             type="button"
             onClick={() => onImageClick?.(imgSrc)}
-            className="group relative block my-3 rounded-2xl overflow-hidden bg-slate-100 dark:bg-[#080a11] border border-slate-200 dark:border-white/10 shadow-md hover:border-[#027DFD]/50 transition-all cursor-pointer"
+            className="group relative block my-3 rounded-2xl overflow-hidden bg-slate-100 dark:bg-[#0a0d16] border border-slate-200 dark:border-white/10 shadow-md hover:border-[#0284ff]/50 transition-all cursor-pointer"
           >
             <img
               src={imgSrc}
               alt={alt}
               loading="lazy"
+              referrerPolicy="no-referrer"
               className="max-h-80 w-auto max-w-full object-contain mx-auto"
             />
             {onImageClick && (
@@ -394,7 +399,6 @@ const InlineMarkdownText: React.FC<InlineRunProps> = ({
         );
       }
     } else if (match[7] && match[8]) {
-      // Markdown hyperlink: [label](href)
       const label = match[7];
       const href = resolveGitHubAssetUrl(match[8], repoName, branch, owner);
       nodes.push(
@@ -403,31 +407,29 @@ const InlineMarkdownText: React.FC<InlineRunProps> = ({
           href={href}
           target={href.startsWith('#') ? undefined : '_blank'}
           rel={href.startsWith('#') ? undefined : 'noopener noreferrer'}
-          className="text-[#027DFD] dark:text-[#00C7FF] hover:underline font-semibold inline-flex items-center gap-0.5"
+          className="text-[#0369a1] dark:text-[#38bdf8] hover:text-[#0284ff] dark:hover:text-white underline decoration-[#0284ff]/40 underline-offset-2 font-semibold inline-flex items-center gap-0.5 transition-colors"
         >
           <span>{label}</span>
-          {!href.startsWith('#') && <ExternalLink size={11} className="inline opacity-75" />}
+          {!href.startsWith('#') && <ExternalLink size={11} className="inline opacity-75 shrink-0" />}
         </a>
       );
     } else if (match[9]) {
-      // Inline code
       nodes.push(
         <code
           key={keyCounter++}
-          className="px-1.5 py-0.5 mx-0.5 rounded-md bg-slate-100 dark:bg-white/10 text-[#027DFD] dark:text-[#7DD3FC] font-mono text-[12px] border border-slate-200/80 dark:border-white/10"
+          dir="ltr"
+          className="px-1.5 py-0.5 mx-0.5 rounded-md bg-slate-100 dark:bg-white/[0.08] text-[#0369a1] dark:text-[#7DD3FC] font-mono text-[12px] border border-slate-200/80 dark:border-white/10"
         >
           {match[9]}
         </code>
       );
     } else if (match[10]) {
-      // Bold
       nodes.push(
         <strong key={keyCounter++} className="font-bold text-slate-900 dark:text-white">
           {match[10]}
         </strong>
       );
     } else if (match[11]) {
-      // Italic
       nodes.push(
         <em key={keyCounter++} className="italic text-slate-700 dark:text-slate-200">
           {match[11]}
@@ -462,16 +464,19 @@ const CodeSnippetCard: React.FC<{ language: string; code: string }> = ({ languag
   };
 
   return (
-    <div className="my-4 rounded-2xl overflow-hidden bg-[#0a0d16] border border-slate-800 shadow-lg" dir="ltr">
-      <div className="flex items-center justify-between px-4 py-2 bg-[#111726] border-b border-white/8 text-[11px] font-mono">
+    <div
+      className="my-3 rounded-2xl overflow-hidden bg-[#080b12] border border-slate-200/20 dark:border-white/10 shadow-lg"
+      dir="ltr"
+    >
+      <div className="flex items-center justify-between px-4 py-2 bg-[#0f1420] border-b border-white/8 text-[11px] font-mono">
         <div className="flex items-center gap-2 text-slate-400">
-          <Terminal size={13} className="text-[#00C7FF]" />
+          <Terminal size={13} className="text-[#38bdf8]" />
           <span className="uppercase tracking-wider font-semibold">{language || 'text'}</span>
         </div>
         <button
           type="button"
           onClick={handleCopy}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-[#0284ff] text-slate-300 hover:text-white transition-colors cursor-pointer"
         >
           {copied ? (
             <>
@@ -493,8 +498,14 @@ const CodeSnippetCard: React.FC<{ language: string; code: string }> = ({ languag
   );
 };
 
+interface ParsedImageItem {
+  alt: string;
+  src: string;
+  href?: string;
+}
+
 interface ParsedBlock {
-  type: 'heading' | 'paragraph' | 'code' | 'list' | 'blockquote' | 'table' | 'hr' | 'details';
+  type: 'heading' | 'paragraph' | 'code' | 'list' | 'blockquote' | 'table' | 'hr' | 'details' | 'image-group';
   level?: number;
   id?: string;
   title?: string;
@@ -507,9 +518,54 @@ interface ParsedBlock {
   alertKind?: 'note' | 'tip' | 'important' | 'warning' | 'caution';
   summary?: string;
   body?: string;
+  images?: ParsedImageItem[];
 }
 
-function parseMarkdownToBlocks(rawMarkdown: string): ParsedBlock[] {
+function parsePureImageLine(
+  line: string,
+  repoName: string,
+  branch: string,
+  owner: string
+): ParsedImageItem[] | null {
+  const trimmed = line.trim();
+  if (!trimmed) return null;
+
+  const stripped = trimmed
+    .replace(/\[!\[[^\]]*\]\([^)]+\)\]\([^)]+\)/g, '')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    .trim();
+
+  if (stripped.length > 0) return null;
+
+  const images: ParsedImageItem[] = [];
+  const linkedRegex = /\[!\[([^\]]*)\]\(([^)]+)\)\]\(([^)]+)\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = linkedRegex.exec(trimmed)) !== null) {
+    const src = resolveGitHubAssetUrl(m[2], repoName, branch, owner);
+    const href = resolveGitHubAssetUrl(m[3], repoName, branch, owner);
+    if (src && !isDecorativeBadgeUrl(src)) {
+      images.push({ alt: m[1] || 'Asset', src, href });
+    }
+  }
+
+  const cleanWithoutLinked = trimmed.replace(linkedRegex, ' ');
+  const standaloneRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+  while ((m = standaloneRegex.exec(cleanWithoutLinked)) !== null) {
+    const src = resolveGitHubAssetUrl(m[2], repoName, branch, owner);
+    if (src && !isDecorativeBadgeUrl(src)) {
+      images.push({ alt: m[1] || 'Screenshot', src });
+    }
+  }
+
+  return images.length > 0 ? images : null;
+}
+
+function parseMarkdownToBlocks(
+  rawMarkdown: string,
+  repoName: string,
+  branch: string,
+  owner: string
+): ParsedBlock[] {
   const normalized = normalizeGitHubHtmlToMarkdown(rawMarkdown);
   const lines = normalized.split('\n');
   const blocks: ParsedBlock[] = [];
@@ -521,6 +577,27 @@ function parseMarkdownToBlocks(rawMarkdown: string): ParsedBlock[] {
 
     if (!trimmed) {
       i++;
+      continue;
+    }
+
+    // Group consecutive pure screenshot/diagram image lines into clean responsive showcase grids
+    const lineImgs = parsePureImageLine(trimmed, repoName, branch, owner);
+    if (lineImgs) {
+      const groupedImages: ParsedImageItem[] = [...lineImgs];
+      let j = i + 1;
+      while (j < lines.length) {
+        const nextTrim = lines[j].trim();
+        if (!nextTrim) {
+          j++;
+          continue;
+        }
+        const nextImgs = parsePureImageLine(nextTrim, repoName, branch, owner);
+        if (!nextImgs) break;
+        groupedImages.push(...nextImgs);
+        j++;
+      }
+      blocks.push({ type: 'image-group', images: groupedImages });
+      i = j;
       continue;
     }
 
@@ -664,7 +741,8 @@ function parseMarkdownToBlocks(rawMarkdown: string): ParsedBlock[] {
         cur.startsWith('>') ||
         cur.startsWith('<details') ||
         /^(?:[-*+]|\d+\.)\s+/.test(cur) ||
-        /^(?:---+|___+|\*\*\*+)$/.test(cur)
+        /^(?:---+|___+|\*\*\*+)$/.test(cur) ||
+        parsePureImageLine(cur, repoName, branch, owner) !== null
       ) {
         break;
       }
@@ -686,6 +764,7 @@ interface ReadmeDocumentViewProps {
   repoName: string;
   branch?: string;
   owner?: string;
+  compactOutline?: boolean;
   onImageClick?: (url: string) => void;
 }
 
@@ -694,94 +773,366 @@ export const ReadmeDocumentView: React.FC<ReadmeDocumentViewProps> = ({
   repoName,
   branch = 'main',
   owner = 'ahmed-el-bialy',
+  compactOutline = false,
   onImageClick,
 }) => {
-  const blocks = useMemo(() => parseMarkdownToBlocks(rawMarkdown), [rawMarkdown]);
+  const { lang } = useLanguage();
+  const [activeAnchorId, setActiveAnchorId] = useState<string>('');
+
+  const isDocAr = useMemo(() => detectArabicDominance(rawMarkdown), [rawMarkdown]);
+  const insights = useMemo(
+    () => extractReadmeInsights(rawMarkdown, repoName, branch, owner),
+    [rawMarkdown, repoName, branch, owner]
+  );
+  const blocks = useMemo(
+    () => parseMarkdownToBlocks(rawMarkdown, repoName, branch, owner),
+    [rawMarkdown, repoName, branch, owner]
+  );
+
+  const handleJumpAnchor = (anchorId: string) => {
+    setActiveAnchorId(anchorId);
+    const el = document.getElementById(anchorId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
-    <div className="space-y-4 text-slate-700 dark:text-slate-300 leading-relaxed" dir="ltr">
-      {blocks.map((block, idx) => {
-        if (block.type === 'hr') {
-          return <hr key={idx} className="my-5 border-slate-200/80 dark:border-white/10" />;
-        }
+    <div
+      className="space-y-5 text-slate-700 dark:text-slate-300 leading-relaxed"
+      dir={isDocAr ? 'rtl' : 'ltr'}
+    >
+      {/* Interactive Glassmorphic Document Outline & Quick Section Rail */}
+      {!compactOutline && insights.sections.length >= 2 && (
+        <div className="rounded-2xl bg-slate-50/95 dark:bg-[#0f1117]/95 backdrop-blur-md border border-slate-200/85 dark:border-white/10 p-3.5 sm:p-4 space-y-2.5 shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-[#0369a1] dark:text-[#38bdf8]">
+              <BookOpen size={13} />
+              <span>
+                {lang === 'ar' ? 'فهرس أقسام المستند' : 'Interactive Document Rail'}
+              </span>
+            </span>
+            <span className="tabular-nums">
+              {insights.sections.length} {lang === 'ar' ? 'أقسام' : 'sections'}
+              {insights.images.length > 0
+                ? ` · ${insights.images.length} ${lang === 'ar' ? 'صور' : 'media'}`
+                : ''}
+            </span>
+          </div>
 
-        if (block.type === 'heading') {
-          const Tag = block.level === 1 ? 'h2' : block.level === 2 ? 'h3' : 'h4';
-          const styles =
-            block.level === 1
-              ? 'text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight pt-1 pb-2 border-b border-slate-200 dark:border-white/10'
-              : block.level === 2
-              ? 'text-base sm:text-lg font-extrabold text-slate-900 dark:text-white pt-4 pb-1.5 border-b border-slate-200/70 dark:border-white/8 flex items-center gap-2'
-              : 'text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 pt-2';
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+            {insights.sections.map((sec) => {
+              const isSelected = activeAnchorId === sec.id;
+              return (
+                <button
+                  key={sec.id}
+                  type="button"
+                  onClick={() => handleJumpAnchor(sec.id)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                    isSelected
+                      ? 'bg-[#0284ff] text-white border-[#0284ff] shadow-xs shadow-[#0284ff]/25'
+                      : 'bg-white dark:bg-white/[0.04] hover:bg-[#0284ff]/10 text-slate-700 dark:text-slate-300 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border-slate-200/85 dark:border-white/10 hover:border-[#0284ff]/35'
+                  }`}
+                >
+                  <Hash size={11} className={isSelected ? 'text-white/80' : 'text-[#0284ff]'} />
+                  <span className="max-w-[190px] truncate">{sec.title}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
-          return (
-            <Tag key={idx} id={block.id} className={styles}>
-              <InlineMarkdownText
-                text={block.title || ''}
-                repoName={repoName}
-                branch={branch}
-                owner={owner}
-                onImageClick={onImageClick}
+      {/* Document Body Rendered with Glassmorphic Sections & Smart Image Grids */}
+      <div className="rounded-2xl bg-white/95 dark:bg-[#0f1117]/85 backdrop-blur-md border border-slate-200/85 dark:border-white/10 p-4 sm:p-6 space-y-4 shadow-sm">
+        {blocks.map((block, idx) => {
+          if (block.type === 'hr') {
+            return <hr key={idx} className="my-5 border-slate-200/80 dark:border-white/10" />;
+          }
+
+          if (block.type === 'heading') {
+            const Tag = block.level === 1 ? 'h2' : block.level === 2 ? 'h3' : 'h4';
+            const styles =
+              block.level === 1
+                ? 'font-display text-xl sm:text-2xl font-extrabold text-slate-950 dark:text-white tracking-tight pt-1 pb-2.5 border-b border-slate-200/85 dark:border-white/10'
+                : block.level === 2
+                ? 'font-display text-base sm:text-lg font-extrabold text-slate-900 dark:text-white pt-4 pb-2 border-b border-slate-200/75 dark:border-white/8 flex items-center gap-2 scroll-mt-4'
+                : 'font-display text-sm sm:text-[15px] font-bold text-slate-800 dark:text-slate-100 pt-2.5 scroll-mt-4';
+
+            return (
+              <Tag key={idx} id={block.id} className={styles}>
+                {block.level === 2 && (
+                  <span
+                    aria-hidden="true"
+                    className="w-1.5 h-5 rounded-full bg-[#0284ff] shrink-0"
+                  />
+                )}
+                <span className="min-w-0">
+                  <InlineMarkdownText
+                    text={block.title || ''}
+                    repoName={repoName}
+                    branch={branch}
+                    owner={owner}
+                    onImageClick={onImageClick}
+                  />
+                </span>
+              </Tag>
+            );
+          }
+
+          if (block.type === 'image-group' && block.images) {
+            const imgCount = block.images.length;
+            return (
+              <div
+                key={idx}
+                className={`my-4 grid gap-3 ${
+                  imgCount === 1
+                    ? 'grid-cols-1 max-w-xl'
+                    : imgCount === 2
+                    ? 'grid-cols-1 sm:grid-cols-2'
+                    : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
+                }`}
+              >
+                {block.images.map((item, imgIdx) => {
+                  const imageCard = (
+                    <div className="group relative rounded-2xl overflow-hidden bg-slate-100/90 dark:bg-[#080a11] border border-slate-200/85 dark:border-white/10 hover:border-[#0284ff]/50 transition-all shadow-xs hover:shadow-md">
+                      <div
+                        className={`w-full overflow-hidden flex items-center justify-center p-2 ${
+                          imgCount >= 3 ? 'aspect-[9/20]' : 'max-h-80 min-h-[160px]'
+                        }`}
+                      >
+                        <img
+                          src={item.src}
+                          alt={item.alt || 'Screenshot'}
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-300 rounded-lg"
+                        />
+                      </div>
+                      <div className="px-3 py-1.5 bg-white/95 dark:bg-[#111624] border-t border-slate-200/70 dark:border-white/8 flex items-center justify-between gap-2 text-[11px] font-mono text-slate-600 dark:text-slate-300">
+                        <span className="inline-flex items-center gap-1.5 truncate">
+                          <ImageIcon size={11} className="text-[#0284ff] shrink-0" />
+                          <span className="truncate">{item.alt || `Asset ${imgIdx + 1}`}</span>
+                        </span>
+                        <ZoomIn
+                          size={12}
+                          className="shrink-0 text-slate-400 group-hover:text-[#0284ff] transition-colors"
+                        />
+                      </div>
+                    </div>
+                  );
+
+                  if (onImageClick) {
+                    return (
+                      <button
+                        key={`${item.src}-${imgIdx}`}
+                        type="button"
+                        onClick={() => onImageClick(item.src)}
+                        className="text-start cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] rounded-2xl"
+                      >
+                        {imageCard}
+                      </button>
+                    );
+                  }
+
+                  if (item.href) {
+                    return (
+                      <a
+                        key={`${item.src}-${imgIdx}`}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block rounded-2xl"
+                      >
+                        {imageCard}
+                      </a>
+                    );
+                  }
+
+                  return <div key={`${item.src}-${imgIdx}`}>{imageCard}</div>;
+                })}
+              </div>
+            );
+          }
+
+          if (block.type === 'code') {
+            return (
+              <CodeSnippetCard
+                key={idx}
+                language={block.language || 'shell'}
+                code={block.content || ''}
               />
-            </Tag>
-          );
-        }
+            );
+          }
 
-        if (block.type === 'code') {
+          if (block.type === 'blockquote') {
+            const alertStyles: Record<string, { border: string; icon: React.ReactNode; label: string }> = {
+              note: {
+                border: 'border-[#0284ff]/30 bg-[#0284ff]/8 text-slate-800 dark:text-slate-200',
+                icon: <Info size={15} className="text-[#0284ff] dark:text-[#38bdf8] shrink-0" />,
+                label: 'Note',
+              },
+              tip: {
+                border: 'border-emerald-500/30 bg-emerald-500/8 text-slate-800 dark:text-slate-200',
+                icon: <Lightbulb size={15} className="text-emerald-500 shrink-0" />,
+                label: 'Tip',
+              },
+              important: {
+                border: 'border-[#0284ff]/35 bg-[#0284ff]/10 text-slate-800 dark:text-slate-200',
+                icon: <Flame size={15} className="text-[#38bdf8] shrink-0" />,
+                label: 'Important',
+              },
+              warning: {
+                border: 'border-amber-500/35 bg-amber-500/8 text-slate-800 dark:text-slate-200',
+                icon: <AlertTriangle size={15} className="text-amber-500 shrink-0" />,
+                label: 'Warning',
+              },
+              caution: {
+                border: 'border-rose-500/35 bg-rose-500/8 text-slate-800 dark:text-slate-200',
+                icon: <AlertTriangle size={15} className="text-rose-500 shrink-0" />,
+                label: 'Caution',
+              },
+            };
+
+            const meta = block.alertKind ? alertStyles[block.alertKind] : null;
+            return (
+              <blockquote
+                key={idx}
+                className={`my-3 px-4 py-3 border rounded-2xl text-xs sm:text-sm ${
+                  meta
+                    ? meta.border
+                    : 'border-slate-200/90 dark:border-white/12 bg-slate-50/90 dark:bg-white/[0.03]'
+                }`}
+              >
+                {meta && (
+                  <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider mb-1">
+                    {meta.icon}
+                    <span>{meta.label}</span>
+                  </div>
+                )}
+                <InlineMarkdownText
+                  text={block.content || ''}
+                  repoName={repoName}
+                  branch={branch}
+                  owner={owner}
+                  onImageClick={onImageClick}
+                />
+              </blockquote>
+            );
+          }
+
+          if (block.type === 'table' && block.headers) {
+            return (
+              <div
+                key={idx}
+                className="my-4 overflow-x-auto rounded-2xl border border-slate-200/85 dark:border-white/10 bg-slate-50/50 dark:bg-[#090c14]/70 shadow-xs"
+              >
+                <table className="w-full text-start border-collapse text-xs sm:text-[13px] tabular-nums">
+                  <thead className="bg-slate-100/95 dark:bg-white/[0.05] text-slate-900 dark:text-white font-bold">
+                    <tr>
+                      {block.headers.map((h, hi) => (
+                        <th
+                          key={hi}
+                          className="px-4 py-2.5 border-b border-slate-200 dark:border-white/10 whitespace-nowrap text-start"
+                        >
+                          <InlineMarkdownText
+                            text={h}
+                            repoName={repoName}
+                            branch={branch}
+                            owner={owner}
+                            onImageClick={onImageClick}
+                          />
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200/75 dark:divide-white/8">
+                    {(block.rows || []).map((row, ri) => (
+                      <tr
+                        key={ri}
+                        className="hover:bg-[#0284ff]/[0.04] dark:hover:bg-[#0284ff]/[0.07] transition-colors"
+                      >
+                        {row.map((cell, ci) => (
+                          <td key={ci} className="px-4 py-2.5 text-slate-700 dark:text-slate-300">
+                            <InlineMarkdownText
+                              text={cell}
+                              repoName={repoName}
+                              branch={branch}
+                              owner={owner}
+                              onImageClick={onImageClick}
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          }
+
+          if (block.type === 'list' && block.items) {
+            return (
+              <ul key={idx} className="space-y-2 my-2 ps-1">
+                {block.items.map((item, li) => (
+                  <li key={li} className="flex items-start gap-2.5 text-xs sm:text-sm">
+                    {item.checked === true ? (
+                      <CheckCircle2 size={15} className="text-emerald-500 shrink-0 mt-0.5" />
+                    ) : item.checked === false ? (
+                      <Circle size={15} className="text-slate-400 shrink-0 mt-0.5" />
+                    ) : block.ordered ? (
+                      <span className="font-mono text-xs font-bold text-[#0284ff] dark:text-[#38bdf8] min-w-[1.25rem] mt-0.5 tabular-nums">
+                        {li + 1}.
+                      </span>
+                    ) : (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0284ff] dark:bg-[#38bdf8] shrink-0 mt-2" />
+                    )}
+                    <span className="flex-1 min-w-0 break-words">
+                      <InlineMarkdownText
+                        text={item.text}
+                        repoName={repoName}
+                        branch={branch}
+                        owner={owner}
+                        onImageClick={onImageClick}
+                      />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            );
+          }
+
+          if (block.type === 'details') {
+            return (
+              <details
+                key={idx}
+                className="group my-3 rounded-2xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/85 dark:border-white/10 px-4 py-3 open:border-[#0284ff]/35 transition-colors"
+              >
+                <summary className="cursor-pointer font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2 list-none">
+                  <ChevronRight
+                    size={15}
+                    className="text-[#0284ff] transition-transform group-open:rotate-90 shrink-0"
+                  />
+                  <span>{block.summary}</span>
+                </summary>
+                {block.body && (
+                  <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-white/8">
+                    <ReadmeDocumentView
+                      rawMarkdown={block.body}
+                      repoName={repoName}
+                      branch={branch}
+                      owner={owner}
+                      compactOutline={true}
+                      onImageClick={onImageClick}
+                    />
+                  </div>
+                )}
+              </details>
+            );
+          }
+
           return (
-            <CodeSnippetCard
-              key={idx}
-              language={block.language || 'shell'}
-              code={block.content || ''}
-            />
-          );
-        }
-
-        if (block.type === 'blockquote') {
-          const alertStyles: Record<string, { border: string; icon: React.ReactNode; label: string }> = {
-            note: {
-              border: 'border-[#027DFD] bg-[#027DFD]/8 text-slate-800 dark:text-slate-200',
-              icon: <Info size={15} className="text-[#027DFD] dark:text-[#00C7FF] shrink-0" />,
-              label: 'Note',
-            },
-            tip: {
-              border: 'border-emerald-500 bg-emerald-500/8 text-slate-800 dark:text-slate-200',
-              icon: <Lightbulb size={15} className="text-emerald-500 shrink-0" />,
-              label: 'Tip',
-            },
-            important: {
-              border: 'border-purple-500 bg-purple-500/8 text-slate-800 dark:text-slate-200',
-              icon: <Flame size={15} className="text-purple-400 shrink-0" />,
-              label: 'Important',
-            },
-            warning: {
-              border: 'border-amber-500 bg-amber-500/8 text-slate-800 dark:text-slate-200',
-              icon: <AlertTriangle size={15} className="text-amber-500 shrink-0" />,
-              label: 'Warning',
-            },
-            caution: {
-              border: 'border-rose-500 bg-rose-500/8 text-slate-800 dark:text-slate-200',
-              icon: <AlertTriangle size={15} className="text-rose-500 shrink-0" />,
-              label: 'Caution',
-            },
-          };
-
-          const meta = block.alertKind ? alertStyles[block.alertKind] : null;
-          return (
-            <blockquote
-              key={idx}
-              className={`my-3 ps-4 pe-4 py-3 border-s-4 rounded-e-xl text-xs sm:text-sm ${
-                meta
-                  ? meta.border
-                  : 'border-slate-300 dark:border-white/20 bg-slate-50 dark:bg-white/[0.03]'
-              }`}
-            >
-              {meta && (
-                <div className="flex items-center gap-1.5 font-bold text-xs uppercase tracking-wider mb-1">
-                  {meta.icon}
-                  <span>{meta.label}</span>
-                </div>
-              )}
+            <p key={idx} className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               <InlineMarkdownText
                 text={block.content || ''}
                 repoName={repoName}
@@ -789,132 +1140,10 @@ export const ReadmeDocumentView: React.FC<ReadmeDocumentViewProps> = ({
                 owner={owner}
                 onImageClick={onImageClick}
               />
-            </blockquote>
+            </p>
           );
-        }
-
-        if (block.type === 'table' && block.headers) {
-          return (
-            <div
-              key={idx}
-              className="my-4 overflow-x-auto rounded-2xl border border-slate-200 dark:border-white/10 shadow-xs"
-            >
-              <table className="w-full text-left border-collapse text-xs sm:text-[13px]">
-                <thead className="bg-slate-100 dark:bg-white/[0.05] text-slate-900 dark:text-white font-bold">
-                  <tr>
-                    {block.headers.map((h, hi) => (
-                      <th
-                        key={hi}
-                        className="px-4 py-2.5 border-b border-slate-200 dark:border-white/10 whitespace-nowrap"
-                      >
-                        <InlineMarkdownText
-                          text={h}
-                          repoName={repoName}
-                          branch={branch}
-                          owner={owner}
-                          onImageClick={onImageClick}
-                        />
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200/80 dark:divide-white/8">
-                  {(block.rows || []).map((row, ri) => (
-                    <tr
-                      key={ri}
-                      className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors"
-                    >
-                      {row.map((cell, ci) => (
-                        <td key={ci} className="px-4 py-2.5 text-slate-700 dark:text-slate-300">
-                          <InlineMarkdownText
-                            text={cell}
-                            repoName={repoName}
-                            branch={branch}
-                            owner={owner}
-                            onImageClick={onImageClick}
-                          />
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          );
-        }
-
-        if (block.type === 'list' && block.items) {
-          return (
-            <ul key={idx} className="space-y-2 my-2 ps-1">
-              {block.items.map((item, li) => (
-                <li key={li} className="flex items-start gap-2.5 text-xs sm:text-sm">
-                  {item.checked === true ? (
-                    <CheckCircle2 size={15} className="text-emerald-500 shrink-0 mt-0.5" />
-                  ) : item.checked === false ? (
-                    <Circle size={15} className="text-slate-400 shrink-0 mt-0.5" />
-                  ) : block.ordered ? (
-                    <span className="font-mono text-xs font-bold text-[#027DFD] dark:text-[#00C7FF] min-w-[1.25rem] mt-0.5">
-                      {li + 1}.
-                    </span>
-                  ) : (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#027DFD] dark:bg-[#00C7FF] shrink-0 mt-2" />
-                  )}
-                  <span className="flex-1">
-                    <InlineMarkdownText
-                      text={item.text}
-                      repoName={repoName}
-                      branch={branch}
-                      owner={owner}
-                      onImageClick={onImageClick}
-                    />
-                  </span>
-                </li>
-              ))}
-            </ul>
-          );
-        }
-
-        if (block.type === 'details') {
-          return (
-            <details
-              key={idx}
-              className="group my-3 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 px-4 py-3"
-            >
-              <summary className="cursor-pointer font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2 list-none">
-                <ChevronRight
-                  size={15}
-                  className="text-[#027DFD] transition-transform group-open:rotate-90"
-                />
-                <span>{block.summary}</span>
-              </summary>
-              {block.body && (
-                <div className="mt-3 pt-3 border-t border-slate-200/80 dark:border-white/8">
-                  <ReadmeDocumentView
-                    rawMarkdown={block.body}
-                    repoName={repoName}
-                    branch={branch}
-                    owner={owner}
-                    onImageClick={onImageClick}
-                  />
-                </div>
-              )}
-            </details>
-          );
-        }
-
-        // Default paragraph
-        return (
-          <p key={idx} className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-            <InlineMarkdownText
-              text={block.content || ''}
-              repoName={repoName}
-              branch={branch}
-              owner={owner}
-              onImageClick={onImageClick}
-            />
-          </p>
-        );
-      })}
+        })}
+      </div>
     </div>
   );
 };

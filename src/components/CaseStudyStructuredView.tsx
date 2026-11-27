@@ -13,6 +13,8 @@ import {
   BookOpen,
   Globe,
   Link2,
+  ZoomIn,
+  Hash,
 } from 'lucide-react';
 import {
   extractStructuredCaseStudy,
@@ -64,7 +66,6 @@ const PILLAR_META = {
 const RichInlineText: React.FC<{ text: string }> = ({ text }) => {
   const tokens = useMemo(() => {
     const out: React.ReactNode[] = [];
-    // Matches: [label](url) | **bold** | `code` | bare https://... URL
     const tokenRegex =
       /(\[([^\]]+)\]\((https?:\/\/[^)\s]+|mailto:[^)\s]+)\)|\*\*([^*]+)\*\*|`([^`]+)`|(https?:\/\/[^\s<>"')\]]+))/gi;
 
@@ -78,7 +79,6 @@ const RichInlineText: React.FC<{ text: string }> = ({ text }) => {
       }
 
       if (match[2] && match[3]) {
-        // [label](url)
         const label = match[2].replace(/\*\*/g, '').trim();
         const href = match[3].trim();
         out.push(
@@ -94,24 +94,22 @@ const RichInlineText: React.FC<{ text: string }> = ({ text }) => {
           </a>
         );
       } else if (match[4]) {
-        // **bold**
         out.push(
           <strong key={`b-${keyCounter++}`} className="font-semibold text-slate-900 dark:text-white">
             {match[4]}
           </strong>
         );
       } else if (match[5]) {
-        // `code`
         out.push(
           <code
             key={`c-${keyCounter++}`}
-            className="px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-white/[0.08] font-mono text-[11px] text-[#0369a1] dark:text-[#38bdf8]"
+            dir="ltr"
+            className="px-1.5 py-0.5 rounded bg-slate-200/75 dark:bg-white/[0.08] font-mono text-[11px] text-[#0369a1] dark:text-[#38bdf8]"
           >
             {match[5]}
           </code>
         );
       } else if (match[6]) {
-        // Bare https://... URL
         const rawUrl = match[6];
         const cleanHref = rawUrl.replace(/[.,;:!?]+$/, '');
         const trailingPunct = rawUrl.slice(cleanHref.length);
@@ -193,6 +191,38 @@ function getLinkBadgeMeta(kind: CaseStudyLinkKind) {
   }
 }
 
+const SectionMediaStrip: React.FC<{
+  images: string[];
+  onImageClick?: (url: string) => void;
+}> = ({ images, onImageClick }) => {
+  if (!images || images.length === 0) return null;
+  return (
+    <div className="pt-2 border-t border-slate-200/70 dark:border-white/8 grid grid-cols-2 sm:grid-cols-3 gap-2">
+      {images.slice(0, 3).map((src, idx) => (
+        <button
+          key={`${src}-${idx}`}
+          type="button"
+          onClick={() => onImageClick?.(src)}
+          className="group relative aspect-video rounded-xl overflow-hidden bg-slate-100 dark:bg-[#080b12] border border-slate-200/80 dark:border-white/10 hover:border-[#0284ff]/50 transition-colors cursor-pointer"
+        >
+          <img
+            src={src}
+            alt={`Section diagram ${idx + 1}`}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            className="w-full h-full object-contain p-1 group-hover:scale-[1.03] transition-transform duration-200"
+          />
+          {onImageClick && (
+            <span className="absolute bottom-1.5 end-1.5 p-1 rounded-md bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+              <ZoomIn size={11} />
+            </span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+};
+
 export const CaseStudyStructuredView: React.FC<CaseStudyStructuredViewProps> = ({
   rawMarkdown,
   repoName,
@@ -206,6 +236,7 @@ export const CaseStudyStructuredView: React.FC<CaseStudyStructuredViewProps> = (
 }) => {
   const shouldReduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState<'cards' | 'document'>('cards');
+  const [activeSectionJump, setActiveSectionJump] = useState<string>('');
 
   const parsed = useMemo(
     () => extractStructuredCaseStudy(rawMarkdown, { repoName, branch }),
@@ -220,7 +251,6 @@ export const CaseStudyStructuredView: React.FC<CaseStudyStructuredViewProps> = (
     return list;
   }, [parsed]);
 
-  // Combine links extracted directly from the Case Study document + key repository fallbacks (deduped)
   const bottomActionLinks: CaseStudyLink[] = useMemo(() => {
     const merged: CaseStudyLink[] = [...parsed.links];
     const seen = new Set(merged.map((l) => l.url.replace(/\/+$/, '').toLowerCase()));
@@ -253,11 +283,21 @@ export const CaseStudyStructuredView: React.FC<CaseStudyStructuredViewProps> = (
     return merged.slice(0, 10);
   }, [parsed.links, githubRepoUrl, googlePlayUrl, demoVideoUrl, uiLang]);
 
-  const hasStructuredPillars =
-    orderedPillars.length >= 2 || parsed.remainingSections.length >= 2;
+  const hasCardsContent =
+    orderedPillars.length > 0 ||
+    parsed.remainingSections.length > 0 ||
+    parsed.executiveParagraphs.length > 0;
   const isDocAr = docLang === 'ar';
 
-  if (!hasStructuredPillars) {
+  const handleJumpSection = (anchorId: string) => {
+    setActiveSectionJump(anchorId);
+    const el = document.getElementById(anchorId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  if (!hasCardsContent) {
     return (
       <div dir={isDocAr ? 'rtl' : 'ltr'} className="pt-1 space-y-4">
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] font-mono text-slate-500 dark:text-slate-400">
@@ -280,36 +320,36 @@ export const CaseStudyStructuredView: React.FC<CaseStudyStructuredViewProps> = (
   }
 
   return (
-    <div className="space-y-5">
-      {/* Top Display Mode Segmented Switcher: Structured Breakdown Cards | Full Formatted Document */}
+    <div className="space-y-4">
+      {/* Top Display Mode Segmented Switcher + Telemetry */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div
           role="tablist"
           aria-label={uiLang === 'ar' ? 'طريقة عرض دراسة الحالة' : 'Study case view mode'}
-          className="inline-flex items-center p-1 rounded-xl bg-slate-100 dark:bg-white/[0.06] border border-slate-200/90 dark:border-white/10"
+          className="inline-flex items-center p-1 rounded-xl bg-slate-100/90 dark:bg-[#0f1117] border border-slate-200/90 dark:border-white/10 shadow-xs"
         >
           <button
             type="button"
             role="tab"
             aria-selected={activeTab === 'cards'}
             onClick={() => setActiveTab('cards')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'cards'
-                ? 'bg-[#0284ff] text-white shadow-xs'
+                ? 'bg-[#0284ff] text-white shadow-xs shadow-[#0284ff]/30'
                 : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <LayoutGrid size={13} />
-            <span>{uiLang === 'ar' ? 'بطاقات شاملة' : 'Structured Cards'}</span>
+            <span>{uiLang === 'ar' ? 'بطاقات مرنة' : 'Structured Cards'}</span>
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={activeTab === 'document'}
             onClick={() => setActiveTab('document')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'document'
-                ? 'bg-[#0284ff] text-white shadow-xs'
+                ? 'bg-[#0284ff] text-white shadow-xs shadow-[#0284ff]/30'
                 : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -324,10 +364,37 @@ export const CaseStudyStructuredView: React.FC<CaseStudyStructuredViewProps> = (
           </span>
           <span aria-hidden="true">·</span>
           <span>
-            {parsed.totalSections} {uiLang === 'ar' ? 'أقسام' : 'sections'}
+            {Math.max(1, parsed.totalSections)} {uiLang === 'ar' ? 'أقسام' : 'sections'}
           </span>
         </div>
       </div>
+
+      {/* Interactive Section Rail when viewing Structured Cards */}
+      {activeTab === 'cards' && parsed.sectionNav.length >= 2 && (
+        <div
+          dir={isDocAr ? 'rtl' : 'ltr'}
+          className="rounded-2xl bg-slate-50/90 dark:bg-[#0f1117]/90 backdrop-blur-md border border-slate-200/85 dark:border-white/10 p-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar"
+        >
+          {parsed.sectionNav.map((nav) => {
+            const isSelected = activeSectionJump === nav.id;
+            return (
+              <button
+                key={nav.id}
+                type="button"
+                onClick={() => handleJumpSection(nav.id)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                  isSelected
+                    ? 'bg-[#0284ff] text-white border-[#0284ff] shadow-xs shadow-[#0284ff]/25'
+                    : 'bg-white dark:bg-white/[0.04] hover:bg-[#0284ff]/10 text-slate-700 dark:text-slate-300 hover:text-[#0369a1] dark:hover:text-[#38bdf8] border-slate-200/85 dark:border-white/10 hover:border-[#0284ff]/35'
+                }`}
+              >
+                <Hash size={11} className={isSelected ? 'text-white/80' : 'text-[#0284ff]'} />
+                <span className="max-w-[180px] truncate">{nav.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <AnimatePresence mode="wait" initial={false}>
         {activeTab === 'cards' ? (
@@ -338,34 +405,41 @@ export const CaseStudyStructuredView: React.FC<CaseStudyStructuredViewProps> = (
             animate={{ opacity: 1, y: 0 }}
             exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
             transition={{ duration: shouldReduceMotion ? 0.01 : 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="space-y-6"
+            className="space-y-5"
           >
             {/* Executive Summary & Extracted Metrics Strip */}
             {(parsed.title || parsed.executiveParagraphs.length > 0 || parsed.metrics.length > 0) && (
-              <div className="rounded-2xl bg-slate-50/90 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 p-5 sm:p-6 space-y-3">
+              <div
+                id="cs-executive-anchor"
+                className="scroll-mt-4 rounded-2xl bg-white/95 dark:bg-[#0f1117]/90 backdrop-blur-md border border-slate-200/85 dark:border-white/10 p-5 sm:p-6 space-y-3 shadow-xs"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="font-semibold text-[#0369a1] dark:text-[#38bdf8]">
-                      {isDocAr ? 'الملخص التنفيذي الكامل' : 'Executive Breakdown'}
+                      {isDocAr ? 'الملخص التنفيذي' : 'Executive Overview'}
                     </span>
-                    <span aria-hidden="true">·</span>
-                    <span className="tabular-nums">
-                      {orderedPillars.length}{' '}
-                      {isDocAr ? 'محاور أساسية' : 'core pillars'}
-                    </span>
+                    {orderedPillars.length > 0 && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <span className="tabular-nums">
+                          {orderedPillars.length}{' '}
+                          {isDocAr ? 'محاور أساسية' : 'core pillars'}
+                        </span>
+                      </>
+                    )}
                     {parsed.remainingSections.length > 0 && (
                       <>
                         <span aria-hidden="true">·</span>
                         <span className="tabular-nums">
                           +{parsed.remainingSections.length}{' '}
-                          {isDocAr ? 'أقسام تفصيلية' : 'deep-dive sections'}
+                          {isDocAr ? 'أقسام إضافية' : 'flexible sections'}
                         </span>
                       </>
                     )}
                   </div>
 
                   {parsed.metrics.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-slate-700 dark:text-slate-300 font-semibold tabular-nums">
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-slate-700 dark:text-slate-200 font-semibold tabular-nums">
                       {parsed.metrics.map((metric, idx) => (
                         <React.Fragment key={metric}>
                           {idx > 0 && (
@@ -401,7 +475,7 @@ export const CaseStudyStructuredView: React.FC<CaseStudyStructuredViewProps> = (
               </div>
             )}
 
-            {/* Structured Comprehensive Pillar Cards: Problem · Solution · Results */}
+            {/* Flexible Pillar Cards: Problem · Solution · Results */}
             {orderedPillars.length > 0 && (
               <div
                 className={`grid grid-cols-1 gap-4 ${
@@ -420,7 +494,8 @@ export const CaseStudyStructuredView: React.FC<CaseStudyStructuredViewProps> = (
                   return (
                     <article
                       key={pillar.id}
-                      className="rounded-2xl bg-slate-50/85 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/10 p-5 flex flex-col justify-between gap-4 transition-colors hover:border-[#0284ff]/40 dark:hover:border-[#38bdf8]/40"
+                      id={pillar.slug}
+                      className="card-shimmer scroll-mt-4 rounded-2xl bg-white/95 dark:bg-[#0f1117]/90 backdrop-blur-md border border-slate-200/85 dark:border-white/10 p-5 flex flex-col justify-between gap-4 transition-colors hover:border-[#0284ff]/45 shadow-xs"
                     >
                       <div className="space-y-3">
                         <div className="flex items-center gap-2.5 min-w-0">
@@ -474,6 +549,8 @@ export const CaseStudyStructuredView: React.FC<CaseStudyStructuredViewProps> = (
                             ))}
                           </ul>
                         )}
+
+                        <SectionMediaStrip images={pillar.images} onImageClick={onImageClick} />
                       </div>
                     </article>
                   );
@@ -481,16 +558,22 @@ export const CaseStudyStructuredView: React.FC<CaseStudyStructuredViewProps> = (
               </div>
             )}
 
-            {/* Complete Remaining Technical Sections (including clickable inline links) */}
+            {/* Dynamic Flexible Extra Sections (automatically adapts if sections are added/removed) */}
             {parsed.remainingSections.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div
+                className={`grid grid-cols-1 gap-4 ${
+                  parsed.remainingSections.length === 1 ? 'md:grid-cols-1' : 'md:grid-cols-2'
+                }`}
+              >
                 {parsed.remainingSections.map((extra, eIdx) => (
-                  <div
-                    key={`${extra.title}-${eIdx}`}
-                    className="rounded-2xl bg-slate-50/75 dark:bg-white/[0.025] border border-slate-200/80 dark:border-white/10 p-5 space-y-2.5"
+                  <article
+                    key={`${extra.id}-${eIdx}`}
+                    id={extra.slug}
+                    className="card-shimmer scroll-mt-4 rounded-2xl bg-white/95 dark:bg-[#0f1117]/90 backdrop-blur-md border border-slate-200/85 dark:border-white/10 hover:border-[#0284ff]/40 p-5 space-y-2.5 transition-colors shadow-xs"
                   >
-                    <h6 className="font-display text-sm font-bold text-slate-900 dark:text-white">
-                      {extra.title}
+                    <h6 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <span aria-hidden="true" className="w-1.5 h-4 rounded-full bg-[#0284ff] shrink-0" />
+                      <span>{extra.title}</span>
                     </h6>
                     {extra.paragraphs.length > 0 ? (
                       <div className="space-y-2">
@@ -523,7 +606,8 @@ export const CaseStudyStructuredView: React.FC<CaseStudyStructuredViewProps> = (
                         ))}
                       </ul>
                     )}
-                  </div>
+                    <SectionMediaStrip images={extra.images} onImageClick={onImageClick} />
+                  </article>
                 ))}
               </div>
             )}

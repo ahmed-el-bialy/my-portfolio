@@ -33,6 +33,7 @@ import {
   Layers,
   Database,
   Smartphone,
+  FileText,
 } from 'lucide-react';
 import { Project } from '../data/portfolioData';
 import { resolveSmartProjectLinks } from '../utils/projectLinks';
@@ -42,6 +43,7 @@ import { ImageWithSkeleton, preloadImageUrls, resolveProxiedImageUrl } from './I
 import { extractRepoTechTags } from '../utils/techTagExtractor';
 import { TechIconBadge } from './TechLogos';
 import { CaseStudyStructuredView } from './CaseStudyStructuredView';
+import { ReadmeDocumentView } from './ReadmeDocumentView';
 import { CoverGuidelinesModal } from './CoverGuidelinesModal';
 import { LeafAnimation } from './LeafAnimation';
 import { ProjectDeviceStage, DeviceStageMode } from './ProjectDeviceStage';
@@ -87,6 +89,7 @@ function isCoverAssetUrl(url?: string): boolean {
   if (!url) return false;
   const lower = url.toLowerCase();
   return (
+    lower.includes('/cover/') ||
     lower.includes('/covers/') ||
     lower.includes('/screenshots/cover') ||
     lower.endsWith('/cover.png') ||
@@ -284,6 +287,8 @@ const GalleryCard: React.FC<{
   onSelect: () => void;
   onInspect: () => void;
 }> = ({ url, label, index, projectName, isActive, onSelect, onInspect }) => {
+  const [isLandscape, setIsLandscape] = useState(false);
+
   return (
     <button
       type="button"
@@ -291,19 +296,22 @@ const GalleryCard: React.FC<{
         onSelect();
         onInspect();
       }}
-      className={`card-shimmer group relative rounded-2xl overflow-hidden bg-white dark:bg-[#111624] border transition-colors duration-200 cursor-pointer flex flex-col text-start w-full ${
+      className={`card-shimmer group relative rounded-2xl overflow-hidden bg-white dark:bg-[#0f1117]/95 backdrop-blur-md border transition-colors duration-200 cursor-pointer flex flex-col text-start w-full ${
         isActive
           ? 'border-[#0284ff] ring-2 ring-[#0284ff]/25 shadow-lg'
           : 'border-slate-200/80 dark:border-white/10 hover:border-[#0284ff]/60 shadow-sm hover:shadow-xl'
       }`}
     >
-      <div className="relative aspect-[9/16] w-full p-2 overflow-hidden bg-slate-100/90 dark:bg-[#090d16] flex items-center justify-center">
+      <div className="relative aspect-[9/20] w-full p-2 overflow-hidden bg-slate-100/90 dark:bg-[#08090d] flex items-center justify-center">
         <ImageWithSkeleton
           src={url}
           alt={`${projectName} — ${label}`}
           loading="lazy"
           variant="phone"
-          className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-300 crisp-screenshot rounded-lg"
+          onImageDimensions={({ isLandscape: landscape }) => setIsLandscape(landscape)}
+          className={`w-full h-full group-hover:scale-[1.02] transition-transform duration-300 crisp-screenshot rounded-xl ${
+            isLandscape ? 'object-contain' : 'object-cover object-top'
+          }`}
         />
 
         <div className="absolute top-2.5 end-2.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
@@ -313,7 +321,7 @@ const GalleryCard: React.FC<{
         </div>
       </div>
 
-      <div className="w-full px-3 py-2 bg-white dark:bg-[#111624] border-t border-slate-100 dark:border-white/8 flex items-center justify-between gap-2">
+      <div className="w-full px-3 py-2 bg-white dark:bg-[#0f1117] border-t border-slate-100 dark:border-white/8 flex items-center justify-between gap-2">
         <span className="text-[11px] font-mono font-semibold text-slate-700 dark:text-slate-200 truncate capitalize">
           {label}
         </span>
@@ -370,6 +378,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   });
   const [studyCaseLoading, setStudyCaseLoading] = useState<boolean>(false);
   const [studyCaseLang, setStudyCaseLang] = useState<'en' | 'ar'>('en');
+  const [studyOrReadmeTab, setStudyOrReadmeTab] = useState<'casestudy' | 'readme'>('casestudy');
   const manualStudyLangRef = useRef(false);
 
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -532,13 +541,16 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         const cleanMetaScreens = sanitizeDiscoveredScreenshots(
           meta?.discoveredScreenshots
         );
-        const mergedScreens = Array.from(
-          new Set([
-            ...cleanFolderUrls,
-            ...cleanMetaScreens,
-            ...(Array.isArray(verified) ? verified : []),
-          ])
-        ).filter(
+        const liveScreensMerged = Array.from(
+          new Set([...cleanFolderUrls, ...cleanMetaScreens])
+        );
+        const screenCandidates =
+          liveScreensMerged.length > 0
+            ? liveScreensMerged
+            : Array.isArray(verified)
+            ? verified
+            : [];
+        const mergedScreens = screenCandidates.filter(
           (u): u is string =>
             typeof u === 'string' &&
             u.trim().length > 0 &&
@@ -601,6 +613,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
         setCaseStudyData({ en: null, ar: null });
         manualStudyLangRef.current = false;
         setStudyCaseLang(lang === 'ar' ? 'ar' : 'en');
+        setStudyOrReadmeTab('casestudy');
         setLiveMeta(cachedLiveMedia || null);
         setReleaseInfo({ hasRelease: false });
 
@@ -636,12 +649,18 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           VERIFIED_REPO_SCREENSHOTS[safeRepoName.toLowerCase()] ||
           [];
 
-        const initialScreens = Array.from(
+        const liveInitialScreens = Array.from(
           new Set([
             ...sanitizeDiscoveredScreenshots(matchedCachedRepo?.discoveredScreenshots),
             ...sanitizeDiscoveredScreenshots(cachedLiveMedia?.discoveredScreenshots),
-            ...(Array.isArray(verified) ? verified : []),
           ])
+        );
+        const initialScreens = (
+          liveInitialScreens.length > 0
+            ? liveInitialScreens
+            : Array.isArray(verified)
+            ? verified
+            : []
         ).filter(
           (u): u is string =>
             typeof u === 'string' &&
@@ -678,6 +697,49 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
       }
     }
   }, [isOpen, safeProject, initialScreenIndex, recoveryEpoch]);
+
+  useEffect(() => {
+    if (
+      !isOpen ||
+      !safeProject?.repoName ||
+      studyCaseLoading ||
+      caseStudyData.en ||
+      caseStudyData.ar ||
+      !cachedLiveMedia?.rawReadmeText
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+    const branchHint =
+      cachedLiveMedia?.defaultBranch || matchedCachedRepo?.default_branch || 'main';
+    fetchRepoCaseStudies(
+      safeProject.repoName,
+      branchHint,
+      'ahmed-el-bialy',
+      false,
+      cachedLiveMedia.rawReadmeText
+    )
+      .then((csData) => {
+        if (!cancelled && (csData?.en || csData?.ar)) {
+          setCaseStudyData(csData);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isOpen,
+    safeProject,
+    studyCaseLoading,
+    caseStudyData.en,
+    caseStudyData.ar,
+    cachedLiveMedia?.rawReadmeText,
+    cachedLiveMedia?.defaultBranch,
+    matchedCachedRepo?.default_branch,
+  ]);
 
   useEffect(() => {
     if (lang === 'ar' && caseStudyData.ar) {
@@ -1198,7 +1260,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           },
           {
             id: 'casestudy',
-            label: lang === 'ar' ? 'دراسة الحالة' : 'Study Case',
+            label: lang === 'ar' ? 'دراسة الحالة والـ README' : 'Study Case & README',
           },
         ];
 
@@ -1989,8 +2051,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                       {lang === 'ar'
-                        ? 'أغلفة 4:3 من مجلد Screenshots/Covers معروضة بأبعادها الطبيعية الكاملة'
-                        : 'Full 4:3 cover artwork from Screenshots/Covers displayed in native proportions'}
+                        ? 'أغلفة 4:3 من مجلد Screenshots/Cover أو Covers معروضة بأبعادها الطبيعية الكاملة'
+                        : 'Full 4:3 cover artwork from Screenshots/Cover or Covers displayed in native proportions'}
                     </p>
                   </div>
 
@@ -2030,7 +2092,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       pacing="entry"
                       label={
                         lang === 'ar'
-                          ? 'جارٍ البحث عن صور مجلد Covers...'
+                          ? 'جارٍ البحث عن صور مجلد Cover...'
                           : 'Loading project covers...'
                       }
                     />
@@ -2043,13 +2105,13 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     />
                     <p className="font-semibold text-xs sm:text-sm text-slate-700 dark:text-slate-200">
                       {lang === 'ar'
-                        ? 'لم يتم العثور على أغلفة في Screenshots/Covers لهذا المستودع بعد.'
-                        : 'No custom cover artwork found in Screenshots/Covers yet.'}
+                        ? 'لم يتم العثور على أغلفة في Screenshots/Cover أو Covers لهذا المستودع بعد.'
+                        : 'No custom cover artwork found in Screenshots/Cover or Covers yet.'}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
                       {lang === 'ar'
-                        ? 'ارفع صوراً بنسبة 4:3 (1200×900) داخل Screenshots/Covers ثم اضغط "مزامنة" بالأعلى.'
-                        : 'Upload 4:3 (1200×900) images to Screenshots/Covers on GitHub and click Sync above.'}
+                        ? 'ارفع صوراً بنسبة 4:3 (1200×900) داخل Screenshots/Cover أو Covers ثم اضغط "مزامنة" بالأعلى.'
+                        : 'Upload 4:3 (1200×900) images to Screenshots/Cover or Covers on GitHub and click Sync above.'}
                     </p>
                   </div>
                 ) : (
@@ -2184,7 +2246,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     {[1, 2, 3, 4].map((sk) => (
                       <div
                         key={sk}
-                        className="aspect-[9/16] rounded-2xl bg-slate-200 dark:bg-slate-800 skeleton-shimmer"
+                        className="aspect-[9/20] rounded-2xl bg-slate-200 dark:bg-slate-800 skeleton-shimmer"
                       />
                     ))}
                   </div>
@@ -2292,7 +2354,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 />
               </section>
 
-              {/* SECTION 5: LIVE GITHUB ENGINEERING STUDY CASE */}
+              {/* SECTION 5: LIVE GITHUB ENGINEERING STUDY CASE & README.MD */}
               <section
                 ref={casestudyRef}
                 id="workspace-casestudy"
@@ -2306,47 +2368,81 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     />
                     <span>
                       {lang === 'ar'
-                        ? 'دراسة الحالة الهندسية'
-                        : 'Engineering Study Case'}
+                        ? 'دراسة الحالة وتوثيق المشروع (README)'
+                        : 'Engineering Study Case & README'}
                     </span>
                   </div>
 
-                  {hasEnglishStudyCase && hasArabicStudyCase ? (
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/10 p-1 rounded-xl border border-slate-200 dark:border-white/10">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          manualStudyLangRef.current = true;
-                          setStudyCaseLang('en');
-                        }}
-                        className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
-                          effectiveStudyCaseLang === 'en'
-                            ? 'bg-[#0284ff] text-white'
-                            : 'text-slate-600 dark:text-slate-300'
-                        }`}
-                      >
-                        English
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          manualStudyLangRef.current = true;
-                          setStudyCaseLang('ar');
-                        }}
-                        className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
-                          effectiveStudyCaseLang === 'ar'
-                            ? 'bg-[#0284ff] text-white'
-                            : 'text-slate-600 dark:text-slate-300'
-                        }`}
-                      >
-                        العربية
-                      </button>
-                    </div>
-                  ) : hasAnyStudyCase ? (
-                    <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">
-                      {effectiveStudyCaseLang === 'ar' ? 'العربية · AR' : 'English · EN'}
-                    </span>
-                  ) : null}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Study Case vs Full README Switcher */}
+                    {hasAnyStudyCase && rawReadme.trim().length > 0 && (
+                      <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#0f1117] p-1 rounded-xl border border-slate-200 dark:border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => setStudyOrReadmeTab('casestudy')}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
+                            studyOrReadmeTab === 'casestudy'
+                              ? 'bg-[#0284ff] text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          <BookOpen size={12.5} />
+                          <span>{lang === 'ar' ? 'دراسة الحالة' : 'Study Case'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setStudyOrReadmeTab('readme')}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
+                            studyOrReadmeTab === 'readme'
+                              ? 'bg-[#0284ff] text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          <FileText size={12.5} />
+                          <span>README.md</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Language Switcher for Study Case */}
+                    {studyOrReadmeTab === 'casestudy' &&
+                      (hasEnglishStudyCase && hasArabicStudyCase ? (
+                        <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/10 p-1 rounded-xl border border-slate-200 dark:border-white/10">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              manualStudyLangRef.current = true;
+                              setStudyCaseLang('en');
+                            }}
+                            className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
+                              effectiveStudyCaseLang === 'en'
+                                ? 'bg-[#0284ff] text-white'
+                                : 'text-slate-600 dark:text-slate-300'
+                            }`}
+                          >
+                            English
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              manualStudyLangRef.current = true;
+                              setStudyCaseLang('ar');
+                            }}
+                            className={`px-3 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors ${
+                              effectiveStudyCaseLang === 'ar'
+                                ? 'bg-[#0284ff] text-white'
+                                : 'text-slate-600 dark:text-slate-300'
+                            }`}
+                          >
+                            العربية
+                          </button>
+                        </div>
+                      ) : hasAnyStudyCase ? (
+                        <span className="text-[11px] font-mono font-semibold text-slate-500 dark:text-slate-400">
+                          {effectiveStudyCaseLang === 'ar' ? 'العربية · AR' : 'English · EN'}
+                        </span>
+                      ) : null)}
+                  </div>
                 </div>
 
                 {studyCaseLoading ? (
@@ -2357,9 +2453,29 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       pacing="entry"
                       label={
                         lang === 'ar'
-                          ? 'جارٍ استخراج وتنظيم دراسة الحالة...'
-                          : 'Extracting & organizing study case...'
+                          ? 'جارٍ استخراج وتنظيم دراسة الحالة وملف README...'
+                          : 'Extracting & organizing study case and README...'
                       }
+                    />
+                  </div>
+                ) : studyOrReadmeTab === 'readme' && rawReadme.trim().length > 0 ? (
+                  <div className="pt-1">
+                    <ReadmeDocumentView
+                      rawMarkdown={rawReadme}
+                      repoName={safeRepoName}
+                      branch={defaultBranch}
+                      onImageClick={(clickedUrl) => {
+                        if (!clickedUrl || typeof clickedUrl !== 'string') return;
+                        const matchedIdx = safeScreenshots.indexOf(clickedUrl);
+                        if (matchedIdx >= 0) {
+                          setAdHocLightboxUrl(null);
+                          setActiveScreenIndex(matchedIdx);
+                        } else {
+                          setAdHocLightboxUrl(clickedUrl);
+                        }
+                        setLightboxMediaType('screen');
+                        setLightboxOpen(true);
+                      }}
                     />
                   </div>
                 ) : hasAnyStudyCase && activeStudyCaseMarkdown ? (
@@ -2387,6 +2503,36 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       }}
                     />
                   </div>
+                ) : rawReadme.trim().length > 0 ? (
+                  <div className="pt-1 space-y-4">
+                    <div className="rounded-xl bg-[#0284ff]/8 border border-[#0284ff]/20 px-4 py-2.5 text-xs text-slate-700 dark:text-slate-300 flex flex-wrap items-center justify-between gap-2">
+                      <span>
+                        {lang === 'ar'
+                          ? 'يتم عرض ملف README.md الكامل لهذا المستودع تلقائياً بتصميم التوثيق الزجاجي.'
+                          : 'Displaying the repository’s full README.md documentation automatically.'}
+                      </span>
+                      <span className="font-mono text-[11px] text-[#0369a1] dark:text-[#38bdf8]">
+                        README.md
+                      </span>
+                    </div>
+                    <ReadmeDocumentView
+                      rawMarkdown={rawReadme}
+                      repoName={safeRepoName}
+                      branch={defaultBranch}
+                      onImageClick={(clickedUrl) => {
+                        if (!clickedUrl || typeof clickedUrl !== 'string') return;
+                        const matchedIdx = safeScreenshots.indexOf(clickedUrl);
+                        if (matchedIdx >= 0) {
+                          setAdHocLightboxUrl(null);
+                          setActiveScreenIndex(matchedIdx);
+                        } else {
+                          setAdHocLightboxUrl(clickedUrl);
+                        }
+                        setLightboxMediaType('screen');
+                        setLightboxOpen(true);
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div className="py-10 px-6 rounded-2xl border border-dashed border-slate-300/80 dark:border-white/12 text-center space-y-2.5">
                     <FileCode
@@ -2400,8 +2546,8 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                     </h5>
                     <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
                       {lang === 'ar'
-                        ? 'بمجرد إضافة ملف CASE_STUDY.md أو CASE_STUDY_AR.md في جذر المستودع على GitHub سيتم عرضه هنا تلقائياً.'
-                        : 'When CASE_STUDY.md or CASE_STUDY_AR.md is added to this repository root on GitHub, it will load here automatically.'}
+                        ? 'بمجرد إضافة قسم دراسة الحالة داخل README.md أو ملف CASE_STUDY.md / CASE_STUDY_AR.md في جذر المستودع سيتم استخراجه وعرضه هنا تلقائياً.'
+                        : 'When a Case Study section is added to README.md or CASE_STUDY.md / CASE_STUDY_AR.md is added to this repository root, it will load here automatically.'}
                     </p>
                   </div>
                 )}
@@ -2686,7 +2832,7 @@ export const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       setActiveScreenIndex(idx);
                     }}
                     aria-label={`View screenshot ${idx + 1}`}
-                    className={`w-10 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${
+                    className={`w-9 aspect-[9/20] rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${
                       lightboxMediaType === 'screen' && safeScreenIndex === idx
                         ? 'border-[#38bdf8] scale-110 opacity-100'
                         : 'border-white/15 opacity-70 hover:opacity-100'

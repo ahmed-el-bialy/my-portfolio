@@ -87,6 +87,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
   const shouldReduceMotion = useReducedMotion();
   const [userToggledStage, setUserToggledStage] = useState(false);
   const [posterError, setPosterError] = useState(false);
+  const [isLandscapeScreen, setIsLandscapeScreen] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
 
   const hasVideo = Boolean(youtubeIframeSrc && parsedVideoId);
@@ -104,6 +105,10 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
     setUserToggledStage(false);
     setPosterError(false);
   }, [repoName, youtubePosterUrl]);
+
+  useEffect(() => {
+    setIsLandscapeScreen(false);
+  }, [activeScreenUrl]);
 
   // Default to Video Demo whenever the project has a video; otherwise show screens immediately
   // unless the user explicitly clicked the Video Demo tab to view the channel fallback.
@@ -143,7 +148,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
     : { duration: 0.18, ease: [0.16, 1, 0.3, 1] as const };
 
   return (
-    <div className="rounded-2xl bg-slate-50/90 dark:bg-[#0e1320]/90 border border-slate-200/90 dark:border-white/10 p-4 sm:p-5 flex flex-col gap-4 shadow-xs">
+    <div className="rounded-2xl bg-slate-50/90 dark:bg-[#0f1117]/90 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 p-4 sm:p-5 flex flex-col gap-4 shadow-sm">
       {/* Segmented Tab Switcher + Contextual Utility Telemetry */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
         <div
@@ -470,74 +475,101 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                       </button>
                     )}
 
-                    {/* Interactive Phone Chassis */}
-                    <div className="relative w-[176px] sm:w-[192px] aspect-[9/17.8] rounded-[28px] p-2 bg-[#0c101b] border-2 border-slate-300/90 dark:border-white/20 shadow-2xl overflow-hidden group">
+                    {/* Google Pixel 9 Pro XL Interactive Chassis (20:9 Display) */}
+                    <div className="relative w-[206px] sm:w-[228px] aspect-[9/20] shrink-0">
+                      {/* Pixel 9 Pro XL Right-Rail Hardware Keys (Power + Volume Rocker) */}
                       <div
                         aria-hidden="true"
-                        className="absolute top-2.5 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-slate-800 z-20 pointer-events-none"
+                        className="absolute -right-[3px] top-[23%] w-[3px] h-7 rounded-r-sm bg-slate-400/80 dark:bg-slate-500/80 pointer-events-none"
+                      />
+                      <div
+                        aria-hidden="true"
+                        className="absolute -right-[3px] top-[34%] w-[3px] h-12 rounded-r-sm bg-slate-400/80 dark:bg-slate-500/80 pointer-events-none"
                       />
 
-                      <button
-                        type="button"
-                        onClick={onOpenLightbox}
-                        className="w-full h-full rounded-[20px] overflow-hidden bg-[#0e1320] flex items-center justify-center cursor-pointer relative"
-                        aria-label={
-                          lang === 'ar'
-                            ? 'فتح الشاشة بملء العرض'
-                            : 'Open screen in fullscreen lightbox'
-                        }
-                      >
-                        <ImageWithSkeleton
-                          key={activeScreenUrl}
-                          src={activeScreenUrl}
-                          alt={`${displayName} — ${formatReadableScreenName(
-                            activeScreenUrl,
-                            safeIndex
-                          )}`}
-                          loading="eager"
-                          variant="phone"
-                          className="w-full h-full object-contain crisp-screenshot group-hover:scale-[1.02] transition-transform duration-300"
+                      <div className="relative w-full h-full rounded-[34px] p-[7px] bg-gradient-to-b from-[#2c313d] via-[#151821] to-[#232834] border border-slate-400/60 dark:border-white/18 ring-1 ring-[#0284ff]/15 shadow-[0_24px_60px_-16px_rgba(2,132,255,0.22),0_18px_36px_-12px_rgba(0,0,0,0.6)] overflow-hidden group">
+                        {/* Centered Top Earpiece + Pixel Punch-Hole Camera */}
+                        <div
+                          aria-hidden="true"
+                          className="absolute top-[5px] left-1/2 -translate-x-1/2 w-10 h-[2px] rounded-full bg-white/10 z-20 pointer-events-none"
                         />
-                      </button>
+                        <div
+                          aria-hidden="true"
+                          className="absolute top-[13px] left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-[#040507] ring-1 ring-white/15 flex items-center justify-center z-20 pointer-events-none"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#1d3b61]/80" />
+                        </div>
 
-                      {/* Mobile On-Frame Arrows (44px touch targets) */}
-                      {screenCount > 1 && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onPrevScreen();
-                            }}
-                            className="sm:hidden absolute start-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/70 text-white flex items-center justify-center z-20 cursor-pointer active:scale-95 transition-transform"
-                            aria-label={lang === 'ar' ? 'الشاشة السابقة' : 'Previous screen'}
-                          >
-                            <ChevronLeft
-                              size={18}
-                              className={dir === 'rtl' ? 'rotate-180' : ''}
-                            />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onNextScreen();
-                            }}
-                            className="sm:hidden absolute end-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/70 text-white flex items-center justify-center z-20 cursor-pointer active:scale-95 transition-transform"
-                            aria-label={lang === 'ar' ? 'الشاشة التالية' : 'Next screen'}
-                          >
-                            <ChevronRight
-                              size={18}
-                              className={dir === 'rtl' ? 'rotate-180' : ''}
-                            />
-                          </button>
-                        </>
-                      )}
+                        <button
+                          type="button"
+                          onClick={onOpenLightbox}
+                          className="w-full h-full rounded-[27px] overflow-hidden bg-[#08090d] flex items-center justify-center cursor-pointer relative"
+                          aria-label={
+                            lang === 'ar'
+                              ? 'فتح الشاشة بملء العرض'
+                              : 'Open screen in fullscreen lightbox'
+                          }
+                        >
+                          <ImageWithSkeleton
+                            key={activeScreenUrl}
+                            src={activeScreenUrl}
+                            alt={`${displayName} — ${formatReadableScreenName(
+                              activeScreenUrl,
+                              safeIndex
+                            )}`}
+                            loading="eager"
+                            variant="phone"
+                            onImageDimensions={({ isLandscape }) =>
+                              setIsLandscapeScreen(isLandscape)
+                            }
+                            className={`w-full h-full crisp-screenshot group-hover:scale-[1.015] transition-transform duration-300 ${
+                              isLandscapeScreen
+                                ? 'object-contain'
+                                : 'object-cover object-top'
+                            }`}
+                          />
+                        </button>
 
-                      <div
-                        aria-hidden="true"
-                        className="absolute bottom-2 left-1/2 -translate-x-1/2 w-12 h-1 rounded-full bg-white/30 z-20 pointer-events-none"
-                      />
+                        {/* Mobile On-Frame Arrows (44px touch targets) */}
+                        {screenCount > 1 && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onPrevScreen();
+                              }}
+                              className="sm:hidden absolute start-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/70 text-white flex items-center justify-center z-20 cursor-pointer active:scale-95 transition-transform"
+                              aria-label={lang === 'ar' ? 'الشاشة السابقة' : 'Previous screen'}
+                            >
+                              <ChevronLeft
+                                size={18}
+                                className={dir === 'rtl' ? 'rotate-180' : ''}
+                              />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onNextScreen();
+                              }}
+                              className="sm:hidden absolute end-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/70 text-white flex items-center justify-center z-20 cursor-pointer active:scale-95 transition-transform"
+                              aria-label={lang === 'ar' ? 'الشاشة التالية' : 'Next screen'}
+                            >
+                              <ChevronRight
+                                size={18}
+                                className={dir === 'rtl' ? 'rotate-180' : ''}
+                              />
+                            </button>
+                          </>
+                        )}
+
+                        {/* Android Bottom Navigation Pill */}
+                        <div
+                          aria-hidden="true"
+                          className="absolute bottom-2.5 left-1/2 -translate-x-1/2 w-14 h-[3px] rounded-full bg-white/35 z-20 pointer-events-none"
+                        />
+                      </div>
                     </div>
 
                     {screenCount > 1 && (
@@ -555,10 +587,16 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                     )}
                   </div>
 
-                  {/* Active Screen Caption & Quick Action */}
+                  {/* Active Screen Caption, Device Silhouette & Quick Action */}
                   <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                    <span className="font-mono font-semibold capitalize truncate max-w-[210px]">
+                    <span className="font-mono font-semibold capitalize truncate max-w-[190px]">
                       {formatReadableScreenName(activeScreenUrl, safeIndex)}
+                    </span>
+                    <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
+                      ·
+                    </span>
+                    <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                      Pixel 9 Pro XL
                     </span>
                     <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">
                       ·
@@ -591,7 +629,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
         </AnimatePresence>
       </div>
 
-      {/* Synchronized Interactive Filmstrip (Bridges Video Demo <-> Phone Screens) */}
+      {/* Synchronized Interactive Filmstrip (Bridges Video Demo <-> Pixel 9 Pro XL Screens) */}
       {screenCount > 0 && (
         <div className="pt-3 border-t border-slate-200/80 dark:border-white/8 flex items-center gap-2 overflow-x-auto no-scrollbar">
           {screenshots.slice(0, 6).map((thumb, idx) => {
@@ -604,7 +642,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
                   handleSelectMode('screens');
                   onSelectScreen(idx);
                 }}
-                className={`w-11 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer bg-[#161e31] ${
+                className={`w-9 aspect-[9/20] rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer bg-[#08090d] ${
                   active
                     ? 'border-[#0284ff] scale-[1.04] shadow-sm'
                     : 'border-slate-200 dark:border-white/15 opacity-80 hover:opacity-100'
@@ -627,7 +665,7 @@ export const ProjectDeviceStage: React.FC<ProjectDeviceStageProps> = ({
           <button
             type="button"
             onClick={onJumpToGallery}
-            className="h-16 px-3 min-w-[54px] rounded-lg border border-dashed border-slate-300 dark:border-white/20 hover:border-[#0284ff] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] text-[11px] font-mono font-bold shrink-0 flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer ms-auto whitespace-nowrap"
+            className="h-20 px-3 min-w-[54px] rounded-lg border border-dashed border-slate-300 dark:border-white/20 hover:border-[#0284ff] bg-white dark:bg-white/[0.04] text-slate-700 dark:text-slate-200 hover:text-[#0369a1] dark:hover:text-[#38bdf8] text-[11px] font-mono font-bold shrink-0 flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer ms-auto whitespace-nowrap"
           >
             <ImageIcon size={14} />
             <span className="tabular-nums">

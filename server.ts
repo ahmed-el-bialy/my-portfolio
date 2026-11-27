@@ -176,20 +176,85 @@ async function startServer() {
     username: string,
     repoName: string,
     folderPath: string
-  ): Promise<any[]> {
+  ): Promise<{ ok: boolean; entries: any[] }> {
     try {
       const res = await fetchWithTimeout(
-        `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/contents/${folderPath}`,
+        `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/contents${folderPath ? `/${folderPath}` : ''}`,
         { headers: githubHeaders() },
         8000
       );
-      if (!res.ok) return [];
+      if (!res.ok) return { ok: false, entries: [] };
       const data = await res.json();
-      return Array.isArray(data) ? data : [];
+      return { ok: true, entries: Array.isArray(data) ? data : [] };
     } catch {
-      return [];
+      return { ok: false, entries: [] };
     }
   }
+
+  async function fetchGitHubWebDirEntries(
+    username: string,
+    repoName: string,
+    branch: string,
+    dirPath: string = ''
+  ): Promise<{ ok: boolean; resolvedBranch: string; entries: Array<{ name: string; path: string; type: 'dir' | 'file' }> }> {
+    const encodeSegs = (p: string) =>
+      p
+        .split('/')
+        .filter(Boolean)
+        .map((seg) => encodeURIComponent(seg))
+        .join('/');
+
+    const branches = Array.from(new Set([branch || 'main', 'main', 'master']));
+    for (const candidateBranch of branches) {
+      const targetUrl = dirPath
+        ? `https://github.com/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/tree/${encodeURIComponent(candidateBranch)}/${encodeSegs(dirPath)}`
+        : `https://github.com/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/tree/${encodeURIComponent(candidateBranch)}`;
+
+      try {
+        const res = await fetchWithTimeout(
+          targetUrl,
+          {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; PortfolioAssetSync/1.0)',
+              Accept: 'text/html,application/xhtml+xml',
+            },
+          },
+          9000
+        );
+        if (!res.ok) continue;
+        const html = await res.text();
+        const seen = new Map<string, { name: string; path: string; type: 'dir' | 'file' }>();
+        const itemRegex = /"name":"([^"]+)","path":"([^"]+)","contentType":"(file|directory)"/g;
+        let match: RegExpExecArray | null;
+        while ((match = itemRegex.exec(html)) !== null) {
+          const itemName = match[1];
+          const itemPath = match[2];
+          const itemType = match[3] === 'directory' ? 'dir' : 'file';
+          // Keep items belonging directly to requested dirPath (or all items if root)
+          if (dirPath) {
+            const normDir = dirPath.replace(/^\/+|\/+$/g, '').toLowerCase();
+            const normPath = itemPath.toLowerCase();
+            if (!normPath.startsWith(`${normDir}/`)) continue;
+          } else if (itemPath.includes('/')) {
+            continue;
+          }
+          if (!seen.has(itemPath)) {
+            seen.set(itemPath, { name: itemName, path: itemPath, type: itemType });
+          }
+        }
+        return {
+          ok: true,
+          resolvedBranch: candidateBranch,
+          entries: Array.from(seen.values()),
+        };
+      } catch {
+        // try next branch
+      }
+    }
+    return { ok: false, resolvedBranch: branch || 'main', entries: [] };
+  }
+
+  const repoAssetsServerCache = new Map<string, { timestamp: number; data: any }>();
 
   async function fetchRepoScreenshotsServer(
     username: string,
@@ -197,6 +262,8 @@ async function startServer() {
     defaultBranch: string
   ): Promise<{ coverUrl?: string; coverImages: string[]; screens: string[] }> {
     const imageRegex = /\.(png|jpe?g|webp)$/i;
+    const isIconOrLogo = (relPath: string) =>
+      /(?:^|\/)(?:app_icon(?:_\d+)?|app_logo)\.(?:png|jpe?g|webp)$/i.test(relPath);
     const localCovers = await collectLocalPublicCovers(repoName);
     const coverImages: string[] = [...localCovers];
     const screens: string[] = [];
@@ -208,16 +275,16 @@ async function startServer() {
         .map((seg) => encodeURIComponent(seg))
         .join('/');
 
-    const toRawUrl = (relPath: string, downloadUrl?: string) =>
+    const makeToRawUrl = (branchName: string) => (relPath: string, downloadUrl?: string) =>
       downloadUrl ||
       `https://raw.githubusercontent.com/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}/${encodeURIComponent(
-        defaultBranch || 'main'
+        branchName || 'main'
       )}/${encodeGitPath(relPath)}`;
 
     const isCoverPath = (relPath: string) => {
       const lower = relPath.toLowerCase();
       return (
-        /(?:^|\/)covers\/[^/]+\.(png|jpe?g|webp)$/i.test(lower) ||
+        /(?:^|\/)covers?\/[^/]+\.(png|jpe?g|webp)$/i.test(lower) ||
         /^(?:screenshots\/)?cover[^/]*\.(png|jpe?g|webp)$/i.test(lower)
       );
     };
@@ -225,13 +292,14 @@ async function startServer() {
     const isDirectScreenshotPath = (relPath: string) => {
       const lower = relPath.toLowerCase();
       return (
-        /^screenshots\/[^/]+\.(png|jpe?g|webp)$/i.test(lower) &&
-        !isCoverPath(lower)
+        /^screenshots\/.+\.(png|jpe?g|webp)$/i.test(lower) &&
+        !isCoverPath(lower) &&
+        !isIconOrLogo(lower)
       );
     };
 
     try {
-      // Primary: single recursive Git tree lookup preserves exact case (e.g. Screenshots/Covers) and cuts API calls by 70%
+      // Primary: single recursive Git tree lookup preserves exact case (e.g. Screenshots/Cover, Screenshots/Covers)
       const treeRes = await fetchWithTimeout(
         `https://api.github.com/repos/${encodeURIComponent(username)}/${encodeURIComponent(
           repoName
@@ -243,6 +311,7 @@ async function startServer() {
       if (treeRes.ok) {
         const treeJson: any = await treeRes.json();
         if (Array.isArray(treeJson?.tree) && !treeJson?.truncated) {
+          const toRawUrl = makeToRawUrl(defaultBranch);
           const blobs = treeJson.tree
             .filter(
               (item: any) =>
@@ -271,63 +340,155 @@ async function startServer() {
         }
       }
 
-      // Fallback: Contents API using exact entry.path casing from parent directory listings
-      const rootEntries = await fetchGitHubFolderImagesServer(username, repoName, '');
-      const coversDirEntry = rootEntries.find(
-        (e: any) => e?.type === 'dir' && String(e?.name || '').toLowerCase() === 'covers'
-      );
-      const screenshotsDirEntry = rootEntries.find(
-        (e: any) => e?.type === 'dir' && String(e?.name || '').toLowerCase() === 'screenshots'
-      );
-
-      const [coversFiles, screenshotFiles] = await Promise.all([
-        coversDirEntry?.path
-          ? fetchGitHubFolderImagesServer(username, repoName, encodeGitPath(coversDirEntry.path))
-          : Promise.resolve([]),
-        screenshotsDirEntry?.path
-          ? fetchGitHubFolderImagesServer(username, repoName, encodeGitPath(screenshotsDirEntry.path))
-          : Promise.resolve([]),
-      ]);
-
-      coversFiles
-        .filter((f: any) => f?.type === 'file' && typeof f?.name === 'string' && imageRegex.test(f.name))
-        .sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true }))
-        .forEach((f: any) => {
-          coverImages.push(toRawUrl(f.path || `${coversDirEntry.path}/${f.name}`, f.download_url));
-        });
-
-      const nestedCoversEntry = screenshotFiles.find(
-        (f: any) => f?.type === 'dir' && String(f?.name || '').toLowerCase() === 'covers'
-      );
-      if (nestedCoversEntry?.path) {
-        const nestedFiles = await fetchGitHubFolderImagesServer(
-          username,
-          repoName,
-          encodeGitPath(nestedCoversEntry.path)
+      // Secondary: Contents API using exact entry.path casing from parent directory listings
+      const rootApiRes = await fetchGitHubFolderImagesServer(username, repoName, '');
+      if (rootApiRes.ok) {
+        const toRawUrl = makeToRawUrl(defaultBranch);
+        const rootEntries = rootApiRes.entries;
+        const coverDirEntries = rootEntries.filter(
+          (e: any) => e?.type === 'dir' && /^covers?$/i.test(String(e?.name || ''))
         );
-        nestedFiles
-          .filter((f: any) => f?.type === 'file' && typeof f?.name === 'string' && imageRegex.test(f.name))
-          .sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true }))
-          .forEach((f: any) => {
-            coverImages.push(
-              toRawUrl(f.path || `${nestedCoversEntry.path}/${f.name}`, f.download_url)
-            );
-          });
+        const screenshotsDirEntry = rootEntries.find(
+          (e: any) => e?.type === 'dir' && String(e?.name || '').toLowerCase() === 'screenshots'
+        );
+
+        const [coverDirsFiles, screenshotsDirRes] = await Promise.all([
+          Promise.all(
+            coverDirEntries.map(async (dirEntry: any) => ({
+              dirPath: dirEntry.path,
+              res: dirEntry?.path
+                ? await fetchGitHubFolderImagesServer(username, repoName, encodeGitPath(dirEntry.path))
+                : { ok: false, entries: [] },
+            }))
+          ),
+          screenshotsDirEntry?.path
+            ? fetchGitHubFolderImagesServer(username, repoName, encodeGitPath(screenshotsDirEntry.path))
+            : Promise.resolve({ ok: true, entries: [] }),
+        ]);
+
+        for (const { dirPath, res } of coverDirsFiles) {
+          res.entries
+            .filter((f: any) => f?.type === 'file' && typeof f?.name === 'string' && imageRegex.test(f.name))
+            .sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+            .forEach((f: any) => {
+              coverImages.push(toRawUrl(f.path || `${dirPath}/${f.name}`, f.download_url));
+            });
+        }
+
+        const screenshotFiles = screenshotsDirRes.entries;
+        const nestedDirs = screenshotFiles.filter((f: any) => f?.type === 'dir' && f?.path);
+        if (nestedDirs.length > 0) {
+          await Promise.all(
+            nestedDirs.map(async (nestedDir: any) => {
+              const isCoverSubdir = /^covers?$/i.test(String(nestedDir?.name || ''));
+              const nestedRes = await fetchGitHubFolderImagesServer(
+                username,
+                repoName,
+                encodeGitPath(nestedDir.path)
+              );
+              nestedRes.entries
+                .filter((f: any) => f?.type === 'file' && typeof f?.name === 'string' && imageRegex.test(f.name))
+                .sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+                .forEach((f: any) => {
+                  const rawUrl = toRawUrl(f.path || `${nestedDir.path}/${f.name}`, f.download_url);
+                  if (isCoverSubdir || /^cover.*\.(png|jpe?g|webp)$/i.test(f.name)) {
+                    coverImages.push(rawUrl);
+                  } else if (!isIconOrLogo(f.name)) {
+                    screens.push(rawUrl);
+                  }
+                });
+            })
+          );
+        }
+
+        for (const file of screenshotFiles) {
+          if (file?.type !== 'file' || typeof file?.name !== 'string') continue;
+          if (!imageRegex.test(file.name)) continue;
+
+          const rawUrl = toRawUrl(
+            file.path || `${screenshotsDirEntry?.path || 'screenshots'}/${file.name}`,
+            file.download_url
+          );
+          if (/^cover.*\.(png|jpe?g|webp)$/i.test(file.name)) {
+            coverImages.push(rawUrl);
+          } else if (!isIconOrLogo(file.name)) {
+            screens.push(rawUrl);
+          }
+        }
+
+        const uniqueCovers = Array.from(new Set(coverImages));
+        return {
+          coverUrl: uniqueCovers[0],
+          coverImages: uniqueCovers,
+          screens: Array.from(new Set(screens)),
+        };
       }
 
-      for (const file of screenshotFiles) {
-        if (file?.type !== 'file' || typeof file?.name !== 'string') continue;
-        if (!imageRegex.test(file.name)) continue;
-
-        const rawUrl = toRawUrl(
-          file.path || `${screenshotsDirEntry?.path || 'screenshots'}/${file.name}`,
-          file.download_url
+      // Tertiary (Rate-Limit-Proof): GitHub Web Tree HTML lookup (works cleanly even when api.github.com returns 403)
+      const rootWeb = await fetchGitHubWebDirEntries(username, repoName, defaultBranch, '');
+      if (rootWeb.ok) {
+        const resolvedBranch = rootWeb.resolvedBranch;
+        const toRawUrl = makeToRawUrl(resolvedBranch);
+        const coverDirs = rootWeb.entries.filter(
+          (e) => e.type === 'dir' && /^covers?$/i.test(e.name)
         );
-        if (/^cover.*\.(png|jpe?g|webp)$/i.test(file.name)) {
-          coverImages.push(rawUrl);
-        } else {
-          screens.push(rawUrl);
+        const screenshotsDir = rootWeb.entries.find(
+          (e) => e.type === 'dir' && e.name.toLowerCase() === 'screenshots'
+        );
+
+        const [coverWebDirs, ssWeb] = await Promise.all([
+          Promise.all(
+            coverDirs.map((d) => fetchGitHubWebDirEntries(username, repoName, resolvedBranch, d.path))
+          ),
+          screenshotsDir
+            ? fetchGitHubWebDirEntries(username, repoName, resolvedBranch, screenshotsDir.path)
+            : Promise.resolve({ ok: true, resolvedBranch, entries: [] }),
+        ]);
+
+        for (const cw of coverWebDirs) {
+          cw.entries
+            .filter((f) => f.type === 'file' && imageRegex.test(f.name))
+            .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+            .forEach((f) => coverImages.push(toRawUrl(f.path)));
         }
+
+        const nestedSsDirs = ssWeb.entries.filter((e) => e.type === 'dir');
+        if (nestedSsDirs.length > 0) {
+          await Promise.all(
+            nestedSsDirs.map(async (subDir) => {
+              const isCoverSubdir = /^covers?$/i.test(subDir.name);
+              const subWeb = await fetchGitHubWebDirEntries(
+                username,
+                repoName,
+                resolvedBranch,
+                subDir.path
+              );
+              subWeb.entries
+                .filter((f) => f.type === 'file' && imageRegex.test(f.name))
+                .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+                .forEach((f) => {
+                  const rawUrl = toRawUrl(f.path);
+                  if (isCoverSubdir || /^cover.*\.(png|jpe?g|webp)$/i.test(f.name)) {
+                    coverImages.push(rawUrl);
+                  } else if (!isIconOrLogo(f.name)) {
+                    screens.push(rawUrl);
+                  }
+                });
+            })
+          );
+        }
+
+        ssWeb.entries
+          .filter((f) => f.type === 'file' && imageRegex.test(f.name))
+          .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+          .forEach((f) => {
+            const rawUrl = toRawUrl(f.path);
+            if (/^cover.*\.(png|jpe?g|webp)$/i.test(f.name)) {
+              coverImages.push(rawUrl);
+            } else if (!isIconOrLogo(f.name)) {
+              screens.push(rawUrl);
+            }
+          });
       }
 
       const uniqueCovers = Array.from(new Set(coverImages));
@@ -341,6 +502,42 @@ async function startServer() {
       return { coverUrl: uniqueCovers[0], coverImages: uniqueCovers, screens: [] };
     }
   }
+
+  app.get('/api/github/repo-assets', async (req, res) => {
+    try {
+      const rawUsername = typeof req.query.username === 'string' ? req.query.username.trim() : 'ahmed-el-bialy';
+      const rawRepo = typeof req.query.repo === 'string' ? req.query.repo.trim() : '';
+      const rawBranch = typeof req.query.branch === 'string' ? req.query.branch.trim() : 'main';
+      const forceRefresh = req.query.refresh === '1';
+
+      if (!rawRepo || !/^[a-zA-Z0-9._-]+$/.test(rawRepo) || !/^[a-zA-Z0-9-]+$/.test(rawUsername)) {
+        return res.status(400).json({ success: false, error: 'Valid repository and username required' });
+      }
+
+      const cacheKey = `${rawUsername.toLowerCase()}/${rawRepo.toLowerCase()}/${rawBranch.toLowerCase()}`;
+      if (!forceRefresh) {
+        const cached = repoAssetsServerCache.get(cacheKey);
+        if (cached && Date.now() - cached.timestamp < GITHUB_CACHE_TTL_MS) {
+          return res.json({ success: true, cached: true, ...cached.data });
+        }
+      } else {
+        repoAssetsServerCache.delete(cacheKey);
+      }
+
+      const result = await fetchRepoScreenshotsServer(rawUsername, rawRepo, rawBranch);
+      const data = {
+        coverUrl: result.coverUrl,
+        coverImages: result.coverImages,
+        screens: result.screens,
+      };
+      if (result.coverImages.length > 0 || result.screens.length > 0) {
+        repoAssetsServerCache.set(cacheKey, { timestamp: Date.now(), data });
+      }
+      return res.json({ success: true, cached: false, ...data });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, error: error?.message || 'Failed to discover repo assets' });
+    }
+  });
 
   // Cached Media Proxy for allowlisted GitHub raw screenshots (eliminates repeat multi-MB downloads)
   const MEDIA_CACHE_MAX_ENTRIES = 48;

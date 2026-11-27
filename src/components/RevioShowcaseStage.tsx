@@ -124,6 +124,7 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
     videoUrl: string;
   } | null>(null);
   const [hasOpenedVideoModal, setHasOpenedVideoModal] = useState(false);
+  const [isLandscapeScreen, setIsLandscapeScreen] = useState(false);
   const { data: revioPlayStats } = usePlayStoreAppStats('com.ahmed.revio');
 
   const {
@@ -191,7 +192,7 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
           : [];
       const rawList =
         liveScreens.length > 0
-          ? Array.from(new Set([...liveScreens, ...verifiedScreens]))
+          ? liveScreens
           : verifiedScreens.length > 0
           ? verifiedScreens
           : fallbackImg;
@@ -238,6 +239,10 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
   const normalizedIdx =
     safeScreenCount > 0 ? ((screenIndex % safeScreenCount) + safeScreenCount) % safeScreenCount : 0;
   const currentScreen = activeScreens[normalizedIdx] || activeScreens[0];
+
+  useEffect(() => {
+    setIsLandscapeScreen(false);
+  }, [currentScreen?.src]);
 
   const { liveRelease, resolvedLinks, linksMapperFailed } = (() => {
     try {
@@ -365,7 +370,7 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
     <TiltCard
       maxTilt={2.5}
       glareOpacity={0.07}
-      className="card-shimmer overflow-hidden w-full h-full flex flex-col justify-between rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0f1117] p-4 sm:p-5 shadow-xl"
+      className="card-shimmer overflow-hidden w-full h-full flex flex-col justify-between rounded-3xl border border-slate-200 dark:border-white/10 hover:border-[#0284ff]/35 bg-white dark:bg-[#0f1117]/95 backdrop-blur-xl p-4 sm:p-5 shadow-xl transition-colors"
     >
       {/* Interactive Multi-App Switcher Header */}
       <div className="space-y-3 pb-3.5 border-b border-slate-200/80 dark:border-white/8">
@@ -431,72 +436,108 @@ const RevioShowcaseStageContent: React.FC<RevioShowcaseStageProps> = ({
       {/* Main Interactive Phone Stage */}
       <div className="my-3 sm:my-4 flex-1 flex items-center justify-center min-h-[280px] sm:min-h-[340px] min-w-0">
         <div className="w-full grid grid-cols-1 sm:grid-cols-12 gap-4 items-center min-w-0">
-          {/* Portrait Phone Mockup */}
+          {/* Portrait Google Pixel 9 Pro XL Mockup (20:9 Display) */}
           <div className="sm:col-span-5 xl:col-span-6 flex justify-center min-w-0">
-            <div className="relative w-[178px] sm:w-full sm:max-w-[204px] xl:max-w-[220px] rounded-[32px] sm:rounded-[34px] p-2 sm:p-2.5 bg-[#0c101b] border-[3px] border-slate-300 dark:border-slate-700 shadow-2xl">
-              <div className="absolute top-3.5 left-1/2 -translate-x-1/2 z-20 w-14 h-3 rounded-full bg-slate-900 border border-slate-800 pointer-events-none" />
+            <div className="relative w-[184px] sm:w-full sm:max-w-[196px] xl:max-w-[214px] aspect-[9/20] shrink-0">
+              {/* Right-side Pixel hardware power & volume keys */}
               <div
-                onClick={handleInspect}
-                role="button"
-                tabIndex={0}
-                data-cursor-label={lang === 'ar' ? 'معاينة' : 'Inspect'}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleInspect();
+                aria-hidden="true"
+                className="absolute -right-[3px] top-[23%] w-[3px] h-7 rounded-r-sm bg-slate-400/80 dark:bg-slate-500/80 pointer-events-none"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute -right-[3px] top-[34%] w-[3px] h-12 rounded-r-sm bg-slate-400/80 dark:bg-slate-500/80 pointer-events-none"
+              />
+
+              <div className="relative w-full h-full rounded-[32px] sm:rounded-[34px] p-[7px] bg-gradient-to-b from-[#2c313d] via-[#151821] to-[#232834] border border-slate-400/60 dark:border-white/18 ring-1 ring-[#0284ff]/15 shadow-[0_24px_60px_-16px_rgba(2,132,255,0.22),0_18px_36px_-12px_rgba(0,0,0,0.6)]">
+                {/* Centered top earpiece hairline + Pixel circular punch-hole camera */}
+                <div
+                  aria-hidden="true"
+                  className="absolute top-[5px] left-1/2 -translate-x-1/2 z-20 w-10 h-[2px] rounded-full bg-white/10 pointer-events-none"
+                />
+                <div
+                  aria-hidden="true"
+                  className="absolute top-[13px] left-1/2 -translate-x-1/2 z-20 w-3 h-3 rounded-full bg-[#040507] ring-1 ring-white/15 flex items-center justify-center pointer-events-none"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#1d3b61]/80" />
+                </div>
+
+                <div
+                  onClick={handleInspect}
+                  role="button"
+                  tabIndex={0}
+                  data-cursor-label={lang === 'ar' ? 'معاينة' : 'Inspect'}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleInspect();
+                    }
+                  }}
+                  aria-label={
+                    lang === 'ar' ? `معاينة تطبيق ${activeProject.name}` : `Inspect ${activeProject.name}`
                   }
-                }}
-                aria-label={
-                  lang === 'ar' ? `معاينة تطبيق ${activeProject.name}` : `Inspect ${activeProject.name}`
-                }
-                className="relative w-full aspect-[9/18.5] rounded-[24px] overflow-hidden bg-[#161e31] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c101b]"
-              >
-                <AnimatePresence initial={false} custom={screenDirection}>
-                  {currentScreen ? (
-                    <motion.div
-                      key={currentScreen.id}
-                      custom={screenDirection}
-                      variants={screenSlideVariants}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute inset-0 w-full h-full"
-                    >
-                      <ImageWithSkeleton
-                        src={currentScreen.src}
-                        alt={`${activeProject.name} ${currentScreen.label}`}
-                        loading="eager"
-                        variant="phone"
-                        className="w-full h-full object-cover object-top crisp-screenshot"
-                      />
-                    </motion.div>
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 text-slate-300 p-4 text-center bg-gradient-to-br from-[#141b2d] to-[#0c111f]">
-                      <div className="w-10 h-10 rounded-2xl bg-[#0284ff]/15 border border-[#0284ff]/30 flex items-center justify-center text-[#38bdf8]">
-                        <Smartphone size={20} />
-                      </div>
-                      <span className="text-xs font-display font-bold text-white">
-                        {activeProject.name}
-                      </span>
-                      <span className="text-[10px] font-mono text-slate-400 leading-snug">
-                        {lang === 'ar' ? 'عرض احتياطي جاهز' : 'Fallback preview ready'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          refetchConsolidated();
-                          onRetryStoreSync?.();
-                        }}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 hover:bg-[#0284ff] text-[10px] font-semibold text-white transition-colors cursor-pointer"
+                  className="relative w-full h-full rounded-[26px] overflow-hidden bg-[#08090d] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c101b]"
+                >
+                  <AnimatePresence initial={false} custom={screenDirection}>
+                    {currentScreen ? (
+                      <motion.div
+                        key={currentScreen.id}
+                        custom={screenDirection}
+                        variants={screenSlideVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                        className="absolute inset-0 w-full h-full"
                       >
-                        <RotateCcw size={10} />
-                        <span>{lang === 'ar' ? 'تحديث' : 'Retry'}</span>
-                      </button>
-                    </div>
-                  )}
-                </AnimatePresence>
+                        <ImageWithSkeleton
+                          src={currentScreen.src}
+                          alt={`${activeProject.name} ${currentScreen.label}`}
+                          loading="eager"
+                          variant="phone"
+                          onImageDimensions={({ isLandscape }) =>
+                            setIsLandscapeScreen(isLandscape)
+                          }
+                          className={`w-full h-full crisp-screenshot ${
+                            isLandscapeScreen
+                              ? 'object-contain'
+                              : 'object-cover object-top'
+                          }`}
+                        />
+                      </motion.div>
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 text-slate-300 p-4 text-center bg-gradient-to-br from-[#141b2d] to-[#0c111f]">
+                        <div className="w-10 h-10 rounded-2xl bg-[#0284ff]/15 border border-[#0284ff]/30 flex items-center justify-center text-[#38bdf8]">
+                          <Smartphone size={20} />
+                        </div>
+                        <span className="text-xs font-display font-bold text-white">
+                          {activeProject.name}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400 leading-snug">
+                          {lang === 'ar' ? 'عرض احتياطي جاهز' : 'Fallback preview ready'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            refetchConsolidated();
+                            onRetryStoreSync?.();
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 hover:bg-[#0284ff] text-[10px] font-semibold text-white transition-colors cursor-pointer"
+                        >
+                          <RotateCcw size={10} />
+                          <span>{lang === 'ar' ? 'تحديث' : 'Retry'}</span>
+                        </button>
+                      </div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Android Bottom Navigation Handle */}
+                <div
+                  aria-hidden="true"
+                  className="absolute bottom-2.5 left-1/2 -translate-x-1/2 w-12 h-[3px] rounded-full bg-white/35 z-20 pointer-events-none"
+                />
               </div>
             </div>
           </div>

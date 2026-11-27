@@ -590,19 +590,32 @@ export function sanitizeDiscoveredScreenshots(urls?: string[] | null): string[] 
     if (typeof url !== 'string') return false;
     const trimmed = url.trim();
     if (!trimmed) return false;
-    const lower = trimmed.toLowerCase();
+    const lower = trimmed.toLowerCase().split('?')[0];
     if (NON_SCREENSHOT_HOST_PATTERNS.some((pattern) => lower.includes(pattern))) {
       return false;
     }
     if (lower.includes('badge') || lower.endsWith('.gif') || lower.endsWith('.svg')) {
       return false;
     }
+    if (/(?:^|\/)(?:app_icon(?:_\d+)?|app_logo)\.(?:png|jpe?g|webp)$/i.test(lower)) {
+      return false;
+    }
     return true;
   });
 }
 
+function isCoverAssetPath(url?: string): boolean {
+  if (!url) return false;
+  const lower = url.toLowerCase();
+  return (
+    /(?:^|\/)covers?\//i.test(lower) ||
+    /\/screenshots\/cover[^/]*\.(?:png|jpe?g|webp)/i.test(lower) ||
+    /\/cover[^/]*\.(?:png|jpe?g|webp)(?:$|\?)/i.test(lower)
+  );
+}
+
 /**
- * Parses image URLs from repository description (supports markdown ![alt](url) and raw http(s) image URLs)
+ * Parses image URLs from repository description (supports markdown ![alt](url), HTML <img src>, and raw http(s) image URLs)
  * Ignores fenced and inline code blocks so sample JSON API payloads are never mistaken for screenshots.
  */
 export function parseImagesFromDescription(description: string | null): string[] {
@@ -619,6 +632,12 @@ export function parseImagesFromDescription(description: string | null): string[]
     if (match[1]) urls.push(match[1]);
   }
 
+  // HTML <img src="..."> tags
+  const htmlImgRegex = /<img\s+[^>]*src=["'](https?:\/\/[^"'\s>]+\.(?:png|jpg|jpeg|webp)(?:\?[^"'\s>]*)?)["'][^>]*>/gi;
+  while ((match = htmlImgRegex.exec(cleanedDescription)) !== null) {
+    if (match[1] && !urls.includes(match[1])) urls.push(match[1]);
+  }
+
   // Raw URLs ending in image extensions
   const rawUrlRegex = /(https?:\/\/[^\s<>"')]+?\.(?:png|jpg|jpeg|webp)(?:\?[^\s<>"')]*)?)/gi;
   while ((match = rawUrlRegex.exec(cleanedDescription)) !== null) {
@@ -631,12 +650,12 @@ export function parseImagesFromDescription(description: string | null): string[]
 }
 
 /**
- * Extracts genuine app screenshots embedded inside a repository README (excluding shields.io, camo, badges, and API example URLs).
+ * Extracts genuine app screenshots embedded inside a repository README (excluding shields.io, camo, badges, and cover artwork).
  */
 export function extractEmbeddedReadmeScreenshots(readmeText?: string | null): string[] {
   if (!readmeText) return [];
   const raw = parseImagesFromDescription(readmeText);
-  return sanitizeDiscoveredScreenshots(raw);
+  return sanitizeDiscoveredScreenshots(raw).filter((u) => !isCoverAssetPath(u));
 }
 
 // Verified screenshot URLs across Ahmed El-Bialy's repositories
@@ -654,10 +673,10 @@ export const VERIFIED_REPO_SCREENSHOTS: Record<string, string[]> = {
   Movura: [
     "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/home_p1.png",
     "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/movie_details_p1.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/trailer_player_v.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/tv_anime_p1.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/search_results.png",
-    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/reviews.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/anime_details.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/search_screen.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/review_tab.png",
+    "https://raw.githubusercontent.com/ahmed-el-bialy/Movura/main/screenshots/genres_screen.png",
   ],
   "Vibrant-store": [
     "https://raw.githubusercontent.com/ahmed-el-bialy/Vibrant-store/main/screenshots/HomeView.png",
@@ -725,6 +744,8 @@ async function fetchRepoImageAssetsViaTree(
   }
 
   const imageRegex = /\.(png|jpe?g|webp)$/i;
+  const isIconOrLogo = (relPath: string) =>
+    /(?:^|\/)(?:app_icon(?:_\d+)?|app_logo)\.(?:png|jpe?g|webp)$/i.test(relPath);
   const encodeGitPath = (relPath: string) =>
     relPath
       .split('/')
@@ -741,15 +762,51 @@ async function fetchRepoImageAssetsViaTree(
   const isCoverPath = (relPath: string) => {
     const lower = relPath.toLowerCase();
     return (
-      /(?:^|\/)covers\/[^/]+\.(png|jpe?g|webp)$/i.test(lower) ||
+      /(?:^|\/)covers?\/[^/]+\.(png|jpe?g|webp)$/i.test(lower) ||
       /^(?:screenshots\/)?cover[^/]*\.(png|jpe?g|webp)$/i.test(lower)
     );
   };
 
   const isDirectScreenshotPath = (relPath: string) => {
     const lower = relPath.toLowerCase();
-    return /^screenshots\/[^/]+\.(png|jpe?g|webp)$/i.test(lower) && !isCoverPath(lower);
+    return (
+      /^screenshots\/.+\.(png|jpe?g|webp)$/i.test(lower) &&
+      !isCoverPath(lower) &&
+      !isIconOrLogo(lower)
+    );
   };
+
+  // Primary in browser runtime: call our rate-limit-proof Express asset discovery proxy
+  if (typeof window !== 'undefined') {
+    try {
+      const serverAssetsRes = await fetch(
+        `/api/github/repo-assets?username=${encodeURIComponent(username)}&repo=${encodeURIComponent(
+          cleanName
+        )}&branch=${encodeURIComponent(defaultBranch || 'main')}${forceRefresh ? '&refresh=1' : ''}`,
+        { cache: forceRefresh ? 'no-store' : 'default' }
+      );
+      if (serverAssetsRes.ok) {
+        const assetsJson: any = await serverAssetsRes.json();
+        if (assetsJson?.success) {
+          const coverImages = Array.isArray(assetsJson.coverImages)
+            ? assetsJson.coverImages.filter((u: any) => typeof u === 'string' && u.trim().length > 0)
+            : [];
+          const screens = sanitizeDiscoveredScreenshots(
+            Array.isArray(assetsJson.screens) ? assetsJson.screens : []
+          );
+          if (coverImages.length > 0 || screens.length > 0) {
+            return {
+              ok: true,
+              coverImages: Array.from(new Set(coverImages)),
+              screens: Array.from(new Set(screens)),
+            };
+          }
+        }
+      }
+    } catch {
+      // Static hosting without Express proxy — fall through to direct GitHub tree lookup
+    }
+  }
 
   try {
     const treeRes = await fetch(
@@ -794,7 +851,7 @@ async function fetchRepoImageAssetsViaTree(
       }
     }
 
-    // Fallback: Contents API preserving exact entry.path casing (handles Screenshots/Covers, Covers, screenshots/covers)
+    // Fallback: Contents API preserving exact entry.path casing (handles Screenshots/Cover, Screenshots/Covers, Cover, Covers)
     const fetchDir = async (dirPath: string): Promise<{ ok: boolean; entries: any[] }> => {
       try {
         const res = await fetch(
@@ -819,17 +876,22 @@ async function fetchRepoImageAssetsViaTree(
       return { ok: false, coverImages: [], screens: [] };
     }
 
-    const coversDirEntry = rootResult.entries.find(
-      (e: any) => e?.type === 'dir' && String(e?.name || '').toLowerCase() === 'covers'
+    const coverDirEntries = rootResult.entries.filter(
+      (e: any) => e?.type === 'dir' && /^covers?$/i.test(String(e?.name || ''))
     );
     const screenshotsDirEntry = rootResult.entries.find(
       (e: any) => e?.type === 'dir' && String(e?.name || '').toLowerCase() === 'screenshots'
     );
 
-    const [coversRes, screenshotsRes] = await Promise.all([
-      coversDirEntry?.path
-        ? fetchDir(coversDirEntry.path)
-        : Promise.resolve({ ok: true, entries: [] }),
+    const [coverDirsFiles, screenshotsRes] = await Promise.all([
+      Promise.all(
+        coverDirEntries.map(async (dirEntry: any) => ({
+          dirPath: dirEntry.path,
+          res: dirEntry?.path
+            ? await fetchDir(dirEntry.path)
+            : { ok: true, entries: [] },
+        }))
+      ),
       screenshotsDirEntry?.path
         ? fetchDir(screenshotsDirEntry.path)
         : Promise.resolve({ ok: true, entries: [] }),
@@ -838,26 +900,34 @@ async function fetchRepoImageAssetsViaTree(
     const coverImages: string[] = [];
     const screens: string[] = [];
 
-    coversRes.entries
-      .filter((f: any) => f?.type === 'file' && typeof f?.name === 'string' && imageRegex.test(f.name))
-      .sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true }))
-      .forEach((f: any) => {
-        coverImages.push(toRawUrl(f.path || `${coversDirEntry.path}/${f.name}`, f.download_url));
-      });
-
-    const nestedCoversEntry = screenshotsRes.entries.find(
-      (e: any) => e?.type === 'dir' && String(e?.name || '').toLowerCase() === 'covers'
-    );
-    if (nestedCoversEntry?.path) {
-      const nestedRes = await fetchDir(nestedCoversEntry.path);
-      nestedRes.entries
+    for (const { dirPath, res } of coverDirsFiles) {
+      res.entries
         .filter((f: any) => f?.type === 'file' && typeof f?.name === 'string' && imageRegex.test(f.name))
         .sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true }))
         .forEach((f: any) => {
-          coverImages.push(
-            toRawUrl(f.path || `${nestedCoversEntry.path}/${f.name}`, f.download_url)
-          );
+          coverImages.push(toRawUrl(f.path || `${dirPath}/${f.name}`, f.download_url));
         });
+    }
+
+    const nestedDirs = screenshotsRes.entries.filter((e: any) => e?.type === 'dir' && e?.path);
+    if (nestedDirs.length > 0) {
+      await Promise.all(
+        nestedDirs.map(async (nestedDir: any) => {
+          const isCoverSubdir = /^covers?$/i.test(String(nestedDir?.name || ''));
+          const nestedRes = await fetchDir(nestedDir.path);
+          nestedRes.entries
+            .filter((f: any) => f?.type === 'file' && typeof f?.name === 'string' && imageRegex.test(f.name))
+            .sort((a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+            .forEach((f: any) => {
+              const rawUrl = toRawUrl(f.path || `${nestedDir.path}/${f.name}`, f.download_url);
+              if (isCoverSubdir || /^cover.*\.(png|jpe?g|webp)$/i.test(f.name)) {
+                coverImages.push(rawUrl);
+              } else {
+                screens.push(rawUrl);
+              }
+            });
+        })
+      );
     }
 
     screenshotsRes.entries
@@ -887,7 +957,7 @@ async function fetchRepoImageAssetsViaTree(
 
 /**
  * Dynamically queries the GitHub tree/contents for the repo's screenshots folder (case-preserving).
- * Excludes nested Covers/ subfolders and cover.* banner files so covers stay separated from phone screens.
+ * Excludes nested Cover/Covers subfolders and cover.* banner files so covers stay separated from phone screens.
  */
 export async function fetchRepoScreenshots(
   repoName: string,
@@ -896,7 +966,7 @@ export async function fetchRepoScreenshots(
   forceRefresh: boolean = false
 ): Promise<string[]> {
   const cleanName = repoName.trim();
-  const cacheKey = `repo-screens-v2-${username}-${cleanName}`;
+  const cacheKey = `repo-screens-v4-${username}-${cleanName}`;
 
   if (!forceRefresh && typeof window !== 'undefined' && !navigator.onLine) {
     try {
@@ -950,8 +1020,8 @@ export async function fetchRepoScreenshots(
 
 /**
  * Automatically discovers natural cover images for a repo from:
- * 1. /Covers or /covers folder at repository root
- * 2. /Screenshots/Covers or /screenshots/covers nested subfolder
+ * 1. /Cover or /Covers folder at repository root
+ * 2. /Screenshots/Cover or /Screenshots/Covers nested subfolder
  * 3. cover.* banner files inside /Screenshots or /screenshots
  * Preserves exact case-sensitive Git paths and never caches failed/rate-limited responses.
  */
@@ -963,7 +1033,7 @@ export async function fetchRepoCoverImages(
 ): Promise<string[]> {
   if (!repoName) return [];
   const cleanName = repoName.trim();
-  const cacheKey = `repo_covers_v2_${username}_${cleanName}`;
+  const cacheKey = `repo_covers_v4_${username}_${cleanName}`;
 
   if (!forceRefresh && typeof window !== 'undefined') {
     try {
@@ -1480,46 +1550,69 @@ function splitBilingualCaseStudyMarkdown(raw: string): RepoCaseStudyData {
 
 function extractEmbeddedCaseStudyFromReadme(rawReadme?: string): string | null {
   if (typeof rawReadme !== 'string' || rawReadme.trim().length < 40) return null;
-  const lines = rawReadme.replace(/\r\n/g, '\n').split('\n');
-  const startHeadingRegex =
-    /^#{1,3}\s+.*(?:case\s*study|study\s*case|problem\s*(?:&|and)\s*solution|engineering\s*challenges?|architecture\s*(?:&|and)\s*design|دراسة\s*الحالة|المشكلة\s*والحل|التحدي\s*والحل)/i;
-  const nextTopHeadingRegex = /^#{1,2}\s+/;
+  const normalizedReadme = rawReadme.replace(/\r\n/g, '\n');
+  const lines = normalizedReadme.split('\n');
+
+  const explicitCaseStudyHeadingRegex =
+    /^#{1,4}\s+.*(?:case\s*study|study\s*case|problem\s*(?:&|and)\s*solution|engineering\s*challenges?|challenges?\s*(?:&|and)\s*solutions?|دراسة\s*الحالة|المشكلة\s*والحل|التحدي\s*والحل)/i;
+  const architecturalHeadingRegex =
+    /^#{1,4}\s+.*(?:overview|problem|challenge|solution|architecture|results|impact|performance|key\s*features?|lessons|workflow|نظرة\s*عامة|المشكلة|التحدي|الحل|المعمارية|النتائج|الأداء|المميزات)/i;
+  const stopFooterHeadingRegex =
+    /^#{1,2}\s+.*(?:license|contributing|acknowledg|credits|author|contact|get\s*in\s*touch|connect\s*with\s*me|support|الرخصة|التواصل|المساهمة)/i;
 
   const collectedSections: string[] = [];
   let collecting = false;
-  let startLevel = 2;
+  let explicitTriggerLevel = 2;
+  let collectedSubheadingsCount = 0;
 
   for (let i = 0; i < lines.length; i++) {
     const trimmed = lines[i].trim();
-    if (startHeadingRegex.test(trimmed)) {
+    const headingMatch = trimmed.match(/^(#{1,4})\s+(.+)/);
+
+    if (!collecting && explicitCaseStudyHeadingRegex.test(trimmed)) {
       collecting = true;
-      const hashMatch = trimmed.match(/^(#{1,3})/);
-      startLevel = hashMatch ? hashMatch[1].length : 2;
+      explicitTriggerLevel = headingMatch ? headingMatch[1].length : 2;
       collectedSections.push(lines[i]);
       continue;
     }
 
     if (collecting) {
-      const headingMatch = trimmed.match(/^(#{1,3})\s+/);
-      if (
-        headingMatch &&
-        headingMatch[1].length <= startLevel &&
-        nextTopHeadingRegex.test(trimmed)
-      ) {
-        collecting = false;
-        continue;
+      if (headingMatch) {
+        const level = headingMatch[1].length;
+        // Stop cleanly only when reaching footer/meta headings AFTER collecting core content,
+        // or if we hit an unrelated top-level # H1
+        if (stopFooterHeadingRegex.test(trimmed) || (level === 1 && explicitTriggerLevel > 1)) {
+          collecting = false;
+          continue;
+        }
+        collectedSubheadingsCount++;
+        // Allow sibling ## Case Study subsections (Problem / Solution / Architecture / Results) to stay together
+        if (level <= explicitTriggerLevel && collectedSubheadingsCount > 8) {
+          collecting = false;
+          continue;
+        }
       }
       collectedSections.push(lines[i]);
     }
   }
 
-  const block = collectedSections.join('\n').trim();
-  return block.length > 60 ? block : null;
+  const explicitBlock = collectedSections.join('\n').trim();
+  if (explicitBlock.length > 60) {
+    return explicitBlock;
+  }
+
+  // Fallback: README without an explicit "Case Study" title — extract structured engineering sections seamlessly
+  const structuralHeadingsCount = lines.filter((l) => architecturalHeadingRegex.test(l.trim())).length;
+  if (structuralHeadingsCount >= 2 || normalizedReadme.trim().length >= 220) {
+    return normalizedReadme.trim();
+  }
+
+  return null;
 }
 
 /**
  * Fetches live CASE_STUDY / STUDY_CASE markdown across ALL repository folders via recursive Git tree,
- * expanded filename & Arabic conventions, /api/study-case fallback, and bilingual README extraction.
+ * expanded filename & Arabic conventions, /api/study-case fallback, and resilient README extraction.
  */
 export async function fetchRepoCaseStudies(
   repoName: string,
@@ -1530,7 +1623,7 @@ export async function fetchRepoCaseStudies(
 ): Promise<RepoCaseStudyData> {
   if (!repoName) return { en: null, ar: null };
   const cleanRepo = repoName.trim();
-  const cacheKey = `gh_casestudy_v3_${username}_${cleanRepo}`;
+  const cacheKey = `gh_casestudy_v4_${username}_${cleanRepo}`;
 
   if (!forceRefresh && typeof window !== 'undefined') {
     try {
@@ -1721,8 +1814,8 @@ export async function fetchRepoCaseStudies(
     } catch {}
   }
 
-  // 4. README embedded Case Study fallback (supports bilingual sections inside README too)
-  if (!enRaw && !arRaw && readmeFallback) {
+  // 4. README embedded Case Study fallback (supports bilingual sections & dynamic additions inside README)
+  if ((!enRaw && !arRaw) && readmeFallback) {
     const embedded = extractEmbeddedCaseStudyFromReadme(readmeFallback);
     if (embedded) {
       const splitEmbedded = splitBilingualCaseStudyMarkdown(embedded);
@@ -1742,9 +1835,13 @@ export async function fetchRepoCaseStudies(
     if (splitSingle.ar) arRaw = splitSingle.ar;
   }
 
+  // Keep raw clean Markdown intact so extractStructuredCaseStudy & ReadmeDocumentView parse images/tables/blocks cleanly
+  const cleanMarkdown = (raw: string | null) =>
+    raw ? raw.replace(/<!--[\s\S]*?-->/g, '').trim() : null;
+
   const result: RepoCaseStudyData = {
-    en: enRaw ? preprocessReadmeContent(enRaw) : null,
-    ar: arRaw ? preprocessReadmeContent(arRaw) : null,
+    en: cleanMarkdown(enRaw),
+    ar: cleanMarkdown(arRaw),
   };
 
   if (typeof window !== 'undefined' && (result.en || result.ar)) {
@@ -1936,7 +2033,7 @@ export async function fetchRepoLiveMetadata(
   forceRefresh: boolean = false
 ): Promise<RepoLiveMetadata> {
   const cleanName = repoName.trim();
-  const cacheKey = `live_media_v5_${username}_${cleanName}`;
+  const cacheKey = `live_media_v6_${username}_${cleanName}`;
 
   if (!forceRefresh && typeof window !== 'undefined') {
     try {
@@ -1963,7 +2060,7 @@ export async function fetchRepoLiveMetadata(
   const embeddedScreens = extractEmbeddedReadmeScreenshots(rawReadme);
   const coverSet = new Set(discoveredCovers);
   const combinedScreens = Array.from(new Set([...folderScreens, ...embeddedScreens])).filter(
-    (u) => !coverSet.has(u) && !/\/covers\//i.test(u)
+    (u) => !coverSet.has(u) && !isCoverAssetPath(u)
   );
 
   // 3. Verified known fallback mappings ONLY if README didn't declare them
@@ -2032,7 +2129,7 @@ export function getCachedConsolidatedPortfolio(
   if (typeof window === 'undefined') return undefined;
   const cleanUsername = username.trim() || 'ahmed-el-bialy';
   try {
-    const raw = localStorage.getItem(`ahmed_consolidated_gh_v5_${cleanUsername}`);
+    const raw = localStorage.getItem(`ahmed_consolidated_gh_v6_${cleanUsername}`);
     if (!raw) return undefined;
     const parsed = JSON.parse(raw);
     if (parsed?.data?.repos) return parsed.data;
@@ -2142,7 +2239,7 @@ export async function fetchConsolidatedGitHubPortfolio(
   forceRefresh: boolean = false
 ): Promise<ConsolidatedGitHubPortfolio> {
   const cleanUsername = username.trim() || 'ahmed-el-bialy';
-  const cacheKey = `ahmed_consolidated_gh_v5_${cleanUsername}`;
+  const cacheKey = `ahmed_consolidated_gh_v6_${cleanUsername}`;
 
   if (!forceRefresh && typeof window !== 'undefined') {
     try {
@@ -2395,7 +2492,7 @@ export async function fetchConsolidatedGitHubPortfolio(
         const coverSet = new Set(coverList);
         const mergedScreens = Array.from(
           new Set([...(assets?.screens || []), ...readmeScreens])
-        ).filter((u) => !coverSet.has(u) && !/\/covers\//i.test(u));
+        ).filter((u) => !coverSet.has(u) && !isCoverAssetPath(u));
 
         if (coverList.length > 0) {
           r.coverImages = coverList;
